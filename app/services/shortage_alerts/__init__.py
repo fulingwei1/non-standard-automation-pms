@@ -4,4 +4,4 @@
 """
 from .service import ShortageAlertService
 
-__all__ = ['ShortageAlertService']
+__all__ = ["ShortageAlertService"]

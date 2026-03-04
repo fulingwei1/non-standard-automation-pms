@@ -8,7 +8,7 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 
@@ -133,14 +133,10 @@ class EmailNotificationHandler:
         )
         html_content = html_content.replace(
             "{{ triggered_at }}",
-            alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S")
-            if alert.triggered_at
-            else "",
+            alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S") if alert.triggered_at else "",
         )
         html_content = html_content.replace("{{ status }}", alert.status)
-        html_content = html_content.replace(
-            "{{ alert_content }}", content.replace("\n", "<br>")
-        )
+        html_content = html_content.replace("{{ alert_content }}", content.replace("\n", "<br>"))
         html_content = html_content.replace("{{ alert_url }}", alert_url)
 
         if not alert.project:

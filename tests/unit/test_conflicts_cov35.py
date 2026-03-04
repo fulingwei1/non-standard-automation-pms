@@ -2,12 +2,14 @@
 """
 第三十五批 - resource_allocation_service/conflicts.py 单元测试
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
     from app.services.resource_allocation_service.conflicts import detect_resource_conflicts
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -30,6 +32,7 @@ def _make_db(machine=None, conflicting_projects=None):
 
     def side_effect(model):
         from app.models import Machine, Project
+
         if model is Machine:
             return machine_query
         return project_query
@@ -112,8 +115,15 @@ class TestDetectResourceConflicts:
         db = _make_db(machine=mock_machine, conflicting_projects=[conflict_project])
         result = detect_resource_conflicts(db, 2, 6, date(2024, 2, 1), date(2024, 2, 28))
         assert len(result) == 1
-        keys = {"type", "resource_id", "resource_name", "conflict_project_id",
-                "conflict_project_name", "conflict_period", "severity"}
+        keys = {
+            "type",
+            "resource_id",
+            "resource_name",
+            "conflict_project_id",
+            "conflict_project_name",
+            "conflict_period",
+            "severity",
+        }
         assert keys.issubset(result[0].keys())
 
     def test_multiple_conflicts(self):

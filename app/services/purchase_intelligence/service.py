@@ -19,19 +19,19 @@ from app.models import (
     Material,
     PurchaseOrder,
     PurchaseOrderItem,
+    PurchaseOrderTracking,
     PurchaseSuggestion,
     SupplierPerformance,
     SupplierQuotation,
     User,
     Vendor,
-    PurchaseOrderTracking,
 )
 from app.schemas.purchase_intelligence import (
+    PurchaseOrderTrackingResponse,
     PurchaseSuggestionResponse,
+    QuotationCompareItem,
     SupplierPerformanceResponse,
     SupplierRankingItem,
-    QuotationCompareItem,
-    PurchaseOrderTrackingResponse,
 )
 from app.services.supplier_performance_evaluator import SupplierPerformanceEvaluator
 
@@ -71,10 +71,7 @@ class PurchaseIntelligenceService:
             query = query.filter(PurchaseSuggestion.urgency_level == urgency_level)
 
         suggestions = (
-            query.order_by(desc(PurchaseSuggestion.created_at))
-            .offset(skip)
-            .limit(limit)
-            .all()
+            query.order_by(desc(PurchaseSuggestion.created_at)).offset(skip).limit(limit).all()
         )
 
         # 填充关联数据
@@ -111,14 +108,14 @@ class PurchaseIntelligenceService:
         if not suggestion:
             raise ValueError("采购建议不存在")
 
-        if suggestion.status != 'PENDING':
+        if suggestion.status != "PENDING":
             raise ValueError(f"当前状态 {suggestion.status} 不允许审批")
 
         if approved:
-            suggestion.status = 'APPROVED'
+            suggestion.status = "APPROVED"
             message = "采购建议已批准"
         else:
-            suggestion.status = 'REJECTED'
+            suggestion.status = "REJECTED"
             message = "采购建议已拒绝"
 
         suggestion.reviewed_by = user_id
@@ -287,7 +284,7 @@ class PurchaseIntelligenceService:
         query = self.db.query(SupplierQuotation).filter(
             and_(
                 SupplierQuotation.material_id == material_id,
-                SupplierQuotation.status == 'ACTIVE',
+                SupplierQuotation.status == "ACTIVE",
                 SupplierQuotation.valid_to >= date.today(),
             )
         )
@@ -312,8 +309,8 @@ class PurchaseIntelligenceService:
 
             if latest_perf:
                 supplier_performances[q.supplier_id] = {
-                    'score': latest_perf.overall_score,
-                    'rating': latest_perf.rating,
+                    "score": latest_perf.overall_score,
+                    "rating": latest_perf.rating,
                 }
 
         # 构建比较数据
@@ -327,8 +324,8 @@ class PurchaseIntelligenceService:
                     quotation_id=q.id,
                     quotation_no=q.quotation_no,
                     supplier_id=q.supplier_id,
-                    supplier_code=supplier.supplier_code if supplier else '',
-                    supplier_name=supplier.supplier_name if supplier else '',
+                    supplier_code=supplier.supplier_code if supplier else "",
+                    supplier_name=supplier.supplier_name if supplier else "",
                     unit_price=q.unit_price,
                     currency=q.currency,
                     min_order_qty=q.min_order_qty,
@@ -338,8 +335,8 @@ class PurchaseIntelligenceService:
                     payment_terms=q.payment_terms,
                     tax_rate=q.tax_rate,
                     is_selected=q.is_selected,
-                    performance_score=perf.get('score'),
-                    performance_rating=perf.get('rating'),
+                    performance_score=perf.get("score"),
+                    performance_rating=perf.get("rating"),
                 )
             )
 
@@ -353,9 +350,9 @@ class PurchaseIntelligenceService:
         for item in compare_items:
             # 综合评分 = 价格评分(40%) + 绩效评分(60%)
             price_score = (
-                (Decimal('1') - (item.unit_price - quotations[0].unit_price) / quotations[0].unit_price)
-                * Decimal('100')
-            )
+                Decimal("1")
+                - (item.unit_price - quotations[0].unit_price) / quotations[0].unit_price
+            ) * Decimal("100")
             perf_score = float(item.performance_score) if item.performance_score else 50
 
             combined_score = float(price_score) * 0.4 + perf_score * 0.6
@@ -434,7 +431,7 @@ class PurchaseIntelligenceService:
             logistics_company=logistics_company,
             tracking_no=tracking_no,
             remark=remark,
-            status='PENDING',
+            status="PENDING",
             created_by=user_id,
         )
 
@@ -443,7 +440,7 @@ class PurchaseIntelligenceService:
 
         # 创建收货明细
         for item_data in items:
-            order_item = self.db.query(PurchaseOrderItem).get(item_data['order_item_id'])
+            order_item = self.db.query(PurchaseOrderItem).get(item_data["order_item_id"])
             if not order_item:
                 continue
 
@@ -452,26 +449,24 @@ class PurchaseIntelligenceService:
                 order_item_id=order_item.id,
                 material_code=order_item.material_code,
                 material_name=order_item.material_name,
-                delivery_qty=item_data['delivery_qty'],
-                received_qty=item_data.get('received_qty', item_data['delivery_qty']),
-                remark=item_data.get('remark'),
+                delivery_qty=item_data["delivery_qty"],
+                received_qty=item_data.get("received_qty", item_data["delivery_qty"]),
+                remark=item_data.get("remark"),
             )
 
             self.db.add(receipt_item)
 
             # 更新订单项收货数量
-            order_item.received_qty = (
-                order_item.received_qty or 0
-            ) + receipt_item.received_qty
+            order_item.received_qty = (order_item.received_qty or 0) + receipt_item.received_qty
 
         # 创建跟踪记录
         tracking = PurchaseOrderTracking(
             order_id=order_id,
             order_no=order.order_no,
-            event_type='RECEIVED',
+            event_type="RECEIVED",
             event_time=datetime.now(),
             event_description=f"收货确认，收货单号：{receipt_no}",
-            new_status='RECEIVED',
+            new_status="RECEIVED",
             tracking_no=tracking_no,
             logistics_company=logistics_company,
             operator_id=user_id,
@@ -497,7 +492,7 @@ class PurchaseIntelligenceService:
         if not suggestion:
             raise ValueError("采购建议不存在")
 
-        if suggestion.status != 'APPROVED':
+        if suggestion.status != "APPROVED":
             raise ValueError("只有已批准的建议才能创建订单")
 
         if suggestion.purchase_order_id:
@@ -519,9 +514,7 @@ class PurchaseIntelligenceService:
         unit_price = suggestion.estimated_unit_price or 0
         amount = suggestion.suggested_qty * unit_price
         tax_amount = (
-            amount * (suggestion.material.standard_price or 13) / 100
-            if suggestion.material
-            else 0
+            amount * (suggestion.material.standard_price or 13) / 100 if suggestion.material else 0
         )
         amount_with_tax = amount + tax_amount
 
@@ -530,14 +523,14 @@ class PurchaseIntelligenceService:
             order_no=order_no,
             supplier_id=final_supplier_id,
             project_id=suggestion.project_id,
-            order_type='NORMAL',
+            order_type="NORMAL",
             order_title=f"采购建议转订单 - {suggestion.material_name}",
             total_amount=amount,
             tax_amount=tax_amount,
             amount_with_tax=amount_with_tax,
             order_date=date.today(),
             required_date=required_date or suggestion.required_date,
-            status='DRAFT',
+            status="DRAFT",
             payment_terms=payment_terms,
             delivery_address=delivery_address,
             remark=remark,
@@ -562,14 +555,14 @@ class PurchaseIntelligenceService:
             tax_amount=tax_amount,
             amount_with_tax=amount_with_tax,
             required_date=required_date or suggestion.required_date,
-            status='PENDING',
+            status="PENDING",
         )
 
         self.db.add(order_item)
 
         # 更新建议状态
         suggestion.purchase_order_id = order.id
-        suggestion.status = 'ORDERED'
+        suggestion.status = "ORDERED"
         suggestion.ordered_at = datetime.now()
 
         self.db.commit()
@@ -580,12 +573,12 @@ class PurchaseIntelligenceService:
 
     def _generate_quotation_no(self) -> str:
         """生成报价单号"""
-        prefix = 'QT'
-        date_str = datetime.now().strftime('%Y%m%d')
+        prefix = "QT"
+        date_str = datetime.now().strftime("%Y%m%d")
 
         latest = (
             self.db.query(SupplierQuotation)
-            .filter(SupplierQuotation.quotation_no.like(f'{prefix}{date_str}%'))
+            .filter(SupplierQuotation.quotation_no.like(f"{prefix}{date_str}%"))
             .order_by(desc(SupplierQuotation.quotation_no))
             .first()
         )
@@ -596,16 +589,16 @@ class PurchaseIntelligenceService:
         else:
             seq = 1
 
-        return f'{prefix}{date_str}{seq:04d}'
+        return f"{prefix}{date_str}{seq:04d}"
 
     def _generate_receipt_no(self) -> str:
         """生成收货单号"""
-        prefix = 'GR'
-        date_str = datetime.now().strftime('%Y%m%d')
+        prefix = "GR"
+        date_str = datetime.now().strftime("%Y%m%d")
 
         latest = (
             self.db.query(GoodsReceipt)
-            .filter(GoodsReceipt.receipt_no.like(f'{prefix}{date_str}%'))
+            .filter(GoodsReceipt.receipt_no.like(f"{prefix}{date_str}%"))
             .order_by(desc(GoodsReceipt.receipt_no))
             .first()
         )
@@ -616,16 +609,16 @@ class PurchaseIntelligenceService:
         else:
             seq = 1
 
-        return f'{prefix}{date_str}{seq:04d}'
+        return f"{prefix}{date_str}{seq:04d}"
 
     def _generate_purchase_order_no(self) -> str:
         """生成采购订单编号"""
-        prefix = 'PO'
-        date_str = datetime.now().strftime('%Y%m%d')
+        prefix = "PO"
+        date_str = datetime.now().strftime("%Y%m%d")
 
         latest = (
             self.db.query(PurchaseOrder)
-            .filter(PurchaseOrder.order_no.like(f'{prefix}{date_str}%'))
+            .filter(PurchaseOrder.order_no.like(f"{prefix}{date_str}%"))
             .order_by(desc(PurchaseOrder.order_no))
             .first()
         )
@@ -636,4 +629,4 @@ class PurchaseIntelligenceService:
         else:
             seq = 1
 
-        return f'{prefix}{date_str}{seq:04d}'
+        return f"{prefix}{date_str}{seq:04d}"

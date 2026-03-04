@@ -73,27 +73,25 @@ class TestWinRatePredictionServiceInit:
     def test_init(self, win_rate_service, db_session):
         assert win_rate_service.db == db_session
         assert win_rate_service.DIMENSION_WEIGHTS == {
-        "requirement_maturity": 0.20,
-        "technical_feasibility": 0.25,
-        "business_feasibility": 0.20,
-        "delivery_risk": 0.15,
-        "customer_relationship": 0.20,
+            "requirement_maturity": 0.20,
+            "technical_feasibility": 0.25,
+            "business_feasibility": 0.20,
+            "delivery_risk": 0.15,
+            "customer_relationship": 0.20,
         }
         assert win_rate_service.PROBABILITY_THRESHOLDS == {
-        WinProbabilityLevelEnum.VERY_HIGH: 0.80,
-        WinProbabilityLevelEnum.HIGH: 0.60,
-        WinProbabilityLevelEnum.MEDIUM: 0.40,
-        WinProbabilityLevelEnum.LOW: 0.20,
-        WinProbabilityLevelEnum.VERY_LOW: 0.0,
+            WinProbabilityLevelEnum.VERY_HIGH: 0.80,
+            WinProbabilityLevelEnum.HIGH: 0.60,
+            WinProbabilityLevelEnum.MEDIUM: 0.40,
+            WinProbabilityLevelEnum.LOW: 0.20,
+            WinProbabilityLevelEnum.VERY_LOW: 0.0,
         }
 
 
 class TestGetSalespersonHistoricalWinRate:
     def test_no_projects(self, win_rate_service, test_salesperson):
         """无项目时返回行业平均值"""
-        win_rate, total = win_rate_service.get_salesperson_historical_win_rate(
-        test_salesperson.id
-        )
+        win_rate, total = win_rate_service.get_salesperson_historical_win_rate(test_salesperson.id)
 
         assert win_rate == pytest.approx(0.20)
         assert total == 0
@@ -128,9 +126,7 @@ class TestGetSalespersonHistoricalWinRate:
 
         win_rate_service.db.commit()
 
-        win_rate, total = win_rate_service.get_salesperson_historical_win_rate(
-            test_salesperson.id
-        )
+        win_rate, total = win_rate_service.get_salesperson_historical_win_rate(test_salesperson.id)
 
         assert win_rate == pytest.approx(0.7)
         assert total == 10
@@ -138,7 +134,7 @@ class TestGetSalespersonHistoricalWinRate:
     def test_custom_lookback_months(self, win_rate_service, test_salesperson):
         """自定义回溯月数"""
         win_rate, total = win_rate_service.get_salesperson_historical_win_rate(
-        test_salesperson.id, lookback_months=6
+            test_salesperson.id, lookback_months=6
         )
 
         assert win_rate == 0.20  # 无数据时返回平均值
@@ -175,9 +171,7 @@ class TestGetCustomerCooperationHistory:
 
         win_rate_service.db.commit()
 
-        total, won = win_rate_service.get_customer_cooperation_history(
-            customer_id=test_customer.id
-        )
+        total, won = win_rate_service.get_customer_cooperation_history(customer_id=test_customer.id)
 
         assert total == 7
         assert won == 5
@@ -185,40 +179,36 @@ class TestGetCustomerCooperationHistory:
     def test_by_customer_name(self, win_rate_service, db_session):
         """通过客户名称查询历史合作"""
         customer = Customer(
-        customer_code="WIN-CUST-002",
-        customer_name="名称测试客户",
-        contact_person="李四",
-        contact_phone="13800000002",
-        status="ACTIVE",
+            customer_code="WIN-CUST-002",
+            customer_name="名称测试客户",
+            contact_person="李四",
+            contact_phone="13800000002",
+            status="ACTIVE",
         )
         db_session.add(customer)
         db_session.flush()  # 确保 customer.id 可用
 
         project = Project(
-        project_code="PJ-NAME-TEST",
-        project_name="名称查询测试",
-        customer_id=customer.id,  # 关联到 customer
-        customer_name="名称测试客户",
-        salesperson_id=1,
-        outcome=LeadOutcomeEnum.WON.value,
-        created_at=datetime.now(),
+            project_code="PJ-NAME-TEST",
+            project_name="名称查询测试",
+            customer_id=customer.id,  # 关联到 customer
+            customer_name="名称测试客户",
+            salesperson_id=1,
+            outcome=LeadOutcomeEnum.WON.value,
+            created_at=datetime.now(),
         )
         win_rate_service.db.add(project)
 
         win_rate_service.db.commit()
 
-        total, won = win_rate_service.get_customer_cooperation_history(
-        customer_name="名称测试客户"
-        )
+        total, won = win_rate_service.get_customer_cooperation_history(customer_name="名称测试客户")
 
         assert total == 1
         assert won == 1
 
     def test_customer_not_found(self, win_rate_service):
         """客户不存在时返回零"""
-        total, won = win_rate_service.get_customer_cooperation_history(
-        customer_id=99999
-        )
+        total, won = win_rate_service.get_customer_cooperation_history(customer_id=99999)
 
         assert total == 0
         assert won == 0
@@ -227,16 +217,12 @@ class TestGetCustomerCooperationHistory:
 class TestGetSimilarLeadsStatistics:
     def test_no_similar_leads(self, win_rate_service, dimension_scores, test_customer):
         """无相似线索时返回零"""
-        similar_count, win_rate = win_rate_service.get_similar_leads_statistics(
-        dimension_scores
-        )
+        similar_count, win_rate = win_rate_service.get_similar_leads_statistics(dimension_scores)
 
         assert similar_count == 0
         assert win_rate == 0
 
-    def test_with_similar_leads(
-        self, win_rate_service, dimension_scores, test_customer
-    ):
+    def test_with_similar_leads(self, win_rate_service, dimension_scores, test_customer):
         """有相似线索时计算中标率"""
         # 创建不同结果的项目
         outcomes = [
@@ -299,9 +285,7 @@ class TestCalculateSalespersonFactor:
     def test_boundary_conditions(self, win_rate_service):
         """边界条件"""
         # 最高中标率 = 1.0 -> 最高加分 = 1.0
-        assert win_rate_service.calculate_salesperson_factor(1.0) == pytest.approx(
-        0.5 + 1.0 * 0.5
-        )
+        assert win_rate_service.calculate_salesperson_factor(1.0) == pytest.approx(0.5 + 1.0 * 0.5)
 
         # 最低中标率 = 0.0 -> 基础加分 = 0.5
         assert win_rate_service.calculate_salesperson_factor(0.0) == pytest.approx(0.5)
@@ -310,23 +294,17 @@ class TestCalculateSalespersonFactor:
 class TestCalculateCustomerFactor:
     def test_deep_cooperation(self, win_rate_service):
         """深度合作客户"""
-        factor = win_rate_service.calculate_customer_factor(
-        cooperation_count=5, success_count=4
-        )
+        factor = win_rate_service.calculate_customer_factor(cooperation_count=5, success_count=4)
         assert factor == 1.30
 
     def test_stable_customer(self, win_rate_service):
         """稳定客户"""
-        factor = win_rate_service.calculate_customer_factor(
-        cooperation_count=3, success_count=2
-        )
+        factor = win_rate_service.calculate_customer_factor(cooperation_count=3, success_count=2)
         assert factor == 1.20
 
     def test_new_customer(self, win_rate_service):
         """新客户"""
-        factor = win_rate_service.calculate_customer_factor(
-        cooperation_count=1, success_count=1
-        )
+        factor = win_rate_service.calculate_customer_factor(cooperation_count=1, success_count=1)
         assert factor == 1.10
 
     def test_repeat_customer(self, win_rate_service):
@@ -334,15 +312,13 @@ class TestCalculateCustomerFactor:
         # 注意：如果 cooperation_count >= 1，会返回 1.10（老客户），而不是 1.05（回头客）
         # 只有当 cooperation_count < 1 且 is_repeat_customer=True 时才返回 1.05
         factor = win_rate_service.calculate_customer_factor(
-        cooperation_count=0, success_count=0, is_repeat_customer=True
+            cooperation_count=0, success_count=0, is_repeat_customer=True
         )
         assert factor == 1.05
 
     def test_no_cooperation(self, win_rate_service):
         """无合作"""
-        factor = win_rate_service.calculate_customer_factor(
-        cooperation_count=0, success_count=0
-        )
+        factor = win_rate_service.calculate_customer_factor(cooperation_count=0, success_count=0)
         assert factor == 1.0
 
 
@@ -410,16 +386,12 @@ class TestCalculateAmountFactor:
 class TestCalculateProductFactor:
     def test_advantage_product(self, win_rate_service):
         """优势产品"""
-        factor = win_rate_service.calculate_product_factor(
-        ProductMatchTypeEnum.ADVANTAGE.value
-        )
+        factor = win_rate_service.calculate_product_factor(ProductMatchTypeEnum.ADVANTAGE.value)
         assert factor == 1.15
 
     def test_new_product(self, win_rate_service):
         """新产品"""
-        factor = win_rate_service.calculate_product_factor(
-        ProductMatchTypeEnum.NEW.value
-        )
+        factor = win_rate_service.calculate_product_factor(ProductMatchTypeEnum.NEW.value)
         assert factor == 0.85
 
     def test_unknown_product(self, win_rate_service):
@@ -434,14 +406,14 @@ class TestPredict:
     ):
         """基础预测（无金额、无产品、默认竞争数）"""
         result = win_rate_service.predict(
-        dimension_scores=dimension_scores,
-        salesperson_id=test_salesperson.id,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        estimated_amount=None,
-        competitor_count=3,
-        is_repeat_customer=False,
-        product_match_type=None,
+            dimension_scores=dimension_scores,
+            salesperson_id=test_salesperson.id,
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            estimated_amount=None,
+            competitor_count=3,
+            is_repeat_customer=False,
+            product_match_type=None,
         )
 
         assert "predicted_rate" in result
@@ -459,19 +431,17 @@ class TestPredict:
         # 预测率在合理范围内
         assert 0 <= result["predicted_rate"] <= 1
 
-    def test_high_amount(
-        self, win_rate_service, test_salesperson, test_customer, dimension_scores
-    ):
+    def test_high_amount(self, win_rate_service, test_salesperson, test_customer, dimension_scores):
         """大额项目预测"""
         result = win_rate_service.predict(
-        dimension_scores=dimension_scores,
-        salesperson_id=test_salesperson.id,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        estimated_amount=Decimal("6000000"),
-        competitor_count=3,
-        is_repeat_customer=False,
-        product_match_type=ProductMatchTypeEnum.ADVANTAGE.value,
+            dimension_scores=dimension_scores,
+            salesperson_id=test_salesperson.id,
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            estimated_amount=Decimal("6000000"),
+            competitor_count=3,
+            is_repeat_customer=False,
+            product_match_type=ProductMatchTypeEnum.ADVANTAGE.value,
         )
 
         # 大额项目降低中标概率
@@ -486,21 +456,21 @@ class TestPredict:
     ):
         """极高的预测中标率"""
         result = win_rate_service.predict(
-        dimension_scores=DimensionScore(
-        requirement_maturity=90,
-        technical_feasibility=90,
-        business_feasibility=90,
-        delivery_risk=90,
-        customer_relationship=90,
-        total_score=90,
-        ),
-        salesperson_id=test_salesperson.id,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        estimated_amount=Decimal("50000"),
-        competitor_count=0,
-        is_repeat_customer=True,
-        product_match_type=ProductMatchTypeEnum.ADVANTAGE.value,
+            dimension_scores=DimensionScore(
+                requirement_maturity=90,
+                technical_feasibility=90,
+                business_feasibility=90,
+                delivery_risk=90,
+                customer_relationship=90,
+                total_score=90,
+            ),
+            salesperson_id=test_salesperson.id,
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            estimated_amount=Decimal("50000"),
+            competitor_count=0,
+            is_repeat_customer=True,
+            product_match_type=ProductMatchTypeEnum.ADVANTAGE.value,
         )
 
         # 高评分、小金额、无竞争、回头客、优势产品 = 极高概率
@@ -518,21 +488,21 @@ class TestPredict:
     ):
         """极低的预测中标率"""
         result = win_rate_service.predict(
-        dimension_scores=DimensionScore(
-        requirement_maturity=40,
-        technical_feasibility=40,
-        business_feasibility=40,
-        delivery_risk=40,
-        customer_relationship=40,
-        total_score=40,
-        ),
-        salesperson_id=test_salesperson.id,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        estimated_amount=Decimal("6000000"),
-        competitor_count=6,
-        is_repeat_customer=False,
-        product_match_type=ProductMatchTypeEnum.NEW.value,
+            dimension_scores=DimensionScore(
+                requirement_maturity=40,
+                technical_feasibility=40,
+                business_feasibility=40,
+                delivery_risk=40,
+                customer_relationship=40,
+                total_score=40,
+            ),
+            salesperson_id=test_salesperson.id,
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            estimated_amount=Decimal("6000000"),
+            competitor_count=6,
+            is_repeat_customer=False,
+            product_match_type=ProductMatchTypeEnum.NEW.value,
         )
 
         # 低评分、大金额、激烈竞争、新产品 = 极低概率
@@ -541,30 +511,28 @@ class TestPredict:
         assert result["confidence"] >= 0.40  # 样本量少置信度较低
 
         # 应该有降低资源的建议
-        assert any(
-        "资源评估" in rec or "策略" in rec for rec in result["recommendations"]
-        )
+        assert any("资源评估" in rec or "策略" in rec for rec in result["recommendations"])
 
     def test_recommendations_content(
         self, win_rate_service, test_salesperson, test_customer, dimension_scores
     ):
         """验证建议内容"""
         result = win_rate_service.predict(
-        dimension_scores=DimensionScore(
-        requirement_maturity=50,  # 低分
-        technical_feasibility=50,  # 低分
-        business_feasibility=50,  # 低分
-        delivery_risk=50,  # 低分
-        customer_relationship=50,  # 低分
-        total_score=50,
-        ),
-        salesperson_id=test_salesperson.id,
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        estimated_amount=None,
-        competitor_count=3,
-        is_repeat_customer=False,
-        product_match_type=None,
+            dimension_scores=DimensionScore(
+                requirement_maturity=50,  # 低分
+                technical_feasibility=50,  # 低分
+                business_feasibility=50,  # 低分
+                delivery_risk=50,  # 低分
+                customer_relationship=50,  # 低分
+                total_score=50,
+            ),
+            salesperson_id=test_salesperson.id,
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            estimated_amount=None,
+            competitor_count=3,
+            is_repeat_customer=False,
+            product_match_type=None,
         )
 
         # 验证所有低分项都有建议
@@ -589,42 +557,42 @@ class TestBatchPredict:
     def test_multiple_leads(self, win_rate_service, test_salesperson, test_customer):
         """批量预测多个线索"""
         leads = [
-        {
-        "lead_id": 1,
-        "dimension_scores": {
-        "requirement_maturity": 80,
-        "technical_feasibility": 80,
-        "business_feasibility": 80,
-        "delivery_risk": 80,
-        "customer_relationship": 80,
-        "total_score": 80,
-        },
-        "salesperson_id": test_salesperson.id,
-        "customer_id": test_customer.id,
-        "customer_name": test_customer.customer_name,
-        "estimated_amount": None,
-        "competitor_count": 2,
-        "is_repeat_customer": False,
-        "product_match_type": None,
-        },
-        {
-        "lead_id": 2,
-        "dimension_scores": {
-        "requirement_maturity": 60,
-        "technical_feasibility": 60,
-        "business_feasibility": 60,
-        "delivery_risk": 60,
-        "customer_relationship": 60,
-        "total_score": 60,
-        },
-        "salesperson_id": test_salesperson.id,
-        "customer_id": test_customer.id,
-        "customer_name": test_customer.customer_name,
-        "estimated_amount": Decimal("500000"),
-        "competitor_count": 4,
-        "is_repeat_customer": False,
-        "product_match_type": ProductMatchTypeEnum.NEW.value,
-        },
+            {
+                "lead_id": 1,
+                "dimension_scores": {
+                    "requirement_maturity": 80,
+                    "technical_feasibility": 80,
+                    "business_feasibility": 80,
+                    "delivery_risk": 80,
+                    "customer_relationship": 80,
+                    "total_score": 80,
+                },
+                "salesperson_id": test_salesperson.id,
+                "customer_id": test_customer.id,
+                "customer_name": test_customer.customer_name,
+                "estimated_amount": None,
+                "competitor_count": 2,
+                "is_repeat_customer": False,
+                "product_match_type": None,
+            },
+            {
+                "lead_id": 2,
+                "dimension_scores": {
+                    "requirement_maturity": 60,
+                    "technical_feasibility": 60,
+                    "business_feasibility": 60,
+                    "delivery_risk": 60,
+                    "customer_relationship": 60,
+                    "total_score": 60,
+                },
+                "salesperson_id": test_salesperson.id,
+                "customer_id": test_customer.id,
+                "customer_name": test_customer.customer_name,
+                "estimated_amount": Decimal("500000"),
+                "competitor_count": 4,
+                "is_repeat_customer": False,
+                "product_match_type": ProductMatchTypeEnum.NEW.value,
+            },
         ]
 
         results = win_rate_service.batch_predict(leads)
@@ -640,12 +608,12 @@ class TestBatchPredict:
         """错误处理"""
         # 传入无效的dimension_scores
         leads = [
-        {
-        "lead_id": 1,
-        "dimension_scores": {
-        "requirement_maturity": 200,  # 无效的分数 > 100
-        },
-        },
+            {
+                "lead_id": 1,
+                "dimension_scores": {
+                    "requirement_maturity": 200,  # 无效的分数 > 100
+                },
+            },
         ]
 
         results = win_rate_service.batch_predict(leads)
@@ -722,9 +690,9 @@ class TestGetWinRateDistribution:
         assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value][
             "actual_win_rate"
         ] == pytest.approx(0.50, abs=0.1)
-        assert distribution[WinProbabilityLevelEnum.HIGH.value][
-            "actual_win_rate"
-        ] == pytest.approx(0.50, abs=0.1)
+        assert distribution[WinProbabilityLevelEnum.HIGH.value]["actual_win_rate"] == pytest.approx(
+            0.50, abs=0.1
+        )
         assert distribution[WinProbabilityLevelEnum.MEDIUM.value][
             "actual_win_rate"
         ] == pytest.approx(0.50, abs=0.1)
@@ -735,24 +703,24 @@ class TestGetWinRateDistribution:
 
         # 创建不同日期的项目
         old_project = Project(
-        project_code="PJ-OLD",
-        project_name="旧项目",
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        salesperson_id=test_salesperson.id,
-        outcome=LeadOutcomeEnum.WON.value,
-        predicted_win_rate=Decimal("0.8"),
-        created_at=datetime.now() - timedelta(days=40),
+            project_code="PJ-OLD",
+            project_name="旧项目",
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            salesperson_id=test_salesperson.id,
+            outcome=LeadOutcomeEnum.WON.value,
+            predicted_win_rate=Decimal("0.8"),
+            created_at=datetime.now() - timedelta(days=40),
         )
         new_project = Project(
-        project_code="PJ-NEW",
-        project_name="新项目",
-        customer_id=test_customer.id,
-        customer_name=test_customer.customer_name,
-        salesperson_id=test_salesperson.id,
-        outcome=LeadOutcomeEnum.LOST.value,
-        predicted_win_rate=Decimal("0.5"),
-        created_at=datetime.now(),
+            project_code="PJ-NEW",
+            project_name="新项目",
+            customer_id=test_customer.id,
+            customer_name=test_customer.customer_name,
+            salesperson_id=test_salesperson.id,
+            outcome=LeadOutcomeEnum.LOST.value,
+            predicted_win_rate=Decimal("0.5"),
+            created_at=datetime.now(),
         )
 
         win_rate_service.db.add(old_project)
@@ -761,7 +729,7 @@ class TestGetWinRateDistribution:
 
         # 查询最近30天
         distribution = win_rate_service.get_win_rate_distribution(
-        start_date=today - timedelta(days=31)
+            start_date=today - timedelta(days=31)
         )
 
         # 应该只包含新项目（注意：predicted_win_rate=0.5 对应 MEDIUM 等级）
@@ -771,7 +739,7 @@ class TestGetWinRateDistribution:
 
         # 查询指定范围
         distribution = win_rate_service.get_win_rate_distribution(
-        start_date=today - timedelta(days=60), end_date=today - timedelta(days=31)
+            start_date=today - timedelta(days=60), end_date=today - timedelta(days=31)
         )
 
         # 应该只包含旧项目（predicted_win_rate=0.8 对应 VERY_HIGH 等级）
@@ -780,30 +748,28 @@ class TestGetWinRateDistribution:
 
 
 class TestValidateModelAccuracy:
-    def test_accuracy_calculation(
-        self, win_rate_service, test_customer, test_salesperson
-    ):
+    def test_accuracy_calculation(self, win_rate_service, test_customer, test_salesperson):
         """验证模型准确度计算"""
         # 创建一组项目
         outcomes = [
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.LOST.value,
-        LeadOutcomeEnum.LOST.value,
-        LeadOutcomeEnum.LOST.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.LOST.value,
+            LeadOutcomeEnum.LOST.value,
+            LeadOutcomeEnum.LOST.value,
         ]
 
         for i, outcome in enumerate(outcomes):
             project = Project(
-            project_code=f"PJ-ACC-{i}",
-            project_name=f"准确度测试{i}",
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            salesperson_id=test_salesperson.id,
-            outcome=outcome,
-            predicted_win_rate=Decimal("0.60"),
-            created_at=datetime.now(),
+                project_code=f"PJ-ACC-{i}",
+                project_name=f"准确度测试{i}",
+                customer_id=test_customer.id,
+                customer_name=test_customer.customer_name,
+                salesperson_id=test_salesperson.id,
+                outcome=outcome,
+                predicted_win_rate=Decimal("0.60"),
+                created_at=datetime.now(),
             )
             win_rate_service.db.add(project)
 

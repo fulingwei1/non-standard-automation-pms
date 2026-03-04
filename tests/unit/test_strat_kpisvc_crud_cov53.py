@@ -2,17 +2,18 @@
 """
 Unit tests for app/services/strategy/kpi_service/crud.py
 """
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.strategy.kpi_service.crud import (
         create_kpi,
+        delete_kpi,
         get_kpi,
         list_kpis,
         update_kpi,
-        delete_kpi,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -44,6 +45,7 @@ def _make_create_data(**kwargs):
 # create_kpi
 # ---------------------------------------------------------------------------
 
+
 def test_create_kpi_adds_and_commits():
     db = MagicMock()
     data = _make_create_data()
@@ -64,6 +66,7 @@ def test_create_kpi_with_data_source_config():
 # get_kpi
 # ---------------------------------------------------------------------------
 
+
 def test_get_kpi_found():
     db = MagicMock()
     mock_kpi = MagicMock()
@@ -82,6 +85,7 @@ def test_get_kpi_not_found():
 # ---------------------------------------------------------------------------
 # update_kpi
 # ---------------------------------------------------------------------------
+
 
 def test_update_kpi_not_found_returns_none():
     db = MagicMock()
@@ -107,6 +111,7 @@ def test_update_kpi_applies_fields():
 # delete_kpi
 # ---------------------------------------------------------------------------
 
+
 def test_delete_kpi_not_found_returns_false():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -128,6 +133,7 @@ def test_delete_kpi_soft_deletes():
 # list_kpis
 # ---------------------------------------------------------------------------
 
+
 def test_list_kpis_returns_items_and_total():
     db = MagicMock()
     mock_items = [MagicMock(), MagicMock()]
@@ -137,7 +143,10 @@ def test_list_kpis_returns_items_and_total():
     q.count.return_value = 2
     q.order_by.return_value.all.return_value = mock_items
     db.query.return_value = q
-    with patch("app.services.strategy.kpi_service.crud.apply_pagination", side_effect=lambda q, s, l: q.order_by()):
+    with patch(
+        "app.services.strategy.kpi_service.crud.apply_pagination",
+        side_effect=lambda q, s, l: q.order_by(),
+    ):
         # Just verify structure without full query chain
         pass
     # Simpler: patch apply_pagination

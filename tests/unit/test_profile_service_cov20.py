@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第二十批 - profile_service (engineer_performance) 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.engineer_performance.profile_service")
 
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
 from app.services.engineer_performance.profile_service import ProfileService
 
 
@@ -60,10 +62,13 @@ class TestCreateProfile:
         db.query.return_value = q
 
         from app.schemas.engineer_performance import EngineerProfileCreate
+
         schema = MagicMock(spec=EngineerProfileCreate)
         schema.model_dump = MagicMock(return_value={"user_id": 1, "skill_level": "中级"})
 
-        with patch("app.services.engineer_performance.profile_service.EngineerProfile") as MockProfile:
+        with patch(
+            "app.services.engineer_performance.profile_service.EngineerProfile"
+        ) as MockProfile:
             mock_profile = MagicMock()
             MockProfile.return_value = mock_profile
             with patch("app.services.engineer_performance.profile_service.save_obj") as mock_save:
@@ -84,6 +89,7 @@ class TestUpdateProfile:
         q.first.return_value = None
         db.query.return_value = q
         from app.schemas.engineer_performance import EngineerProfileUpdate
+
         schema = MagicMock(spec=EngineerProfileUpdate)
         schema.model_dump = MagicMock(return_value={})
         result = svc.update_profile(user_id=999, data=schema)
@@ -98,6 +104,7 @@ class TestUpdateProfile:
         q.first.return_value = profile
         db.query.return_value = q
         from app.schemas.engineer_performance import EngineerProfileUpdate
+
         schema = MagicMock(spec=EngineerProfileUpdate)
         schema.model_dump = MagicMock(return_value={"skill_level": "高级"})
         with patch("app.services.engineer_performance.profile_service.save_obj") as mock_save:

@@ -38,10 +38,15 @@ class TestSyncContractToProject:
 
     def test_amount_synced(self, service, db):
         contract = MagicMock(
-            project_id=1, contract_amount=Decimal("100000"),
-            signed_date=None, delivery_deadline=None, quote_version=None
+            project_id=1,
+            contract_amount=Decimal("100000"),
+            signed_date=None,
+            delivery_deadline=None,
+            quote_version=None,
         )
-        project = MagicMock(contract_amount=Decimal("50000"), contract_date=None, planned_end_date=None)
+        project = MagicMock(
+            contract_amount=Decimal("50000"), contract_date=None, planned_end_date=None
+        )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = service.sync_contract_to_project(1)
         assert result["success"] is True
@@ -49,10 +54,15 @@ class TestSyncContractToProject:
 
     def test_no_changes(self, service, db):
         contract = MagicMock(
-            project_id=1, contract_amount=Decimal("100000"),
-            signed_date=None, delivery_deadline=None, quote_version=None
+            project_id=1,
+            contract_amount=Decimal("100000"),
+            signed_date=None,
+            delivery_deadline=None,
+            quote_version=None,
         )
-        project = MagicMock(contract_amount=Decimal("100000"), contract_date=None, planned_end_date=None)
+        project = MagicMock(
+            contract_amount=Decimal("100000"), contract_date=None, planned_end_date=None
+        )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = service.sync_contract_to_project(1)
         assert "无需同步" in result["message"]

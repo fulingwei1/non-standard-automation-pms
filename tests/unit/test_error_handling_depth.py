@@ -16,15 +16,15 @@ D4组 - 异常处理 & 安全边界测试
 import re
 import time
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from fastapi import HTTPException
 
-
 # =============================================================================
 # 1. 数据库异常处理
 # =============================================================================
+
 
 class TestDatabaseErrorHandling:
     """DB 连接 / 提交异常时的服务行为"""
@@ -121,6 +121,7 @@ class TestDatabaseErrorHandling:
 # 2. 空值 / None 边界测试
 # =============================================================================
 
+
 class TestNullAndBoundaryValues:
     """None、负数、零等边界输入不应导致系统崩溃"""
 
@@ -174,18 +175,14 @@ class TestNullAndBoundaryValues:
         """EVM：PV=0 且 EV=0 时不崩溃，返回 0"""
         from app.services.evm_service import EVMCalculator
 
-        result = EVMCalculator.calculate_schedule_variance(
-            ev=Decimal("0"), pv=Decimal("0")
-        )
+        result = EVMCalculator.calculate_schedule_variance(ev=Decimal("0"), pv=Decimal("0"))
         assert result == Decimal("0")
 
     def test_evm_schedule_variance_with_none_like_zero_values(self):
         """EVM：负 PV（进度落后）时结果为负数，不崩溃"""
         from app.services.evm_service import EVMCalculator
 
-        result = EVMCalculator.calculate_schedule_variance(
-            ev=Decimal("0"), pv=Decimal("10000")
-        )
+        result = EVMCalculator.calculate_schedule_variance(ev=Decimal("0"), pv=Decimal("10000"))
         assert result < Decimal("0")
 
     def test_update_obj_with_empty_data_leaves_object_unchanged(self):
@@ -224,6 +221,7 @@ class TestNullAndBoundaryValues:
 # 3. 库存安全约束（并发安全 / 负库存防护）
 # =============================================================================
 
+
 class TestInventoryStockSafety:
     """库存扣减业务约束：不允许超额扣减，数据一致性保证"""
 
@@ -256,8 +254,8 @@ class TestInventoryStockSafety:
     def test_issue_raises_when_stock_insufficient(self):
         """库存扣减：可用库存 3，尝试扣 10 → InsufficientStockError"""
         from app.services.inventory_management_service import (
-            InventoryManagementService,
             InsufficientStockError,
+            InventoryManagementService,
         )
 
         service, db, _ = self._make_service(Decimal("3"))
@@ -305,9 +303,9 @@ class TestInventoryStockSafety:
             pass  # 期望的行为：报错而非写入负数
 
         # 库存不应被修改为负数（mock 中 available_quantity 应未被减为负数）
-        assert mock_stock.available_quantity >= Decimal("0") or \
-               mock_stock.available_quantity == Decimal("3"), \
-               "库存量不应变为负数"
+        assert mock_stock.available_quantity >= Decimal(
+            "0"
+        ) or mock_stock.available_quantity == Decimal("3"), "库存量不应变为负数"
 
     def test_db_flush_called_for_transactional_integrity(self):
         """update_stock 正常出库后应调用 db.flush 保证事务一致性"""
@@ -346,14 +344,13 @@ class TestInventoryStockSafety:
 # 4. 输入格式验证
 # =============================================================================
 
+
 class TestInputFormatValidation:
     """项目编号、顺序编号等格式符合业务规范"""
 
     @patch("app.utils.number_generator.apply_like_filter")
     @patch("app.utils.number_generator.datetime")
-    def test_project_code_matches_pj_yymmdd_xxx_format(
-        self, mock_dt, mock_filter
-    ):
+    def test_project_code_matches_pj_yymmdd_xxx_format(self, mock_dt, mock_filter):
         """generate_project_code：格式必须是 PJ + 6位日期 + 3位序号"""
         from app.utils.project_utils import generate_project_code
 
@@ -368,8 +365,7 @@ class TestInputFormatValidation:
 
         code = generate_project_code(db)
 
-        assert re.match(r"^PJ\d{6}\d{3}$", code), \
-            f"项目编号格式不合规: {code!r}，期望 PJyymmddxxx"
+        assert re.match(r"^PJ\d{6}\d{3}$", code), f"项目编号格式不合规: {code!r}，期望 PJyymmddxxx"
 
     @patch("app.utils.number_generator.apply_like_filter")
     @patch("app.utils.number_generator.datetime")
@@ -391,12 +387,10 @@ class TestInputFormatValidation:
 
     @patch("app.utils.number_generator.apply_like_filter")
     @patch("app.utils.number_generator.datetime")
-    def test_project_code_increments_sequence_when_existing(
-        self, mock_dt, mock_filter
-    ):
+    def test_project_code_increments_sequence_when_existing(self, mock_dt, mock_filter):
         """generate_project_code：已存在记录时序号自增"""
-        from app.utils.project_utils import generate_project_code
         from app.models.project import Project
+        from app.utils.project_utils import generate_project_code
 
         mock_dt.now.return_value.strftime.return_value = "260217"
 
@@ -416,9 +410,7 @@ class TestInputFormatValidation:
 
     @patch("app.utils.number_generator.apply_like_filter")
     @patch("app.utils.number_generator.datetime")
-    def test_sequential_no_recovers_from_corrupt_sequence(
-        self, mock_dt, mock_filter
-    ):
+    def test_sequential_no_recovers_from_corrupt_sequence(self, mock_dt, mock_filter):
         """generate_sequential_no：序号字段格式损坏时 fallback 到 1"""
         from app.utils.number_generator import generate_sequential_no
 
@@ -459,6 +451,7 @@ class TestInputFormatValidation:
 # 5. 大数据量 / 分页性能
 # =============================================================================
 
+
 class TestPaginationPerformance:
     """分页查询在大数据集下耗时可控（mock 场景）
 
@@ -477,13 +470,7 @@ class TestPaginationPerformance:
 
         # search_projects_optimized 内部的分页链路
         (
-            db.query.return_value
-            .options.return_value
-            .filter.return_value
-            .order_by.return_value
-            .offset.return_value
-            .limit.return_value
-            .all.return_value
+            db.query.return_value.options.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value
         ) = fake_rows
 
         optimizer = QueryOptimizer(db)

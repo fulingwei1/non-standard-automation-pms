@@ -12,11 +12,9 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import MetaData, inspect, text
-
 from seed_complete_demo_data import (
-    CORE_TABLE_EXACT,
     CORE_PREFIXES,
+    CORE_TABLE_EXACT,
     CheckResult,
     business_rule_checks,
     classify_module,
@@ -25,6 +23,7 @@ from seed_complete_demo_data import (
     fk_integrity_issues,
     is_core_table,
 )
+from sqlalchemy import MetaData, inspect, text
 
 REPORT_PATH = Path("reports/verify_seed_data_report.md")
 
@@ -32,7 +31,9 @@ REPORT_PATH = Path("reports/verify_seed_data_report.md")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Verify seeded data quality and coverage.")
     parser.add_argument("--database-url", default=None, help="Override database URL")
-    parser.add_argument("--report-path", default=str(REPORT_PATH), help="Markdown report output path")
+    parser.add_argument(
+        "--report-path", default=str(REPORT_PATH), help="Markdown report output path"
+    )
     return parser.parse_args()
 
 
@@ -73,7 +74,9 @@ def write_report(
         f"- {'PASS' if core_coverage >= 100.0 else 'FAIL'} core tables 100% non-empty "
         f"({core_non_empty}/{len(core_tables)})"
     )
-    lines.append(f"- {'PASS' if not fk_issues else 'FAIL'} no FK orphan records (issues: {len(fk_issues)})")
+    lines.append(
+        f"- {'PASS' if not fk_issues else 'FAIL'} no FK orphan records (issues: {len(fk_issues)})"
+    )
     lines.append(
         f"- {'PASS' if all_checks_pass else 'FAIL'} business logic checks "
         f"({sum(1 for item in business_checks if item.passed)}/{len(business_checks)})"
@@ -86,7 +89,9 @@ def write_report(
         lines.append("| Child Table | Child Column | Parent Table | Parent Column | Orphans |")
         lines.append("| --- | --- | --- | --- | ---: |")
         for table_name, child_col, parent_table, parent_col, orphan_count in fk_issues[:300]:
-            lines.append(f"| {table_name} | {child_col} | {parent_table} | {parent_col} | {orphan_count} |")
+            lines.append(
+                f"| {table_name} | {child_col} | {parent_table} | {parent_col} | {orphan_count} |"
+            )
         if len(fk_issues) > 300:
             lines.append("")
             lines.append(f"- (truncated, total issues: {len(fk_issues)})")
@@ -134,7 +139,9 @@ def main() -> int:
             conn.execute(text("PRAGMA foreign_keys = ON"))
             conn.commit()
 
-        table_counts = {name: count_rows(conn, table_obj) for name, table_obj in tables_by_name.items()}
+        table_counts = {
+            name: count_rows(conn, table_obj) for name, table_obj in tables_by_name.items()
+        }
         fk_issues = fk_integrity_issues(conn, inspector_obj, table_names)
         checks = business_rule_checks(conn, tables_by_name)
 

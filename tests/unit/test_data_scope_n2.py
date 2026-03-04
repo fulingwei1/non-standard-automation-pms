@@ -6,9 +6,10 @@
       _get_subtree_ids_recursive 的多层递归,
       _find_ancestor_by_type 的深度限制
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.models.permission import ScopeType
 from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
@@ -23,6 +24,7 @@ def make_user(user_id=1, is_superuser=False):
 
 # ======================= apply_data_scope BUSINESS_UNIT scope =======================
 
+
 class TestApplyDataScopeBUScope:
     def test_bu_scope_with_accessible_orgs(self):
         db = MagicMock()
@@ -33,12 +35,14 @@ class TestApplyDataScopeBUScope:
         query.column_descriptions = [{"entity": model_cls}]
         query.filter.return_value = query
 
-        with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps, \
-             patch.object(DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2, 3]):
+        with (
+            patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps,
+            patch.object(
+                DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2, 3]
+            ),
+        ):
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.BUSINESS_UNIT.value}
-            result = DataScopeServiceEnhanced.apply_data_scope(
-                query, db, user, "project"
-            )
+            result = DataScopeServiceEnhanced.apply_data_scope(query, db, user, "project")
         query.filter.assert_called()
 
     def test_bu_scope_uses_department_id_fallback(self):
@@ -51,16 +55,17 @@ class TestApplyDataScopeBUScope:
         query.column_descriptions = [{"entity": model_cls}]
         query.filter.return_value = query
 
-        with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps, \
-             patch.object(DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2]):
+        with (
+            patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps,
+            patch.object(DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2]),
+        ):
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.BUSINESS_UNIT.value}
-            result = DataScopeServiceEnhanced.apply_data_scope(
-                query, db, user, "project"
-            )
+            result = DataScopeServiceEnhanced.apply_data_scope(query, db, user, "project")
         query.filter.assert_called()
 
 
 # ======================= apply_data_scope PROJECT scope =======================
+
 
 class TestApplyDataScopeProjectScope:
     def test_project_scope_with_owner_field(self):
@@ -72,12 +77,12 @@ class TestApplyDataScopeProjectScope:
         query.column_descriptions = [{"entity": model_cls}]
         query.filter.return_value = query
 
-        with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps, \
-             patch("app.services.data_scope_service_enhanced.or_"):
+        with (
+            patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps,
+            patch("app.services.data_scope_service_enhanced.or_"),
+        ):
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.PROJECT.value}
-            result = DataScopeServiceEnhanced.apply_data_scope(
-                query, db, user, "project"
-            )
+            result = DataScopeServiceEnhanced.apply_data_scope(query, db, user, "project")
         assert result is not None
 
     def test_project_scope_with_pm_field(self):
@@ -91,8 +96,10 @@ class TestApplyDataScopeProjectScope:
         query.column_descriptions = [{"entity": model_cls}]
         query.filter.return_value = query
 
-        with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps, \
-             patch("app.services.data_scope_service_enhanced.or_"):
+        with (
+            patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps,
+            patch("app.services.data_scope_service_enhanced.or_"),
+        ):
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.PROJECT.value}
             result = DataScopeServiceEnhanced.apply_data_scope(
                 query, db, user, "project", pm_field="pm_id"
@@ -110,13 +117,12 @@ class TestApplyDataScopeProjectScope:
 
         with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps:
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.PROJECT.value}
-            result = DataScopeServiceEnhanced.apply_data_scope(
-                query, db, user, "project"
-            )
+            result = DataScopeServiceEnhanced.apply_data_scope(query, db, user, "project")
         query.filter.assert_called()
 
 
 # ======================= can_access_data PROJECT scope =======================
+
 
 class TestCanAccessDataProjectScope:
     def test_project_scope_owner_match(self):
@@ -169,6 +175,7 @@ class TestCanAccessDataProjectScope:
 
 # ======================= can_access_data DEPARTMENT scope inaccessible =======================
 
+
 class TestCanAccessDataDeptScopeInaccessible:
     def test_dept_scope_not_accessible(self):
         """数据org_unit_id不在可访问列表中，拒绝访问"""
@@ -177,16 +184,19 @@ class TestCanAccessDataDeptScopeInaccessible:
         data = MagicMock()
         data.org_unit_id = 999
 
-        with patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps, \
-             patch.object(DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2, 3]):
+        with (
+            patch("app.services.data_scope_service_enhanced.PermissionService") as mock_ps,
+            patch.object(
+                DataScopeServiceEnhanced, "get_accessible_org_units", return_value=[1, 2, 3]
+            ),
+        ):
             mock_ps.get_user_data_scopes.return_value = {"project": ScopeType.DEPARTMENT.value}
-            result = DataScopeServiceEnhanced.can_access_data(
-                db, user, "project", data
-            )
+            result = DataScopeServiceEnhanced.can_access_data(db, user, "project", data)
         assert result is False
 
 
 # ======================= _find_ancestor_by_type 深度限制 =======================
+
 
 class TestFindAncestorDepthLimit:
     def test_depth_limit_prevents_infinite_loop(self):
@@ -211,15 +221,19 @@ class TestFindAncestorDepthLimit:
 
 # ======================= _get_subtree_ids_recursive 多层 =======================
 
+
 class TestSubtreeRecursiveMultiLevel:
     def test_three_level_hierarchy(self):
         db = MagicMock()
 
         # Level structure: 1 → 2 → 3 → (no children)
-        child2 = MagicMock(); child2.id = 2
-        child3 = MagicMock(); child3.id = 3
+        child2 = MagicMock()
+        child2.id = 2
+        child3 = MagicMock()
+        child3.id = 3
 
         call_count = [0]
+
         def all_side():
             call_count[0] += 1
             if call_count[0] == 1:
@@ -237,6 +251,7 @@ class TestSubtreeRecursiveMultiLevel:
 
 # ======================= normalize_scope_type 通过值 =======================
 
+
 class TestNormalizeScopeTypeEdgeCases:
     def test_empty_string_passthrough(self):
         result = DataScopeServiceEnhanced.normalize_scope_type("")
@@ -249,5 +264,6 @@ class TestNormalizeScopeTypeEdgeCases:
 
     def test_all_value_mapped(self):
         from app.models.enums import DataScopeEnum
+
         result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.ALL.value)
         assert result == DataScopeEnum.ALL.value

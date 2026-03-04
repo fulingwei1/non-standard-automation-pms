@@ -31,6 +31,7 @@ os.environ["RATE_LIMIT_DEFAULT"] = "99999/minute"
 
 # Mock slowapi limiter to be a no-op during tests
 from unittest.mock import patch as _patch
+
 _noop_decorator = lambda *a, **kw: (lambda f: f)
 _mock_limiter = MagicMock()
 _mock_limiter.limit = _noop_decorator
@@ -39,13 +40,15 @@ _mock_limiter.shared_limit = _noop_decorator
 # sys.modules.setdefault("slowapi", MagicMock())  # This breaks imports!
 # Patch the limiter instances so they don't actually rate-limit
 import importlib
+
 try:
     import app.core.rate_limiting as _rl_mod
+
     _rl_mod.limiter.limit = _noop_decorator
     _rl_mod.limiter.shared_limit = _noop_decorator
-    if hasattr(_rl_mod, 'user_limiter'):
+    if hasattr(_rl_mod, "user_limiter"):
         _rl_mod.user_limiter.limit = _noop_decorator
-    if hasattr(_rl_mod, 'strict_limiter'):
+    if hasattr(_rl_mod, "strict_limiter"):
         _rl_mod.strict_limiter.limit = _noop_decorator
 except Exception:
     pass
@@ -60,6 +63,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+
 # ---------------------------------------------------------------------------
 # LAZY IMPORTS: These heavy app imports are deferred to fixtures so that
 # unit tests (tests/unit/) can run WITHOUT loading the entire FastAPI app.
@@ -67,30 +71,40 @@ from sqlalchemy.orm import Session
 # ---------------------------------------------------------------------------
 def _get_app():
     from app.main import app as _app
+
     return _app
+
 
 def _get_settings():
     from app.core.config import settings as _settings
+
     return _settings
+
 
 def _get_security():
     from app.core.security import get_password_hash, verify_password
+
     return get_password_hash, verify_password
+
 
 def _get_session_local():
     from app.models.base import SessionLocal, get_engine
+
     return SessionLocal, get_engine
+
 
 def _get_permission_cache_service():
     from app.services.permission_cache_service import get_permission_cache_service
+
     return get_permission_cache_service
+
 
 # Keep these as module-level for code that reads them directly
 # but guard with a try to avoid breaking unit tests
 try:
     import os as _os
+
     if _os.environ.get("CONFTEST_EAGER_LOAD", "0") == "1":
-        from app.services.permission_cache_service import get_permission_cache_service
         from app.core.config import settings
         from app.core.security import get_password_hash, verify_password
         from app.main import app
@@ -99,8 +113,13 @@ try:
         from app.models.project import Customer, Machine, Project, ProjectMember
         from app.models.task_center import TaskApprovalWorkflow, TaskUnified
         from app.models.user import (
-            ApiPermission, Role, RoleApiPermission, User, UserRole,
+            ApiPermission,
+            Role,
+            RoleApiPermission,
+            User,
+            UserRole,
         )
+        from app.services.permission_cache_service import get_permission_cache_service
     else:
         # Lazy stubs — will be set properly inside fixtures when needed
         app = None
@@ -153,6 +172,7 @@ def _ensure_login_user(
     )
     if user.is_superuser != is_superuser:
         from app.models.user import User as _U
+
         db.query(_U).filter(_U.id == user.id).update({"is_superuser": is_superuser})
         db.commit()
     return user
@@ -170,6 +190,9 @@ def _init_test_database() -> None:
     from datetime import date
 
     import app.models  # noqa: F401  # register all models into Base.metadata
+
+    # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
+    from app.core.config import settings as _settings
     from app.models.acceptance import (
         AcceptanceOrder,
         AcceptanceOrderItem,
@@ -177,16 +200,13 @@ def _init_test_database() -> None:
         TemplateCategory,
         TemplateCheckItem,
     )
+    from app.models.base import get_engine as _get_engine
     from app.models.base import get_session, init_db
-    from app.models.vendor import Vendor
+    from app.models.organization import Employee
     from app.models.project import Customer, Machine, Project, ProjectMember
     from app.models.task_center import TaskApprovalWorkflow, TaskUnified
     from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
-    from app.models.organization import Employee
-
-    # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
-    from app.core.config import settings as _settings
-    from app.models.base import get_engine as _get_engine
+    from app.models.vendor import Vendor
 
     def _resolve_sqlite_path() -> Optional[Path]:
         db_url = os.getenv("DATABASE_URL") or _settings.DATABASE_URL
@@ -355,9 +375,10 @@ def _init_test_database() -> None:
 @pytest.fixture(scope="module")
 def client() -> Generator:
     # Lazy import to avoid loading the full app during unit test collection
-    from app.main import app as _fastapi_app
     from app.core.config import settings as _settings  # noqa: F401
+    from app.main import app as _fastapi_app
     from app.models.base import SessionLocal, get_engine  # noqa: F401
+
     # Disable rate limiting during tests to avoid flaky 429 responses from slowapi
     # when multiple fixtures log in repeatedly.
     if getattr(_fastapi_app.state, "limiter", None) is not None:
@@ -366,9 +387,7 @@ def client() -> Generator:
         yield c
 
 
-def _get_auth_token(
-    db: Session, username: str = "admin", password: str = "admin123"
-) -> str:
+def _get_auth_token(db: Session, username: str = "admin", password: str = "admin123") -> str:
     """
     获取认证 token 的辅助函数
 
@@ -380,8 +399,9 @@ def _get_auth_token(
     Returns:
         JWT token 字符串
     """
-    from app.main import app
     from fastapi.testclient import TestClient
+
+    from app.main import app
 
     # 确保用户存在
     _ensure_login_user(
@@ -407,9 +427,7 @@ def _get_auth_token(
     if response.status_code == 200:
         return response.json()["access_token"]
     else:
-        raise ValueError(
-            f"Failed to get auth token: {response.status_code} - {response.text}"
-        )
+        raise ValueError(f"Failed to get auth token: {response.status_code} - {response.text}")
 
 
 @pytest.fixture(scope="module")
@@ -420,8 +438,9 @@ def admin_token(client: TestClient) -> str:
     如果是在隔离的测试环境中，应该先创建 admin 用户。
     由于目前我们没有隔离数据库，这里尝试直接登录。
     """
-    from app.models.base import SessionLocal as _SL
     from app.core.config import settings as _settings
+    from app.models.base import SessionLocal as _SL
+
     # Ensure an admin user exists so API/integration tests can run instead of skipping.
     db = _SL()
     try:
@@ -455,6 +474,7 @@ def admin_token(client: TestClient) -> str:
 def normal_user_token(client: TestClient) -> str:
     """获取普通用户 token"""
     from app.models.base import SessionLocal as _SL
+
     db = _SL()
     try:
         _ensure_login_user(
@@ -484,6 +504,7 @@ def normal_user_token(client: TestClient) -> str:
 def sales_user_token(client: TestClient) -> str:
     """获取销售用户 token"""
     from app.models.base import SessionLocal as _SL
+
     db = _SL()
     try:
         # Sales permission matrix varies across deployments; use superuser to keep
@@ -515,6 +536,7 @@ def sales_user_token(client: TestClient) -> str:
 def finance_user_token(client: TestClient) -> str:
     """获取财务用户 token"""
     from app.models.base import SessionLocal as _SL
+
     db = _SL()
     try:
         _ensure_login_user(
@@ -556,6 +578,7 @@ def db_session() -> Generator[Session, None, None]:
     init_db(drop_all=True) 保证。
     """
     from app.models.base import SessionLocal as _SL
+
     session: Session = _SL()
 
     # 禁用外键约束，参考 unit tests 模式
@@ -583,6 +606,7 @@ def cleanup_permission_cache():
     """每个测试前后清理权限缓存，防止 ID 重复导致的测试污染"""
     try:
         from app.services.permission_cache_service import get_permission_cache_service as _gpcs
+
         cache_service = _gpcs()
         cache_service.invalidate_all()
         yield
@@ -650,6 +674,7 @@ ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
 
 def _ensure_permission(db: Session, code: str, name: str) -> ApiPermission:
     from app.models.user import ApiPermission as _Perm
+
     permission = db.query(_Perm).filter(_Perm.perm_code == code).first()
     if permission:
         return permission
@@ -676,6 +701,7 @@ def _get_or_create_employee(
     role: str = "ENGINEER",
 ) -> Employee:
     from app.models.organization import Employee as _Emp
+
     employee = db.query(_Emp).filter(_Emp.employee_code == code).first()
     if employee:
         updated = False
@@ -716,8 +742,10 @@ def _get_or_create_user(
     department: str,
     employee_role: str = "ENGINEER",
 ) -> User:
+    from app.core.security import get_password_hash as _gph
+    from app.core.security import verify_password as _vp
     from app.models.user import User as _User
-    from app.core.security import get_password_hash as _gph, verify_password as _vp
+
     user = db.query(_User).filter(_User.username == username).first()
     if user:
         updated = False
@@ -764,6 +792,7 @@ def _get_or_create_user(
 def _ensure_role(db: Session, role_code: str, role_name: str) -> Role:
     """确保角色字典中存在指定角色编码"""
     from app.models.user import Role as _Role
+
     role = db.query(_Role).filter(_Role.role_code == role_code).first()
     if role:
         return role
@@ -784,6 +813,7 @@ def _ensure_role_permissions(
     db: Session, role: Role, permission_specs: Iterable[Tuple[str, str]]
 ) -> None:
     from app.models.user import RoleApiPermission as _RAP
+
     changed = False
     for code, name in permission_specs:
         permission = _ensure_permission(db, code, name)
@@ -804,11 +834,8 @@ def _ensure_role_permissions(
 
 def _assign_role_to_user(db: Session, user: User, role: Role) -> None:
     from app.models.user import UserRole as _UR
-    exists = (
-        db.query(_UR)
-        .filter(_UR.user_id == user.id, _UR.role_id == role.id)
-        .first()
-    )
+
+    exists = db.query(_UR).filter(_UR.user_id == user.id, _UR.role_id == role.id).first()
     if exists:
         return
     db.add(_UR(user_id=user.id, role_id=role.id))
@@ -864,9 +891,7 @@ def regular_user(db_session: Session) -> User:
 
 
 def _ensure_customer(db: Session) -> Customer:
-    customer = (
-        db.query(Customer).filter(Customer.customer_code == "CUST-ENGINEER").first()
-    )
+    customer = db.query(Customer).filter(Customer.customer_code == "CUST-ENGINEER").first()
     if not customer:
         customer = Customer(
             customer_code="CUST-ENGINEER",
@@ -943,11 +968,7 @@ def create_test_task(
         session: Session = overrides.pop("db", db_session)
         task_code = overrides.get("task_code", f"TASK-{uuid.uuid4().hex[:10].upper()}")
 
-        existing = (
-            session.query(TaskUnified)
-            .filter(TaskUnified.task_code == task_code)
-            .first()
-        )
+        existing = session.query(TaskUnified).filter(TaskUnified.task_code == task_code).first()
         if existing:
             session.delete(existing)
             session.commit()
@@ -962,13 +983,9 @@ def create_test_task(
             project_code=overrides.get("project_code", mock_project.project_code),
             project_name=overrides.get("project_name", mock_project.project_name),
             assignee_id=overrides.get("assignee_id", mock_user.id),
-            assignee_name=overrides.get(
-                "assignee_name", mock_user.real_name or mock_user.username
-            ),
+            assignee_name=overrides.get("assignee_name", mock_user.real_name or mock_user.username),
             assigner_id=overrides.get("assigner_id", mock_user.id),
-            assigner_name=overrides.get(
-                "assigner_name", mock_user.real_name or mock_user.username
-            ),
+            assigner_name=overrides.get("assigner_name", mock_user.real_name or mock_user.username),
             plan_start_date=overrides.get("plan_start_date"),
             plan_end_date=overrides.get("plan_end_date"),
             deadline=overrides.get("deadline"),
@@ -1149,6 +1166,7 @@ def test_project_with_customer() -> Project:
 def test_machine(test_project: Project) -> Machine:
     """创建测试机台，关联到 test_project"""
     from tests.factories import MachineFactory
+
     return MachineFactory(project_id=test_project.id)
 
 
@@ -1290,8 +1308,8 @@ def mock_department_simple():
 # 统一 Mocking 模式 - 外部服务
 # ---------------------------------------------------------------------------
 
-from unittest.mock import MagicMock, Mock
 from io import BytesIO
+from unittest.mock import MagicMock, Mock
 
 
 class ExternalServiceMocker:

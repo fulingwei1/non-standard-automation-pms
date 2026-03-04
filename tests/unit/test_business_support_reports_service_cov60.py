@@ -29,9 +29,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
     def test_parse_week_string(self):
         """测试解析周字符串"""
-        year, week_num, week_start, week_end = self.service.parse_week_string(
-            "2024-W10"
-        )
+        year, week_num, week_start, week_end = self.service.parse_week_string("2024-W10")
 
         self.assertEqual(year, 2024)
         self.assertEqual(week_num, 10)
@@ -258,17 +256,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
     def test_get_weekly_report_with_week(self):
         """测试获取周报数据 - 指定周"""
-        with patch.object(
-            self.service, "calculate_contract_stats"
-        ) as mock_contract, patch.object(
-            self.service, "calculate_order_stats"
-        ) as mock_order, patch.object(
-            self.service, "calculate_receipt_stats"
-        ) as mock_receipt, patch.object(
-            self.service, "calculate_invoice_stats"
-        ) as mock_invoice, patch.object(
-            self.service, "calculate_bidding_stats"
-        ) as mock_bidding:
+        with (
+            patch.object(self.service, "calculate_contract_stats") as mock_contract,
+            patch.object(self.service, "calculate_order_stats") as mock_order,
+            patch.object(self.service, "calculate_receipt_stats") as mock_receipt,
+            patch.object(self.service, "calculate_invoice_stats") as mock_invoice,
+            patch.object(self.service, "calculate_bidding_stats") as mock_bidding,
+        ):
 
             mock_contract.return_value = {
                 "new_count": 5,
@@ -309,17 +303,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
     def test_get_weekly_report_current_week(self):
         """测试获取周报数据 - 当前周"""
-        with patch.object(
-            self.service, "calculate_contract_stats"
-        ) as mock_contract, patch.object(
-            self.service, "calculate_order_stats"
-        ) as mock_order, patch.object(
-            self.service, "calculate_receipt_stats"
-        ) as mock_receipt, patch.object(
-            self.service, "calculate_invoice_stats"
-        ) as mock_invoice, patch.object(
-            self.service, "calculate_bidding_stats"
-        ) as mock_bidding:
+        with (
+            patch.object(self.service, "calculate_contract_stats") as mock_contract,
+            patch.object(self.service, "calculate_order_stats") as mock_order,
+            patch.object(self.service, "calculate_receipt_stats") as mock_receipt,
+            patch.object(self.service, "calculate_invoice_stats") as mock_invoice,
+            patch.object(self.service, "calculate_bidding_stats") as mock_bidding,
+        ):
 
             mock_contract.return_value = {
                 "new_count": 0,

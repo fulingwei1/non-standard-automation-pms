@@ -3,8 +3,9 @@
 tests/unit/test_ps_history_cov51.py
 Unit tests for app/services/performance_service/history.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_service.history import get_historical_performance
@@ -13,6 +14,7 @@ except ImportError as e:
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_summary(id_, period, status="COMPLETED"):
     s = MagicMock()
@@ -23,6 +25,7 @@ def _make_summary(id_, period, status="COMPLETED"):
 
 
 # ─── tests ────────────────────────────────────────────────────────────────────
+
 
 def test_get_historical_performance_no_summaries():
     """No completed summaries → empty list."""
@@ -65,13 +68,16 @@ def test_get_historical_performance_level_assigned():
     s = _make_summary(1, "2025-03")
     db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [s]
 
-    with patch(
-        "app.services.performance_service.history.calculate_final_score",
-        return_value={"final_score": 92.0, "dept_score": 92.0, "project_score": None},
-    ), patch(
-        "app.services.performance_service.history.get_score_level",
-        return_value="A",
-    ) as mock_level:
+    with (
+        patch(
+            "app.services.performance_service.history.calculate_final_score",
+            return_value={"final_score": 92.0, "dept_score": 92.0, "project_score": None},
+        ),
+        patch(
+            "app.services.performance_service.history.get_score_level",
+            return_value="A",
+        ) as mock_level,
+    ):
         result = get_historical_performance(db, employee_id=2, months=1)
 
     mock_level.assert_called_once_with(92.0)

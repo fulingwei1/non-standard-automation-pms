@@ -22,7 +22,7 @@ class TemplateReportCore:
         department_id: Optional[int] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        filters: Optional[Dict] = None
+        filters: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """
         根据模板配置生成报表数据
@@ -55,54 +55,67 @@ class TemplateReportCore:
             "template_code": template.template_code,
             "template_name": template.template_name,
             "report_type": template.report_type,
-            "period": {
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
-            },
+            "period": {"start_date": start_date.isoformat(), "end_date": end_date.isoformat()},
             "sections": {},
             "metrics": {},
-            "charts": []
+            "charts": [],
         }
 
         # 根据报表类型生成数据
-        from .project_reports import ProjectReportMixin
-        from .dept_reports import DeptReportMixin
         from .analysis_reports import AnalysisReportMixin
         from .company_reports import CompanyReportMixin
+        from .dept_reports import DeptReportMixin
         from .generic_report import GenericReportMixin
+        from .project_reports import ProjectReportMixin
 
         if template.report_type == "PROJECT_WEEKLY":
-            report_data.update(ProjectReportMixin._generate_project_weekly(
-                db, project_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                ProjectReportMixin._generate_project_weekly(
+                    db, project_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "PROJECT_MONTHLY":
-            report_data.update(ProjectReportMixin._generate_project_monthly(
-                db, project_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                ProjectReportMixin._generate_project_monthly(
+                    db, project_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "DEPT_WEEKLY":
-            report_data.update(DeptReportMixin._generate_dept_weekly(
-                db, department_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                DeptReportMixin._generate_dept_weekly(
+                    db, department_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "DEPT_MONTHLY":
-            report_data.update(DeptReportMixin._generate_dept_monthly(
-                db, department_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                DeptReportMixin._generate_dept_monthly(
+                    db, department_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "WORKLOAD_ANALYSIS":
-            report_data.update(AnalysisReportMixin._generate_workload_analysis(
-                db, department_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                AnalysisReportMixin._generate_workload_analysis(
+                    db, department_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "COST_ANALYSIS":
-            report_data.update(AnalysisReportMixin._generate_cost_analysis(
-                db, project_id, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                AnalysisReportMixin._generate_cost_analysis(
+                    db, project_id, start_date, end_date, sections_config, metrics_config
+                )
+            )
         elif template.report_type == "COMPANY_MONTHLY":
-            report_data.update(CompanyReportMixin._generate_company_monthly(
-                db, start_date, end_date, sections_config, metrics_config
-            ))
+            report_data.update(
+                CompanyReportMixin._generate_company_monthly(
+                    db, start_date, end_date, sections_config, metrics_config
+                )
+            )
         else:
             # 通用报表生成
-            report_data.update(GenericReportMixin._generate_generic_report(
-                db, template.report_type, project_id, department_id, start_date, end_date
-            ))
+            report_data.update(
+                GenericReportMixin._generate_generic_report(
+                    db, template.report_type, project_id, department_id, start_date, end_date
+                )
+            )
 
         return report_data

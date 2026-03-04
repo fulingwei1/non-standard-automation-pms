@@ -34,7 +34,9 @@ from app.schemas.performance import (  # New Performance System
 router = APIRouter()
 
 
-def _check_performance_view_permission(current_user: User, target_user_id: int, db: Session) -> bool:
+def _check_performance_view_permission(
+    current_user: User, target_user_id: int, db: Session
+) -> bool:
     """
     检查用户是否有权限查看指定用户的绩效
 
@@ -60,14 +62,22 @@ def _check_performance_view_permission(current_user: User, target_user_id: int, 
         return False
 
     # 检查是否有管理角色
-    manager_roles = ['dept_manager', 'department_manager', '部门经理',
-                     'pm', 'project_manager', '项目经理',
-                     'admin', 'super_admin', '管理员']
+    manager_roles = [
+        "dept_manager",
+        "department_manager",
+        "部门经理",
+        "pm",
+        "project_manager",
+        "项目经理",
+        "admin",
+        "super_admin",
+        "管理员",
+    ]
 
     has_manager_role = False
-    for user_role in (current_user.roles or []):
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
-        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+    for user_role in current_user.roles or []:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
         if role_code in manager_roles or role_name in manager_roles:
             has_manager_role = True
             break
@@ -87,10 +97,12 @@ def _check_performance_view_permission(current_user: User, target_user_id: int, 
     for project in target_projects:
         # 检查目标用户是否是项目成员
         from app.models.progress import Task
-        member_task = db.query(Task).filter(
-            Task.project_id == project.id,
-            Task.owner_id == target_user_id
-        ).first()
+
+        member_task = (
+            db.query(Task)
+            .filter(Task.project_id == project.id, Task.owner_id == target_user_id)
+            .first()
+        )
         if member_task:
             return True
 
@@ -109,10 +121,7 @@ def _get_team_members(db: Session, team_id: int) -> List[int]:
         List[int]: 成员ID列表
     """
     # 临时使用部门作为团队
-    users = db.query(User).filter(
-        User.department_id == team_id,
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.department_id == team_id, User.is_active).all()
     return [u.id for u in users]
 
 
@@ -127,10 +136,7 @@ def _get_department_members(db: Session, dept_id: int) -> List[int]:
     Returns:
         List[int]: 成员ID列表
     """
-    users = db.query(User).filter(
-        User.department_id == dept_id,
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.department_id == dept_id, User.is_active).all()
     return [u.id for u in users]
 
 
@@ -148,23 +154,31 @@ def _get_evaluator_type(user: User, db: Session) -> str:
     is_dept_manager = False
     is_project_manager = False
 
-    for user_role in (user.roles or []):
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
-        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+    for user_role in user.roles or []:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
-        if role_code in ['dept_manager', 'department_manager', '部门经理'] or role_name in ['dept_manager', 'department_manager', '部门经理']:
+        if role_code in ["dept_manager", "department_manager", "部门经理"] or role_name in [
+            "dept_manager",
+            "department_manager",
+            "部门经理",
+        ]:
             is_dept_manager = True
-        if role_code in ['pm', 'project_manager', '项目经理'] or role_name in ['pm', 'project_manager', '项目经理']:
+        if role_code in ["pm", "project_manager", "项目经理"] or role_name in [
+            "pm",
+            "project_manager",
+            "项目经理",
+        ]:
             is_project_manager = True
 
     if is_dept_manager and is_project_manager:
-        return 'BOTH'
+        return "BOTH"
     elif is_dept_manager:
-        return 'DEPT_MANAGER'
+        return "DEPT_MANAGER"
     elif is_project_manager:
-        return 'PROJECT_MANAGER'
+        return "PROJECT_MANAGER"
     else:
-        return 'OTHER'
+        return "OTHER"
 
 
 def _get_team_name(db: Session, team_id: int) -> str:
@@ -179,19 +193,20 @@ def _get_department_name(db: Session, dept_id: int) -> str:
     return dept.name if dept else f"部门{dept_id}"
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/performance/new/hr",
-    tags=["hr_api"]
-)
+router = APIRouter(prefix="/performance/new/hr", tags=["hr_api"])
 
 # 共 2 个路由
 
 # ==================== 新绩效系统 - HR端 API ====================
 
-@router.get("/weight-config", response_model=EvaluationWeightConfigListResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/weight-config",
+    response_model=EvaluationWeightConfigListResponse,
+    status_code=status.HTTP_200_OK,
+)
 def get_weight_config(
     *,
     db: Session = Depends(deps.get_db),
@@ -201,9 +216,11 @@ def get_weight_config(
     HR查看权重配置（当前+历史）
     """
     # 获取当前配置（最新的）
-    current_config = db.query(EvaluationWeightConfig).order_by(
-        desc(EvaluationWeightConfig.effective_date)
-    ).first()
+    current_config = (
+        db.query(EvaluationWeightConfig)
+        .order_by(desc(EvaluationWeightConfig.effective_date))
+        .first()
+    )
 
     if not current_config:
         # 创建默认配置
@@ -212,24 +229,29 @@ def get_weight_config(
             project_manager_weight=50,
             effective_date=date.today(),
             operator_id=current_user.id,
-            reason="系统默认配置"
+            reason="系统默认配置",
         )
         db.add(current_config)
         db.commit()
         db.refresh(current_config)
 
     # 获取历史配置
-    history = db.query(EvaluationWeightConfig).order_by(
-        desc(EvaluationWeightConfig.effective_date)
-    ).offset(1).limit(10).all()
-
-    return EvaluationWeightConfigListResponse(
-        current=current_config,
-        history=history
+    history = (
+        db.query(EvaluationWeightConfig)
+        .order_by(desc(EvaluationWeightConfig.effective_date))
+        .offset(1)
+        .limit(10)
+        .all()
     )
 
+    return EvaluationWeightConfigListResponse(current=current_config, history=history)
 
-@router.put("/weight-config", response_model=EvaluationWeightConfigResponse, status_code=status.HTTP_201_CREATED)
+
+@router.put(
+    "/weight-config",
+    response_model=EvaluationWeightConfigResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def update_weight_config(
     *,
     db: Session = Depends(deps.get_db),
@@ -241,10 +263,7 @@ def update_weight_config(
     """
     # 验证权重总和
     if config_in.dept_manager_weight + config_in.project_manager_weight != 100:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="权重总和必须等于100%"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="权重总和必须等于100%")
 
     # 创建新配置
     new_config = EvaluationWeightConfig(
@@ -252,7 +271,7 @@ def update_weight_config(
         project_manager_weight=config_in.project_manager_weight,
         effective_date=config_in.effective_date,
         operator_id=current_user.id,
-        reason=config_in.reason
+        reason=config_in.reason,
     )
 
     db.add(new_config)
@@ -260,6 +279,3 @@ def update_weight_config(
     db.refresh(new_config)
 
     return new_config
-
-
-

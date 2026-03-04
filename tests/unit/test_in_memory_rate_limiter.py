@@ -3,17 +3,18 @@
 Tests for app/core/middleware/rate_limiting.py
 Covers InMemoryRateLimiter and RateLimitMiddleware.
 """
-import time
 import threading
+import time
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 from app.core.middleware.rate_limiting import InMemoryRateLimiter, RateLimitMiddleware, rate_limiter
-
 
 # ---------------------------------------------------------------------------
 # InMemoryRateLimiter
 # ---------------------------------------------------------------------------
+
 
 class TestInMemoryRateLimiter:
     def setup_method(self):
@@ -40,6 +41,7 @@ class TestInMemoryRateLimiter:
     def test_expired_requests_dont_count(self):
         # Add stale timestamp directly
         import time
+
         with self.limiter._lock:
             self.limiter._requests["stale_key"] = [time.time() - 120] * 10
         # All are outside 60s window → request should be allowed
@@ -80,6 +82,7 @@ class TestGlobalRateLimiterSingleton:
 # RateLimitMiddleware
 # ---------------------------------------------------------------------------
 
+
 def _make_request(path="/api/v1/data", client_host="127.0.0.1"):
     req = MagicMock()
     req.url.path = path
@@ -95,11 +98,13 @@ class TestRateLimitMiddleware:
         # Replace the global rate_limiter used by middleware
         self._fresh_limiter = InMemoryRateLimiter()
         import app.core.middleware.rate_limiting as mod
+
         self._orig_limiter = mod.rate_limiter
         mod.rate_limiter = self._fresh_limiter
 
     def teardown_method(self):
         import app.core.middleware.rate_limiting as mod
+
         mod.rate_limiter = self._orig_limiter
 
     @pytest.mark.asyncio

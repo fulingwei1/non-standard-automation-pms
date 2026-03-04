@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Ticket Assignment Service 测试 - Batch 2"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.ticket_assignment_service import (
-    get_project_members_for_ticket, get_ticket_related_projects
+    get_project_members_for_ticket,
+    get_ticket_related_projects,
 )
 
 
@@ -112,8 +114,12 @@ class TestGetProjectMembersForTicket:
 
     def test_include_roles_and_exclude_combined(self, mock_db):
         m1 = make_member(1, "a", "A", "PM", 1)
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [m1]
-        result = get_project_members_for_ticket(mock_db, [1], include_roles=["PM"], exclude_user_id=99)
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            m1
+        ]
+        result = get_project_members_for_ticket(
+            mock_db, [1], include_roles=["PM"], exclude_user_id=99
+        )
         assert len(result) == 1
 
 
@@ -171,7 +177,11 @@ class TestGetTicketRelatedProjects:
         project_related.project_code = "P020"
         project_related.project_name = "Related"
 
-        mock_db.query.return_value.filter.return_value.first.side_effect = [ticket, project_main, project_related]
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            ticket,
+            project_main,
+            project_related,
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = [tp]
 
         result = get_ticket_related_projects(mock_db, 1)

@@ -85,11 +85,7 @@ def get_my_nav_groups(
     """获取当前用户的导航组配置"""
     service = RoleManagementService(db)
     nav_groups = service.get_user_nav_groups(user_id=current_user.id)
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data={"nav_groups": nav_groups}
-    )
+    return ResponseModel(code=200, message="获取成功", data={"nav_groups": nav_groups})
 
 
 @router.post("/", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
@@ -107,13 +103,11 @@ def create_role(
         description=role_in.description,
         data_scope=role_in.data_scope or "OWN",
     )
-    
+
     # 使用旧的 RoleService 格式化响应（保持兼容性）
     role_service = RoleService(db)
     return ResponseModel(
-        code=201,
-        message="创建成功",
-        data=role_service._to_response(role).model_dump()
+        code=201, message="创建成功", data=role_service._to_response(role).model_dump()
     )
 
 
@@ -126,13 +120,11 @@ def get_role(
     """获取角色详情"""
     service = RoleManagementService(db)
     role = service.get_role_by_id(role_id, tenant_id=current_user.tenant_id)
-    
+
     # 使用旧的 RoleService 格式化响应（保持兼容性）
     role_service = RoleService(db)
     return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=role_service._to_response(role).model_dump()
+        code=200, message="获取成功", data=role_service._to_response(role).model_dump()
     )
 
 
@@ -146,18 +138,13 @@ def update_role(
     """更新角色"""
     service = RoleManagementService(db)
     update_data = role_in.model_dump(exclude_unset=True)
-    
-    role = service.update_role(
-        role_id=role_id,
-        **update_data
-    )
-    
+
+    role = service.update_role(role_id=role_id, **update_data)
+
     # 使用旧的 RoleService 格式化响应（保持兼容性）
     role_service = RoleService(db)
     return ResponseModel(
-        code=200,
-        message="更新成功",
-        data=role_service._to_response(role).model_dump()
+        code=200, message="更新成功", data=role_service._to_response(role).model_dump()
     )
 
 
@@ -183,9 +170,7 @@ def update_role_permissions(
     """更新角色权限（使用新的 RoleApiPermission 模型）"""
     service = RoleManagementService(db)
     service.update_role_permissions(
-        role_id=role_id,
-        permission_ids=permission_ids,
-        tenant_id=current_user.tenant_id
+        role_id=role_id, permission_ids=permission_ids, tenant_id=current_user.tenant_id
     )
     return ResponseModel(code=200, message="权限更新成功")
 
@@ -199,11 +184,7 @@ def get_role_nav_groups(
     """获取角色的导航组配置"""
     service = RoleManagementService(db)
     nav_groups = service.get_role_nav_groups(role_id)
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data={"nav_groups": nav_groups}
-    )
+    return ResponseModel(code=200, message="获取成功", data={"nav_groups": nav_groups})
 
 
 @router.put("/{role_id}/nav-groups", response_model=ResponseModel)
@@ -250,7 +231,7 @@ def update_role_parent(
     """
     service = RoleManagementService(db)
     role = service.update_role_parent(role_id, parent_id)
-    
+
     return ResponseModel(
         code=200,
         message="角色层级更新成功",
@@ -272,18 +253,14 @@ def get_role_ancestors(
     """获取角色的所有祖先角色（继承链）"""
     service = RoleManagementService(db)
     ancestors = service.get_role_ancestors(role_id)
-    
+
     # 获取角色信息
     role = service.get_role_by_id(role_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
-        data={
-            "role_id": role.id,
-            "role_code": role.role_code,
-            "ancestors": ancestors
-        },
+        data={"role_id": role.id, "role_code": role.role_code, "ancestors": ancestors},
     )
 
 
@@ -296,10 +273,10 @@ def get_role_descendants(
     """获取角色的所有子孙角色"""
     service = RoleManagementService(db)
     descendants = service.get_role_descendants(role_id)
-    
+
     # 获取角色信息
     role = service.get_role_by_id(role_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",

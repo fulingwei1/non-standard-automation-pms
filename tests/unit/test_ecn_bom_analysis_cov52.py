@@ -2,9 +2,10 @@
 """
 Unit tests for app/services/ecn_bom_analysis_service/analysis.py (cov52)
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ecn_bom_analysis_service.analysis import (
@@ -22,6 +23,7 @@ def _make_service():
 
 
 # ──────────────────────── analyze_bom_impact ────────────────────────
+
 
 def test_analyze_bom_impact_ecn_not_found():
     """ECN 不存在时抛出 ValueError"""
@@ -79,8 +81,8 @@ def test_analyze_bom_impact_no_bom_headers():
 
     service.db.query.return_value.filter.return_value.first.side_effect = [ecn, machine]
     service.db.query.return_value.filter.return_value.all.side_effect = [
-        [affected_mat],   # affected_materials
-        [],               # bom_headers
+        [affected_mat],  # affected_materials
+        [],  # bom_headers
     ]
 
     result = analyze_bom_impact(service, ecn_id=1)
@@ -90,8 +92,12 @@ def test_analyze_bom_impact_no_bom_headers():
 
 # ──────────────────────── analyze_single_bom ────────────────────────
 
+
 @patch("app.services.ecn_bom_analysis_service.analysis.analyze_cascade_impact", return_value=[])
-@patch("app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact", return_value=Decimal("0"))
+@patch(
+    "app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact",
+    return_value=Decimal("0"),
+)
 @patch("app.services.ecn_bom_analysis_service.analysis.calculate_schedule_impact", return_value=0)
 @patch("app.services.ecn_bom_analysis_service.analysis.get_impact_description", return_value="修改")
 def test_analyze_single_bom_no_match(mock_desc, mock_sched, mock_cost, mock_cascade):
@@ -104,8 +110,13 @@ def test_analyze_single_bom_no_match(mock_desc, mock_sched, mock_cost, mock_casc
     affected_mat.material_code = "MAT-999"
     affected_mat.material_id = None
 
-    result = analyze_single_bom(service, ecn_id=1, bom_header=bom_header,
-                                affected_materials=[affected_mat], include_cascade=True)
+    result = analyze_single_bom(
+        service,
+        ecn_id=1,
+        bom_header=bom_header,
+        affected_materials=[affected_mat],
+        include_cascade=True,
+    )
 
     assert result["has_impact"] is False
     assert result["bom_id"] == 1

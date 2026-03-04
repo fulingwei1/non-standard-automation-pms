@@ -6,7 +6,7 @@ DimensionConfigService 完整测试套件
 
 import unittest
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.services.engineer_performance.dimension_config_service import DimensionConfigService
 
@@ -43,9 +43,7 @@ class TestGetConfig(unittest.TestCase):
         q = self._mock_query_chain()
         q.first.return_value = dept_config
 
-        result = self.service.get_config(
-            "mechanical", "senior", date(2025, 6, 1), department_id=10
-        )
+        result = self.service.get_config("mechanical", "senior", date(2025, 6, 1), department_id=10)
         self.assertEqual(result.id, 1)
         self.assertFalse(result.is_global)
 
@@ -56,9 +54,7 @@ class TestGetConfig(unittest.TestCase):
         # 前两次调用返回None（无部门配置），第三次返回全局配置
         q.first.side_effect = [None, None, global_config]
 
-        result = self.service.get_config(
-            "mechanical", "senior", date(2025, 6, 1), department_id=10
-        )
+        result = self.service.get_config("mechanical", "senior", date(2025, 6, 1), department_id=10)
         # 验证至少尝试了查询
         self.assertTrue(self.db.query.called)
 
@@ -113,9 +109,7 @@ class TestGetDepartmentConfig(unittest.TestCase):
         q.order_by.return_value = q
         q.first.return_value = config
 
-        result = self.service._get_department_config(
-            "mechanical", "senior", date(2025, 1, 1), 10
-        )
+        result = self.service._get_department_config("mechanical", "senior", date(2025, 1, 1), 10)
         self.assertEqual(result.id, 1)
 
     def test_get_department_config_generic_fallback(self):
@@ -128,9 +122,7 @@ class TestGetDepartmentConfig(unittest.TestCase):
         # 第一次查询无结果，第二次返回通用配置
         q.first.side_effect = [None, generic_config]
 
-        result = self.service._get_department_config(
-            "mechanical", "senior", date(2025, 1, 1), 10
-        )
+        result = self.service._get_department_config("mechanical", "senior", date(2025, 1, 1), 10)
         self.assertEqual(result.id, 2)
 
 
@@ -191,9 +183,13 @@ class TestCreateConfig(unittest.TestCase):
     def test_create_config_weight_sum_validation_pass(self):
         """权重总和为100时创建成功"""
         data = self._make_valid_data()
-        
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj') as mock_save:
-            with patch('app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig') as MockConfig:
+
+        with patch(
+            "app.services.engineer_performance.dimension_config_service.save_obj"
+        ) as mock_save:
+            with patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig:
                 MockConfig.return_value = MagicMock()
                 result = self.service.create_config(data, operator_id=1)
                 mock_save.assert_called_once()
@@ -221,14 +217,16 @@ class TestCreateConfig(unittest.TestCase):
     def test_create_global_config_auto_approved(self):
         """全局配置（无部门）应自动审批通过"""
         data = self._make_valid_data()
-        
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj'):
-            with patch('app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig') as MockConfig:
+
+        with patch("app.services.engineer_performance.dimension_config_service.save_obj"):
+            with patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig:
                 created_config = MagicMock()
                 MockConfig.return_value = created_config
-                
+
                 result = self.service.create_config(data, operator_id=1, department_id=None)
-                
+
                 call_kwargs = MockConfig.call_args.kwargs
                 self.assertTrue(call_kwargs.get("is_global"))
                 self.assertEqual(call_kwargs.get("approval_status"), "APPROVED")
@@ -236,7 +234,7 @@ class TestCreateConfig(unittest.TestCase):
     def test_create_department_config_pending_approval(self):
         """部门配置应设为待审批状态"""
         data = self._make_valid_data()
-        
+
         # Mock部门经理权限验证
         q = MagicMock()
         self.db.query.return_value = q
@@ -244,14 +242,16 @@ class TestCreateConfig(unittest.TestCase):
         user = MagicMock(employee_id=100)
         dept = MagicMock(id=10, manager_id=100)
         q.first.side_effect = [user, dept]
-        
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj'):
-            with patch('app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig') as MockConfig:
+
+        with patch("app.services.engineer_performance.dimension_config_service.save_obj"):
+            with patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig:
                 created_config = MagicMock()
                 MockConfig.return_value = created_config
-                
+
                 result = self.service.create_config(data, operator_id=1, department_id=10)
-                
+
                 call_kwargs = MockConfig.call_args.kwargs
                 self.assertFalse(call_kwargs.get("is_global"))
                 self.assertEqual(call_kwargs.get("approval_status"), "PENDING")
@@ -259,23 +259,25 @@ class TestCreateConfig(unittest.TestCase):
     def test_create_config_without_approval_requirement(self):
         """require_approval=False时不需要审批"""
         data = self._make_valid_data()
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         user = MagicMock(employee_id=100)
         dept = MagicMock(id=10, manager_id=100)
         q.first.side_effect = [user, dept]
-        
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj'):
-            with patch('app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig') as MockConfig:
+
+        with patch("app.services.engineer_performance.dimension_config_service.save_obj"):
+            with patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig:
                 created_config = MagicMock()
                 MockConfig.return_value = created_config
-                
+
                 result = self.service.create_config(
                     data, operator_id=1, department_id=10, require_approval=False
                 )
-                
+
                 call_kwargs = MockConfig.call_args.kwargs
                 self.assertEqual(call_kwargs.get("approval_status"), "APPROVED")
 
@@ -292,11 +294,11 @@ class TestValidateDepartmentManagerPermission(unittest.TestCase):
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
-        
+
         user = MagicMock(employee_id=100)
         dept = MagicMock(id=10, manager_id=100)
         q.first.side_effect = [user, dept]
-        
+
         # 不应抛出异常
         self.service._validate_department_manager_permission(10, 1)
 
@@ -306,7 +308,7 @@ class TestValidateDepartmentManagerPermission(unittest.TestCase):
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = None
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service._validate_department_manager_permission(10, 999)
         self.assertIn("操作人", str(ctx.exception))
@@ -316,10 +318,10 @@ class TestValidateDepartmentManagerPermission(unittest.TestCase):
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
-        
+
         user = MagicMock(employee_id=None)
         q.first.return_value = user
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service._validate_department_manager_permission(10, 1)
         self.assertIn("不完整", str(ctx.exception))
@@ -329,10 +331,10 @@ class TestValidateDepartmentManagerPermission(unittest.TestCase):
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
-        
+
         user = MagicMock(employee_id=100)
         q.first.side_effect = [user, None]  # 部门查询返回None
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service._validate_department_manager_permission(10, 1)
         self.assertIn("无权限", str(ctx.exception))
@@ -358,7 +360,7 @@ class TestListConfigs(unittest.TestCase):
         """列出所有配置"""
         configs = [MagicMock(id=1), MagicMock(id=2)]
         self._mock_query(configs)
-        
+
         result = self.service.list_configs()
         self.assertEqual(len(result), 2)
 
@@ -366,7 +368,7 @@ class TestListConfigs(unittest.TestCase):
         """按岗位类型筛选"""
         configs = [MagicMock(job_type="mechanical")]
         self._mock_query(configs)
-        
+
         result = self.service.list_configs(job_type="mechanical")
         self.assertEqual(len(result), 1)
 
@@ -374,7 +376,7 @@ class TestListConfigs(unittest.TestCase):
         """按部门筛选"""
         configs = [MagicMock(department_id=10)]
         self._mock_query(configs)
-        
+
         result = self.service.list_configs(department_id=10)
         self.assertEqual(len(result), 1)
 
@@ -382,7 +384,7 @@ class TestListConfigs(unittest.TestCase):
         """默认不包含已过期配置"""
         configs = [MagicMock()]
         self._mock_query(configs)
-        
+
         result = self.service.list_configs(include_expired=False)
         self.assertIsNotNone(result)
 
@@ -390,7 +392,7 @@ class TestListConfigs(unittest.TestCase):
         """可选择包含已过期配置"""
         configs = [MagicMock(), MagicMock()]
         self._mock_query(configs)
-        
+
         result = self.service.list_configs(include_expired=True)
         self.assertEqual(len(result), 2)
 
@@ -398,7 +400,7 @@ class TestListConfigs(unittest.TestCase):
         """可选择排除全局配置"""
         configs = []
         self._mock_query(configs)
-        
+
         result = self.service.list_configs(include_global=False)
         self.assertEqual(result, [])
 
@@ -412,58 +414,46 @@ class TestApproveConfig(unittest.TestCase):
 
     def test_approve_config_success(self):
         """审批通过"""
-        config = MagicMock(
-            id=1,
-            is_global=False,
-            approval_status="PENDING"
-        )
+        config = MagicMock(id=1, is_global=False, approval_status="PENDING")
         approver = MagicMock(is_superuser=True)
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.side_effect = [config, approver]
-        
+
         result = self.service.approve_config(1, approver_id=1, approved=True)
-        
+
         self.assertEqual(result.approval_status, "APPROVED")
 
     def test_approve_config_reject(self):
         """审批拒绝"""
-        config = MagicMock(
-            id=1,
-            is_global=False,
-            approval_status="PENDING"
-        )
+        config = MagicMock(id=1, is_global=False, approval_status="PENDING")
         approver = MagicMock(is_superuser=True)
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.side_effect = [config, approver]
-        
+
         result = self.service.approve_config(1, approver_id=1, approved=False)
-        
+
         self.assertEqual(result.approval_status, "REJECTED")
 
     def test_approve_config_with_reason(self):
         """审批时提供理由"""
-        config = MagicMock(
-            id=1,
-            is_global=False,
-            approval_status="PENDING"
-        )
+        config = MagicMock(id=1, is_global=False, approval_status="PENDING")
         approver = MagicMock(is_superuser=True)
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.side_effect = [config, approver]
-        
+
         result = self.service.approve_config(
             1, approver_id=1, approved=False, approval_reason="权重分配不合理"
         )
-        
+
         self.assertEqual(result.approval_reason, "权重分配不合理")
 
     def test_approve_config_not_found(self):
@@ -472,7 +462,7 @@ class TestApproveConfig(unittest.TestCase):
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = None
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service.approve_config(999, approver_id=1)
         self.assertIn("不存在", str(ctx.exception))
@@ -480,28 +470,25 @@ class TestApproveConfig(unittest.TestCase):
     def test_approve_config_global_raises(self):
         """全局配置不能审批"""
         config = MagicMock(is_global=True, approval_status="PENDING")
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = config
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service.approve_config(1, approver_id=1)
         self.assertIn("全局", str(ctx.exception))
 
     def test_approve_config_wrong_status(self):
         """非待审批状态不能审批"""
-        config = MagicMock(
-            is_global=False,
-            approval_status="APPROVED"
-        )
-        
+        config = MagicMock(is_global=False, approval_status="APPROVED")
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = config
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service.approve_config(1, approver_id=1)
         self.assertIn("无法审批", str(ctx.exception))
@@ -517,12 +504,12 @@ class TestValidateAdminPermission(unittest.TestCase):
     def test_validate_admin_superuser(self):
         """超级用户有权限"""
         user = MagicMock(is_superuser=True)
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = user
-        
+
         # 不应抛出异常
         self.service._validate_admin_permission(1)
 
@@ -531,13 +518,13 @@ class TestValidateAdminPermission(unittest.TestCase):
         user = MagicMock(is_superuser=False)
         role = MagicMock()
         role.role = MagicMock(role_code="admin")
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = user
         q.all.return_value = [role]
-        
+
         # 不应抛出异常
         self.service._validate_admin_permission(1)
 
@@ -546,13 +533,13 @@ class TestValidateAdminPermission(unittest.TestCase):
         user = MagicMock(is_superuser=False)
         role = MagicMock()
         role.role = MagicMock(role_code="super_admin")
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = user
         q.all.return_value = [role]
-        
+
         # 不应抛出异常
         self.service._validate_admin_permission(1)
 
@@ -562,7 +549,7 @@ class TestValidateAdminPermission(unittest.TestCase):
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = None
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service._validate_admin_permission(999)
         self.assertIn("不存在", str(ctx.exception))
@@ -572,13 +559,13 @@ class TestValidateAdminPermission(unittest.TestCase):
         user = MagicMock(is_superuser=False)
         role = MagicMock()
         role.role = MagicMock(role_code="user")
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.first.return_value = user
         q.all.return_value = [role]
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service._validate_admin_permission(1)
         self.assertIn("管理员", str(ctx.exception))
@@ -595,17 +582,17 @@ class TestGetPendingApprovals(unittest.TestCase):
         """获取待审批配置列表"""
         pending_configs = [
             MagicMock(id=1, approval_status="PENDING"),
-            MagicMock(id=2, approval_status="PENDING")
+            MagicMock(id=2, approval_status="PENDING"),
         ]
-        
+
         q = MagicMock()
         self.db.query.return_value = q
         q.filter.return_value = q
         q.order_by.return_value = q
         q.all.return_value = pending_configs
-        
+
         result = self.service.get_pending_approvals()
-        
+
         self.assertEqual(len(result), 2)
         for config in result:
             self.assertEqual(config.approval_status, "PENDING")
@@ -617,9 +604,9 @@ class TestGetPendingApprovals(unittest.TestCase):
         q.filter.return_value = q
         q.order_by.return_value = q
         q.all.return_value = []
-        
+
         result = self.service.get_pending_approvals()
-        
+
         self.assertEqual(result, [])
 
 
@@ -646,9 +633,9 @@ class TestFormatConfig(unittest.TestCase):
         config.collaboration_weight = 10
         config.approval_status = "APPROVED"
         config.effective_date = date(2025, 1, 1)
-        
+
         result = self.service._format_config(config)
-        
+
         self.assertEqual(result["id"], 1)
         self.assertEqual(result["technical_weight"], 30)
         self.assertEqual(result["execution_weight"], 25)
@@ -660,11 +647,17 @@ class TestFormatConfig(unittest.TestCase):
 
     def test_format_config_without_approval_status(self):
         """无审批状态时返回None"""
-        config = MagicMock(spec=[
-            'id', 'technical_weight', 'execution_weight',
-            'cost_quality_weight', 'knowledge_weight',
-            'collaboration_weight', 'effective_date'
-        ])
+        config = MagicMock(
+            spec=[
+                "id",
+                "technical_weight",
+                "execution_weight",
+                "cost_quality_weight",
+                "knowledge_weight",
+                "collaboration_weight",
+                "effective_date",
+            ]
+        )
         config.id = 1
         config.technical_weight = 30
         config.execution_weight = 25
@@ -672,9 +665,9 @@ class TestFormatConfig(unittest.TestCase):
         config.knowledge_weight = 15
         config.collaboration_weight = 10
         config.effective_date = date(2025, 1, 1)
-        
+
         result = self.service._format_config(config)
-        
+
         self.assertIsNone(result.get("approval_status"))
 
 
@@ -694,9 +687,9 @@ class TestAnalyzeJobTypeDistribution(unittest.TestCase):
         """单一岗位类型"""
         p1 = MagicMock(job_type="mechanical", job_level="senior")
         p2 = MagicMock(job_type="mechanical", job_level="junior")
-        
+
         result = self.service._analyze_job_type_distribution([p1, p2])
-        
+
         self.assertEqual(result["mechanical"]["count"], 2)
         self.assertEqual(result["mechanical"]["levels"]["senior"], 1)
         self.assertEqual(result["mechanical"]["levels"]["junior"], 1)
@@ -706,9 +699,9 @@ class TestAnalyzeJobTypeDistribution(unittest.TestCase):
         p1 = MagicMock(job_type="mechanical", job_level="senior")
         p2 = MagicMock(job_type="test", job_level="junior")
         p3 = MagicMock(job_type="electrical", job_level="senior")
-        
+
         result = self.service._analyze_job_type_distribution([p1, p2, p3])
-        
+
         self.assertEqual(result["mechanical"]["count"], 1)
         self.assertEqual(result["test"]["count"], 1)
         self.assertEqual(result["electrical"]["count"], 1)
@@ -716,9 +709,9 @@ class TestAnalyzeJobTypeDistribution(unittest.TestCase):
     def test_analyze_none_job_level(self):
         """job_level为None时归为'all'"""
         p = MagicMock(job_type="mechanical", job_level=None)
-        
+
         result = self.service._analyze_job_type_distribution([p])
-        
+
         self.assertEqual(result["mechanical"]["levels"]["all"], 1)
 
 
@@ -731,13 +724,8 @@ class TestBuildConfigList(unittest.TestCase):
 
     def test_build_config_list_with_both_configs(self):
         """同时有部门和全局配置"""
-        distribution = {
-            "mechanical": {
-                "count": 5,
-                "levels": {"senior": 2, "junior": 3}
-            }
-        }
-        
+        distribution = {"mechanical": {"count": 5, "levels": {"senior": 2, "junior": 3}}}
+
         dept_config = MagicMock(
             id=1,
             job_type="mechanical",
@@ -746,9 +734,9 @@ class TestBuildConfigList(unittest.TestCase):
             cost_quality_weight=20,
             knowledge_weight=15,
             collaboration_weight=10,
-            effective_date=date(2025, 1, 1)
+            effective_date=date(2025, 1, 1),
         )
-        
+
         global_config = MagicMock(
             id=2,
             job_type="mechanical",
@@ -758,15 +746,11 @@ class TestBuildConfigList(unittest.TestCase):
             cost_quality_weight=25,
             knowledge_weight=15,
             collaboration_weight=10,
-            effective_date=date(2025, 1, 1)
+            effective_date=date(2025, 1, 1),
         )
-        
-        result = self.service._build_config_list(
-            distribution,
-            [dept_config],
-            [global_config]
-        )
-        
+
+        result = self.service._build_config_list(distribution, [dept_config], [global_config])
+
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["job_type"], "mechanical")
         self.assertEqual(result[0]["engineer_count"], 5)
@@ -775,13 +759,8 @@ class TestBuildConfigList(unittest.TestCase):
 
     def test_build_config_list_no_dept_config(self):
         """只有全局配置"""
-        distribution = {
-            "test": {
-                "count": 3,
-                "levels": {"junior": 3}
-            }
-        }
-        
+        distribution = {"test": {"count": 3, "levels": {"junior": 3}}}
+
         global_config = MagicMock(
             id=1,
             job_type="test",
@@ -791,15 +770,11 @@ class TestBuildConfigList(unittest.TestCase):
             cost_quality_weight=20,
             knowledge_weight=15,
             collaboration_weight=10,
-            effective_date=date(2025, 1, 1)
+            effective_date=date(2025, 1, 1),
         )
-        
-        result = self.service._build_config_list(
-            distribution,
-            [],
-            [global_config]
-        )
-        
+
+        result = self.service._build_config_list(distribution, [], [global_config])
+
         self.assertEqual(len(result), 1)
         self.assertIsNone(result[0]["department_config"])
         self.assertIsNotNone(result[0]["global_config"])

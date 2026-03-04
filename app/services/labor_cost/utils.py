@@ -18,13 +18,8 @@ from app.models.timesheet import Timesheet
 # LaborCostService 延迟导入，避免循环依赖
 
 
-
-
 def query_approved_timesheets(
-    db: Session,
-    project_id: int,
-    start_date: Optional[date],
-    end_date: Optional[date]
+    db: Session, project_id: int, start_date: Optional[date], end_date: Optional[date]
 ) -> List[Timesheet]:
     """
     查询已审批的工时记录
@@ -33,8 +28,7 @@ def query_approved_timesheets(
         List[Timesheet]: 工时记录列表
     """
     query = db.query(Timesheet).filter(
-        Timesheet.project_id == project_id,
-        Timesheet.status == "APPROVED"
+        Timesheet.project_id == project_id, Timesheet.status == "APPROVED"
     )
 
     if start_date:
@@ -45,23 +39,25 @@ def query_approved_timesheets(
     return query.all()
 
 
-def delete_existing_costs(
-    db: Session,
-    project: Project,
-    project_id: int
-) -> None:
+def delete_existing_costs(db: Session, project: Project, project_id: int) -> None:
     """
     删除现有的工时成本记录
     """
-    existing_costs = db.query(ProjectCost).filter(
-        ProjectCost.project_id == project_id,
-        ProjectCost.source_module == "TIMESHEET",
-        ProjectCost.source_type == "LABOR_COST"
-    ).all()
+    existing_costs = (
+        db.query(ProjectCost)
+        .filter(
+            ProjectCost.project_id == project_id,
+            ProjectCost.source_module == "TIMESHEET",
+            ProjectCost.source_type == "LABOR_COST",
+        )
+        .all()
+    )
 
     for cost in existing_costs:
         # 更新项目实际成本
-        project.actual_cost = max(Decimal("0"), Decimal(str(project.actual_cost or 0)) - Decimal(str(cost.amount or 0)))
+        project.actual_cost = max(
+            Decimal("0"), Decimal(str(project.actual_cost or 0)) - Decimal(str(cost.amount or 0))
+        )
         db.delete(cost)
 
 
@@ -83,7 +79,7 @@ def group_timesheets_by_user(timesheets: List[Timesheet]) -> Dict[int, Dict]:
                 "total_hours": Decimal("0"),
                 "timesheet_ids": [],
                 "cost_amount": Decimal("0"),
-                "work_date": ts.work_date
+                "work_date": ts.work_date,
             }
 
         hours = Decimal(str(ts.hours or 0))
@@ -97,23 +93,23 @@ def group_timesheets_by_user(timesheets: List[Timesheet]) -> Dict[int, Dict]:
     return user_costs
 
 
-def find_existing_cost(
-    db: Session,
-    project_id: int,
-    user_id: int
-) -> Optional[ProjectCost]:
+def find_existing_cost(db: Session, project_id: int, user_id: int) -> Optional[ProjectCost]:
     """
     查找现有的成本记录
 
     Returns:
         Optional[ProjectCost]: 现有成本记录
     """
-    return db.query(ProjectCost).filter(
-        ProjectCost.project_id == project_id,
-        ProjectCost.source_module == "TIMESHEET",
-        ProjectCost.source_type == "LABOR_COST",
-        ProjectCost.source_id == user_id
-    ).first()
+    return (
+        db.query(ProjectCost)
+        .filter(
+            ProjectCost.project_id == project_id,
+            ProjectCost.source_module == "TIMESHEET",
+            ProjectCost.source_type == "LABOR_COST",
+            ProjectCost.source_id == user_id,
+        )
+        .first()
+    )
 
 
 def update_existing_cost(
@@ -122,7 +118,7 @@ def update_existing_cost(
     existing_cost: ProjectCost,
     cost_amount: Decimal,
     user_data: Dict,
-    end_date: Optional[date]
+    end_date: Optional[date],
 ) -> None:
     """
     更新现有成本记录
@@ -130,10 +126,16 @@ def update_existing_cost(
     old_amount = existing_cost.amount
     existing_cost.amount = cost_amount
     existing_cost.cost_date = end_date or date.today()
-    existing_cost.description = f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时"
+    existing_cost.description = (
+        f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时"
+    )
 
     # 更新项目实际成本
-    project.actual_cost = Decimal(str(project.actual_cost or 0)) - Decimal(str(old_amount or 0)) + Decimal(str(cost_amount or 0))
+    project.actual_cost = (
+        Decimal(str(project.actual_cost or 0))
+        - Decimal(str(old_amount or 0))
+        + Decimal(str(cost_amount or 0))
+    )
 
     db.add(existing_cost)
 
@@ -145,7 +147,7 @@ def create_new_cost(
     user_id: int,
     cost_amount: Decimal,
     user_data: Dict,
-    end_date: Optional[date]
+    end_date: Optional[date],
 ) -> ProjectCost:
     """
     创建新的成本记录
@@ -165,7 +167,7 @@ def create_new_cost(
         tax_amount=Decimal("0"),
         cost_date=end_date or date.today(),
         description=f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时",
-        created_by=None
+        created_by=None,
     )
     db.add(cost)
 
@@ -175,21 +177,19 @@ def create_new_cost(
     return cost
 
 
-def check_budget_alert(
-    db: Session,
-    project_id: int,
-    user_id: int
-) -> None:
+def check_budget_alert(db: Session, project_id: int, user_id: int) -> None:
     """
     检查预算执行情况并生成预警
     """
     try:
         from app.services.cost_alert_service import CostAlertService
+
         CostAlertService.check_budget_execution(
             db, project_id, trigger_source="TIMESHEET", source_id=user_id
         )
     except Exception as e:
         import logging
+
         logging.warning(f"成本预警检查失败：{str(e)}")
 
 
@@ -199,7 +199,7 @@ def process_user_costs(
     project_id: int,
     user_costs: Dict[int, Dict],
     end_date: Optional[date],
-    recalculate: bool
+    recalculate: bool,
 ) -> tuple[List[ProjectCost], Decimal]:
     """
     处理用户成本
@@ -235,7 +235,9 @@ def process_user_costs(
             check_budget_alert(db, project_id, user_id)
         else:
             # 创建新的成本记录
-            cost = create_new_cost(db, project, project_id, user_id, cost_amount, user_data, end_date)
+            cost = create_new_cost(
+                db, project, project_id, user_id, cost_amount, user_data, end_date
+            )
             created_costs.append(cost)
 
             # 检查预算预警
@@ -252,6 +254,6 @@ def __getattr__(name):
     """支持从本模块导入 LaborCostCalculationService（向后兼容）"""
     if name == "LaborCostCalculationService":
         from app.services.labor_cost_service import LaborCostCalculationService
+
         return LaborCostCalculationService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-

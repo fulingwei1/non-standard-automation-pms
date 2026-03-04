@@ -21,8 +21,8 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.workload import TeamWorkloadItem, TeamWorkloadResponse
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -143,9 +143,7 @@ def get_project_team_workload(
                 assigned_hours += float(alloc.planned_hours)
 
         # 计算分配率
-        allocation_rate = (
-            (assigned_hours / standard_hours * 100) if standard_hours > 0 else 0.0
-        )
+        allocation_rate = (assigned_hours / standard_hours * 100) if standard_hours > 0 else 0.0
 
         # 获取用户角色
         role = getattr(user, "position", None)
@@ -286,18 +284,14 @@ def get_project_workload_summary(
     # 统计汇总
     total_users = len(team_items)
     overloaded_users = sum(1 for item in team_items if item.allocation_rate > 110)
-    normal_users = sum(
-        1 for item in team_items if 80 <= item.allocation_rate <= 110
-    )
+    normal_users = sum(1 for item in team_items if 80 <= item.allocation_rate <= 110)
     underloaded_users = sum(1 for item in team_items if item.allocation_rate < 80)
 
     total_assigned = sum(item.assigned_hours for item in team_items)
     total_tasks = sum(item.task_count for item in team_items)
     total_overdue = sum(item.overdue_count for item in team_items)
     average_allocation = (
-        sum(item.allocation_rate for item in team_items) / total_users
-        if total_users > 0
-        else 0.0
+        sum(item.allocation_rate for item in team_items) / total_users if total_users > 0 else 0.0
     )
 
     return ResponseModel(

@@ -2,12 +2,14 @@
 """
 第八批覆盖率测试 - 成本仪表盘服务
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.cost_dashboard_service import CostDashboardService
+
     HAS_CDS = True
 except Exception:
     HAS_CDS = False
@@ -58,8 +60,10 @@ class TestGetMonthlyTrend:
     def test_returns_list(self):
         """月度趋势返回列表"""
         svc, db = make_service()
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
-        if hasattr(svc, 'get_monthly_trend'):
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
+        if hasattr(svc, "get_monthly_trend"):
             result = svc.get_monthly_trend()
             assert isinstance(result, list)
         else:
@@ -70,8 +74,10 @@ class TestGetProjectCostRanking:
     def test_returns_list(self):
         """项目成本排名返回列表"""
         svc, db = make_service()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-        if hasattr(svc, 'get_project_cost_ranking'):
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
+        if hasattr(svc, "get_project_cost_ranking"):
             result = svc.get_project_cost_ranking()
             assert isinstance(result, list)
         else:
@@ -82,7 +88,7 @@ class TestGetCostAlerts:
     def test_returns_something(self):
         """成本预警接口存在且可调用"""
         svc, db = make_service()
-        if hasattr(svc, 'get_cost_alerts'):
+        if hasattr(svc, "get_cost_alerts"):
             db.query.return_value.filter.return_value.all.return_value = []
             result = svc.get_cost_alerts()
             assert result is not None
@@ -94,7 +100,7 @@ class TestGetDeptCostBreakdown:
     def test_dept_breakdown(self):
         """部门成本分解"""
         svc, db = make_service()
-        if hasattr(svc, 'get_dept_cost_breakdown'):
+        if hasattr(svc, "get_dept_cost_breakdown"):
             db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
             result = svc.get_dept_cost_breakdown()
             assert result is not None

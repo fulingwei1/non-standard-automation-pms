@@ -13,12 +13,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.sales import ContractTemplate, ContractTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     ContractTemplateApplyResponse,
     ContractTemplateCreate,
@@ -27,6 +27,7 @@ from app.schemas.sales import (
     ContractTemplateVersionCreate,
     ContractTemplateVersionResponse,
 )
+from app.utils.db_helpers import save_obj
 
 from .common import (
     _build_template_history,
@@ -35,7 +36,6 @@ from .common import (
     _get_previous_version,
     _serialize_contract_template,
 )
-from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -53,7 +53,9 @@ def list_contract_templates(
     query = db.query(ContractTemplate).options(joinedload(ContractTemplate.versions))
     query = _filter_template_visibility(query, ContractTemplate, current_user)
 
-    query = apply_keyword_filter(query, ContractTemplate, keyword, ["template_name", "template_code"])
+    query = apply_keyword_filter(
+        query, ContractTemplate, keyword, ["template_name", "template_code"]
+    )
     if status:
         query = query.filter(ContractTemplate.status == status)
 
@@ -69,7 +71,7 @@ def list_contract_templates(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -164,7 +166,9 @@ def update_contract_template(
     return _serialize_contract_template(template)
 
 
-@router.post("/contract-templates/{template_id}/versions", response_model=ContractTemplateVersionResponse)
+@router.post(
+    "/contract-templates/{template_id}/versions", response_model=ContractTemplateVersionResponse
+)
 def create_contract_template_version(
     *,
     db: Session = Depends(deps.get_db),
@@ -215,7 +219,10 @@ def create_contract_template_version(
     )
 
 
-@router.post("/contract-templates/{template_id}/versions/{version_id}/publish", response_model=ContractTemplateResponse)
+@router.post(
+    "/contract-templates/{template_id}/versions/{version_id}/publish",
+    response_model=ContractTemplateResponse,
+)
 def publish_contract_template_version(
     *,
     db: Session = Depends(deps.get_db),

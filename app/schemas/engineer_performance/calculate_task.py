@@ -15,11 +15,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== 计算任务 Schemas ====================
+
 
 class CalculateTaskCreate(BaseModel):
     """创建计算任务"""
+
     period_id: int = Field(..., description="考核周期ID")
     job_types: Optional[List[str]] = Field(None, description="指定岗位类型")
     force_recalculate: bool = Field(False, description="是否强制重新计算")
@@ -27,6 +28,7 @@ class CalculateTaskCreate(BaseModel):
 
 class CalculateTaskStatus(BaseModel):
     """计算任务状态"""
+
     task_id: str
     status: str  # pending/running/completed/failed
     progress: int = Field(0, ge=0, le=100)

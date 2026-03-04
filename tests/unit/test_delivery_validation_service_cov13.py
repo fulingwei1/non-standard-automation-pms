@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十三批 - 交期校验服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.delivery_validation_service import DeliveryValidationService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -26,9 +28,7 @@ class TestGetMaterialLeadTime:
         mock_material.material_name = "螺丝"
         db.query.return_value.filter.return_value.first.return_value = mock_material
 
-        days, note = DeliveryValidationService.get_material_lead_time(
-            db, material_id=1
-        )
+        days, note = DeliveryValidationService.get_material_lead_time(db, material_id=1)
         assert days == 15
         assert "螺丝" in note
 
@@ -39,18 +39,14 @@ class TestGetMaterialLeadTime:
         mock_material.material_name = "轴承"
         db.query.return_value.filter.return_value.first.return_value = mock_material
 
-        days, note = DeliveryValidationService.get_material_lead_time(
-            db, material_code="M001"
-        )
+        days, note = DeliveryValidationService.get_material_lead_time(db, material_code="M001")
         assert days == 10
 
     def test_fallback_to_type_default(self, db):
         """物料不存在时使用类型默认值"""
         db.query.return_value.filter.return_value.first.return_value = None
 
-        days, note = DeliveryValidationService.get_material_lead_time(
-            db, material_type="标准件"
-        )
+        days, note = DeliveryValidationService.get_material_lead_time(db, material_type="标准件")
         assert days == 7
         assert "标准件" in note
 
@@ -58,22 +54,20 @@ class TestGetMaterialLeadTime:
         """未知类型时使用默认14天"""
         db.query.return_value.filter.return_value.first.return_value = None
 
-        days, note = DeliveryValidationService.get_material_lead_time(
-            db, material_type="未知类型"
-        )
+        days, note = DeliveryValidationService.get_material_lead_time(db, material_type="未知类型")
         assert days == 14
 
     def test_default_stage_durations_defined(self):
         """默认阶段工期已定义"""
-        assert 'S1' in DeliveryValidationService.DEFAULT_STAGE_DURATION
-        assert 'S4' in DeliveryValidationService.DEFAULT_STAGE_DURATION
-        assert DeliveryValidationService.DEFAULT_STAGE_DURATION['S4'] == 30
+        assert "S1" in DeliveryValidationService.DEFAULT_STAGE_DURATION
+        assert "S4" in DeliveryValidationService.DEFAULT_STAGE_DURATION
+        assert DeliveryValidationService.DEFAULT_STAGE_DURATION["S4"] == 30
 
     def test_default_material_lead_times_defined(self):
         """默认物料交期已定义"""
-        assert '标准件' in DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME
-        assert '定制件' in DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME
-        assert DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME['定制件'] == 30
+        assert "标准件" in DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME
+        assert "定制件" in DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME
+        assert DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME["定制件"] == 30
 
     def test_material_id_no_lead_time_falls_through(self, db):
         """物料存在但无lead_time_days时继续查找"""

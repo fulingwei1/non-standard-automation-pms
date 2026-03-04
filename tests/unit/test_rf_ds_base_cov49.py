@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/data_sources/base.py"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.report_framework.data_sources.base import DataSource, DataSourceError

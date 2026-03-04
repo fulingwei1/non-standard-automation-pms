@@ -5,8 +5,8 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 class NotificationChannel(str):
@@ -54,7 +54,7 @@ class NotificationRequest:
     link_url: Optional[str] = None
     extra_data: Optional[Dict[str, Any]] = None
     wechat_template: Optional[Dict[str, Any]] = None
-    force_send: bool = False # 跳过去重和用户偏好检查，强制发送
+    force_send: bool = False  # 跳过去重和用户偏好检查，强制发送
 
 
 class ChannelHandler(ABC):
@@ -63,9 +63,7 @@ class ChannelHandler(ABC):
     def __init__(self, db, channel: str):
         self.db = db
         self.channel = channel
-        self.logger = logging.getLogger(
-            f"{self.__class__.__module__}.{self.__class__.__name__}"
-        )
+        self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
     @abstractmethod
     def send(self, request: NotificationRequest) -> NotificationResult:
@@ -87,9 +85,7 @@ class ChannelHandler(ABC):
             NotificationPriority.NORMAL,
             NotificationPriority.LOW,
         ]
-        priority_level = (
-            priority_order.index(priority) if priority in priority_order else 1
-        )
+        priority_level = priority_order.index(priority) if priority in priority_order else 1
 
         if self.channel == NotificationChannel.SYSTEM:
             return getattr(user_settings, "system_enabled", True)

@@ -13,6 +13,7 @@ class TestStrategyReviews:
     @pytest.mark.skip(reason="Missing health_calculator module")
     def test_create_strategy_review(self):
         from app.services.strategy.review.strategy_reviews import create_strategy_review
+
         data = MagicMock()
         data.model_dump.return_value = {"title": "Review1", "strategy_id": 1}
         result = create_strategy_review(self.db, data, created_by=1)
@@ -21,6 +22,7 @@ class TestStrategyReviews:
 
     def test_get_strategy_review_found(self):
         from app.services.strategy.review.strategy_reviews import get_strategy_review
+
         review = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = review
         result = get_strategy_review(self.db, 1)
@@ -28,12 +30,14 @@ class TestStrategyReviews:
 
     def test_get_strategy_review_not_found(self):
         from app.services.strategy.review.strategy_reviews import get_strategy_review
+
         self.db.query.return_value.filter.return_value.first.return_value = None
         result = get_strategy_review(self.db, 999)
         assert result is None
 
     def test_delete_strategy_review_not_found(self):
         from app.services.strategy.review.strategy_reviews import delete_strategy_review
+
         self.db.query.return_value.filter.return_value.first.return_value = None
         result = delete_strategy_review(self.db, 999)
         assert result is False

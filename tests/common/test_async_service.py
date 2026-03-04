@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests for async BaseService (app.common.crud.service)"""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from pydantic import BaseModel
+
+import pytest
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------

@@ -11,6 +11,12 @@
  └── stats.py                  # 统计分析
 """
 
+# 分解追溯
+from .decomposition_tree import (
+    get_decomposition_tree,
+    trace_to_strategy,
+)
+
 # 部门目标管理
 from .department_objectives import (
     create_department_objective,
@@ -31,12 +37,6 @@ from .personal_kpis import (
     manager_rating,
     self_rating,
     update_personal_kpi,
-)
-
-# 分解追溯
-from .decomposition_tree import (
-    get_decomposition_tree,
-    trace_to_strategy,
 )
 
 # 统计分析

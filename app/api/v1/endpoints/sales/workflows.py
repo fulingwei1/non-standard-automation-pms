@@ -9,12 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import ApprovalWorkflow, ApprovalWorkflowStep
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.schemas.sales import (
     ApprovalWorkflowCreate,
     ApprovalWorkflowResponse,
@@ -64,9 +64,7 @@ def list_approval_workflows(
     """
     获取审批工作流列表
     """
-    query = db.query(ApprovalWorkflow).options(
-        joinedload(ApprovalWorkflow.steps)
-    )
+    query = db.query(ApprovalWorkflow).options(joinedload(ApprovalWorkflow.steps))
 
     if workflow_type:
         query = query.filter(ApprovalWorkflow.workflow_type == workflow_type)
@@ -75,7 +73,9 @@ def list_approval_workflows(
         query = query.filter(ApprovalWorkflow.is_active == is_active)
 
     total = query.count()
-    workflows = apply_pagination(query.order_by(ApprovalWorkflow.created_at.desc()), pagination.offset, pagination.limit).all()
+    workflows = apply_pagination(
+        query.order_by(ApprovalWorkflow.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     result = []
     for workflow in workflows:
@@ -86,7 +86,7 @@ def list_approval_workflows(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -129,9 +129,12 @@ def get_approval_workflow(
     """
     获取审批工作流详情
     """
-    workflow = db.query(ApprovalWorkflow).options(
-        joinedload(ApprovalWorkflow.steps)
-    ).filter(ApprovalWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(ApprovalWorkflow)
+        .options(joinedload(ApprovalWorkflow.steps))
+        .filter(ApprovalWorkflow.id == workflow_id)
+        .first()
+    )
 
     if not workflow:
         raise HTTPException(status_code=404, detail="审批工作流不存在")

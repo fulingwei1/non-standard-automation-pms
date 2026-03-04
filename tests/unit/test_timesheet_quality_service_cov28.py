@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - timesheet_quality_service 单元测试（工时质量检查服务）"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_quality_service")
 
 from app.services.timesheet_quality_service import TimesheetQualityService
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_timesheet(
     user_id=1,
@@ -41,6 +42,7 @@ def _make_service(db=None):
 
 
 # ─── detect_anomalies ────────────────────────────────────────
+
 
 class TestDetectAnomalies:
 
@@ -143,6 +145,7 @@ class TestDetectAnomalies:
 
 # ─── check_work_log_completeness ────────────────────────────
 
+
 class TestCheckWorkLogCompleteness:
 
     def test_returns_100_completeness_when_no_timesheets(self):
@@ -228,6 +231,7 @@ class TestCheckWorkLogCompleteness:
 
 
 # ─── 常量验证 ────────────────────────────────────────────────
+
 
 class TestConstants:
 

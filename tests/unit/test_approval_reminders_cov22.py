@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十二批：approval_reminders 单元测试"""
 
+from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from datetime import datetime, timedelta, date
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.timesheet_reminder.approval_reminders import notify_approval_timeout
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -46,6 +48,7 @@ class TestNotifyApprovalTimeout:
             m.filter.return_value = m
             from app.models.timesheet import Timesheet
             from app.models.user import User
+
             if model is Timesheet:
                 m.all.return_value = [mock_timesheet]
                 m.first.return_value = mock_timesheet
@@ -77,6 +80,7 @@ class TestNotifyApprovalTimeout:
             m.filter.return_value = m
             from app.models.timesheet import Timesheet
             from app.models.user import User
+
             if model is Timesheet:
                 m.all.return_value = [mock_timesheet]
                 m.first.return_value = mock_timesheet

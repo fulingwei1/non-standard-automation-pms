@@ -30,7 +30,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.post("/models", response_model=ResponseModel[PositionCompetencyModelResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/models",
+    response_model=ResponseModel[PositionCompetencyModelResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_competency_model(
     *,
     db: Session = Depends(deps.get_db),
@@ -49,7 +53,9 @@ def create_competency_model(
     return ResponseModel(code=200, message="创建成功", data=model)
 
 
-@router.get("/models", response_model=PositionCompetencyModelListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/models", response_model=PositionCompetencyModelListResponse, status_code=status.HTTP_200_OK
+)
 def get_competency_models(
     *,
     db: Session = Depends(deps.get_db),
@@ -73,20 +79,27 @@ def get_competency_models(
         query = query.filter(PositionCompetencyModel.is_active == is_active)
 
     total = query.count()
-    models = query.order_by(desc(PositionCompetencyModel.created_at)).offset(
-        pagination.offset
-    ).limit(pagination.limit).all()
+    models = (
+        query.order_by(desc(PositionCompetencyModel.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
 
     return PositionCompetencyModelListResponse(
         items=models,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.get("/models/{position_type}/{level_id}", response_model=ResponseModel[PositionCompetencyModelResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/models/{position_type}/{level_id}",
+    response_model=ResponseModel[PositionCompetencyModelResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_competency_model_by_position_level(
     *,
     db: Session = Depends(deps.get_db),
@@ -96,16 +109,18 @@ def get_competency_model_by_position_level(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取特定岗位等级的能力要求"""
-    model = QualificationService.get_competency_model(
-        db, position_type, level_id, position_subtype
-    )
+    model = QualificationService.get_competency_model(db, position_type, level_id, position_subtype)
     if not model:
         raise HTTPException(status_code=404, detail="能力模型不存在")
 
     return ResponseModel(code=200, message="获取成功", data=model)
 
 
-@router.put("/models/{model_id}", response_model=ResponseModel[PositionCompetencyModelResponse], status_code=status.HTTP_200_OK)
+@router.put(
+    "/models/{model_id}",
+    response_model=ResponseModel[PositionCompetencyModelResponse],
+    status_code=status.HTTP_200_OK,
+)
 def update_competency_model(
     *,
     db: Session = Depends(deps.get_db),

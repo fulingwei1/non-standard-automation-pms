@@ -10,13 +10,14 @@ from pydantic import BaseModel, Field
 
 from ..common import TimestampSchema
 
-
 # ============================================
 # StrategyReview - 战略审视
 # ============================================
 
+
 class StrategyReviewCreate(BaseModel):
     """创建战略审视"""
+
     strategy_id: int = Field(description="关联战略")
     review_type: str = Field(description="审视类型：ANNUAL/QUARTERLY/MONTHLY/SPECIAL")
     review_date: date = Field(description="审视日期")
@@ -40,6 +41,7 @@ class StrategyReviewCreate(BaseModel):
 
 class StrategyReviewUpdate(BaseModel):
     """更新战略审视"""
+
     review_date: Optional[date] = None
     review_period: Optional[str] = None
     reviewer_id: Optional[int] = None
@@ -61,6 +63,7 @@ class StrategyReviewUpdate(BaseModel):
 
 class StrategyReviewResponse(TimestampSchema):
     """战略审视响应"""
+
     id: int
     strategy_id: int
     review_type: str
@@ -91,6 +94,7 @@ class StrategyReviewResponse(TimestampSchema):
 
 class HealthScoreResponse(BaseModel):
     """健康度评分响应"""
+
     strategy_id: int
     strategy_name: Optional[str] = None
     overall_score: Optional[int] = None
@@ -111,6 +115,7 @@ class HealthScoreResponse(BaseModel):
 
 class DimensionHealthDetail(BaseModel):
     """维度健康度详情"""
+
     dimension: str
     dimension_name: str
     score: int
@@ -128,8 +133,10 @@ class DimensionHealthDetail(BaseModel):
 # StrategyCalendarEvent - 战略日历事件
 # ============================================
 
+
 class StrategyCalendarEventCreate(BaseModel):
     """创建战略日历事件"""
+
     strategy_id: int = Field(description="关联战略")
     event_type: str = Field(description="事件类型")
     name: str = Field(max_length=200, description="事件名称")
@@ -148,6 +155,7 @@ class StrategyCalendarEventCreate(BaseModel):
 
 class StrategyCalendarEventUpdate(BaseModel):
     """更新战略日历事件"""
+
     name: Optional[str] = Field(default=None, max_length=200)
     description: Optional[str] = None
     month: Optional[int] = Field(default=None, ge=1, le=12)
@@ -166,6 +174,7 @@ class StrategyCalendarEventUpdate(BaseModel):
 
 class StrategyCalendarEventResponse(TimestampSchema):
     """战略日历事件响应"""
+
     id: int
     strategy_id: int
     event_type: str
@@ -196,6 +205,7 @@ class StrategyCalendarEventResponse(TimestampSchema):
 
 class CalendarMonthResponse(BaseModel):
     """月度日历响应"""
+
     year: int
     month: int
     events: List[StrategyCalendarEventResponse] = []
@@ -206,6 +216,7 @@ class CalendarMonthResponse(BaseModel):
 
 class CalendarYearResponse(BaseModel):
     """年度日历响应"""
+
     year: int
     months: List[CalendarMonthResponse] = []
     event_summary: Dict[str, int] = {}  # 按类型统计
@@ -218,8 +229,10 @@ class CalendarYearResponse(BaseModel):
 # 例行管理周期
 # ============================================
 
+
 class RoutineManagementCycleItem(BaseModel):
     """例行管理周期项"""
+
     event_type: str
     event_type_name: str
     frequency: str  # MONTHLY/QUARTERLY/YEARLY
@@ -230,6 +243,7 @@ class RoutineManagementCycleItem(BaseModel):
 
 class RoutineManagementCycleResponse(BaseModel):
     """例行管理周期响应"""
+
     strategy_id: int
     year: int
     annual_events: List[RoutineManagementCycleItem] = []

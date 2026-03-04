@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - payment_reminders 单元测试"""
 
-import pytest
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales_reminder.payment_reminders")
 
 from app.services.sales_reminder.payment_reminders import (
-    notify_payment_plan_upcoming,
-    notify_payment_overdue,
     _create_overdue_dispute_record,
+    notify_payment_overdue,
+    notify_payment_plan_upcoming,
 )
 
 
@@ -177,18 +178,22 @@ class TestNotifyPaymentOverdue:
         plan.contract = MagicMock(owner_id=None)
         self.db.query.return_value.filter.return_value.all.side_effect = [
             [plan],  # overdue plans
-            [],      # finance users
-            [],      # sales managers
+            [],  # finance users
+            [],  # sales managers
         ]
         # no existing notification
         self.db.query.return_value.filter.return_value.first.return_value = None
-        with patch(
-            "app.services.sales_reminder.payment_reminders.create_notification"
-        ) as mock_create, patch(
-            "app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"
-        ) as mock_dispute, patch(
-            "app.services.sales_reminder.payment_reminders.find_users_by_role",
-            return_value=[],
+        with (
+            patch(
+                "app.services.sales_reminder.payment_reminders.create_notification"
+            ) as mock_create,
+            patch(
+                "app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"
+            ) as mock_dispute,
+            patch(
+                "app.services.sales_reminder.payment_reminders.find_users_by_role",
+                return_value=[],
+            ),
         ):
             result = notify_payment_overdue(self.db)
         assert result >= 0
@@ -206,16 +211,20 @@ class TestNotifyPaymentOverdue:
         self.db.query.return_value.filter.return_value.all.side_effect = [[plan], [], []]
         self.db.query.return_value.filter.return_value.first.return_value = None
         captured_priority = []
+
         def fake_create(**kwargs):
             captured_priority.append(kwargs.get("priority"))
-        with patch(
-            "app.services.sales_reminder.payment_reminders.create_notification",
-            side_effect=fake_create,
-        ), patch(
-            "app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"
-        ), patch(
-            "app.services.sales_reminder.payment_reminders.find_users_by_role",
-            return_value=[],
+
+        with (
+            patch(
+                "app.services.sales_reminder.payment_reminders.create_notification",
+                side_effect=fake_create,
+            ),
+            patch("app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"),
+            patch(
+                "app.services.sales_reminder.payment_reminders.find_users_by_role",
+                return_value=[],
+            ),
         ):
             notify_payment_overdue(self.db)
         assert all(p == "URGENT" for p in captured_priority) if captured_priority else True
@@ -228,10 +237,11 @@ class TestNotifyPaymentOverdue:
             actual_amount=0,
         )
         self.db.query.return_value.filter.return_value.all.return_value = [plan]
-        with patch(
-            "app.services.sales_reminder.payment_reminders.create_notification"
-        ) as mock_create, patch(
-            "app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"
+        with (
+            patch(
+                "app.services.sales_reminder.payment_reminders.create_notification"
+            ) as mock_create,
+            patch("app.services.sales_reminder.payment_reminders._create_overdue_dispute_record"),
         ):
             result = notify_payment_overdue(self.db)
         assert result == 0

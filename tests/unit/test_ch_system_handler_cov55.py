@@ -2,12 +2,13 @@
 """
 Tests for app/services/channel_handlers/system_handler.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
+    from app.services.channel_handlers.base import NotificationChannel, NotificationRequest
     from app.services.channel_handlers.system_handler import SystemChannelHandler
-    from app.services.channel_handlers.base import NotificationRequest, NotificationChannel
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -47,8 +48,10 @@ def test_send_returns_success(handler, request_obj):
 
 def test_send_creates_notification_obj(handler, request_obj):
     """发送时应创建 Notification 对象"""
-    with patch("app.services.channel_handlers.system_handler.save_obj") as mock_save, \
-         patch("app.services.channel_handlers.system_handler.Notification") as MockNotif:
+    with (
+        patch("app.services.channel_handlers.system_handler.save_obj") as mock_save,
+        patch("app.services.channel_handlers.system_handler.Notification") as MockNotif,
+    ):
         mock_instance = MagicMock()
         MockNotif.return_value = mock_instance
         handler.send(request_obj)
@@ -65,8 +68,10 @@ def test_send_result_has_sent_at(handler, request_obj):
 
 def test_send_uses_recipient_id(handler, mock_db, request_obj):
     """发送时使用正确的 recipient_id"""
-    with patch("app.services.channel_handlers.system_handler.save_obj"), \
-         patch("app.services.channel_handlers.system_handler.Notification") as MockNotif:
+    with (
+        patch("app.services.channel_handlers.system_handler.save_obj"),
+        patch("app.services.channel_handlers.system_handler.Notification") as MockNotif,
+    ):
         handler.send(request_obj)
         call_kwargs = MockNotif.call_args[1]
         assert call_kwargs.get("user_id") == request_obj.recipient_id
@@ -75,6 +80,7 @@ def test_send_uses_recipient_id(handler, mock_db, request_obj):
 def test_handler_inherits_channel_handler(handler):
     """确认继承自 ChannelHandler"""
     from app.services.channel_handlers.base import ChannelHandler
+
     assert isinstance(handler, ChannelHandler)
 
 
@@ -88,8 +94,10 @@ def test_send_with_none_extra_data(handler):
         content="c",
         extra_data=None,
     )
-    with patch("app.services.channel_handlers.system_handler.save_obj"), \
-         patch("app.services.channel_handlers.system_handler.Notification") as MockNotif:
+    with (
+        patch("app.services.channel_handlers.system_handler.save_obj"),
+        patch("app.services.channel_handlers.system_handler.Notification") as MockNotif,
+    ):
         handler.send(req)
         call_kwargs = MockNotif.call_args[1]
         assert call_kwargs.get("extra_data") == {}

@@ -6,21 +6,22 @@ fallback 方法, get_clarification_questions, update_structured_requirement,
 get_requirement_confidence 等核心分支
 """
 import json
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from app.schemas.presale_ai_requirement import (
+    ClarificationQuestion,
+    EquipmentItem,
+    FeasibilityAnalysis,
+    ProcessStep,
+    RequirementUpdateRequest,
+    StructuredRequirement,
+    TechnicalParameter,
+)
 from app.services.presale_ai_requirement_service import (
     AIRequirementAnalyzer,
     PresaleAIRequirementService,
-)
-from app.schemas.presale_ai_requirement import (
-    RequirementUpdateRequest,
-    ClarificationQuestion,
-    FeasibilityAnalysis,
-    StructuredRequirement,
-    EquipmentItem,
-    ProcessStep,
-    TechnicalParameter,
 )
 
 
@@ -55,6 +56,7 @@ def _make_mock_analysis(**kwargs):
 # 1. _extract_json_from_response - 三条分支
 # ============================================================
 
+
 class TestExtractJsonFromResponse:
     def test_direct_json_parse(self):
         """直接 JSON 解析成功"""
@@ -88,6 +90,7 @@ class TestExtractJsonFromResponse:
 # 2. _calculate_confidence_score - 各维度评分
 # ============================================================
 
+
 class TestCalculateConfidenceScore:
     def test_empty_input_low_score(self):
         analyzer = _make_analyzer()
@@ -120,9 +123,7 @@ class TestCalculateConfidenceScore:
 
     def test_equipment_list_increases_score(self):
         analyzer = _make_analyzer()
-        parsed = {
-            "equipment_list": [{"name": f"设备{i}"} for i in range(5)]
-        }
+        parsed = {"equipment_list": [{"name": f"设备{i}"} for i in range(5)]}
         score = analyzer._calculate_confidence_score("test", parsed)
         assert score >= 0.2
 
@@ -148,6 +149,7 @@ class TestCalculateConfidenceScore:
 # 3. _build_system_prompt - depth 分支
 # ============================================================
 
+
 class TestBuildSystemPrompt:
     def test_deep_includes_deep_keyword(self):
         analyzer = _make_analyzer()
@@ -168,6 +170,7 @@ class TestBuildSystemPrompt:
 # ============================================================
 # 4. _fallback_rule_based_analysis
 # ============================================================
+
 
 class TestFallbackRuleBasedAnalysis:
     def test_detects_keywords(self):
@@ -194,6 +197,7 @@ class TestFallbackRuleBasedAnalysis:
 # 5. _fallback_generate_questions
 # ============================================================
 
+
 class TestFallbackGenerateQuestions:
     def test_returns_five_questions(self):
         analyzer = _make_analyzer()
@@ -219,6 +223,7 @@ class TestFallbackGenerateQuestions:
 # 6. _fallback_feasibility_analysis
 # ============================================================
 
+
 class TestFallbackFeasibilityAnalysis:
     def test_returns_medium_feasibility(self):
         analyzer = _make_analyzer()
@@ -230,6 +235,7 @@ class TestFallbackFeasibilityAnalysis:
 # ============================================================
 # 7. PresaleAIRequirementService.get_analysis
 # ============================================================
+
 
 class TestGetAnalysis:
     def test_get_analysis_found(self):
@@ -251,6 +257,7 @@ class TestGetAnalysis:
 # 8. PresaleAIRequirementService.get_clarification_questions
 # ============================================================
 
+
 class TestGetClarificationQuestions:
     def test_no_analysis_returns_empty(self):
         svc, db = _make_service()
@@ -271,13 +278,15 @@ class TestGetClarificationQuestions:
 
     def test_returns_question_objects(self):
         svc, db = _make_service()
-        q_data = [{
-            "question_id": 1,
-            "category": "技术参数",
-            "question": "速度要求是多少？",
-            "importance": "critical",
-            "suggested_answer": None
-        }]
+        q_data = [
+            {
+                "question_id": 1,
+                "category": "技术参数",
+                "question": "速度要求是多少？",
+                "importance": "critical",
+                "suggested_answer": None,
+            }
+        ]
         a = _make_mock_analysis(id=5, clarification_questions=q_data)
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = a
 
@@ -290,6 +299,7 @@ class TestGetClarificationQuestions:
 # ============================================================
 # 9. PresaleAIRequirementService.update_structured_requirement
 # ============================================================
+
 
 class TestUpdateStructuredRequirement:
     def test_not_found_raises(self):
@@ -344,6 +354,7 @@ class TestUpdateStructuredRequirement:
 # ============================================================
 # 10. PresaleAIRequirementService.get_requirement_confidence
 # ============================================================
+
 
 class TestGetRequirementConfidence:
     def test_no_analysis_returns_zero(self):

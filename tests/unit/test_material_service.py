@@ -4,8 +4,9 @@ Tests for material_service
 Covers: app/services/material_service.py
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
 from sqlalchemy.orm import Session
 
 from app.models.material import Material, MaterialCategory
@@ -62,7 +63,7 @@ class TestToResponse:
         mock_material.created_at = None
         mock_material.updated_at = None
 
-        with patch.object(MaterialResponse, 'model_validate') as mock_validate:
+        with patch.object(MaterialResponse, "model_validate") as mock_validate:
             mock_response = Mock(spec=MaterialResponse)
             mock_response.category_name = None
             mock_validate.return_value = mock_response
@@ -99,7 +100,7 @@ class TestToResponse:
         mock_material.created_at = None
         mock_material.updated_at = None
 
-        with patch.object(MaterialResponse, 'model_validate') as mock_validate:
+        with patch.object(MaterialResponse, "model_validate") as mock_validate:
             mock_response = Mock(spec=MaterialResponse)
             mock_response.category_name = None
             mock_validate.return_value = mock_response
@@ -125,7 +126,7 @@ class TestToResponse:
         mock_material.current_stock = None
         mock_material.lead_time_days = None
 
-        with patch.object(MaterialResponse, 'model_validate') as mock_validate:
+        with patch.object(MaterialResponse, "model_validate") as mock_validate:
             mock_response = Mock(spec=MaterialResponse)
             mock_validate.return_value = mock_response
 
@@ -151,7 +152,7 @@ class TestListMaterials:
 
         service = MaterialService(db_session)
 
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 0
@@ -172,7 +173,7 @@ class TestListMaterials:
 
         service = MaterialService(db_session)
 
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = ["item1", "item2"]
             mock_result.total = 50
@@ -192,7 +193,7 @@ class TestListMaterials:
 
         service = MaterialService(db_session)
 
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 0
@@ -213,7 +214,7 @@ class TestListMaterials:
 
         service = MaterialService(db_session)
 
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 0
@@ -222,10 +223,7 @@ class TestListMaterials:
             mock_list.return_value = mock_result
 
             service.list_materials(
-                category_id=5,
-                material_type="电气件",
-                is_key_material=True,
-                is_active=True
+                category_id=5, material_type="电气件", is_key_material=True, is_active=True
             )
 
             # Verify filters were applied
@@ -240,7 +238,7 @@ class TestListMaterials:
 
         service = MaterialService(db_session)
 
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 25
@@ -266,7 +264,7 @@ class TestGenerateCode:
 
         service = MaterialService(db_session)
 
-        with patch('app.utils.number_generator.generate_material_code') as mock_gen:
+        with patch("app.utils.number_generator.generate_material_code") as mock_gen:
             mock_gen.return_value = "MAT20250130001"
 
             result = service.generate_code()
@@ -288,7 +286,7 @@ class TestGenerateCode:
         mock_query.first = Mock(return_value=mock_category)
         db_session.query = Mock(return_value=mock_query)
 
-        with patch('app.utils.number_generator.generate_material_code') as mock_gen:
+        with patch("app.utils.number_generator.generate_material_code") as mock_gen:
             mock_gen.return_value = "ELC20250130001"
 
             result = service.generate_code(category_id=1)
@@ -306,7 +304,7 @@ class TestGenerateCode:
         mock_query.first = Mock(return_value=None)  # Category not found
         db_session.query = Mock(return_value=mock_query)
 
-        with patch('app.utils.number_generator.generate_material_code') as mock_gen:
+        with patch("app.utils.number_generator.generate_material_code") as mock_gen:
             mock_gen.return_value = "MAT20250130001"
 
             result = service.generate_code(category_id=999)

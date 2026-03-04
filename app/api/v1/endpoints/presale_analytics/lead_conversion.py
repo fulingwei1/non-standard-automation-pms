@@ -31,7 +31,7 @@ router = APIRouter()
 async def create_project_from_lead(
     lead_data: LeadConversionRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("presale_analytics:create"))
+    current_user: User = Depends(security.require_permission("presale_analytics:create")),
 ) -> Any:
     """从评估通过的销售线索创建项目
 
@@ -45,8 +45,8 @@ async def create_project_from_lead(
             data=LeadConversionResponse(
                 success=False,
                 lead_id=lead_data.lead_id,
-                message=f"评估未通过: {lead_data.decision}"
-            )
+                message=f"评估未通过: {lead_data.decision}",
+            ),
         )
 
     # 生成项目编号
@@ -63,8 +63,8 @@ async def create_project_from_lead(
                 project_id=existing_project.id,
                 project_code=project_code,
                 lead_id=lead_data.lead_id,
-                message=f"项目已存在，ID: {existing_project.id}"
-            )
+                message=f"项目已存在，ID: {existing_project.id}",
+            ),
         )
 
     # 查找或创建客户
@@ -76,7 +76,7 @@ async def create_project_from_lead(
             contact_name=lead_data.customer_contact,
             contact_phone=lead_data.customer_phone,
             is_active=True,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
         db.add(customer)
         db.flush()
@@ -111,7 +111,7 @@ async def create_project_from_lead(
             machine_code=f"M{str(i+1).zfill(3)}",
             name=f"{lead_data.lead_name}-设备{i+1}",
             status=MachineStatusEnum.PLANNING,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
         db.add(machine)
 
@@ -125,6 +125,6 @@ async def create_project_from_lead(
             project_id=project.id,
             project_code=project_code,
             lead_id=lead_data.lead_id,
-            message=f"已从线索 {lead_data.lead_id} 创建项目 {project_code}"
-        )
+            message=f"已从线索 {lead_data.lead_id} 创建项目 {project_code}",
+        ),
     )

@@ -26,7 +26,9 @@ def generate_purchase_requisition(
     *,
     db: Session = Depends(deps.get_db),
     project_ids: Optional[str] = Query(None, description="项目ID列表（逗号分隔）"),
-    material_ids: Optional[str] = Query(None, description="物料ID列表（逗号分隔），为空则生成所有短缺物料"),
+    material_ids: Optional[str] = Query(
+        None, description="物料ID列表（逗号分隔），为空则生成所有短缺物料"
+    ),
     supplier_id: Optional[int] = Query(None, description="默认供应商ID"),
     current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
@@ -49,8 +51,8 @@ def generate_purchase_requisition(
             BomItem.material_id,
             BomItem.material_code,
             BomItem.material_name,
-            func.sum(BomItem.quantity).label('total_demand'),
-            func.min(BomItem.required_date).label('earliest_date')
+            func.sum(BomItem.quantity).label("total_demand"),
+            func.min(BomItem.required_date).label("earliest_date"),
         )
         .join(BomHeader, BomItem.bom_id == BomHeader.id)
         .join(Machine, BomHeader.machine_id == Machine.id)
@@ -85,7 +87,9 @@ def generate_purchase_requisition(
             .all()
         )
         for po_item in po_items:
-            in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
+            in_transit_qty += (po_item.quantity or Decimal("0")) - (
+                po_item.received_qty or Decimal("0")
+            )
 
         total_available = current_stock + in_transit_qty
         shortage_qty = max(Decimal("0"), result.total_demand - total_available)
@@ -101,16 +105,18 @@ def generate_purchase_requisition(
             if not target_supplier_id:
                 continue  # 跳过没有供应商的物料
 
-            pr_items.append({
-                "material_id": result.material_id,
-                "material_code": result.material_code,
-                "material_name": result.material_name,
-                "quantity": purchase_qty,
-                "unit": material.unit,
-                "unit_price": material.last_price or material.standard_price or Decimal("0"),
-                "required_date": result.earliest_date,
-                "supplier_id": target_supplier_id
-            })
+            pr_items.append(
+                {
+                    "material_id": result.material_id,
+                    "material_code": result.material_code,
+                    "material_name": result.material_name,
+                    "quantity": purchase_qty,
+                    "unit": material.unit,
+                    "unit_price": material.last_price or material.standard_price or Decimal("0"),
+                    "required_date": result.earliest_date,
+                    "supplier_id": target_supplier_id,
+                }
+            )
             generated_count += 1
 
     if generated_count == 0:
@@ -118,8 +124,5 @@ def generate_purchase_requisition(
 
     return ResponseModel(
         message=f"成功生成 {generated_count} 条采购需求",
-        data={
-            "count": generated_count,
-            "items": pr_items
-        }
+        data={"count": generated_count, "items": pr_items},
     )

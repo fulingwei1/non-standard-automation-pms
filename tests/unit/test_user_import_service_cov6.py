@@ -2,12 +2,14 @@
 """
 第六批覆盖测试 - user_import_service.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 
 try:
     from app.services.user_import_service import UserImportService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -73,20 +75,24 @@ class TestValidateDataframe:
         assert len(errors) > 0
 
     def test_all_required_fields_present(self):
-        df = pd.DataFrame({
-            "username": ["alice"],
-            "real_name": ["Alice"],
-            "email": ["alice@example.com"],
-        })
+        df = pd.DataFrame(
+            {
+                "username": ["alice"],
+                "real_name": ["Alice"],
+                "email": ["alice@example.com"],
+            }
+        )
         errors = UserImportService.validate_dataframe(df)
         assert isinstance(errors, list)
 
     def test_exceeds_max_limit(self):
-        df = pd.DataFrame({
-            "username": [f"user{i}" for i in range(600)],
-            "real_name": [f"User {i}" for i in range(600)],
-            "email": [f"user{i}@example.com" for i in range(600)],
-        })
+        df = pd.DataFrame(
+            {
+                "username": [f"user{i}" for i in range(600)],
+                "real_name": [f"User {i}" for i in range(600)],
+                "email": [f"user{i}@example.com" for i in range(600)],
+            }
+        )
         errors = UserImportService.validate_dataframe(df)
         assert len(errors) > 0
 
@@ -94,11 +100,14 @@ class TestValidateDataframe:
 class TestValidateRow:
     def test_valid_row(self, mock_db):
         import pandas as pd
-        row = pd.Series({
-            "username": "alice_valid",
-            "real_name": "Alice",
-            "email": "alice@example.com",
-        })
+
+        row = pd.Series(
+            {
+                "username": "alice_valid",
+                "real_name": "Alice",
+                "email": "alice@example.com",
+            }
+        )
         existing_u = set()
         existing_e = set()
         result = UserImportService.validate_row(row, 1, mock_db, existing_u, existing_e)
@@ -106,31 +115,40 @@ class TestValidateRow:
 
     def test_missing_username(self, mock_db):
         import pandas as pd
-        row = pd.Series({
-            "username": "",
-            "real_name": "Alice",
-            "email": "alice@example.com",
-        })
+
+        row = pd.Series(
+            {
+                "username": "",
+                "real_name": "Alice",
+                "email": "alice@example.com",
+            }
+        )
         result = UserImportService.validate_row(row, 1, mock_db, set(), set())
         assert result is not None  # Should return error
 
     def test_short_username(self, mock_db):
         import pandas as pd
-        row = pd.Series({
-            "username": "ab",
-            "real_name": "Alice",
-            "email": "alice@example.com",
-        })
+
+        row = pd.Series(
+            {
+                "username": "ab",
+                "real_name": "Alice",
+                "email": "alice@example.com",
+            }
+        )
         result = UserImportService.validate_row(row, 1, mock_db, set(), set())
         assert result is not None  # Username too short
 
     def test_duplicate_username(self, mock_db):
         import pandas as pd
-        row = pd.Series({
-            "username": "alice",
-            "real_name": "Alice",
-            "email": "alice@example.com",
-        })
+
+        row = pd.Series(
+            {
+                "username": "alice",
+                "real_name": "Alice",
+                "email": "alice@example.com",
+            }
+        )
         existing_u = {"alice"}  # Already in set
         result = UserImportService.validate_row(row, 1, mock_db, existing_u, set())
         assert result is not None  # Duplicate error

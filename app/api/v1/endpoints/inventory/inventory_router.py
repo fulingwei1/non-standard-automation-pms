@@ -3,30 +3,32 @@
 库存管理API路由
 Team 2: 物料全流程跟踪系统
 """
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_db
 from app.core.auth import get_current_user
+from app.dependencies import get_db
 from app.models.user import User
 from app.services.inventory_management_service import (
+    InsufficientStockError,
     InventoryManagementService,
-    InsufficientStockError
 )
 from app.services.stock_count_service import StockCountService
-
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
 
 # ============ Pydantic Schemas ============
 
+
 class MaterialStockResponse(BaseModel):
     """库存响应"""
+
     id: int
     material_id: int
     material_code: str
@@ -48,6 +50,7 @@ class MaterialStockResponse(BaseModel):
 
 class MaterialTransactionResponse(BaseModel):
     """交易记录响应"""
+
     id: int
     material_code: str
     material_name: str
@@ -68,6 +71,7 @@ class MaterialTransactionResponse(BaseModel):
 
 class ReserveMaterialRequest(BaseModel):
     """预留物料请求"""
+
     material_id: int = Field(..., description="物料ID")
     quantity: float = Field(..., gt=0, description="预留数量")
     project_id: Optional[int] = Field(None, description="项目ID")
@@ -78,6 +82,7 @@ class ReserveMaterialRequest(BaseModel):
 
 class IssueMaterialRequest(BaseModel):
     """领料请求"""
+
     material_id: int = Field(..., description="物料ID")
     quantity: float = Field(..., gt=0, description="领料数量")
     location: str = Field(..., description="仓库位置")
@@ -91,6 +96,7 @@ class IssueMaterialRequest(BaseModel):
 
 class ReturnMaterialRequest(BaseModel):
     """退料请求"""
+
     material_id: int = Field(..., description="物料ID")
     quantity: float = Field(..., gt=0, description="退料数量")
     location: str = Field(..., description="仓库位置")
@@ -101,6 +107,7 @@ class ReturnMaterialRequest(BaseModel):
 
 class TransferStockRequest(BaseModel):
     """库存转移请求"""
+
     material_id: int = Field(..., description="物料ID")
     quantity: float = Field(..., gt=0, description="转移数量")
     from_location: str = Field(..., description="源位置")
@@ -111,6 +118,7 @@ class TransferStockRequest(BaseModel):
 
 class CreateCountTaskRequest(BaseModel):
     """创建盘点任务请求"""
+
     count_type: str = Field("FULL", description="盘点类型: FULL/PARTIAL/CYCLE")
     count_date: date = Field(..., description="盘点日期")
     location: Optional[str] = Field(None, description="盘点位置")
@@ -122,12 +130,14 @@ class CreateCountTaskRequest(BaseModel):
 
 class RecordActualQuantityRequest(BaseModel):
     """录入实盘数量请求"""
+
     actual_quantity: float = Field(..., description="实盘数量")
     remark: Optional[str] = Field(None, description="备注")
 
 
 class StockCountDetailResponse(BaseModel):
     """盘点明细响应"""
+
     id: int
     material_code: str
     material_name: str
@@ -145,6 +155,7 @@ class StockCountDetailResponse(BaseModel):
 
 class StockCountTaskResponse(BaseModel):
     """盘点任务响应"""
+
     id: int
     task_no: str
     count_type: str
@@ -163,28 +174,29 @@ class StockCountTaskResponse(BaseModel):
 
 # ============ API Endpoints ============
 
+
 @router.get("/stocks", response_model=List[MaterialStockResponse])
 def get_stocks(
     material_id: Optional[int] = Query(None, description="物料ID"),
     location: Optional[str] = Query(None, description="仓库位置"),
     status: Optional[str] = Query(None, description="库存状态"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     查询库存
-    
+
     - **material_id**: 物料ID (可选)
     - **location**: 仓库位置 (可选)
     - **status**: 库存状态 (可选)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     if material_id:
         stocks = service.get_stock(material_id, location)
     else:
         stocks = service.get_all_stocks(location=location, status=status)
-    
+
     return stocks
 
 
@@ -196,11 +208,11 @@ def get_material_transactions(
     end_date: Optional[datetime] = Query(None, description="结束日期"),
     limit: int = Query(100, le=500, description="返回数量限制"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     查询物料交易记录
-    
+
     - **material_id**: 物料ID
     - **transaction_type**: 交易类型 (可选)
     - **start_date**: 开始日期 (可选)
@@ -208,15 +220,15 @@ def get_material_transactions(
     - **limit**: 返回数量限制
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     transactions = service.get_transactions(
         material_id=material_id,
         transaction_type=transaction_type,
         start_date=start_date,
         end_date=end_date,
-        limit=limit
+        limit=limit,
     )
-    
+
     return transactions
 
 
@@ -224,11 +236,11 @@ def get_material_transactions(
 def reserve_material(
     request: ReserveMaterialRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     预留物料
-    
+
     - **material_id**: 物料ID
     - **quantity**: 预留数量
     - **project_id**: 项目ID (可选)
@@ -236,7 +248,7 @@ def reserve_material(
     - **expected_use_date**: 预计使用日期 (可选)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     try:
         reservation = service.reserve_material(
             material_id=request.material_id,
@@ -245,17 +257,17 @@ def reserve_material(
             work_order_id=request.work_order_id,
             expected_use_date=request.expected_use_date,
             created_by=current_user.id,
-            remark=request.remark
+            remark=request.remark,
         )
-        
+
         return {
             "success": True,
             "message": "物料预留成功",
             "reservation_id": reservation.id,
             "reservation_no": reservation.reservation_no,
-            "reserved_quantity": float(reservation.reserved_quantity)
+            "reserved_quantity": float(reservation.reserved_quantity),
         }
-    
+
     except InsufficientStockError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -267,11 +279,11 @@ def reserve_material(
 def issue_material(
     request: IssueMaterialRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     领料出库
-    
+
     - **material_id**: 物料ID
     - **quantity**: 领料数量
     - **location**: 仓库位置
@@ -281,7 +293,7 @@ def issue_material(
     - **cost_method**: 成本核算方法 (FIFO/LIFO/WEIGHTED_AVG)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     try:
         result = service.issue_material(
             material_id=request.material_id,
@@ -293,17 +305,17 @@ def issue_material(
             operator_id=current_user.id,
             reservation_id=request.reservation_id,
             remark=request.remark,
-            cost_method=request.cost_method
+            cost_method=request.cost_method,
         )
-        
+
         return {
             "success": True,
-            "message": result['message'],
-            "total_quantity": float(result['total_quantity']),
-            "total_cost": float(result['total_cost']),
-            "transactions": len(result['transactions'])
+            "message": result["message"],
+            "total_quantity": float(result["total_quantity"]),
+            "total_cost": float(result["total_cost"]),
+            "transactions": len(result["transactions"]),
         }
-    
+
     except InsufficientStockError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -315,11 +327,11 @@ def issue_material(
 def return_material(
     request: ReturnMaterialRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     退料入库
-    
+
     - **material_id**: 物料ID
     - **quantity**: 退料数量
     - **location**: 仓库位置
@@ -327,7 +339,7 @@ def return_material(
     - **work_order_id**: 工单ID (可选)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     try:
         result = service.return_material(
             material_id=request.material_id,
@@ -336,16 +348,16 @@ def return_material(
             batch_number=request.batch_number,
             work_order_id=request.work_order_id,
             operator_id=current_user.id,
-            remark=request.remark
+            remark=request.remark,
         )
-        
+
         return {
             "success": True,
-            "message": result['message'],
-            "transaction_id": result['transaction'].id,
-            "stock_quantity": float(result['stock'].quantity)
+            "message": result["message"],
+            "transaction_id": result["transaction"].id,
+            "stock_quantity": float(result["stock"].quantity),
         }
-    
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"退料失败: {str(e)}")
@@ -355,11 +367,11 @@ def return_material(
 def transfer_stock(
     request: TransferStockRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     库存转移
-    
+
     - **material_id**: 物料ID
     - **quantity**: 转移数量
     - **from_location**: 源位置
@@ -367,7 +379,7 @@ def transfer_stock(
     - **batch_number**: 批次号 (可选)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     try:
         result = service.transfer_stock(
             material_id=request.material_id,
@@ -376,16 +388,16 @@ def transfer_stock(
             to_location=request.to_location,
             batch_number=request.batch_number,
             operator_id=current_user.id,
-            remark=request.remark
+            remark=request.remark,
         )
-        
+
         return {
             "success": True,
-            "message": result['message'],
-            "from_stock_quantity": float(result['from_stock'].quantity),
-            "to_stock_quantity": float(result['to_stock'].quantity)
+            "message": result["message"],
+            "from_stock_quantity": float(result["from_stock"].quantity),
+            "to_stock_quantity": float(result["to_stock"].quantity),
         }
-    
+
     except InsufficientStockError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -400,24 +412,21 @@ def get_count_tasks(
     end_date: Optional[date] = Query(None, description="结束日期"),
     limit: int = Query(50, le=200, description="返回数量限制"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     查询盘点任务列表
-    
+
     - **status**: 任务状态 (可选)
     - **start_date**: 开始日期 (可选)
     - **end_date**: 结束日期 (可选)
     """
     service = StockCountService(db, current_user.tenant_id)
-    
+
     tasks = service.get_count_tasks(
-        status=status,
-        start_date=start_date,
-        end_date=end_date,
-        limit=limit
+        status=status, start_date=start_date, end_date=end_date, limit=limit
     )
-    
+
     return tasks
 
 
@@ -425,11 +434,11 @@ def get_count_tasks(
 def create_count_task(
     request: CreateCountTaskRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     创建盘点任务
-    
+
     - **count_type**: 盘点类型 (FULL-全盘, PARTIAL-抽盘, CYCLE-循环盘点)
     - **count_date**: 盘点日期
     - **location**: 盘点位置 (可选)
@@ -438,7 +447,7 @@ def create_count_task(
     - **assigned_to**: 指派盘点人ID (可选)
     """
     service = StockCountService(db, current_user.tenant_id)
-    
+
     try:
         task = service.create_count_task(
             count_type=request.count_type,
@@ -448,11 +457,11 @@ def create_count_task(
             material_ids=request.material_ids,
             created_by=current_user.id,
             assigned_to=request.assigned_to,
-            remark=request.remark
+            remark=request.remark,
         )
-        
+
         return task
-    
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"创建盘点任务失败: {str(e)}")
@@ -460,13 +469,11 @@ def create_count_task(
 
 @router.get("/count/tasks/{task_id}/details", response_model=List[StockCountDetailResponse])
 def get_count_details(
-    task_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取盘点明细列表"""
     service = StockCountService(db, current_user.tenant_id)
-    
+
     details = service.get_count_details(task_id)
     return details
 
@@ -476,24 +483,24 @@ def record_actual_quantity(
     detail_id: int,
     request: RecordActualQuantityRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     录入实盘数量
-    
+
     - **detail_id**: 盘点明细ID
     - **actual_quantity**: 实盘数量
     """
     service = StockCountService(db, current_user.tenant_id)
-    
+
     try:
         detail = service.record_actual_quantity(
             detail_id=detail_id,
             actual_quantity=Decimal(str(request.actual_quantity)),
             counted_by=current_user.id,
-            remark=request.remark
+            remark=request.remark,
         )
-        
+
         return {
             "success": True,
             "message": "录入成功",
@@ -501,9 +508,9 @@ def record_actual_quantity(
             "system_quantity": float(detail.system_quantity),
             "actual_quantity": float(detail.actual_quantity or 0),
             "difference": float(detail.difference or 0),
-            "difference_rate": float(detail.difference_rate or 0)
+            "difference_rate": float(detail.difference_rate or 0),
         }
-    
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"录入失败: {str(e)}")
@@ -514,30 +521,28 @@ def approve_count_task(
     task_id: int,
     auto_adjust: bool = Query(True, description="是否自动执行库存调整"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     批准盘点调整
-    
+
     - **task_id**: 盘点任务ID
     - **auto_adjust**: 是否自动执行库存调整
     """
     service = StockCountService(db, current_user.tenant_id)
-    
+
     try:
         result = service.approve_adjustment(
-            task_id=task_id,
-            approved_by=current_user.id,
-            auto_adjust=auto_adjust
+            task_id=task_id, approved_by=current_user.id, auto_adjust=auto_adjust
         )
-        
+
         return {
             "success": True,
-            "message": result['message'],
-            "total_adjustments": result['total_adjustments'],
-            "total_diff_value": result['total_diff_value']
+            "message": result["message"],
+            "total_adjustments": result["total_adjustments"],
+            "total_diff_value": result["total_diff_value"],
         }
-    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -551,23 +556,21 @@ def get_turnover_analysis(
     start_date: Optional[datetime] = Query(None, description="开始日期"),
     end_date: Optional[datetime] = Query(None, description="结束日期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     库存周转率分析
-    
+
     - **material_id**: 物料ID (可选,不填则分析所有物料)
     - **start_date**: 开始日期 (可选)
     - **end_date**: 结束日期 (可选)
     """
     service = InventoryManagementService(db, current_user.tenant_id)
-    
+
     result = service.calculate_turnover_rate(
-        material_id=material_id,
-        start_date=start_date,
-        end_date=end_date
+        material_id=material_id, start_date=start_date, end_date=end_date
     )
-    
+
     return result
 
 
@@ -575,13 +578,13 @@ def get_turnover_analysis(
 def get_aging_analysis(
     location: Optional[str] = Query(None, description="仓库位置"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     库龄分析
-    
+
     - **location**: 仓库位置 (可选)
-    
+
     返回物料库龄分析,按0-30天、31-90天、91-180天、181-365天、365天以上分类
     """
     service = InventoryManagementService(db, current_user.tenant_id)

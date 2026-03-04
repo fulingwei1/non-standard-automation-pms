@@ -16,11 +16,12 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ==================== PLC模块库 Schemas ====================
+
 
 class PlcModuleLibraryBase(BaseModel):
     """PLC模块库基础"""
+
     module_name: str = Field(..., max_length=100, description="模块名称")
     category: Optional[str] = Field(None, description="分类")
     plc_brand: Optional[str] = Field(None, description="适用PLC品牌")
@@ -31,11 +32,13 @@ class PlcModuleLibraryBase(BaseModel):
 
 class PlcModuleLibraryCreate(PlcModuleLibraryBase):
     """创建PLC模块"""
+
     pass
 
 
 class PlcModuleLibraryUpdate(BaseModel):
     """更新PLC模块"""
+
     module_name: Optional[str] = Field(None, max_length=100)
     category: Optional[str] = None
     description: Optional[str] = None
@@ -46,6 +49,7 @@ class PlcModuleLibraryUpdate(BaseModel):
 
 class PlcModuleLibraryResponse(PlcModuleLibraryBase):
     """PLC模块响应"""
+
     id: int
     module_code: Optional[str] = None
     contributor_id: int
@@ -57,5 +61,3 @@ class PlcModuleLibraryResponse(PlcModuleLibraryBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-

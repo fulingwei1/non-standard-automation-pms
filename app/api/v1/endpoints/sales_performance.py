@@ -4,8 +4,9 @@
 提供实时排行榜、提成计算、PK 对战
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 实时业绩排行榜 ==========
 
+
 @router.get("/performance/leaderboard", summary="实时业绩排行榜")
 def get_performance_leaderboard(
     period: str = Query("monthly", description="周期：daily/weekly/monthly/quarterly/yearly"),
@@ -28,13 +30,13 @@ def get_performance_leaderboard(
 ) -> Any:
     """
     实时业绩排行榜
-    
+
     维度：
     - 个人排行榜
     - 团队排行榜
     - 新人排行榜（入职<1 年）
     """
-    
+
     # 模拟排行榜数据
     leaderboard = {
         "period": period,
@@ -46,7 +48,6 @@ def get_performance_leaderboard(
             "yearly": "本年度",
         }.get(period, "本月"),
         "updated_at": date.today().isoformat(),
-        
         "individual_ranking": [
             {
                 "rank": 1,
@@ -114,7 +115,6 @@ def get_performance_leaderboard(
                 "rank_change": 2,
             },
         ],
-        
         "team_ranking": [
             {
                 "rank": 1,
@@ -144,7 +144,6 @@ def get_performance_leaderboard(
                 "avg_per_person": 6366667,
             },
         ],
-        
         "newcomer_ranking": [
             {
                 "rank": 1,
@@ -169,7 +168,6 @@ def get_performance_leaderboard(
                 "deals_won": 3,
             },
         ],
-        
         "top_performers": {
             "highest_revenue": {"sales_name": "张三", "value": 15800000},
             "highest_completion": {"sales_name": "张三", "value": 158.0},
@@ -177,11 +175,12 @@ def get_performance_leaderboard(
             "largest_deal": {"sales_name": "李四", "value": 2800000},
         },
     }
-    
+
     return leaderboard
 
 
 # ========== 2. 提成自动计算 ==========
+
 
 @router.get("/commission/calculate", summary="提成计算")
 def calculate_commission(
@@ -192,26 +191,24 @@ def calculate_commission(
 ) -> Any:
     """
     自动计算销售提成
-    
+
     规则：
     - 阶梯提成（完成率越高，提成比例越高）
     - 产品类型系数（高毛利产品系数高）
     - 回款系数（按实际回款计算）
     """
-    
+
     # 模拟提成计算数据
     commission_data = {
         "sales_id": sales_id or 101,
         "sales_name": "张三",
         "month": month or "2025-02",
-        
         "base_data": {
             "monthly_target": 10000000,
             "monthly_revenue": 15800000,
             "completion_rate": 158.0,
             "deals_won": 12,
         },
-        
         "commission_rules": {
             "tiers": [
                 {"min_rate": 0, "max_rate": 80, "commission_rate": 1.0, "label": "基础档"},
@@ -227,7 +224,6 @@ def calculate_commission(
             },
             "collection_coefficient": 0.9,  # 回款系数
         },
-        
         "deals": [
             {
                 "deal_id": 1001,
@@ -269,7 +265,6 @@ def calculate_commission(
                 "commission_amount": 75600,
             },
         ],
-        
         "summary": {
             "total_revenue": 15800000,
             "total_base_commission": 476000,
@@ -279,7 +274,6 @@ def calculate_commission(
             "tax_estimate": 68544,
             "net_commission": 388416,
         },
-        
         "breakdown": {
             "by_tier": [
                 {"tier": "卓越档", "revenue": 12000000, "commission": 360000},
@@ -293,7 +287,7 @@ def calculate_commission(
             ],
         },
     }
-    
+
     return commission_data
 
 
@@ -303,7 +297,7 @@ def get_commission_rules(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取提成计算规则"""
-    
+
     return {
         "commission_tiers": [
             {
@@ -353,6 +347,7 @@ def get_commission_rules(
 
 # ========== 3. PK 对战系统 ==========
 
+
 @router.get("/pk/battles", summary="PK 对战列表")
 def get_pk_battles(
     status: Optional[str] = Query(None, description="状态：active/completed"),
@@ -361,12 +356,12 @@ def get_pk_battles(
 ) -> Any:
     """
     销售 PK 对战列表
-    
+
     类型：
     - 自由 PK（销售之间自愿发起）
     - 官方 PK（公司组织的 PK 活动）
     """
-    
+
     battles = {
         "active_battles": [
             {
@@ -426,7 +421,6 @@ def get_pk_battles(
                 "days_remaining": 3,
             },
         ],
-        
         "completed_battles": [
             {
                 "battle_id": 3,
@@ -446,7 +440,6 @@ def get_pk_battles(
                 "prize_awarded": 20000,
             },
         ],
-        
         "my_battles": [
             {
                 "battle_id": 1,
@@ -464,7 +457,7 @@ def get_pk_battles(
             },
         ],
     }
-    
+
     return battles
 
 
@@ -478,7 +471,7 @@ def create_pk_challenge(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """发起 PK 挑战"""
-    
+
     return {
         "message": "PK 挑战已发送",
         "challenge_id": 123,
@@ -492,6 +485,7 @@ def create_pk_challenge(
 
 # ========== 4. 成就系统 ==========
 
+
 @router.get("/achievements", summary="成就系统")
 def get_achievements(
     sales_id: Optional[int] = Query(None, description="销售 ID"),
@@ -500,13 +494,13 @@ def get_achievements(
 ) -> Any:
     """
     销售成就系统
-    
+
     成就类型：
     - 业绩成就（签单王、破纪录等）
     - 进步成就（最快进步等）
     - 技能成就（产品专家等）
     """
-    
+
     achievements = {
         "sales_id": sales_id or 101,
         "sales_name": "张三",
@@ -515,7 +509,6 @@ def get_achievements(
         "level": 8,
         "level_name": "销售精英",
         "next_level_points": 3500,
-        
         "badges": [
             {
                 "badge_id": 1,
@@ -563,7 +556,6 @@ def get_achievements(
                 "points": 850,
             },
         ],
-        
         "progress": [
             {
                 "achievement_name": "百万俱乐部",
@@ -580,17 +572,17 @@ def get_achievements(
                 "progress": 78.0,
             },
         ],
-        
         "recent_achievements": [
             {"name": "常胜将军", "earned_date": "2025-02-28", "points": 850},
             {"name": "破纪录者", "earned_date": "2025-02-10", "points": 800},
         ],
     }
-    
+
     return achievements
 
 
 # ========== 5. 激励方案 ==========
+
 
 @router.get("/incentive-plans", summary="激励方案")
 def get_incentive_plans(
@@ -598,7 +590,7 @@ def get_incentive_plans(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取当前激励方案"""
-    
+
     return {
         "active_plans": [
             {
@@ -630,7 +622,6 @@ def get_incentive_plans(
                 "total_prize_pool": 100000,
             },
         ],
-        
         "my_incentives": [
             {
                 "plan_name": "2026 年 Q1 冲刺计划",
@@ -645,12 +636,10 @@ def get_incentive_plans(
                 "status": "on_track",
             },
         ],
-        
         "historical_rewards": [
             {"month": "2025-01", "plan": "12 月业绩 PK 赛", "amount": 20000, "status": "paid"},
             {"month": "2025-01", "plan": "新人王成就", "amount": 5000, "status": "paid"},
             {"month": "2024-12", "plan": "季度冠军奖", "amount": 20000, "status": "paid"},
         ],
-        
         "total_earnings_ytd": 125000,
     }

@@ -53,9 +53,7 @@ class PresaleVisitRecord(Base, TimestampMixin):
     presale_ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=False, comment="售前工单ID"
     )
-    customer_id = Column(
-        Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID"
-    )
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
     visit_date = Column(Date, nullable=False, comment="拜访日期")
     visit_type = Column(
         Enum(
@@ -91,9 +89,7 @@ class PresaleMobileQuickEstimate(Base, TimestampMixin):
     presale_ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=True, comment="售前工单ID"
     )
-    customer_id = Column(
-        Integer, ForeignKey("customers.id"), nullable=True, comment="客户ID"
-    )
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True, comment="客户ID")
     equipment_photo_url = Column(String(255), comment="设备照片URL")
     recognized_equipment = Column(String(200), comment="识别的设备名称")
     equipment_description = Column(Text, comment="设备描述")
@@ -115,14 +111,10 @@ class PresaleMobileOfflineData(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
-    data_type = Column(
-        String(50), nullable=False, comment="数据类型：chat/visit/estimate"
-    )
+    data_type = Column(String(50), nullable=False, comment="数据类型：chat/visit/estimate")
     local_id = Column(String(100), comment="本地临时ID")
     data_payload = Column(JSON, comment="数据内容")
-    sync_status = Column(
-        String(20), default="pending", comment="同步状态：pending/synced/failed"
-    )
+    sync_status = Column(String(20), default="pending", comment="同步状态：pending/synced/failed")
     synced_at = Column(DateTime, comment="同步时间")
     error_message = Column(Text, comment="错误信息")
 

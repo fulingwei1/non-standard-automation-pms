@@ -3,9 +3,11 @@
 
 测试角色权限的继承关系和权限传递
 """
+
 import pytest
 from sqlalchemy.orm import Session
-from app.models.user import Role, ApiPermission, RoleApiPermission, User, UserRole
+
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 
 
 class TestRolePermissionInheritance:
@@ -86,9 +88,11 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 验证权限关联
-        perms = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == base_role.id
-        ).all()
+        perms = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == base_role.id)
+            .all()
+        )
         assert len(perms) == 1
 
     def test_02_child_role_inherits_parent_permissions(
@@ -110,11 +114,12 @@ class TestRolePermissionInheritance:
                 return []
 
             # 直接权限
-            direct_perms = session.query(ApiPermission).join(
-                RoleApiPermission
-            ).filter(
-                RoleApiPermission.role_id == role_id
-            ).all()
+            direct_perms = (
+                session.query(ApiPermission)
+                .join(RoleApiPermission)
+                .filter(RoleApiPermission.role_id == role_id)
+                .all()
+            )
 
             # 继承权限
             inherited_perms = []
@@ -147,11 +152,12 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 子角色应该拥有读+编辑权限
-        child_direct_perms = db_session.query(ApiPermission).join(
-            RoleApiPermission
-        ).filter(
-            RoleApiPermission.role_id == child_role.id
-        ).all()
+        child_direct_perms = (
+            db_session.query(ApiPermission)
+            .join(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == child_role.id)
+            .all()
+        )
 
         assert len(child_direct_perms) == 1  # 直接权限1个
         assert test_permissions[1] in child_direct_perms
@@ -182,18 +188,24 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 各级分配不同权限
-        db_session.add(RoleApiPermission(
-            role_id=level1_role.id,
-            permission_id=test_permissions[0].id,
-        ))
-        db_session.add(RoleApiPermission(
-            role_id=level2_role.id,
-            permission_id=test_permissions[1].id,
-        ))
-        db_session.add(RoleApiPermission(
-            role_id=level3_role.id,
-            permission_id=test_permissions[2].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=level1_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
+        db_session.add(
+            RoleApiPermission(
+                role_id=level2_role.id,
+                permission_id=test_permissions[1].id,
+            )
+        )
+        db_session.add(
+            RoleApiPermission(
+                role_id=level3_role.id,
+                permission_id=test_permissions[2].id,
+            )
+        )
         db_session.commit()
 
         # 三级角色应该拥有所有权限
@@ -206,26 +218,30 @@ class TestRolePermissionInheritance:
     ):
         """测试5：权限覆盖"""
         # 父角色有读权限
-        db_session.add(RoleApiPermission(
-            role_id=base_role.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=base_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
         db_session.commit()
 
         # 子角色明确禁止读权限（通过删除或标记）
         # 在实际实现中可能需要额外的字段来表示"明确拒绝"
         # 这里简化处理：不继承该权限
-        
-        child_direct_perms = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == child_role.id,
-            RoleApiPermission.permission_id == test_permissions[0].id
-        ).all()
+
+        child_direct_perms = (
+            db_session.query(RoleApiPermission)
+            .filter(
+                RoleApiPermission.role_id == child_role.id,
+                RoleApiPermission.permission_id == test_permissions[0].id,
+            )
+            .all()
+        )
 
         assert len(child_direct_perms) == 0  # 子角色未明确分配
 
-    def test_06_user_multiple_roles(
-        self, db_session: Session, test_permissions
-    ):
+    def test_06_user_multiple_roles(self, db_session: Session, test_permissions):
         """测试6：用户拥有多个角色"""
         # 创建两个角色
         role1 = Role(
@@ -242,20 +258,25 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 角色A：读权限
-        db_session.add(RoleApiPermission(
-            role_id=role1.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=role1.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
 
         # 角色B：编辑权限
-        db_session.add(RoleApiPermission(
-            role_id=role2.id,
-            permission_id=test_permissions[1].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=role2.id,
+                permission_id=test_permissions[1].id,
+            )
+        )
         db_session.commit()
 
         # 创建用户并分配两个角色
         from app.models.organization import Employee
+
         employee = Employee(
             employee_code="EMP-MULTI",
             name="多角色用户",
@@ -266,6 +287,7 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         from app.core.security import get_password_hash
+
         user = User(
             employee_id=employee.id,
             username="multi_role_user",
@@ -282,14 +304,10 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 用户应该拥有两个角色的权限并集
-        user_roles = db_session.query(UserRole).filter(
-            UserRole.user_id == user.id
-        ).all()
+        user_roles = db_session.query(UserRole).filter(UserRole.user_id == user.id).all()
         assert len(user_roles) == 2
 
-    def test_07_permission_hierarchy(
-        self, db_session: Session, test_permissions
-    ):
+    def test_07_permission_hierarchy(self, db_session: Session, test_permissions):
         """测试7：权限层级关系"""
         # 定义权限依赖：删除依赖编辑，编辑依赖读
         # 这里简化为角色层级来模拟
@@ -314,50 +332,62 @@ class TestRolePermissionInheritance:
         db_session.commit()
 
         # 查看者：只读
-        db_session.add(RoleApiPermission(
-            role_id=viewer_role.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=viewer_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
 
         # 编辑者：读+编辑
-        db_session.add_all([
-            RoleApiPermission(
-                role_id=editor_role.id,
-                permission_id=test_permissions[0].id,
-            ),
-            RoleApiPermission(
-                role_id=editor_role.id,
-                permission_id=test_permissions[1].id,
-            ),
-        ])
+        db_session.add_all(
+            [
+                RoleApiPermission(
+                    role_id=editor_role.id,
+                    permission_id=test_permissions[0].id,
+                ),
+                RoleApiPermission(
+                    role_id=editor_role.id,
+                    permission_id=test_permissions[1].id,
+                ),
+            ]
+        )
 
         # 管理员：读+编辑+删除
-        db_session.add_all([
-            RoleApiPermission(
-                role_id=admin_role.id,
-                permission_id=test_permissions[0].id,
-            ),
-            RoleApiPermission(
-                role_id=admin_role.id,
-                permission_id=test_permissions[1].id,
-            ),
-            RoleApiPermission(
-                role_id=admin_role.id,
-                permission_id=test_permissions[2].id,
-            ),
-        ])
+        db_session.add_all(
+            [
+                RoleApiPermission(
+                    role_id=admin_role.id,
+                    permission_id=test_permissions[0].id,
+                ),
+                RoleApiPermission(
+                    role_id=admin_role.id,
+                    permission_id=test_permissions[1].id,
+                ),
+                RoleApiPermission(
+                    role_id=admin_role.id,
+                    permission_id=test_permissions[2].id,
+                ),
+            ]
+        )
         db_session.commit()
 
         # 验证权限数量
-        viewer_perms = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == viewer_role.id
-        ).count()
-        editor_perms = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == editor_role.id
-        ).count()
-        admin_perms = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == admin_role.id
-        ).count()
+        viewer_perms = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == viewer_role.id)
+            .count()
+        )
+        editor_perms = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == editor_role.id)
+            .count()
+        )
+        admin_perms = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == admin_role.id)
+            .count()
+        )
 
         assert viewer_perms == 1
         assert editor_perms == 2
@@ -368,44 +398,52 @@ class TestRolePermissionInheritance:
     ):
         """测试8：动态修改角色权限"""
         # 初始权限
-        db_session.add(RoleApiPermission(
-            role_id=base_role.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=base_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
         db_session.commit()
 
-        initial_count = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == base_role.id
-        ).count()
+        initial_count = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == base_role.id)
+            .count()
+        )
         assert initial_count == 1
 
         # 添加新权限
-        db_session.add(RoleApiPermission(
-            role_id=base_role.id,
-            permission_id=test_permissions[1].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=base_role.id,
+                permission_id=test_permissions[1].id,
+            )
+        )
         db_session.commit()
 
-        new_count = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == base_role.id
-        ).count()
+        new_count = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == base_role.id)
+            .count()
+        )
         assert new_count == 2
 
         # 移除权限
         db_session.query(RoleApiPermission).filter(
             RoleApiPermission.role_id == base_role.id,
-            RoleApiPermission.permission_id == test_permissions[0].id
+            RoleApiPermission.permission_id == test_permissions[0].id,
         ).delete()
         db_session.commit()
 
-        final_count = db_session.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == base_role.id
-        ).count()
+        final_count = (
+            db_session.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == base_role.id)
+            .count()
+        )
         assert final_count == 1
 
-    def test_09_inactive_role_permissions(
-        self, db_session: Session, test_permissions
-    ):
+    def test_09_inactive_role_permissions(self, db_session: Session, test_permissions):
         """测试9：非活跃角色权限"""
         inactive_role = Role(
             role_code="INACTIVE_ROLE",
@@ -415,19 +453,23 @@ class TestRolePermissionInheritance:
         db_session.add(inactive_role)
         db_session.commit()
 
-        db_session.add(RoleApiPermission(
-            role_id=inactive_role.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=inactive_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
         db_session.commit()
 
         # 查询活跃角色的权限（应过滤非活跃角色）
-        active_role_perms = db_session.query(RoleApiPermission).join(
-            Role
-        ).filter(
-            Role.is_active == True,
-            RoleApiPermission.permission_id == test_permissions[0].id
-        ).all()
+        active_role_perms = (
+            db_session.query(RoleApiPermission)
+            .join(Role)
+            .filter(
+                Role.is_active == True, RoleApiPermission.permission_id == test_permissions[0].id
+            )
+            .all()
+        )
 
         # 非活跃角色的权限不应包含在内
         assert inactive_role.id not in [rp.role_id for rp in active_role_perms]
@@ -437,10 +479,12 @@ class TestRolePermissionInheritance:
     ):
         """测试10：权限检查（含继承）"""
         # 父角色权限
-        db_session.add(RoleApiPermission(
-            role_id=base_role.id,
-            permission_id=test_permissions[0].id,
-        ))
+        db_session.add(
+            RoleApiPermission(
+                role_id=base_role.id,
+                permission_id=test_permissions[0].id,
+            )
+        )
         db_session.commit()
 
         # 权限检查函数
@@ -450,12 +494,14 @@ class TestRolePermissionInheritance:
                 return False
 
             # 检查直接权限
-            direct_perm = session.query(ApiPermission).join(
-                RoleApiPermission
-            ).filter(
-                RoleApiPermission.role_id == role_id,
-                ApiPermission.perm_code == permission_code
-            ).first()
+            direct_perm = (
+                session.query(ApiPermission)
+                .join(RoleApiPermission)
+                .filter(
+                    RoleApiPermission.role_id == role_id, ApiPermission.perm_code == permission_code
+                )
+                .first()
+            )
 
             if direct_perm:
                 return True

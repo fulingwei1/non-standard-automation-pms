@@ -12,16 +12,15 @@ Generated endpoints:
   ... and 1 more
 """
 
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from tests.factories import ProjectStageFactory, ProjectWithCustomerFactory
 
-import uuid
-
 _S10 = f"S10-{uuid.uuid4().hex[:8]}"
-
 
 
 @pytest.fixture
@@ -45,7 +44,7 @@ class TestStagesAPI:
             "stage_code": _S10,
             "stage_name": "测试阶段",
             "stage_order": 10,
-            "is_active": True
+            "is_active": True,
         }
 
         response = api_client.post("/api/v1/stages", json=stage_data)
@@ -62,10 +61,7 @@ class TestStagesAPI:
         project = ProjectWithCustomerFactory()
         stage = ProjectStageFactory(project=project)
 
-        update_data = {
-            "stage_name": "更新后的阶段名称",
-            "is_active": False
-        }
+        update_data = {"stage_name": "更新后的阶段名称", "is_active": False}
 
         response = api_client.put(f"/api/v1/stages/{stage.id}", json=update_data)
         if response.status_code == 422:
@@ -94,11 +90,7 @@ class TestStagesAPI:
 
     def test_post_stages_statuses(self, api_client, db_session):
         """测试 POST /api/v1/stages/statuses - 创建状态"""
-        status_data = {
-            "status_code": "ST99",
-            "status_name": "测试状态",
-            "stage_code": "S1"
-        }
+        status_data = {"status_code": "ST99", "status_name": "测试状态", "stage_code": "S1"}
 
         response = api_client.post("/api/v1/stages/statuses", json=status_data)
         if response.status_code == 404:
@@ -143,8 +135,7 @@ class TestProjectStagesAPI:
         }
 
         response = api_client.post(
-            f"/api/v1/projects/{project.id}/advance-stage",
-            json=advance_data
+            f"/api/v1/projects/{project.id}/advance-stage", json=advance_data
         )
         assert response.status_code in [200, 400, 404, 422]
 
@@ -167,10 +158,7 @@ class TestProjectStagesAPI:
             "progress_pct": 50,
         }
 
-        response = api_client.put(
-            f"/api/v1/projects/{project.id}/stages/S1",
-            json=update_data
-        )
+        response = api_client.put(f"/api/v1/projects/{project.id}/stages/S1", json=update_data)
         if response.status_code == 405:
             pytest.skip("Stage update endpoint not implemented")
         if response.status_code == 422:
@@ -197,7 +185,9 @@ class TestProjectStagesAPI:
         if response.status_code == 200:
             data = response.json()
             # 支持多种响应格式
-            assert "data" in data or "progress" in data or "stages" in data or "total_stages" in data
+            assert (
+                "data" in data or "progress" in data or "stages" in data or "total_stages" in data
+            )
 
 
 class TestStagesEdgeCases:
@@ -213,8 +203,7 @@ class TestStagesEdgeCases:
         }
 
         response = api_client.post(
-            f"/api/v1/projects/{project.id}/advance-stage",
-            json=advance_data
+            f"/api/v1/projects/{project.id}/advance-stage", json=advance_data
         )
         if response.status_code == 404:
             pytest.skip("Advance stage endpoint not found")
@@ -232,8 +221,7 @@ class TestStagesEdgeCases:
         }
 
         response = api_client.post(
-            f"/api/v1/projects/{project.id}/advance-stage",
-            json=advance_data
+            f"/api/v1/projects/{project.id}/advance-stage", json=advance_data
         )
         if response.status_code == 404:
             pytest.skip("Advance stage endpoint not found")

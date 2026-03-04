@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.approval_engine.adapters.invoice")
 
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
 from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
 
 

@@ -3,8 +3,9 @@
 第四十五批覆盖：stage_template/stage_management.py
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.stage_template.stage_management")
 

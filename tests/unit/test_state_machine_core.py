@@ -5,8 +5,9 @@
 只测试核心逻辑，不依赖数据库
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestStateMachinePermissionChecker:
@@ -147,14 +148,14 @@ class TestStateMachineNotifier:
         notifier = StateMachineNotifier()
 
         # 测试 created_by_id 字段
-        entity = Mock(spec=['created_by_id'])
+        entity = Mock(spec=["created_by_id"])
         entity.created_by_id = 10
 
         recipients = notifier.resolve_notification_recipients(entity, ["creator"])
         assert recipients == [10]
 
         # 测试 created_by 关系
-        entity2 = Mock(spec=['created_by'])
+        entity2 = Mock(spec=["created_by"])
         creator = Mock()
         creator.id = 20
         entity2.created_by = creator
@@ -317,11 +318,11 @@ class TestStateMachineEnhanced:
         user_without_permission.has_permission = Mock(return_value=False)
 
         with pytest.raises(PermissionDeniedError) as exc_info:
-            with patch.object(state_machine, '_create_audit_log'), \
-                 patch.object(state_machine, '_send_notifications'):
-                state_machine.transition_to(
-                    "PUBLISHED", current_user=user_without_permission
-                )
+            with (
+                patch.object(state_machine, "_create_audit_log"),
+                patch.object(state_machine, "_send_notifications"),
+            ):
+                state_machine.transition_to("PUBLISHED", current_user=user_without_permission)
 
         assert "缺少权限" in str(exc_info.value)
 
@@ -358,8 +359,8 @@ def test_state_machine_imports():
     from app.core.state_machine.exceptions import (
         PermissionDeniedError,
     )
-    from app.core.state_machine.permissions import StateMachinePermissionChecker
     from app.core.state_machine.notifications import StateMachineNotifier
+    from app.core.state_machine.permissions import StateMachinePermissionChecker
 
     # 验证类存在
     assert StateMachine is not None
@@ -375,8 +376,8 @@ def test_state_transition_log_model_import():
 
     # 验证模型类存在
     assert StateTransitionLog is not None
-    assert hasattr(StateTransitionLog, '__tablename__')
-    assert StateTransitionLog.__tablename__ == 'state_transition_logs'
+    assert hasattr(StateTransitionLog, "__tablename__")
+    assert StateTransitionLog.__tablename__ == "state_transition_logs"
 
 
 if __name__ == "__main__":

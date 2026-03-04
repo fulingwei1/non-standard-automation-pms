@@ -14,7 +14,6 @@ from app.models.enums import (
     TemplateProjectTypeEnum,
 )
 
-
 # ==================== 节点定义 Schemas ====================
 
 
@@ -29,25 +28,17 @@ class NodeDefinitionBase(BaseModel):
     completion_method: CompletionMethodEnum = Field(
         default=CompletionMethodEnum.MANUAL, description="完成方式"
     )
-    dependency_node_ids: Optional[List[int]] = Field(
-        default=None, description="前置依赖节点ID列表"
-    )
+    dependency_node_ids: Optional[List[int]] = Field(default=None, description="前置依赖节点ID列表")
     is_required: bool = Field(default=True, description="是否必需节点")
     required_attachments: bool = Field(default=False, description="是否需上传附件")
-    approval_role_ids: Optional[List[int]] = Field(
-        default=None, description="审批角色ID列表"
-    )
-    auto_condition: Optional[Dict[str, Any]] = Field(
-        default=None, description="自动完成条件配置"
-    )
+    approval_role_ids: Optional[List[int]] = Field(default=None, description="审批角色ID列表")
+    auto_condition: Optional[Dict[str, Any]] = Field(default=None, description="自动完成条件配置")
     description: Optional[str] = Field(None, description="节点描述")
     owner_role_code: Optional[str] = Field(None, description="负责角色编码")
     participant_role_codes: Optional[List[str]] = Field(
         default=None, description="参与角色编码列表"
     )
-    deliverables: Optional[List[Dict[str, Any]]] = Field(
-        default=None, description="交付物清单"
-    )
+    deliverables: Optional[List[Dict[str, Any]]] = Field(default=None, description="交付物清单")
 
 
 class NodeDefinitionCreate(NodeDefinitionBase):
@@ -94,9 +85,7 @@ class StageDefinitionBase(BaseModel):
 class StageDefinitionCreate(StageDefinitionBase):
     """创建阶段定义请求"""
 
-    nodes: Optional[List[NodeDefinitionCreate]] = Field(
-        default=None, description="包含的节点列表"
-    )
+    nodes: Optional[List[NodeDefinitionCreate]] = Field(default=None, description="包含的节点列表")
 
 
 class StageDefinitionUpdate(StageDefinitionBase):

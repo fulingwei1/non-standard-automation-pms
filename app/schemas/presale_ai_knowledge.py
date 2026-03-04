@@ -1,15 +1,18 @@
 """
 售前AI知识库相关的Pydantic模型
 """
-from typing import Optional, List
-from pydantic import BaseModel, Field
-from datetime import datetime
 
+from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 # ============= 知识库案例相关 =============
 
+
 class KnowledgeCaseBase(BaseModel):
     """案例基础模型"""
+
     case_name: str = Field(..., description="案例名称")
     industry: Optional[str] = Field(None, description="行业分类")
     equipment_type: Optional[str] = Field(None, description="设备类型")
@@ -26,11 +29,13 @@ class KnowledgeCaseBase(BaseModel):
 
 class KnowledgeCaseCreate(KnowledgeCaseBase):
     """创建案例"""
+
     pass
 
 
 class KnowledgeCaseUpdate(BaseModel):
     """更新案例"""
+
     case_name: Optional[str] = None
     industry: Optional[str] = None
     equipment_type: Optional[str] = None
@@ -47,6 +52,7 @@ class KnowledgeCaseUpdate(BaseModel):
 
 class KnowledgeCaseResponse(KnowledgeCaseBase):
     """案例响应"""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -58,8 +64,10 @@ class KnowledgeCaseResponse(KnowledgeCaseBase):
 
 # ============= 语义搜索相关 =============
 
+
 class SemanticSearchRequest(BaseModel):
     """语义搜索请求"""
+
     query: str = Field(..., description="搜索查询")
     industry: Optional[str] = Field(None, description="行业筛选")
     equipment_type: Optional[str] = Field(None, description="设备类型筛选")
@@ -70,6 +78,7 @@ class SemanticSearchRequest(BaseModel):
 
 class SemanticSearchResponse(BaseModel):
     """语义搜索响应"""
+
     cases: List[KnowledgeCaseResponse]
     total: int
     query: str
@@ -78,8 +87,10 @@ class SemanticSearchResponse(BaseModel):
 
 # ============= 最佳实践推荐相关 =============
 
+
 class BestPracticeRequest(BaseModel):
     """最佳实践推荐请求"""
+
     scenario: str = Field(..., description="应用场景描述")
     industry: Optional[str] = None
     equipment_type: Optional[str] = None
@@ -88,6 +99,7 @@ class BestPracticeRequest(BaseModel):
 
 class BestPracticeResponse(BaseModel):
     """最佳实践推荐响应"""
+
     recommended_cases: List[KnowledgeCaseResponse]
     success_pattern_analysis: str = Field(..., description="成功模式分析")
     risk_warnings: List[str] = Field(default_factory=list, description="风险警告")
@@ -95,14 +107,17 @@ class BestPracticeResponse(BaseModel):
 
 # ============= 知识提取相关 =============
 
+
 class KnowledgeExtractionRequest(BaseModel):
     """知识提取请求"""
+
     project_data: dict = Field(..., description="项目数据")
     auto_save: Optional[bool] = Field(True, description="是否自动保存到知识库")
 
 
 class KnowledgeExtractionResponse(BaseModel):
     """知识提取响应"""
+
     extracted_case: KnowledgeCaseCreate
     extraction_confidence: float = Field(..., ge=0, le=1, description="提取置信度")
     suggested_tags: List[str]
@@ -111,14 +126,17 @@ class KnowledgeExtractionResponse(BaseModel):
 
 # ============= 智能问答相关 =============
 
+
 class AIQARequest(BaseModel):
     """智能问答请求"""
+
     question: str = Field(..., description="问题")
     context: Optional[dict] = Field(None, description="上下文信息")
 
 
 class AIQAResponse(BaseModel):
     """智能问答响应"""
+
     answer: str
     matched_cases: List[KnowledgeCaseResponse]
     confidence_score: float = Field(..., ge=0, le=1)
@@ -127,6 +145,7 @@ class AIQAResponse(BaseModel):
 
 class QAFeedbackRequest(BaseModel):
     """问答反馈请求"""
+
     qa_id: int
     feedback_score: int = Field(..., ge=1, le=5, description="1-5星评分")
     feedback_comment: Optional[str] = None
@@ -134,14 +153,17 @@ class QAFeedbackRequest(BaseModel):
 
 # ============= 通用响应 =============
 
+
 class TagsResponse(BaseModel):
     """标签列表响应"""
+
     tags: List[str]
     tag_counts: dict = Field(default_factory=dict, description="标签统计")
 
 
 class KnowledgeBaseSearchRequest(BaseModel):
     """知识库搜索请求"""
+
     keyword: Optional[str] = None
     tags: Optional[List[str]] = None
     industry: Optional[str] = None
@@ -153,6 +175,7 @@ class KnowledgeBaseSearchRequest(BaseModel):
 
 class KnowledgeBaseSearchResponse(BaseModel):
     """知识库搜索响应"""
+
     cases: List[KnowledgeCaseResponse]
     total: int
     page: int

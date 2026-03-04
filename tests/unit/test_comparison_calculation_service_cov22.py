@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第二十二批：comparison_calculation_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.comparison_calculation_service import ComparisonCalculationService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -31,12 +33,7 @@ def svc(db):
 
 
 def make_metric_result(value, metric_name="测试指标", unit="个"):
-    return {
-        "value": value,
-        "metric_name": metric_name,
-        "unit": unit,
-        "format_type": "NUMBER"
-    }
+    return {"value": value, "metric_name": metric_name, "unit": unit, "format_type": "NUMBER"}
 
 
 class TestCalculateMomComparison:
@@ -44,7 +41,7 @@ class TestCalculateMomComparison:
         """环比返回包含必要字段的字典"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(100),
-            make_metric_result(80)
+            make_metric_result(80),
         ]
         result = svc.calculate_mom_comparison("metric_a", 2025, 3)
         assert "current_value" in result
@@ -55,7 +52,7 @@ class TestCalculateMomComparison:
         """环比上升正确识别"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(120),
-            make_metric_result(100)
+            make_metric_result(100),
         ]
         result = svc.calculate_mom_comparison("metric_a", 2025, 3)
         assert result["is_increase"] is True
@@ -65,7 +62,7 @@ class TestCalculateMomComparison:
         """环比下降正确识别"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(80),
-            make_metric_result(100)
+            make_metric_result(100),
         ]
         result = svc.calculate_mom_comparison("metric_a", 2025, 3)
         assert result["is_decrease"] is True
@@ -75,7 +72,7 @@ class TestCalculateMomComparison:
         """1月份的环比比较12月"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(100),
-            make_metric_result(90)
+            make_metric_result(90),
         ]
         result = svc.calculate_mom_comparison("metric_a", 2025, 1)
         assert result["previous_period"] == "2024-12"
@@ -84,7 +81,7 @@ class TestCalculateMomComparison:
         """上期值为0时不出现除零错误"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(100),
-            make_metric_result(0)
+            make_metric_result(0),
         ]
         result = svc.calculate_mom_comparison("metric_a", 2025, 3)
         assert isinstance(result["change_rate"], (int, float))
@@ -95,7 +92,7 @@ class TestCalculateYoyComparison:
         """同比返回包含必要字段的字典"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(150),
-            make_metric_result(100)
+            make_metric_result(100),
         ]
         result = svc.calculate_yoy_comparison("metric_b", 2025, 6)
         assert "current_period" in result
@@ -106,7 +103,7 @@ class TestCalculateYoyComparison:
         """同比上期是去年同月"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(100),
-            make_metric_result(80)
+            make_metric_result(80),
         ]
         result = svc.calculate_yoy_comparison("metric_b", 2025, 6)
         assert result["previous_period"] == "2024-06"
@@ -117,7 +114,7 @@ class TestCalculateAnnualYoyComparison:
         """年度同比返回字典"""
         svc.metric_service.calculate_metric.side_effect = [
             make_metric_result(1000),
-            make_metric_result(900)
+            make_metric_result(900),
         ]
         result = svc.calculate_annual_yoy_comparison("metric_c", 2025)
         assert result["current_period"] == "2025"

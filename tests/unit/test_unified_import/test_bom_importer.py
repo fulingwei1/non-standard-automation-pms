@@ -8,10 +8,11 @@ File Size: 77 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 # BomImporter 使用 @classmethod，不需要实例化
@@ -24,9 +25,8 @@ class TestBomImporter:
     def test_init(self, db_session: Session):
         """测试 BomImporter 是一个类（使用 classmethod）"""
         # BomImporter 使用 @classmethod，不需要实例化
-        assert hasattr(BomImporter, 'import_bom_data')
-        assert callable(getattr(BomImporter, 'import_bom_data'))
-
+        assert hasattr(BomImporter, "import_bom_data")
+        assert callable(getattr(BomImporter, "import_bom_data"))
 
     def test_import_bom_data(self, db_session: Session):
         """测试 import_bom_data 方法"""
@@ -35,7 +35,6 @@ class TestBomImporter:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

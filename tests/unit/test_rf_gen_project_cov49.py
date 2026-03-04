@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/generators/project.py"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.generators.project import ProjectReportGenerator
@@ -38,10 +39,14 @@ def test_generate_weekly_returns_keys():
     db = _make_db(project=project)
     dummy_summary = {"project_id": 1, "health_status": "H1"}
     dummy_milestones = {"summary": {"delayed": 0}}
-    with patch.object(ProjectReportGenerator, "_build_project_summary", return_value=dummy_summary), \
-         patch.object(ProjectReportGenerator, "_get_milestone_data", return_value=dummy_milestones), \
-         patch.object(ProjectReportGenerator, "_get_timesheet_data", return_value={"total_hours": 0}), \
-         patch.object(ProjectReportGenerator, "_get_machine_data", return_value=[]):
+    with (
+        patch.object(ProjectReportGenerator, "_build_project_summary", return_value=dummy_summary),
+        patch.object(ProjectReportGenerator, "_get_milestone_data", return_value=dummy_milestones),
+        patch.object(
+            ProjectReportGenerator, "_get_timesheet_data", return_value={"total_hours": 0}
+        ),
+        patch.object(ProjectReportGenerator, "_get_machine_data", return_value=[]),
+    ):
         result = ProjectReportGenerator.generate_weekly(db, 1, date(2025, 1, 1), date(2025, 1, 7))
     assert "summary" in result
     assert "milestones" in result
@@ -64,10 +69,12 @@ def test_generate_monthly_returns_keys():
     db = _make_db(project=project)
     dummy_summary = {"project_id": 2, "health_status": "H1"}
     dummy_milestones = {"summary": {"delayed": 0}}
-    with patch.object(ProjectReportGenerator, "_build_project_summary", return_value=dummy_summary), \
-         patch.object(ProjectReportGenerator, "_get_milestone_data", return_value=dummy_milestones), \
-         patch.object(ProjectReportGenerator, "_get_weekly_trend", return_value=[]), \
-         patch.object(ProjectReportGenerator, "_get_cost_summary", return_value={"planned_cost": 0}):
+    with (
+        patch.object(ProjectReportGenerator, "_build_project_summary", return_value=dummy_summary),
+        patch.object(ProjectReportGenerator, "_get_milestone_data", return_value=dummy_milestones),
+        patch.object(ProjectReportGenerator, "_get_weekly_trend", return_value=[]),
+        patch.object(ProjectReportGenerator, "_get_cost_summary", return_value={"planned_cost": 0}),
+    ):
         result = ProjectReportGenerator.generate_monthly(db, 2, date(2025, 1, 1), date(2025, 1, 31))
     assert "summary" in result
     assert result["summary"]["report_type"] == "月报"
@@ -80,7 +87,9 @@ def test_build_project_summary():
     project.id = 5
     project.project_name = "P5"
     project.progress = 75
-    summary = ProjectReportGenerator._build_project_summary(project, date(2025, 2, 1), date(2025, 2, 7))
+    summary = ProjectReportGenerator._build_project_summary(
+        project, date(2025, 2, 1), date(2025, 2, 7)
+    )
     assert summary["project_id"] == 5
     assert summary["project_name"] == "P5"
     assert summary["progress"] == 75.0

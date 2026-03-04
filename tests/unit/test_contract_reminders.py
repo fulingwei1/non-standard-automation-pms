@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
-from app.services.sales_reminder.contract_reminders import notify_contract_signed, notify_contract_expiring
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from app.services.sales_reminder.contract_reminders import (
+    notify_contract_expiring,
+    notify_contract_signed,
+)
 
 
 class TestNotifyContractSigned:

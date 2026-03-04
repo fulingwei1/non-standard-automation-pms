@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 统一导入基础工具单元测试"""
-import pytest
 from datetime import date, datetime
 
-pytest.importorskip("app.services.unified_import.base",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.unified_import.base", reason="依赖不满足，跳过")
+
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
-from unittest.mock import MagicMock, patch
 from fastapi import HTTPException
+
 from app.services.unified_import.base import ImportBase
 
 

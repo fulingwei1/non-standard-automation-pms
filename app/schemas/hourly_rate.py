@@ -14,6 +14,7 @@ from app.schemas.common import TimestampSchema
 
 class HourlyRateConfigCreate(BaseModel):
     """创建时薪配置"""
+
     config_type: str = Field(..., description="配置类型：USER/ROLE/DEPT/DEFAULT")
     user_id: Optional[int] = Field(None, description="用户ID（config_type=USER时必填）")
     role_id: Optional[int] = Field(None, description="角色ID（config_type=ROLE时必填）")
@@ -26,6 +27,7 @@ class HourlyRateConfigCreate(BaseModel):
 
 class HourlyRateConfigUpdate(BaseModel):
     """更新时薪配置"""
+
     hourly_rate: Optional[Decimal] = Field(None, description="时薪（元/小时）")
     effective_date: Optional[date] = Field(None, description="生效日期")
     expiry_date: Optional[date] = Field(None, description="失效日期")
@@ -35,6 +37,7 @@ class HourlyRateConfigUpdate(BaseModel):
 
 class HourlyRateConfigResponse(TimestampSchema):
     """时薪配置响应"""
+
     id: int
     config_type: str
     user_id: Optional[int] = None
@@ -54,9 +57,3 @@ class HourlyRateConfigResponse(TimestampSchema):
 
     class Config:
         from_attributes = True
-
-
-
-
-
-

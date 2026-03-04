@@ -14,44 +14,114 @@
     from app.models import Project, Material, User
 """
 
-# Import models from complete directory instead of deprecated main
-from .exports.complete import *
+# Change Impact Analysis System
+from .change_impact import (  # noqa: F401
+    ChangeImpactAnalysis,
+    ChangeResponseSuggestion,
+)
+
+# Change Request System
+from .change_request import (  # noqa: F401
+    ChangeApprovalRecord,
+    ChangeNotification,
+    ChangeRequest,
+)
 
 # 枚举补充导出（向后兼容）
 from .enums import ApprovalRecordStatusEnum  # noqa: F401
 
-# AI Knowledge Base & Presale AI System
-from .presale_knowledge_case import PresaleKnowledgeCase  # noqa: F401
-from .presale_ai_qa import PresaleAIQA  # noqa: F401
-from .presale_ai_requirement_analysis import PresaleAIRequirementAnalysis  # noqa: F401
-from .presale_ai_solution import (  # noqa: F401
-    PresaleAISolution,
-    PresaleAISolutionTemplate,
-    PresaleAIGenerationLog,
+# Import models from complete directory instead of deprecated main
+from .exports.complete import *
+
+# Inventory Tracking System
+from .inventory_tracking import (  # noqa: F401
+    MaterialReservation,
+    MaterialStock,
+    MaterialTransaction,
+    StockAdjustment,
+    StockCountDetail,
+    StockCountTask,
 )
-from .presale_ai_quotation import (  # noqa: F401
-    PresaleAIQuotation,
-    QuotationTemplate,
-    QuotationApproval,
-    QuotationVersion,
+
+# Security & Authentication
+from .login_attempt import LoginAttempt  # noqa: F401
+
+# Material Shortage (from material.py)
+from .material import MaterialShortage  # noqa: F401
+from .presale_ai import (  # noqa: F401
+    PresaleAIAuditLog,
+    PresaleAIConfig,
+    PresaleAIFeedback,
+    PresaleAIUsageStats,
+    PresaleAIWorkflowLog,
 )
 from .presale_ai_emotion_analysis import PresaleAIEmotionAnalysis  # noqa: F401
+from .presale_ai_qa import PresaleAIQA  # noqa: F401
+from .presale_ai_quotation import (  # noqa: F401
+    PresaleAIQuotation,
+    QuotationApproval,
+    QuotationTemplate,
+    QuotationVersion,
+)
+from .presale_ai_requirement_analysis import PresaleAIRequirementAnalysis  # noqa: F401
+from .presale_ai_solution import (  # noqa: F401
+    PresaleAIGenerationLog,
+    PresaleAISolution,
+    PresaleAISolutionTemplate,
+)
 from .presale_emotion_trend import PresaleEmotionTrend  # noqa: F401
-from .presale_ai import (  # noqa: F401
-    PresaleAIUsageStats,
-    PresaleAIFeedback,
-    PresaleAIConfig,
-    PresaleAIWorkflowLog,
-    PresaleAIAuditLog,
-)
-from .presale_mobile import (  # noqa: F401
-    PresaleMobileAssistantChat,
-    PresaleVisitRecord,
-    PresaleMobileQuickEstimate,
-    PresaleMobileOfflineData,
-)
 from .presale_expense import PresaleExpense  # noqa: F401
 from .presale_follow_up_reminder import PresaleFollowUpReminder  # noqa: F401
+
+# AI Knowledge Base & Presale AI System
+from .presale_knowledge_case import PresaleKnowledgeCase  # noqa: F401
+from .presale_mobile import (  # noqa: F401
+    PresaleMobileAssistantChat,
+    PresaleMobileOfflineData,
+    PresaleMobileQuickEstimate,
+    PresaleVisitRecord,
+)
+
+# Project Schedule Prediction System
+from .project.schedule_prediction import (  # noqa: F401
+    CatchUpSolution,
+    ProjectSchedulePrediction,
+    ScheduleAlert,
+)
+
+# Purchase Intelligence System
+from .purchase_intelligence import (  # noqa: F401
+    PurchaseOrderTracking,
+    PurchaseSuggestion,
+    SupplierPerformance,
+    SupplierQuotation,
+)
+
+# Quality Risk Detection System
+from .quality_risk_detection import (  # noqa: F401
+    QualityRiskDetection,
+    QualityTestRecommendation,
+    RiskCategoryEnum,
+    RiskLevelEnum,
+    RiskSourceEnum,
+    RiskStatusEnum,
+    TestPriorityEnum,
+    TestRecommendationStatusEnum,
+)
+
+# Report System
+from .report import (  # noqa: F401
+    ArchiveStatusEnum,
+    DeliveryMethodEnum,
+    FrequencyEnum,
+    GeneratedByEnum,
+    OutputFormatEnum,
+    RecipientTypeEnum,
+    ReportArchive,
+    ReportRecipient,
+    ReportTypeEnum,
+    TimesheetReportTemplate,
+)
 from .sales.presale_ai_cost import (  # noqa: F401
     PresaleAICostEstimation,
     PresaleCostHistory,
@@ -62,83 +132,17 @@ from .sales.presale_ai_win_rate import (  # noqa: F401
     PresaleWinRateHistory,
 )
 
-# Security & Authentication
-from .login_attempt import LoginAttempt  # noqa: F401
-from .two_factor import User2FASecret, User2FABackupCode  # noqa: F401
-
-# Report System
-from .report import (  # noqa: F401
-    TimesheetReportTemplate,
-    ReportArchive,
-    ReportRecipient,
-    ReportTypeEnum,
-    OutputFormatEnum,
-    FrequencyEnum,
-    GeneratedByEnum,
-    ArchiveStatusEnum,
-    RecipientTypeEnum,
-    DeliveryMethodEnum,
-)
-
-# Project Schedule Prediction System
-from .project.schedule_prediction import (  # noqa: F401
-    ProjectSchedulePrediction,
-    CatchUpSolution,
-    ScheduleAlert,
-)
-
-# Quality Risk Detection System
-from .quality_risk_detection import (  # noqa: F401
-    QualityRiskDetection,
-    QualityTestRecommendation,
-    RiskLevelEnum,
-    RiskSourceEnum,
-    RiskStatusEnum,
-    RiskCategoryEnum,
-    TestRecommendationStatusEnum,
-    TestPriorityEnum,
-)
-
-# Change Request System
-from .change_request import (  # noqa: F401
-    ChangeRequest,
-    ChangeApprovalRecord,
-    ChangeNotification,
-)
-
-# Change Impact Analysis System
-from .change_impact import (  # noqa: F401
-    ChangeImpactAnalysis,
-    ChangeResponseSuggestion,
-)
-
-# Purchase Intelligence System
-from .purchase_intelligence import (  # noqa: F401
-    PurchaseSuggestion,
-    SupplierQuotation,
-    SupplierPerformance,
-    PurchaseOrderTracking,
-)
-
-# Inventory Tracking System
-from .inventory_tracking import (  # noqa: F401
-    MaterialTransaction,
-    MaterialStock,
-    MaterialReservation,
-    StockCountTask,
-    StockCountDetail,
-    StockAdjustment,
-)
-
 # Smart Shortage Alert System
-from .shortage.smart_alert import (  # noqa: F401
-    ShortageAlert as ShortageAlertEnhanced,  # Alias for consistency
-    ShortageHandlingPlan,
+from .shortage.smart_alert import (
     MaterialDemandForecast,
 )
-
-# Material Shortage (from material.py)
-from .material import MaterialShortage  # noqa: F401
+from .shortage.smart_alert import (  # noqa: F401; Alias for consistency
+    ShortageAlert as ShortageAlertEnhanced,
+)
+from .shortage.smart_alert import (
+    ShortageHandlingPlan,
+)
+from .two_factor import User2FABackupCode, User2FASecret  # noqa: F401
 
 __all__ = [
     # Base

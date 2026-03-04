@@ -210,9 +210,13 @@ class TestBuildOverview:
             elif call_count[0] == 4:  # Contract
                 configure_query_chain(mock_query, [])
             elif call_count[0] == 5:  # Invoice (join query)
-                mock_query.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+                mock_query.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    []
+                )
             elif call_count[0] == 6:  # PaymentPlan (join query)
-                mock_query.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+                mock_query.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    []
+                )
             elif call_count[0] == 7:  # Communication
                 configure_query_chain(mock_query, [])
 
@@ -246,18 +250,18 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         contracts = [
-        create_mock_contract(contract_amount=Decimal("100000")),
-        create_mock_contract(contract_amount=Decimal("200000")),
+            create_mock_contract(contract_amount=Decimal("100000")),
+            create_mock_contract(contract_amount=Decimal("200000")),
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=[],
-        quotes=[],
-        contracts=contracts,
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=[],
+            quotes=[],
+            contracts=contracts,
+            payment_plans=[],
+            communications=[],
         )
 
         assert summary["total_contract_amount"] == Decimal("300000")
@@ -269,26 +273,26 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         payment_plans = [
-        create_mock_payment_plan(
-        planned_amount=Decimal("100000"),
-        actual_amount=Decimal("30000"),
-        status="PENDING",
-        ),
-        create_mock_payment_plan(
-        planned_amount=Decimal("50000"),
-        actual_amount=Decimal("50000"),
-        status="PAID",  # 已付清，不计入应收
-        ),
+            create_mock_payment_plan(
+                planned_amount=Decimal("100000"),
+                actual_amount=Decimal("30000"),
+                status="PENDING",
+            ),
+            create_mock_payment_plan(
+                planned_amount=Decimal("50000"),
+                actual_amount=Decimal("50000"),
+                status="PAID",  # 已付清，不计入应收
+            ),
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=[],
-        quotes=[],
-        contracts=[],
-        payment_plans=payment_plans,
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=[],
+            quotes=[],
+            contracts=[],
+            payment_plans=payment_plans,
+            communications=[],
         )
 
         # 只计算 PENDING 状态的差额：100000 - 30000 = 70000
@@ -301,20 +305,20 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         opportunities = [
-        create_mock_opportunity(stage="QUALIFIED", est_amount=Decimal("100000")),
-        create_mock_opportunity(stage="PROPOSAL", est_amount=Decimal("200000")),
-        create_mock_opportunity(stage="WON", est_amount=Decimal("300000")),  # 不计入管道
-        create_mock_opportunity(stage="LOST", est_amount=Decimal("400000")),  # 不计入管道
+            create_mock_opportunity(stage="QUALIFIED", est_amount=Decimal("100000")),
+            create_mock_opportunity(stage="PROPOSAL", est_amount=Decimal("200000")),
+            create_mock_opportunity(stage="WON", est_amount=Decimal("300000")),  # 不计入管道
+            create_mock_opportunity(stage="LOST", est_amount=Decimal("400000")),  # 不计入管道
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=opportunities,
-        quotes=[],
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=opportunities,
+            quotes=[],
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         # 管道金额：100000 + 200000 = 300000
@@ -327,20 +331,20 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         opportunities = [
-        create_mock_opportunity(stage="WON"),
-        create_mock_opportunity(stage="WON"),
-        create_mock_opportunity(stage="LOST"),
-        create_mock_opportunity(stage="QUALIFIED"),
+            create_mock_opportunity(stage="WON"),
+            create_mock_opportunity(stage="WON"),
+            create_mock_opportunity(stage="LOST"),
+            create_mock_opportunity(stage="QUALIFIED"),
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=opportunities,
-        quotes=[],
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=opportunities,
+            quotes=[],
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         # 赢单率：2/4 = 50%
@@ -353,19 +357,19 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         quotes = [
-        create_mock_quote(gross_margin=Decimal("20.0")),
-        create_mock_quote(gross_margin=Decimal("30.0")),
-        create_mock_quote(gross_margin=Decimal("25.0")),
+            create_mock_quote(gross_margin=Decimal("20.0")),
+            create_mock_quote(gross_margin=Decimal("30.0")),
+            create_mock_quote(gross_margin=Decimal("25.0")),
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=[],
-        quotes=quotes,
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=[],
+            quotes=quotes,
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         # 平均毛利率：(20+30+25)/3 = 25
@@ -378,20 +382,20 @@ class TestBuildSummary:
 
         customer = create_mock_customer()
         projects = [
-        create_mock_project(status="ACTIVE"),
-        create_mock_project(status="IN_PROGRESS"),
-        create_mock_project(status="CLOSED"),  # 不计入活跃
-        create_mock_project(status="CANCELLED"),  # 不计入活跃
+            create_mock_project(status="ACTIVE"),
+            create_mock_project(status="IN_PROGRESS"),
+            create_mock_project(status="CLOSED"),  # 不计入活跃
+            create_mock_project(status="CANCELLED"),  # 不计入活跃
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=projects,
-        opportunities=[],
-        quotes=[],
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=projects,
+            opportunities=[],
+            quotes=[],
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         assert summary["total_projects"] == 4
@@ -405,13 +409,13 @@ class TestBuildSummary:
         customer = create_mock_customer()
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=[],
-        quotes=[],
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=[],
+            quotes=[],
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         assert summary["total_projects"] == 0
@@ -436,13 +440,13 @@ class TestBuildSummary:
         opportunities = [create_mock_opportunity(updated_at=newer_time)]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=projects,
-        opportunities=opportunities,
-        quotes=[],
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=projects,
+            opportunities=opportunities,
+            quotes=[],
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         assert summary["last_activity"] == newer_time
@@ -457,18 +461,18 @@ class TestBuildSummary:
         quote_with_none.current_version.gross_margin = None
 
         quotes = [
-        quote_with_none,
-        create_mock_quote(gross_margin=Decimal("30.0")),
+            quote_with_none,
+            create_mock_quote(gross_margin=Decimal("30.0")),
         ]
 
         summary = service._build_summary(
-        customer=customer,
-        projects=[],
-        opportunities=[],
-        quotes=quotes,
-        contracts=[],
-        payment_plans=[],
-        communications=[],
+            customer=customer,
+            projects=[],
+            opportunities=[],
+            quotes=quotes,
+            contracts=[],
+            payment_plans=[],
+            communications=[],
         )
 
         # 只计算有毛利率的报价

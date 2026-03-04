@@ -13,10 +13,17 @@ from app.api import deps
 from app.core import security
 from app.models.presale import PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress
 from app.models.user import User
-from app.schemas.presale import DeliverableCreate, DeliverableResponse, TicketAcceptRequest, TicketProgressUpdate, TicketRatingRequest, TicketResponse
+from app.schemas.presale import (
+    DeliverableCreate,
+    DeliverableResponse,
+    TicketAcceptRequest,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+)
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .crud import read_ticket
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -34,7 +41,7 @@ def accept_ticket(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    if ticket.status != 'PENDING':
+    if ticket.status != "PENDING":
         raise HTTPException(status_code=400, detail="只有待处理状态的工单才能接单")
 
     assignee_id = accept_request.assignee_id or current_user.id
@@ -43,7 +50,7 @@ def accept_ticket(
     ticket.assignee_id = assignee_id
     ticket.assignee_name = assignee.real_name or assignee.username
     ticket.accept_time = datetime.now()
-    ticket.status = 'ACCEPTED'
+    ticket.status = "ACCEPTED"
 
     save_obj(db, ticket)
 
@@ -63,10 +70,10 @@ def update_ticket_progress(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    if ticket.status not in ['ACCEPTED', 'IN_PROGRESS']:
+    if ticket.status not in ["ACCEPTED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只有已接单或进行中的工单才能更新进度")
 
-    ticket.status = 'IN_PROGRESS'
+    ticket.status = "IN_PROGRESS"
 
     # 记录进度
     progress = PresaleTicketProgress(
@@ -74,7 +81,7 @@ def update_ticket_progress(
         progress_note=progress_request.progress_note,
         progress_percent=progress_request.progress_percent,
         updated_by=current_user.id,
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
     db.add(progress)
 
@@ -83,7 +90,11 @@ def update_ticket_progress(
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
-@router.post("/{ticket_id}/deliverables", response_model=DeliverableResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{ticket_id}/deliverables",
+    response_model=DeliverableResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_deliverable(
     *,
     db: Session = Depends(deps.get_db),
@@ -103,7 +114,7 @@ def create_deliverable(
         file_path=deliverable_in.file_path,
         file_url=deliverable_in.file_url,
         description=deliverable_in.description,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     save_obj(db, deliverable)
@@ -134,7 +145,7 @@ def complete_ticket(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    ticket.status = 'COMPLETED'
+    ticket.status = "COMPLETED"
     ticket.complete_time = datetime.now()
     if actual_hours:
         ticket.actual_hours = Decimal(str(actual_hours))

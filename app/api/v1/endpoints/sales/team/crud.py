@@ -9,16 +9,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.sales import SalesTeam, SalesTeamMember
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import SalesTeamCreate, SalesTeamUpdate
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.utils.db_helpers import save_obj
 
 from .utils import build_team_response
-from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -46,30 +46,44 @@ def list_sales_teams(
     query = apply_keyword_filter(query, SalesTeam, keyword, ["team_name", "team_code"])
 
     total = query.count()
-    teams = apply_pagination(query.order_by(SalesTeam.sort_order, SalesTeam.id), pagination.offset, pagination.limit).all()
+    teams = apply_pagination(
+        query.order_by(SalesTeam.sort_order, SalesTeam.id), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for team in teams:
-        member_count = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active,
-        ).count()
-        sub_team_count = db.query(SalesTeam).filter(
-            SalesTeam.parent_team_id == team.id,
-            SalesTeam.is_active,
-        ).count()
+        member_count = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team.id,
+                SalesTeamMember.is_active,
+            )
+            .count()
+        )
+        sub_team_count = (
+            db.query(SalesTeam)
+            .filter(
+                SalesTeam.parent_team_id == team.id,
+                SalesTeam.is_active,
+            )
+            .count()
+        )
 
-        items.append({
-            "id": team.id,
-            "team_code": team.team_code,
-            "team_name": team.team_name,
-            "team_type": team.team_type,
-            "department_name": team.department.name if team.department else None,
-            "leader_name": (team.leader.real_name or team.leader.username) if team.leader else None,
-            "is_active": team.is_active,
-            "member_count": member_count,
-            "sub_team_count": sub_team_count,
-        })
+        items.append(
+            {
+                "id": team.id,
+                "team_code": team.team_code,
+                "team_name": team.team_name,
+                "team_type": team.team_type,
+                "department_name": team.department.name if team.department else None,
+                "leader_name": (
+                    (team.leader.real_name or team.leader.username) if team.leader else None
+                ),
+                "is_active": team.is_active,
+                "member_count": member_count,
+                "sub_team_count": sub_team_count,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -79,7 +93,7 @@ def list_sales_teams(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-        }
+        },
     )
 
 
@@ -198,10 +212,14 @@ def delete_sales_team(
         )
 
     # 检查是否有子团队
-    sub_teams = db.query(SalesTeam).filter(
-        SalesTeam.parent_team_id == team_id,
-        SalesTeam.is_active,
-    ).count()
+    sub_teams = (
+        db.query(SalesTeam)
+        .filter(
+            SalesTeam.parent_team_id == team_id,
+            SalesTeam.is_active,
+        )
+        .count()
+    )
     if sub_teams > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

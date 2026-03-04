@@ -12,8 +12,8 @@
 测试场景：比亚迪电子 ADAS 域控制器 ICT 在线测试系统，预算 30 万
 """
 
-import sys
 import os
+import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock
@@ -28,6 +28,8 @@ os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
+import uuid
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -36,8 +38,6 @@ from sqlalchemy.pool import StaticPool
 # ─── 导入所有模型（触发元数据注册）──────────────────────────────────────────
 import app.models  # noqa: F401
 
-import uuid
-
 _CTR260217001 = f"CTR260217001-{uuid.uuid4().hex[:8]}"
 _LD260217001 = f"LD260217001-{uuid.uuid4().hex[:8]}"
 _MAT_HK_001 = f"MAT-HK-001-{uuid.uuid4().hex[:8]}"
@@ -45,10 +45,10 @@ _MAT_NI_001 = f"MAT-NI-001-{uuid.uuid4().hex[:8]}"
 _MAT_SMC_001 = f"MAT-SMC-001-{uuid.uuid4().hex[:8]}"
 
 
-
 # ════════════════════════════════════════════════════════════════════════════
 #  数据库 Fixture（模块级，共享同一个 SQLite 内存实例）
 # ════════════════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture(scope="module")
 def engine():
@@ -61,8 +61,11 @@ def engine():
     - idx_created_at 等索引名在多表中重复（SQLite 全局命名空间）
       → 逐表创建，跳过错误
     """
+    from sqlalchemy import Column
+    from sqlalchemy import Integer as SAInteger
+    from sqlalchemy import Table
+
     from app.models.base import Base
-    from sqlalchemy import Table, Column, Integer as SAInteger
 
     # 补全缺失的 FK 目标表（存根）
     for stub in ["production_work_orders", "suppliers"]:
@@ -100,6 +103,7 @@ def db(engine):
 # ════════════════════════════════════════════════════════════════════════════
 #  基础数据 Fixtures
 # ════════════════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture(scope="module")
 def sales_user(db):
@@ -235,6 +239,7 @@ def smc_vendor(db):
 #  模块级"共享状态"容器 —— 把业务对象 id 串联到各测试
 # ════════════════════════════════════════════════════════════════════════════
 
+
 @pytest.fixture(scope="module")
 def flow_state():
     """
@@ -263,7 +268,7 @@ class TestSalesLeadToDelivery:
               期望总分 ≥ 70 分（A级线索启动阈值）。
         """
         from app.models.sales import Lead, Opportunity
-        from tests.fixtures.industry_data import PROJECT_TYPES, CUSTOMERS
+        from tests.fixtures.industry_data import CUSTOMERS, PROJECT_TYPES
 
         # 1-a 创建线索
         lead = Lead(
@@ -274,8 +279,7 @@ class TestSalesLeadToDelivery:
             contact_name="王工",
             contact_phone="13800138003",
             demand_summary=(
-                "ADAS域控制器主板ICT在线测试系统，"
-                "需兼容8个版本测试点，节拍≤12秒/件，预算30万"
+                "ADAS域控制器主板ICT在线测试系统，" "需兼容8个版本测试点，节拍≤12秒/件，预算30万"
             ),
             owner_id=sales_user.id,
             status="NEW",
@@ -299,11 +303,11 @@ class TestSalesLeadToDelivery:
             comp_score = {"LOW": 25, "MEDIUM": 18, "HIGH": 10}.get(competition, 18)
             return tech_score + budget_score + comp_score
 
-        budget = 300_000          # 比亚迪预算 30 万
+        budget = 300_000  # 比亚迪预算 30 万
         score = score_ict_lead(
             budget=budget,
-            tech_complexity="MEDIUM",   # ICT 难度中等
-            competition="MEDIUM",        # 竞争态势中等
+            tech_complexity="MEDIUM",  # ICT 难度中等
+            competition="MEDIUM",  # 竞争态势中等
         )
 
         # 更新线索评分
@@ -333,7 +337,7 @@ class TestSalesLeadToDelivery:
         场景：基于 ICT 线索生成售前技术方案，
               验证方案摘要包含关键技术词汇（ICT、飞针/床钉、夹具、程序）。
         """
-        from tests.fixtures.industry_data import PROJECT_TYPES, KPI_BENCHMARKS
+        from tests.fixtures.industry_data import KPI_BENCHMARKS, PROJECT_TYPES
 
         # 2-a 使用 Mock 模式生成售前方案对象（presale_ai_solution 模型依赖外部AI）
         solution_summary = {
@@ -345,7 +349,7 @@ class TestSalesLeadToDelivery:
                 "测试程序基于 LabVIEW 开发，支持在线参数配置与版本切换；"
                 "预计节拍 ≤ 10 秒/件，故障覆盖率 ≥ 99.2%。"
             ),
-            "bom_estimate_cny": 185_000,   # 硬件 BOM 估算
+            "bom_estimate_cny": 185_000,  # 硬件 BOM 估算
             "labor_estimate_cny": 75_000,  # 人工成本估算
             "total_cost_estimate": 260_000,
             "gross_margin_estimate": (300_000 - 260_000) / 300_000,
@@ -362,13 +366,13 @@ class TestSalesLeadToDelivery:
         flow_state["solution"] = solution_summary
 
         # ── 断言 ──
-        assert len(found) == len(required_keywords), (
-            f"方案缺少关键词：{set(required_keywords) - set(found)}"
-        )
+        assert len(found) == len(
+            required_keywords
+        ), f"方案缺少关键词：{set(required_keywords) - set(found)}"
         assert solution_summary["gross_margin_estimate"] > 0, "预估毛利率应为正"
-        assert solution_summary["total_cost_estimate"] < flow_state["budget"], (
-            "估算成本不应超出预算"
-        )
+        assert (
+            solution_summary["total_cost_estimate"] < flow_state["budget"]
+        ), "估算成本不应超出预算"
         assert solution_summary["delivery_days"] <= PROJECT_TYPES["ICT"]["avg_duration_days"] + 10
 
         print(
@@ -386,7 +390,7 @@ class TestSalesLeadToDelivery:
         场景：创建报价单，录入含税/不含税价格，
               验证：含税价 = 不含税价 × 1.13（增值税13%）。
         """
-        from app.models.sales import Opportunity, Quote, QuoteVersion, QuoteItem
+        from app.models.sales import Opportunity, Quote, QuoteItem, QuoteVersion
         from tests.fixtures.industry_data import KPI_BENCHMARKS
 
         # 3-a 创建商机
@@ -425,7 +429,7 @@ class TestSalesLeadToDelivery:
         version = QuoteVersion(
             quote_id=quote.id,
             version_no="V1",
-            total_price=unit_price_inc_tax,   # 含税总价录入报价版本
+            total_price=unit_price_inc_tax,  # 含税总价录入报价版本
             cost_total=Decimal("182000.00"),
             gross_margin=Decimal("35.50"),
             lead_time_days=90,
@@ -450,7 +454,7 @@ class TestSalesLeadToDelivery:
                 item_name=name,
                 qty=qty,
                 unit_price=price,
-                cost=price * qty,   # 用 cost 字段记录该行小计
+                cost=price * qty,  # 用 cost 字段记录该行小计
             )
             db.add(item)
 
@@ -464,9 +468,9 @@ class TestSalesLeadToDelivery:
 
         # ── 断言 ──
         calculated_inc = (unit_price_ex_tax * Decimal("1.13")).quantize(Decimal("0.01"))
-        assert version.total_price == calculated_inc, (
-            f"含税价 {version.total_price} ≠ 不含税价×1.13={calculated_inc}"
-        )
+        assert (
+            version.total_price == calculated_inc
+        ), f"含税价 {version.total_price} ≠ 不含税价×1.13={calculated_inc}"
         # 毛利率合理性校验
         if version.cost_total and version.total_price:
             gm = float(version.total_price - version.cost_total) / float(version.total_price)
@@ -559,7 +563,7 @@ class TestSalesLeadToDelivery:
         plans = []
         for node in payment_nodes:
             plan = ProjectPaymentPlan(
-                project_id=None,   # 合同签订时项目尚未立项，project_id 留空
+                project_id=None,  # 合同签订时项目尚未立项，project_id 留空
                 contract_id=contract.id,
                 payment_no=node["payment_no"],
                 payment_name=node["payment_name"],
@@ -574,23 +578,22 @@ class TestSalesLeadToDelivery:
             plans.append(plan)
 
         db.commit()
-        flow_state["payment_plan_ids"] = [p.id for p in [
-            db.query(ProjectPaymentPlan)
-              .filter(ProjectPaymentPlan.contract_id == contract.id)
-              .order_by(ProjectPaymentPlan.payment_no)
-              .all()
-        ][0]]  # flatten
+        flow_state["payment_plan_ids"] = [
+            p.id
+            for p in [
+                db.query(ProjectPaymentPlan)
+                .filter(ProjectPaymentPlan.contract_id == contract.id)
+                .order_by(ProjectPaymentPlan.payment_no)
+                .all()
+            ][0]
+        ]  # flatten
 
         # ── 断言 ──
         all_plans = (
-            db.query(ProjectPaymentPlan)
-            .filter(ProjectPaymentPlan.contract_id == contract.id)
-            .all()
+            db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.contract_id == contract.id).all()
         )
         total_ratio = sum(float(p.payment_ratio) for p in all_plans)
-        assert abs(total_ratio - 100.0) < 0.01, (
-            f"付款节点比例合计 {total_ratio:.1f}% ≠ 100%"
-        )
+        assert abs(total_ratio - 100.0) < 0.01, f"付款节点比例合计 {total_ratio:.1f}% ≠ 100%"
         assert len(all_plans) == 4, "应有 4 个付款节点（3+3+3+1）"
         # 验证付款类型顺序
         types = [p.payment_type for p in all_plans]
@@ -606,9 +609,7 @@ class TestSalesLeadToDelivery:
     # 5. 项目立项
     # ────────────────────────────────────────────────────────────────────────
 
-    def test_project_initiation_from_contract(
-        self, db, pm_user, byd_customer, flow_state
-    ):
+    def test_project_initiation_from_contract(self, db, pm_user, byd_customer, flow_state):
         """
         场景：从已签合同生成项目，
               验证项目编号格式为 PJyymmddxxx（如 PJ260217001）。
@@ -660,10 +661,11 @@ class TestSalesLeadToDelivery:
 
         # ── 断言 ──
         import re
+
         pattern = r"^PJ\d{6}\d{3}$"
-        assert re.match(pattern, project.project_code), (
-            f"项目编号 {project.project_code!r} 不符合 PJyymmddxxx 格式"
-        )
+        assert re.match(
+            pattern, project.project_code
+        ), f"项目编号 {project.project_code!r} 不符合 PJyymmddxxx 格式"
         assert project.customer_id == byd_customer.id
         assert float(project.contract_amount) == flow_state["contract_amount"]
         assert project.pm_id == pm_user.id
@@ -830,9 +832,9 @@ class TestSalesLeadToDelivery:
         assert camera_total == 6400.0, f"相机合计金额 {camera_total} 应为 6400（0.64万）"
         # BOM 总金额
         expected_total = 35000.0 + 2240.0 + 6400.0
-        assert float(bom.total_amount) == pytest.approx(expected_total, rel=1e-4), (
-            f"BOM总金额 {float(bom.total_amount)} ≠ 预期 {expected_total}"
-        )
+        assert float(bom.total_amount) == pytest.approx(
+            expected_total, rel=1e-4
+        ), f"BOM总金额 {float(bom.total_amount)} ≠ 预期 {expected_total}"
         assert bom.total_items == 3
 
         print(
@@ -849,18 +851,13 @@ class TestSalesLeadToDelivery:
         场景：BOM 中 NI 机箱和工业相机库存为 0，触发采购申请，
               验证采购申请行数=2（按供应商拆分），数量和供应商正确。
         """
+        from app.models.material import BomHeader, BomItem
         from app.models.purchase import PurchaseRequest, PurchaseRequestItem
-        from app.models.material import BomItem, BomHeader
 
         # 7-a 查找 BOM 中库存为 0 的物料（模拟缺料检测）
-        bom_items = (
-            db.query(BomItem)
-            .filter(BomItem.bom_id == flow_state["bom_id"])
-            .all()
-        )
+        bom_items = db.query(BomItem).filter(BomItem.bom_id == flow_state["bom_id"]).all()
         shortage_items = [
-            item for item in bom_items
-            if item.received_qty == 0  # 均未到货 = 全部缺料
+            item for item in bom_items if item.received_qty == 0  # 均未到货 = 全部缺料
         ]
         assert len(shortage_items) == 3, f"应有 3 行缺料，实际 {len(shortage_items)}"
 
@@ -944,10 +941,14 @@ class TestSalesLeadToDelivery:
         flow_state["pr_other_id"] = pr_other.id
 
         # ── 断言 ──
-        ni_items = list(db.query(PurchaseRequestItem)
-                          .filter(PurchaseRequestItem.request_id == pr_ni.id).all())
-        other_items = list(db.query(PurchaseRequestItem)
-                             .filter(PurchaseRequestItem.request_id == pr_other.id).all())
+        ni_items = list(
+            db.query(PurchaseRequestItem).filter(PurchaseRequestItem.request_id == pr_ni.id).all()
+        )
+        other_items = list(
+            db.query(PurchaseRequestItem)
+            .filter(PurchaseRequestItem.request_id == pr_other.id)
+            .all()
+        )
 
         assert len(ni_items) == 1, "NI采购申请应有1行（机箱）"
         assert float(ni_items[0].quantity) == 1.0, "NI机箱数量应为1台"
@@ -970,11 +971,13 @@ class TestSalesLeadToDelivery:
         """
         场景：NI机箱到货，创建收货单，验证库存更新（current_stock +1）。
         """
-        from app.models.purchase import (
-            PurchaseOrder, PurchaseOrderItem,
-            GoodsReceipt, GoodsReceiptItem,
-        )
         from app.models.material import Material
+        from app.models.purchase import (
+            GoodsReceipt,
+            GoodsReceiptItem,
+            PurchaseOrder,
+            PurchaseOrderItem,
+        )
 
         # 8-a 先生成采购单（PR → PO）
         po = PurchaseOrder(
@@ -1049,9 +1052,7 @@ class TestSalesLeadToDelivery:
         receipt.warehoused_by = pm_user.id
 
         # 8-d 更新物料库存（模拟入库动作）
-        ni_mat = db.query(Material).filter(
-            Material.id == flow_state["ni_pxi_material_id"]
-        ).first()
+        ni_mat = db.query(Material).filter(Material.id == flow_state["ni_pxi_material_id"]).first()
         stock_before = float(ni_mat.current_stock)
         ni_mat.current_stock = (ni_mat.current_stock or Decimal("0")) + Decimal("1")
 
@@ -1065,9 +1066,9 @@ class TestSalesLeadToDelivery:
         flow_state["gr_id"] = receipt.id
 
         # ── 断言 ──
-        assert float(ni_mat.current_stock) == stock_before + 1.0, (
-            f"NI机箱库存应从 {stock_before} 增加到 {stock_before + 1}"
-        )
+        assert (
+            float(ni_mat.current_stock) == stock_before + 1.0
+        ), f"NI机箱库存应从 {stock_before} 增加到 {stock_before + 1}"
         assert receipt.status == "COMPLETED", "收货单状态应为 COMPLETED"
         assert receipt.inspect_status == "QUALIFIED", "质检状态应为 QUALIFIED（合格）"
 
@@ -1092,7 +1093,7 @@ class TestSalesLeadToDelivery:
             "task_type": "ASSEMBLY",
             "project_id": flow_state["project_id"],
             "plan_qty": 1,
-            "standard_hours": Decimal("160"),   # 20 人天 × 8h
+            "standard_hours": Decimal("160"),  # 20 人天 × 8h
             "plan_start_date": date.today() + timedelta(days=30),
             "plan_end_date": date.today() + timedelta(days=75),
             "status": "PENDING",
@@ -1176,9 +1177,9 @@ class TestSalesLeadToDelivery:
         # ── 断言 ──
         target_pass_rate = KPI_BENCHMARKS["fat_pass_rate_target"]  # 0.90
         actual_pass_rate = float(fat.pass_rate) / 100.0
-        assert actual_pass_rate >= target_pass_rate, (
-            f"FAT通过率 {actual_pass_rate:.1%} < 目标 {target_pass_rate:.1%}"
-        )
+        assert (
+            actual_pass_rate >= target_pass_rate
+        ), f"FAT通过率 {actual_pass_rate:.1%} < 目标 {target_pass_rate:.1%}"
         assert fat.overall_result == "PASSED", "FAT应整体通过"
         assert fat.is_officially_completed, "FAT应已正式完成（上传签署文件）"
         assert fat.report_file_path is not None, "应生成验收报告文件路径"
@@ -1235,10 +1236,10 @@ class TestSalesLeadToDelivery:
 
         # 11-b 核算实际成本（基于 SAMPLE_COSTS 行业基准数据）
         actual_costs = {
-            "硬件采购": 175_000,   # NI机箱+板卡+气缸+相机+夹具材料
-            "人工成本": 72_000,    # 5人×2个月
-            "外协加工": 28_000,    # 夹具机加工（超预算）
-            "差旅费用": 8_500,     # 客户现场调试
+            "硬件采购": 175_000,  # NI机箱+板卡+气缸+相机+夹具材料
+            "人工成本": 72_000,  # 5人×2个月
+            "外协加工": 28_000,  # 夹具机加工（超预算）
+            "差旅费用": 8_500,  # 客户现场调试
         }
         total_actual_cost = sum(actual_costs.values())  # 283,500
 
@@ -1250,7 +1251,7 @@ class TestSalesLeadToDelivery:
         project = db.query(Project).filter(Project.id == flow_state["project_id"]).first()
         project.actual_cost = Decimal(str(total_actual_cost))
         project.actual_end_date = date.today() + timedelta(days=96)
-        project.status = "ST09"   # 结项状态
+        project.status = "ST09"  # 结项状态
         project.stage = "S9"
         project.progress_pct = Decimal("100.00")
         db.commit()
@@ -1296,7 +1297,7 @@ class TestSalesLeadToDelivery:
                 "name": "预付款",
                 "amount": contract_amount * Decimal("0.30"),
                 "planned_offset_days": 7,
-                "actual_offset_days": 5,    # 比计划提前2天
+                "actual_offset_days": 5,  # 比计划提前2天
                 "type": "ADVANCE",
             },
             {
@@ -1310,7 +1311,7 @@ class TestSalesLeadToDelivery:
                 "name": "验收款",
                 "amount": contract_amount * Decimal("0.30"),
                 "planned_offset_days": 90,
-                "actual_offset_days": 95,   # 延迟5天（FAT验收后客户付款）
+                "actual_offset_days": 95,  # 延迟5天（FAT验收后客户付款）
                 "type": "ACCEPTANCE",
             },
             {
@@ -1334,9 +1335,7 @@ class TestSalesLeadToDelivery:
             total_received += rec["amount"]
 
             if abs(delay_days) > 30:
-                compliance_issues.append(
-                    f"{rec['name']} 逾期 {delay_days} 天，超过 ±30 天合规阈值"
-                )
+                compliance_issues.append(f"{rec['name']} 逾期 {delay_days} 天，超过 ±30 天合规阈值")
 
         # 12-b 创建发票记录（开具增值税专用发票，税额另计）
         tax_rate = Decimal("13")
@@ -1360,9 +1359,8 @@ class TestSalesLeadToDelivery:
 
         # 12-c 更新合同已收款金额
         from app.models.sales import Contract
-        contract = db.query(Contract).filter(
-            Contract.id == flow_state["contract_id"]
-        ).first()
+
+        contract = db.query(Contract).filter(Contract.id == flow_state["contract_id"]).first()
         contract.received_amount = total_received
         db.commit()
         db.refresh(contract)
@@ -1372,12 +1370,8 @@ class TestSalesLeadToDelivery:
         # ── 断言 ──
         assert float(total_received) == pytest.approx(
             flow_state["contract_amount"], rel=1e-4
-        ), (
-            f"累计回款 ¥{float(total_received):,.2f} ≠ 合同总额 ¥{flow_state['contract_amount']:,.2f}"
-        )
-        assert len(compliance_issues) == 0, (
-            f"存在账期合规问题：{compliance_issues}"
-        )
+        ), f"累计回款 ¥{float(total_received):,.2f} ≠ 合同总额 ¥{flow_state['contract_amount']:,.2f}"
+        assert len(compliance_issues) == 0, f"存在账期合规问题：{compliance_issues}"
         assert float(contract.received_amount) == pytest.approx(
             flow_state["contract_amount"], rel=1e-4
         )
@@ -1399,9 +1393,18 @@ class TestSalesLeadToDelivery:
 
         # 检查所有关键节点已完成
         required_keys = [
-            "lead_id", "opp_id", "quote_id", "contract_id",
-            "project_id", "bom_id", "pr_ni_id", "gr_id",
-            "fat_id", "sat_id", "gross_margin", "total_received",
+            "lead_id",
+            "opp_id",
+            "quote_id",
+            "contract_id",
+            "project_id",
+            "bom_id",
+            "pr_ni_id",
+            "gr_id",
+            "fat_id",
+            "sat_id",
+            "gross_margin",
+            "total_received",
         ]
         missing = [k for k in required_keys if k not in flow_state]
         assert not missing, f"业务链缺少关键节点数据：{missing}"
@@ -1416,9 +1419,9 @@ class TestSalesLeadToDelivery:
 
         # BOM 金额合理（不超过合同额的 75%）
         bom_to_contract_ratio = flow_state["bom_amount"] / flow_state["contract_amount"]
-        assert bom_to_contract_ratio < 0.75, (
-            f"BOM金额占比 {bom_to_contract_ratio:.1%} 过高（应 < 75%）"
-        )
+        assert (
+            bom_to_contract_ratio < 0.75
+        ), f"BOM金额占比 {bom_to_contract_ratio:.1%} 过高（应 < 75%）"
 
         print(
             f"\n{'═'*60}"

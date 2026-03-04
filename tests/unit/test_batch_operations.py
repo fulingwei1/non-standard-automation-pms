@@ -4,11 +4,12 @@ Unit tests for batch_operations.py
 Covers: app/utils/batch_operations.py
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from typing import List
+from unittest.mock import MagicMock, call, patch
 
-from app.utils.batch_operations import BatchOperationResult, BatchOperationExecutor
+import pytest
+
+from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 
 
 class TestBatchOperationResult:

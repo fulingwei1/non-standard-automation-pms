@@ -13,8 +13,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.project import Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
 
 from .base import ApprovalAdapter
@@ -59,9 +59,9 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             return {}
 
         # 获取订单明细数量
-        item_count = self.db.query(PurchaseOrderItem).filter(
-            PurchaseOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == entity_id).count()
+        )
 
         # 获取项目信息（如果有）
         project_info = {}
@@ -71,7 +71,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
                 project_info = {
                     "project_code": project.project_code,
                     "project_name": project.project_name,
-                    "project_priority": project.priority if hasattr(project, 'priority') else None,
+                    "project_priority": project.priority if hasattr(project, "priority") else None,
                 }
 
         # 获取供应商信息
@@ -143,7 +143,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         if order:
             order.status = "REJECTED"
             # approval_note可以记录驳回原因（如果有的话）
-            if hasattr(instance, 'reject_reason'):
+            if hasattr(instance, "reject_reason"):
                 order.approval_note = instance.reject_reason
             self.db.flush()
 
@@ -194,9 +194,9 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             return ""
 
         # 获取订单明细数量
-        item_count = self.db.query(PurchaseOrderItem).filter(
-            PurchaseOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == entity_id).count()
+        )
 
         # 获取供应商名称
         vendor_name = "未指定"
@@ -209,7 +209,11 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         summary_parts = [
             f"订单编号: {order.order_no}",
             f"供应商: {vendor_name}",
-            f"订单金额: ¥{order.amount_with_tax:,.2f}" if order.amount_with_tax else "订单金额: 未填写",
+            (
+                f"订单金额: ¥{order.amount_with_tax:,.2f}"
+                if order.amount_with_tax
+                else "订单金额: 未填写"
+            ),
             f"明细行数: {item_count}",
         ]
 
@@ -249,9 +253,9 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             return False, "请填写订单日期"
 
         # 验证是否有订单明细
-        item_count = self.db.query(PurchaseOrderItem).filter(
-            PurchaseOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == entity_id).count()
+        )
 
         if item_count == 0:
             return False, "采购订单至少需要一条明细"
@@ -285,17 +289,17 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         # 关联项目的项目经理
         if order.project_id:
             project = self.db.query(Project).filter(Project.id == order.project_id).first()
-            if project and hasattr(project, 'manager_id') and project.manager_id:
+            if project and hasattr(project, "manager_id") and project.manager_id:
                 cc_users.append(project.manager_id)
 
         # 采购部门负责人
-        purchase_dept_codes = ['PURCHASE', 'PROCUREMENT', 'PMC', '采购部']
+        purchase_dept_codes = ["PURCHASE", "PROCUREMENT", "PMC", "采购部"]
         purchase_manager_ids = self.get_department_manager_user_ids_by_codes(purchase_dept_codes)
         cc_users.extend(purchase_manager_ids)
 
         # 如果没找到，尝试通过部门名称查找
         if not purchase_manager_ids:
-            purchase_manager = self.get_department_manager_user_id('采购部')
+            purchase_manager = self.get_department_manager_user_id("采购部")
             if purchase_manager:
                 cc_users.append(purchase_manager)
 

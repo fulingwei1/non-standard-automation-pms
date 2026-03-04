@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.bonus.project")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -17,6 +17,7 @@ def db():
 def calculator(db):
     with patch("app.services.bonus.project.ProjectEvaluationService"):
         from app.services.bonus.project import ProjectBonusCalculator
+
         return ProjectBonusCalculator(db)
 
 
@@ -48,8 +49,10 @@ def test_calculate_by_contribution_creates_bonus(calculator, db):
     contrib.hours_percentage = Decimal("50")
     contrib.hours_spent = Decimal("100")
 
-    with patch("app.services.bonus.project.ProjectEvaluationService") as MockEval, \
-         patch("app.services.bonus.project.BonusCalculation") as MockCalc:
+    with (
+        patch("app.services.bonus.project.ProjectEvaluationService") as MockEval,
+        patch("app.services.bonus.project.BonusCalculation") as MockCalc,
+    ):
         eval_svc = MockEval.return_value
         eval_svc.get_difficulty_bonus_coefficient.return_value = Decimal("1.0")
         eval_svc.get_new_tech_bonus_coefficient.return_value = Decimal("1.2")
@@ -84,8 +87,10 @@ def test_calculate_by_milestone_creates_per_member(calculator, db):
     member.role_code = "PM"
     db.query.return_value.filter.return_value.all.return_value = [member]
 
-    with patch("app.services.bonus.project.ProjectEvaluationService") as MockEval, \
-         patch("app.services.bonus.project.BonusCalculation") as MockCalc:
+    with (
+        patch("app.services.bonus.project.ProjectEvaluationService") as MockEval,
+        patch("app.services.bonus.project.BonusCalculation") as MockCalc,
+    ):
         eval_svc = MockEval.return_value
         eval_svc.get_bonus_coefficient.return_value = Decimal("1.0")
         MockCalc.return_value = MagicMock()
@@ -116,8 +121,10 @@ def test_calculate_by_stage_creates_calculations(calculator, db):
     member.role_code = "ME"
     db.query.return_value.filter.return_value.all.return_value = [member]
 
-    with patch("app.services.bonus.project.ProjectEvaluationService") as MockEval, \
-         patch("app.services.bonus.project.BonusCalculation") as MockCalc:
+    with (
+        patch("app.services.bonus.project.ProjectEvaluationService") as MockEval,
+        patch("app.services.bonus.project.BonusCalculation") as MockCalc,
+    ):
         eval_svc = MockEval.return_value
         eval_svc.get_bonus_coefficient.return_value = Decimal("1.1")
         MockCalc.return_value = MagicMock()

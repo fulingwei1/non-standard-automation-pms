@@ -31,9 +31,7 @@ class TestGetMaterialLeadTime:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_material
 
-        days, remark = DeliveryValidationService.get_material_lead_time(
-            mock_db, material_id=1
-        )
+        days, remark = DeliveryValidationService.get_material_lead_time(mock_db, material_id=1)
 
         assert days == 21
         assert "物料档案" in remark
@@ -393,9 +391,7 @@ class TestGetSuggestions:
         from app.services.delivery_validation_service import DeliveryValidationService
 
         suggestions = DeliveryValidationService._get_suggestions(
-            quoted_days=20,
-            material_days=30,
-            estimated_days=60
+            quoted_days=20, material_days=30, estimated_days=60
         )
 
         assert any("至少" in s for s in suggestions)
@@ -405,9 +401,7 @@ class TestGetSuggestions:
         from app.services.delivery_validation_service import DeliveryValidationService
 
         suggestions = DeliveryValidationService._get_suggestions(
-            quoted_days=40,
-            material_days=20,
-            estimated_days=60
+            quoted_days=40, material_days=20, estimated_days=60
         )
 
         assert any("60" in s for s in suggestions)
@@ -417,9 +411,7 @@ class TestGetSuggestions:
         from app.services.delivery_validation_service import DeliveryValidationService
 
         suggestions = DeliveryValidationService._get_suggestions(
-            quoted_days=None,
-            material_days=30,
-            estimated_days=60
+            quoted_days=None, material_days=30, estimated_days=60
         )
 
         assert any("建议交期" in s for s in suggestions)

@@ -68,12 +68,7 @@ def test_calculate_coverage_target_low():
 
 def test_identify_focus_areas_from_signals():
     engine = _engine()
-    risk_analysis = {
-        **BASE_RISK,
-        "risk_signals": [
-            {"module": "登录模块", "risk_score": 80}
-        ]
-    }
+    risk_analysis = {**BASE_RISK, "risk_signals": [{"module": "登录模块", "risk_score": 80}]}
     areas = engine._identify_focus_areas(risk_analysis)
     assert any(a["area"] == "登录模块" for a in areas)
 

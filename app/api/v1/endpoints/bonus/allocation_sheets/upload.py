@@ -20,7 +20,11 @@ from ..allocation_helpers import generate_sheet_code
 router = APIRouter()
 
 
-@router.post("/allocation-sheets/upload", response_model=ResponseModel[BonusAllocationSheetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/allocation-sheets/upload",
+    response_model=ResponseModel[BonusAllocationSheetResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_allocation_sheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -38,10 +42,7 @@ async def upload_allocation_sheet(
     try:
         import pandas as pd  # noqa: F401
     except ImportError:
-        raise HTTPException(
-            status_code=500,
-            detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
+        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl")
 
     from app.services.bonus_allocation_parser import (
         parse_allocation_sheet,
@@ -82,10 +83,10 @@ async def upload_allocation_sheet(
             total_rows=len(df),
             valid_rows=len(valid_rows),
             invalid_rows=len(invalid_rows),
-            status='PARSED' if len(invalid_rows) == 0 else 'UPLOADED',
-            parse_result={'valid_rows': valid_rows},
+            status="PARSED" if len(invalid_rows) == 0 else "UPLOADED",
+            parse_result={"valid_rows": valid_rows},
             parse_errors=parse_errors if parse_errors else None,
-            uploaded_by=current_user.id
+            uploaded_by=current_user.id,
         )
 
         db.add(allocation_sheet)
@@ -95,7 +96,7 @@ async def upload_allocation_sheet(
         return ResponseModel(
             code=201,
             message=f"上传成功，有效行数：{len(valid_rows)}，无效行数：{len(invalid_rows)}",
-            data=BonusAllocationSheetResponse.model_validate(allocation_sheet)
+            data=BonusAllocationSheetResponse.model_validate(allocation_sheet),
         )
 
     except HTTPException:

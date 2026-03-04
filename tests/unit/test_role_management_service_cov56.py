@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi import HTTPException
 
-from app.services.role_management.service import RoleManagementService, RESERVED_ROLE_CODES
+from app.services.role_management.service import RESERVED_ROLE_CODES, RoleManagementService
 
 
 class TestRoleManagementService(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestRoleManagementService(unittest.TestCase):
         mock_role.id = 1
         mock_role.role_code = "TEST_ROLE"
         mock_role.role_name = "测试角色"
-        
+
         self.db.query.return_value.filter.return_value.first.return_value = mock_role
 
         # 执行测试
@@ -45,7 +45,7 @@ class TestRoleManagementService(unittest.TestCase):
         # 验证抛出异常
         with self.assertRaises(HTTPException) as context:
             self.service.get_role_by_id(999)
-        
+
         self.assertEqual(context.exception.status_code, 404)
         self.assertIn("角色不存在", context.exception.detail)
 
@@ -53,12 +53,8 @@ class TestRoleManagementService(unittest.TestCase):
         """测试使用保留角色编码创建角色时抛出异常"""
         # 尝试使用保留编码
         with self.assertRaises(HTTPException) as context:
-            self.service.create_role(
-                role_code="ADMIN",
-                role_name="管理员",
-                tenant_id=1
-            )
-        
+            self.service.create_role(role_code="ADMIN", role_name="管理员", tenant_id=1)
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("系统保留编码", context.exception.detail)
 
@@ -70,12 +66,8 @@ class TestRoleManagementService(unittest.TestCase):
 
         # 尝试创建重复编码的角色
         with self.assertRaises(HTTPException) as context:
-            self.service.create_role(
-                role_code="EXISTING_ROLE",
-                role_name="现有角色",
-                tenant_id=1
-            )
-        
+            self.service.create_role(role_code="EXISTING_ROLE", role_name="现有角色", tenant_id=1)
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("已存在", context.exception.detail)
 
@@ -83,14 +75,14 @@ class TestRoleManagementService(unittest.TestCase):
         """测试成功创建角色"""
         # 模拟不存在重复
         self.db.query.return_value.filter.return_value.first.return_value = None
-        
+
         mock_role = MagicMock()
         mock_role.id = 1
         mock_role.role_code = "NEW_ROLE"
         mock_role.role_name = "新角色"
-        
+
         # 模拟刷新后的角色
-        self.db.refresh = MagicMock(side_effect=lambda r: setattr(r, 'id', 1))
+        self.db.refresh = MagicMock(side_effect=lambda r: setattr(r, "id", 1))
 
         # 执行测试
         result = self.service.create_role(
@@ -98,7 +90,7 @@ class TestRoleManagementService(unittest.TestCase):
             role_name="新角色",
             tenant_id=1,
             description="测试角色",
-            data_scope="OWN"
+            data_scope="OWN",
         )
 
         # 验证数据库操作
@@ -113,16 +105,13 @@ class TestRoleManagementService(unittest.TestCase):
         mock_role.id = 1
         mock_role.is_system = True
         mock_role.role_code = "SYSTEM_ROLE"
-        
+
         self.db.query.return_value.filter.return_value.first.return_value = mock_role
 
         # 尝试修改系统角色编码
         with self.assertRaises(HTTPException) as context:
-            self.service.update_role(
-                role_id=1,
-                role_code="NEW_CODE"
-            )
-        
+            self.service.update_role(role_id=1, role_code="NEW_CODE")
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("系统预置角色不允许修改编码", context.exception.detail)
 
@@ -132,16 +121,16 @@ class TestRoleManagementService(unittest.TestCase):
         mock_role = MagicMock()
         mock_role.id = 1
         mock_role.is_system = False
-        
+
         self.db.query.return_value.filter.return_value.first.return_value = mock_role
-        
+
         # 模拟有3个用户使用此角色
         self.db.query.return_value.filter.return_value.count.return_value = 3
 
         # 尝试删除
         with self.assertRaises(HTTPException) as context:
             self.service.delete_role(1)
-        
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("3 个用户", context.exception.detail)
 
@@ -151,13 +140,13 @@ class TestRoleManagementService(unittest.TestCase):
         mock_role = MagicMock()
         mock_role.id = 1
         mock_role.is_system = True
-        
+
         self.db.query.return_value.filter.return_value.first.return_value = mock_role
 
         # 尝试删除系统角色
         with self.assertRaises(HTTPException) as context:
             self.service.delete_role(1)
-        
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("系统预置角色不允许删除", context.exception.detail)
 
@@ -168,23 +157,19 @@ class TestRoleManagementService(unittest.TestCase):
             MagicMock(id=1, role_code="ROLE1", role_name="角色1", is_active=True),
             MagicMock(id=2, role_code="ROLE2", role_name="角色2", is_active=True),
         ]
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 2
         mock_query.offset.return_value = mock_query
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = mock_roles
-        
+
         self.db.query.return_value = mock_query
 
         # 执行测试
         result = self.service.list_roles_by_tenant(
-            tenant_id=1,
-            page=1,
-            page_size=10,
-            keyword="角色",
-            is_active=True
+            tenant_id=1, page=1, page_size=10, keyword="角色", is_active=True
         )
 
         # 验证结果
@@ -201,19 +186,19 @@ class TestRoleManagementService(unittest.TestCase):
         mock_parent.role_name = "父角色"
         mock_parent.parent_id = None
         mock_parent.data_scope = "ALL"
-        
+
         mock_child = MagicMock()
         mock_child.id = 2
         mock_child.role_code = "CHILD"
         mock_child.role_name = "子角色"
         mock_child.parent_id = 1
         mock_child.data_scope = "OWN"
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.all.return_value = [mock_parent, mock_child]
-        
+
         self.db.query.return_value = mock_query
 
         # 执行测试
@@ -231,24 +216,24 @@ class TestRoleManagementService(unittest.TestCase):
         mock_role_2 = MagicMock()
         mock_role_2.id = 2
         mock_role_2.parent_id = 3
-        
+
         mock_role_3 = MagicMock()
         mock_role_3.id = 3
         mock_role_3.parent_id = None
-        
+
         def mock_first():
             role_id = self.db.query.call_args[0][0]
-            if hasattr(role_id, 'id'):
+            if hasattr(role_id, "id"):
                 return None
             # 根据filter的参数返回对应的角色
             return mock_role_2 if mock_role_2 else mock_role_3
-        
+
         self.db.query.return_value.filter.return_value.first = mock_first
 
         # 测试：如果将3的父角色设为1，会形成循环（1 -> 2 -> 3 -> 1）
         # 由于mock的复杂性，这里简化测试
         result = self.service._would_create_cycle(3, 1)
-        
+
         # 基础验证（实际循环检测需要更复杂的mock）
         self.assertIsInstance(result, bool)
 
@@ -257,34 +242,30 @@ class TestRoleManagementService(unittest.TestCase):
         # 准备角色
         mock_role = MagicMock()
         mock_role.id = 1
-        
+
         # 准备权限
         mock_perm1 = MagicMock()
         mock_perm1.id = 1
         mock_perm2 = MagicMock()
         mock_perm2.id = 2
-        
+
         # 模拟查询
         def query_side_effect(model):
             mock_query = MagicMock()
-            if model.__name__ == 'Role':
+            if model.__name__ == "Role":
                 mock_query.filter.return_value.first.return_value = mock_role
-            elif model.__name__ == 'ApiPermission':
+            elif model.__name__ == "ApiPermission":
                 # 轮流返回两个权限
                 mock_query.filter.return_value.first.side_effect = [mock_perm1, mock_perm2]
-            elif model.__name__ == 'RoleApiPermission':
+            elif model.__name__ == "RoleApiPermission":
                 mock_query.filter.return_value.delete.return_value = None
             return mock_query
-        
+
         self.db.query.side_effect = query_side_effect
 
         # 执行测试
-        with patch('app.services.role_management.service.logger'):
-            self.service.update_role_permissions(
-                role_id=1,
-                permission_ids=[1, 2],
-                tenant_id=1
-            )
+        with patch("app.services.role_management.service.logger"):
+            self.service.update_role_permissions(role_id=1, permission_ids=[1, 2], tenant_id=1)
 
         # 验证数据库操作
         self.db.commit.assert_called()
@@ -305,22 +286,22 @@ class TestRoleManagementService(unittest.TestCase):
         # 准备用户角色
         mock_user_role = MagicMock()
         mock_user_role.role_id = 1
-        
+
         # 准备角色和导航组
         mock_role = MagicMock()
         mock_role.id = 1
         mock_role.nav_groups = [
             {"label": "仪表盘", "items": []},
-            {"label": "系统管理", "items": []}
+            {"label": "系统管理", "items": []},
         ]
-        
+
         # 创建两个独立的查询mock
         mock_query1 = MagicMock()
         mock_query1.filter.return_value.all.return_value = [mock_user_role]
-        
+
         mock_query2 = MagicMock()
         mock_query2.filter.return_value.all.return_value = [mock_role]
-        
+
         # 第一次查询返回UserRole，第二次返回Role
         self.db.query.side_effect = [mock_query1, mock_query2]
 

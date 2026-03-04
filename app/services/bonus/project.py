@@ -23,10 +23,7 @@ class ProjectBonusCalculator(BonusCalculatorBase):
         super().__init__(db)
 
     def calculate_by_contribution(
-        self,
-        project_contribution: ProjectContribution,
-        project: Project,
-        bonus_rule: BonusRule
+        self, project_contribution: ProjectContribution, project: Project, bonus_rule: BonusRule
     ) -> Optional[BonusCalculation]:
         """
         基于项目贡献计算奖金
@@ -40,17 +37,17 @@ class ProjectBonusCalculator(BonusCalculatorBase):
             BonusCalculation: 计算记录
         """
         # 检查触发条件
-        context = {'project': project, 'project_contribution': project_contribution}
+        context = {"project": project, "project_contribution": project_contribution}
         if not self.check_trigger_condition(bonus_rule, context):
             return None
 
         # 获取项目金额和贡献占比
-        project_amount = project.contract_amount or Decimal('0')
-        hours_percentage = project_contribution.hours_percentage or Decimal('0')
-        contribution_ratio = hours_percentage / Decimal('100')
+        project_amount = project.contract_amount or Decimal("0")
+        hours_percentage = project_contribution.hours_percentage or Decimal("0")
+        contribution_ratio = hours_percentage / Decimal("100")
 
         # 计算基础奖金（按项目金额的百分比）
-        bonus_ratio = (bonus_rule.coefficient or Decimal('0')) / Decimal('100')
+        bonus_ratio = (bonus_rule.coefficient or Decimal("0")) / Decimal("100")
         base_amount = project_amount * bonus_ratio * contribution_ratio
 
         # 应用项目评价系数（难度、新技术等）
@@ -78,23 +75,24 @@ class ProjectBonusCalculator(BonusCalculatorBase):
                 "difficulty_coefficient": float(difficulty_coef),
                 "new_tech_coefficient": float(new_tech_coef),
                 "final_coefficient": float(bonus_coefficient),
-                "hours_spent": float(project_contribution.hours_spent) if project_contribution.hours_spent else 0
+                "hours_spent": (
+                    float(project_contribution.hours_spent)
+                    if project_contribution.hours_spent
+                    else 0
+                ),
             },
             calculation_basis={
                 "type": "project",
                 "project_id": project.id,
-                "project_contribution_id": project_contribution.id
+                "project_contribution_id": project_contribution.id,
             },
-            status='CALCULATED'
+            status="CALCULATED",
         )
 
         return calculation
 
     def calculate_by_milestone(
-        self,
-        milestone: ProjectMilestone,
-        project: Project,
-        bonus_rule: BonusRule
+        self, milestone: ProjectMilestone, project: Project, bonus_rule: BonusRule
     ) -> List[BonusCalculation]:
         """
         基于里程碑完成计算奖金（可能涉及多个项目成员）
@@ -108,23 +106,24 @@ class ProjectBonusCalculator(BonusCalculatorBase):
             List[BonusCalculation]: 计算记录列表
         """
         # 检查触发条件
-        context = {'milestone': milestone, 'project': project}
+        context = {"milestone": milestone, "project": project}
         if not self.check_trigger_condition(bonus_rule, context):
             return []
 
         calculations = []
 
         # 获取项目成员
-        members = self.db.query(ProjectMember).filter(
-            ProjectMember.project_id == project.id,
-            ProjectMember.is_active
-        ).all()
+        members = (
+            self.db.query(ProjectMember)
+            .filter(ProjectMember.project_id == project.id, ProjectMember.is_active)
+            .all()
+        )
 
         if not members:
             return []
 
         # 按角色分配奖金
-        base_amount = bonus_rule.base_amount or Decimal('0')
+        base_amount = bonus_rule.base_amount or Decimal("0")
 
         # 应用项目评价系数（如果项目有评价）
         eval_service = ProjectEvaluationService(self.db)
@@ -148,25 +147,21 @@ class ProjectBonusCalculator(BonusCalculatorBase):
                     "role": member.role_code,
                     "role_coefficient": float(role_coefficient),
                     "project_coefficient": float(project_coef),
-                    "base_amount": float(base_with_role)
+                    "base_amount": float(base_with_role),
                 },
                 calculation_basis={
                     "type": "milestone",
                     "project_id": project.id,
-                    "milestone_id": milestone.id
+                    "milestone_id": milestone.id,
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             calculations.append(calculation)
 
         return calculations
 
     def calculate_by_stage(
-        self,
-        project: Project,
-        old_stage: str,
-        new_stage: str,
-        bonus_rule: BonusRule
+        self, project: Project, old_stage: str, new_stage: str, bonus_rule: BonusRule
     ) -> List[BonusCalculation]:
         """
         基于项目阶段推进计算奖金
@@ -181,22 +176,20 @@ class ProjectBonusCalculator(BonusCalculatorBase):
             List[BonusCalculation]: 计算记录列表
         """
         # 检查是否触发阶段奖金规则
-        context = {'project': project, 'stage': new_stage}
+        context = {"project": project, "stage": new_stage}
         if not self.check_trigger_condition(bonus_rule, context):
             return []
 
         calculations = []
 
         # 获取项目成员
-        members = self.db.query(ProjectMember).filter(
-            ProjectMember.project_id == project.id
-        ).all()
+        members = self.db.query(ProjectMember).filter(ProjectMember.project_id == project.id).all()
 
         if not members:
             return []
 
         # 按角色分配奖金
-        base_amount = bonus_rule.base_amount or Decimal('0')
+        base_amount = bonus_rule.base_amount or Decimal("0")
         for member in members:
             role_coefficient = self.get_role_coefficient(member.role_code, bonus_rule)
             amount = base_amount * role_coefficient
@@ -218,15 +211,15 @@ class ProjectBonusCalculator(BonusCalculatorBase):
                     "role": member.role_code,
                     "role_coefficient": float(role_coefficient),
                     "project_coefficient": float(project_coef),
-                    "base_amount": float(amount)
+                    "base_amount": float(amount),
                 },
                 calculation_basis={
                     "type": "stage",
                     "project_id": project.id,
                     "old_stage": old_stage,
-                    "new_stage": new_stage
+                    "new_stage": new_stage,
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             calculations.append(calculation)
 

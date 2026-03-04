@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """VendorService 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestVendorServiceToResponse:
@@ -11,6 +12,7 @@ class TestVendorServiceToResponse:
 
     def _make_service(self):
         from app.services.vendor_service import VendorService
+
         db = MagicMock()
         svc = VendorService(db)
         return svc
@@ -80,6 +82,7 @@ class TestVendorServiceListSuppliers:
 
     def _make_service_with_list_result(self, items=None, total=0):
         from app.services.vendor_service import VendorService
+
         db = MagicMock()
         svc = VendorService(db)
         list_result = MagicMock()

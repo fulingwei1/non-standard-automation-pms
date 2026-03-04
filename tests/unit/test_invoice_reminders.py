@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """发票提醒单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.sales_reminder.invoice_reminders import notify_invoice_issued
 
 

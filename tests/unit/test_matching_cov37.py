@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 项目匹配模块
 tests/unit/test_matching_cov37.py
 """
-import pytest
 from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.work_log_ai.project_matching")
 
@@ -13,6 +14,7 @@ from app.services.work_log_ai.project_matching import ProjectMatchingMixin
 
 class ConcreteMatching(ProjectMatchingMixin):
     """具体化混入以便测试"""
+
     def __init__(self, db):
         self.db = db
 
@@ -36,8 +38,9 @@ def _make_db(members=None, projects=None, timesheet_count=3):
     t_query.filter.return_value.count.return_value = timesheet_count
 
     def query_side_effect(model):
-        from app.models.project import ProjectMember, Project
+        from app.models.project import Project, ProjectMember
         from app.models.timesheet import Timesheet
+
         if model is ProjectMember:
             return m_query
         elif model is Project:
@@ -93,7 +96,7 @@ class TestProjectMatchingMixin:
         proj2 = _make_project(pid=20)
 
         db = MagicMock()
-        from app.models.project import ProjectMember, Project
+        from app.models.project import Project, ProjectMember
         from app.models.timesheet import Timesheet
 
         call_counts = {"count": 0}

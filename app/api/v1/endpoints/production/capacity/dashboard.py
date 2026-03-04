@@ -215,27 +215,47 @@ class CapacityDashboardEndpoint(BaseDashboardEndpoint):
             "oee_overview": {
                 "total_records": oee_summary.total_records or 0,
                 "avg_oee": float(oee_summary.avg_oee) if oee_summary.avg_oee else 0,
-                "avg_availability": float(oee_summary.avg_availability) if oee_summary.avg_availability else 0,
-                "avg_performance": float(oee_summary.avg_performance) if oee_summary.avg_performance else 0,
+                "avg_availability": (
+                    float(oee_summary.avg_availability) if oee_summary.avg_availability else 0
+                ),
+                "avg_performance": (
+                    float(oee_summary.avg_performance) if oee_summary.avg_performance else 0
+                ),
                 "avg_quality": float(oee_summary.avg_quality) if oee_summary.avg_quality else 0,
                 "total_output": oee_summary.total_output or 0,
                 "total_qualified": oee_summary.total_qualified or 0,
                 "total_defects": oee_summary.total_defects or 0,
                 "total_downtime": oee_summary.total_downtime or 0,
                 "quality_rate": round(
-                    (oee_summary.total_qualified / oee_summary.total_output * 100)
-                    if oee_summary.total_output
-                    else 0,
+                    (
+                        (oee_summary.total_qualified / oee_summary.total_output * 100)
+                        if oee_summary.total_output
+                        else 0
+                    ),
                     2,
                 ),
             },
             "efficiency_overview": {
                 "total_records": efficiency_summary.total_records or 0,
-                "avg_efficiency": float(efficiency_summary.avg_efficiency) if efficiency_summary.avg_efficiency else 0,
-                "avg_quality_rate": float(efficiency_summary.avg_quality_rate) if efficiency_summary.avg_quality_rate else 0,
-                "avg_utilization": float(efficiency_summary.avg_utilization) if efficiency_summary.avg_utilization else 0,
+                "avg_efficiency": (
+                    float(efficiency_summary.avg_efficiency)
+                    if efficiency_summary.avg_efficiency
+                    else 0
+                ),
+                "avg_quality_rate": (
+                    float(efficiency_summary.avg_quality_rate)
+                    if efficiency_summary.avg_quality_rate
+                    else 0
+                ),
+                "avg_utilization": (
+                    float(efficiency_summary.avg_utilization)
+                    if efficiency_summary.avg_utilization
+                    else 0
+                ),
                 "total_completed": efficiency_summary.total_completed or 0,
-                "total_hours": float(efficiency_summary.total_hours) if efficiency_summary.total_hours else 0,
+                "total_hours": (
+                    float(efficiency_summary.total_hours) if efficiency_summary.total_hours else 0
+                ),
             },
             "oee_distribution": {
                 "total": oee_distribution.count or 0,

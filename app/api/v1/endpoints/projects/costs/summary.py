@@ -6,6 +6,7 @@
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
 
@@ -27,8 +28,8 @@ def get_project_cost_summary(
 ) -> Any:
     """获取项目成本汇总（使用统一统计服务）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = CostStatisticsService(db)
     summary = service.get_summary(project_id)
-    
+
     return ResponseModel(data=summary)

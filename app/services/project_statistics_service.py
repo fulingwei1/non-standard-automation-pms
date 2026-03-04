@@ -95,9 +95,7 @@ def calculate_customer_statistics(query) -> List[Dict[str, Any]]:
     return list(temp_stats.values())
 
 
-def calculate_monthly_statistics(
-    query, start_date=None, end_date=None
-) -> List[Dict[str, Any]]:
+def calculate_monthly_statistics(query, start_date=None, end_date=None) -> List[Dict[str, Any]]:
     """计算月度统计"""
     from datetime import datetime
 
@@ -106,9 +104,7 @@ def calculate_monthly_statistics(
             Project.created_at >= datetime.combine(start_date, datetime.min.time())
         )
     if end_date:
-        query = query.filter(
-            Project.created_at <= datetime.combine(end_date, datetime.max.time())
-        )
+        query = query.filter(Project.created_at <= datetime.combine(end_date, datetime.max.time()))
 
     projects = query.all()
     temp_stats = {}
@@ -137,9 +133,7 @@ def build_project_statistics(
     """构建综合统计数据"""
     projects = query.all()
     total = len(projects)
-    avg_progress = (
-        sum(p.progress_pct or 0 for p in projects) / total if total > 0 else 0
-    )
+    avg_progress = sum(p.progress_pct or 0 for p in projects) / total if total > 0 else 0
 
     result = {
         "total": total,
@@ -222,9 +216,7 @@ class ProjectStatisticsServiceBase(ABC):
         if aggregate_field:
             aggregate_attr = getattr(model, aggregate_field)
             result = (
-                query.with_entities(
-                    field_attr, aggregate_func(aggregate_attr).label("total")
-                )
+                query.with_entities(field_attr, aggregate_func(aggregate_attr).label("total"))
                 .group_by(field_attr)
                 .all()
             )
@@ -236,8 +228,7 @@ class ProjectStatisticsServiceBase(ABC):
             )
 
         return {
-            str(key): float(value) if isinstance(value, Decimal) else value
-            for key, value in result
+            str(key): float(value) if isinstance(value, Decimal) else value for key, value in result
         }
 
     def calculate_total(
@@ -408,9 +399,7 @@ class TimesheetStatisticsService(ProjectStatisticsServiceBase):
             "project_name": project.project_name,
             "total_hours": float(total_hours),
             "total_participants": len(participants),
-            "by_user": [
-                {**v, "total_hours": float(v["total_hours"])} for v in by_user.values()
-            ],
+            "by_user": [{**v, "total_hours": float(v["total_hours"])} for v in by_user.values()],
             "by_date": {k: float(v) for k, v in by_date.items()},
             "by_work_type": {k: float(v) for k, v in by_work_type.items()},
             "start_date": start_date.isoformat() if start_date else None,
@@ -451,9 +440,7 @@ class TimesheetStatisticsService(ProjectStatisticsServiceBase):
 
         # 计算平均每日工时
         unique_dates = set(ts.work_date for ts in all_timesheets if ts.work_date)
-        avg_daily_hours = (
-            float(total_hours) / len(unique_dates) if unique_dates else 0.0
-        )
+        avg_daily_hours = float(total_hours) / len(unique_dates) if unique_dates else 0.0
 
         # 计算参与人数
         participants = set(ts.user_id for ts in all_timesheets)
@@ -496,6 +483,7 @@ class WorkLogStatisticsService(ProjectStatisticsServiceBase):
     ) -> Dict[str, Any]:
         """获取工作日志汇总"""
         from datetime import timedelta
+
         from app.models.work_log import WorkLog, WorkLogMention
 
         self.get_project(project_id)

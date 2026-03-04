@@ -21,37 +21,40 @@ D3 组：计算精度 & 数值边界测试
   pytest tests/unit/test_numerical_precision.py -v
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 
-# ─── 被测模块 ────────────────────────────────────────────────────────────────
+import pytest
 
+from app.services.business_rules import calc_kit_rate  # 套件率原版
+from app.services.business_rules import calc_spi  # 原版（PV<=0 抛异常）
+from app.services.business_rules import (
+    should_trigger_shortage_alert,
+)
+from app.utils.holiday_utils import get_working_days
 from app.utils.numerical_utils import (
-    calc_spi_safe,
     calc_cpi,
-    is_cost_overrun,
-    calc_eac,
-    calc_vac,
     calc_cumulative_kit_rate,
+    calc_eac,
     calc_hourly_rate,
-    calc_price_with_vat,
     calc_price_breakdown,
+    calc_price_with_vat,
+    calc_spi_safe,
+    calc_vac,
+    is_cost_overrun,
     paginate_pure,
 )
 
-from app.services.business_rules import (
-    calc_spi,           # 原版（PV<=0 抛异常）
-    calc_kit_rate,      # 套件率原版
-    should_trigger_shortage_alert,
-)
+# ─── 被测模块 ────────────────────────────────────────────────────────────────
 
-from app.utils.holiday_utils import get_working_days
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. EVM 计算精度
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestEVMPrecision:
     """EVM（挣值管理）数值精度与边界测试"""
@@ -166,6 +169,7 @@ class TestEVMPrecision:
 # 2. 套件率精度
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestKitRatePrecision:
     """套件率数值精度与边界测试"""
 
@@ -245,6 +249,7 @@ class TestKitRatePrecision:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 3. 工时计算精度
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestWorkingDaysPrecision:
     """工作日计算与时薪精度测试"""
@@ -330,6 +335,7 @@ class TestWorkingDaysPrecision:
 # 4. 报价含税计算
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestVATAndPriceBreakdown:
     """含税价格与报价分解精度测试"""
 
@@ -384,7 +390,9 @@ class TestVATAndPriceBreakdown:
 
     def test_price_breakdown_cost_subtotal(self):
         """成本合计 = 硬件 + 人工 + 外协"""
-        bd = calc_price_breakdown(hardware=100_000, labor=50_000, outsource=10_000, margin_rate=0.20)
+        bd = calc_price_breakdown(
+            hardware=100_000, labor=50_000, outsource=10_000, margin_rate=0.20
+        )
         assert float(bd["cost_subtotal"]) == pytest.approx(160_000, abs=0.01)
 
     def test_price_breakdown_zero_margin(self):
@@ -422,6 +430,7 @@ class TestVATAndPriceBreakdown:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 5. 分页和数据截断
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestPaginationBoundary:
     """纯函数分页边界测试"""

@@ -4,13 +4,14 @@ import pytest
 
 pytest.importorskip("app.services.lead_priority_scoring.opportunity_scoring")
 
-from unittest.mock import MagicMock
 from decimal import Decimal
-from app.services.lead_priority_scoring.opportunity_scoring import OpportunityScoringMixin
+from unittest.mock import MagicMock
+
 from app.services.lead_priority_scoring.constants import ScoringConstants
-from app.services.lead_priority_scoring.scoring_helpers import ScoringHelpersMixin
-from app.services.lead_priority_scoring.level_determination import LevelDeterminationMixin
 from app.services.lead_priority_scoring.descriptions import DescriptionsMixin
+from app.services.lead_priority_scoring.level_determination import LevelDeterminationMixin
+from app.services.lead_priority_scoring.opportunity_scoring import OpportunityScoringMixin
+from app.services.lead_priority_scoring.scoring_helpers import ScoringHelpersMixin
 
 
 class ConcreteOpportunityService(
@@ -37,8 +38,9 @@ def _make_opp_db(opp, customer=None):
     db = MagicMock()
 
     def mock_query(model):
-        from app.models.sales import Opportunity
         from app.models.project import Customer, Project
+        from app.models.sales import Opportunity
+
         q = MagicMock()
         # Always return 0 for count() to avoid MagicMock comparison issues
         q.filter.return_value.count.return_value = 0

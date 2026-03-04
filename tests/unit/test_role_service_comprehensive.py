@@ -8,8 +8,8 @@ RoleService 综合单元测试
 - list_roles: 获取角色列表
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,8 +30,8 @@ class TestRoleServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.role_service import RoleService
         from app.models.user import Role
+        from app.services.role_service import RoleService
 
         mock_db = MagicMock()
 
@@ -145,7 +145,7 @@ class TestToResponse:
         mock_role.updated_at = datetime(2024, 1, 1)
 
         # 模拟 getattr 返回默认值
-        delattr(mock_role, 'sort_order')
+        delattr(mock_role, "sort_order")
 
         result = service._to_response(mock_role)
 
@@ -172,13 +172,13 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_roles(page=1, page_size=20)
 
-            assert result['items'] == mock_result.items
-            assert result['total'] == 2
-            assert result['page'] == 1
-            assert result['page_size'] == 20
+            assert result["items"] == mock_result.items
+            assert result["total"] == 2
+            assert result["page"] == 1
+            assert result["page_size"] == 20
 
     def test_filters_by_is_active(self):
         """测试按激活状态过滤"""
@@ -193,12 +193,12 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_roles(is_active=True)
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('is_active') is True
+            assert call_args.filters.get("is_active") is True
 
     def test_filters_by_is_active_false(self):
         """测试按非激活状态过滤"""
@@ -213,11 +213,11 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_roles(is_active=False)
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('is_active') is False
+            assert call_args.filters.get("is_active") is False
 
     def test_no_filter_when_is_active_none(self):
         """测试 is_active 为 None 时不过滤"""
@@ -232,11 +232,11 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_roles(is_active=None)
 
             call_args = mock_list.call_args[0][0]
-            assert 'is_active' not in call_args.filters
+            assert "is_active" not in call_args.filters
 
     def test_searches_by_keyword(self):
         """测试关键字搜索"""
@@ -251,7 +251,7 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_roles(keyword="管理员")
 
             call_args = mock_list.call_args[0][0]
@@ -272,11 +272,11 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_roles()
 
             # (55 + 20 - 1) // 20 = 3
-            assert result['pages'] == 3
+            assert result["pages"] == 3
 
     def test_calculates_pages_exact_division(self):
         """测试精确整除时的页数计算"""
@@ -291,8 +291,8 @@ class TestListRoles:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_roles()
 
             # (40 + 20 - 1) // 20 = 2
-            assert result['pages'] == 2
+            assert result["pages"] == 2

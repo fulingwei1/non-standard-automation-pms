@@ -15,12 +15,12 @@ from .code_generation import (
 from .common import (
     build_department_name_map,
     calculate_growth,
+    generate_trend_buckets,
     get_entity_creator_id,
     get_previous_range,
     get_user_role_code,
     get_user_role_name,
     get_visible_sales_users,
-    generate_trend_buckets,
     normalize_date_range,
     shift_month,
 )

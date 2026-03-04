@@ -13,8 +13,10 @@ from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 工时记录 ====================
 
+
 class TimesheetCreate(BaseModel):
     """创建工时记录"""
+
     project_id: Optional[int] = None
     rd_project_id: Optional[int] = None
     task_id: Optional[int] = None
@@ -27,6 +29,7 @@ class TimesheetCreate(BaseModel):
 
 class TimesheetUpdate(BaseModel):
     """更新工时记录"""
+
     work_date: Optional[date] = None
     work_hours: Optional[Decimal] = Field(None, gt=0, le=24)
     work_type: Optional[str] = None
@@ -36,6 +39,7 @@ class TimesheetUpdate(BaseModel):
 
 class TimesheetResponse(TimestampSchema):
     """工时记录响应"""
+
     id: int
     user_id: int
     user_name: Optional[str] = None
@@ -56,18 +60,22 @@ class TimesheetResponse(TimestampSchema):
 
 class TimesheetListResponse(PaginatedResponse):
     """工时记录列表响应"""
+
     items: List[TimesheetResponse]
 
 
 class TimesheetBatchCreate(BaseModel):
     """批量创建工时记录"""
+
     timesheets: List[TimesheetCreate] = Field(description="工时记录列表")
 
 
 # ==================== 周工时表 ====================
 
+
 class WeekTimesheetResponse(BaseModel):
     """周工时表响应"""
+
     week_start: date
     week_end: date
     total_hours: Decimal
@@ -78,8 +86,10 @@ class WeekTimesheetResponse(BaseModel):
 
 # ==================== 月度汇总 ====================
 
+
 class MonthSummaryResponse(BaseModel):
     """月度汇总响应"""
+
     year: int
     month: int
     total_hours: Decimal
@@ -92,8 +102,10 @@ class MonthSummaryResponse(BaseModel):
 
 # ==================== 工时统计 ====================
 
+
 class TimesheetStatisticsResponse(BaseModel):
     """工时统计分析响应"""
+
     total_hours: Decimal
     billable_hours: Decimal
     by_user: Dict[str, Decimal]

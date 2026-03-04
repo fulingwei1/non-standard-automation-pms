@@ -20,10 +20,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -48,7 +45,7 @@ class TestDocumentCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/documents/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -68,7 +65,7 @@ class TestDocumentCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/documents/",
             params={"project_id": project["id"]},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -85,7 +82,7 @@ class TestDocumentCRUD:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/documents/projects/{project['id']}/documents",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -113,9 +110,7 @@ class TestDocumentCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/documents/",
-            json=doc_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/documents/", json=doc_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -145,7 +140,7 @@ class TestDocumentCRUD:
         response = client.post(
             f"{settings.API_V1_PREFIX}/documents/projects/{project['id']}/documents",
             json=doc_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -163,10 +158,7 @@ class TestDocumentCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取文档列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/documents/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get documents list")
@@ -178,10 +170,7 @@ class TestDocumentCRUD:
 
         doc_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/{doc_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/documents/{doc_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -193,10 +182,7 @@ class TestDocumentCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/documents/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -208,10 +194,7 @@ class TestDocumentCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取文档列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/documents/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get documents list")
@@ -228,9 +211,7 @@ class TestDocumentCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/documents/{doc_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/documents/{doc_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -250,10 +231,7 @@ class TestDocumentVersions:
         headers = _auth_headers(admin_token)
 
         # 先获取文档列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/documents/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get documents list")
@@ -266,8 +244,7 @@ class TestDocumentVersions:
         doc_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/{doc_id}/versions",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/documents/{doc_id}/versions", headers=headers
         )
 
         assert response.status_code == 200
@@ -286,10 +263,7 @@ class TestDocumentDownload:
         headers = _auth_headers(admin_token)
 
         # 先获取文档列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/documents/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get documents list")
@@ -303,8 +277,7 @@ class TestDocumentDownload:
         doc_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/documents/{doc_id}/download",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/documents/{doc_id}/download", headers=headers
         )
 
         # 如果文档没有实际文件，会返回 404
@@ -323,9 +296,6 @@ class TestDocumentDelete:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/documents/99999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/documents/99999", headers=headers)
 
         assert response.status_code in [404, 403]  # 可能返回403如果没有权限

@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.meeting_report_docx_service import MeetingReportDocxService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -40,8 +41,12 @@ class TestGenerateAnnualReportDocx:
         }
 
         with patch("app.services.meeting_report_docx_service.Document", return_value=mock_doc):
-            with patch("app.services.docx_content_builders.setup_document_formatting") as mock_setup:
-                with patch("app.services.meeting_report_docx_service.Document", return_value=mock_doc):
+            with patch(
+                "app.services.docx_content_builders.setup_document_formatting"
+            ) as mock_setup:
+                with patch(
+                    "app.services.meeting_report_docx_service.Document", return_value=mock_doc
+                ):
                     # patch all the builder imports inside the function
                     builders = {
                         "add_action_items_section": MagicMock(),
@@ -54,7 +59,9 @@ class TestGenerateAnnualReportDocx:
                         "add_summary_section": MagicMock(),
                         "setup_document_formatting": MagicMock(),
                     }
-                    with patch.dict("sys.modules", {"app.services.docx_content_builders": MagicMock(**builders)}):
+                    with patch.dict(
+                        "sys.modules", {"app.services.docx_content_builders": MagicMock(**builders)}
+                    ):
                         try:
                             result = service.generate_annual_report_docx(
                                 report_data=report_data,

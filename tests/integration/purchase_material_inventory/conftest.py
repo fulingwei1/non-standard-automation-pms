@@ -2,25 +2,24 @@
 """
 集成测试配置和fixtures
 """
-import pytest
-from decimal import Decimal
+import uuid
 from datetime import datetime, timedelta
+from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.material import Material, MaterialCategory
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
-from app.models.vendor import Vendor
 from app.models.project import Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
 from app.models.user import User
-
-import uuid
+from app.models.vendor import Vendor
 
 _M001 = f"M001-{uuid.uuid4().hex[:8]}"
 _M002 = f"M002-{uuid.uuid4().hex[:8]}"
 _M003 = f"M003-{uuid.uuid4().hex[:8]}"
 _PRJ2026001 = f"PRJ2026001-{uuid.uuid4().hex[:8]}"
 _RAW_METAL = f"RAW_METAL-{uuid.uuid4().hex[:8]}"
-
 
 
 @pytest.fixture
@@ -30,18 +29,15 @@ def test_materials(db: Session):
     category = db.query(MaterialCategory).filter_by(category_code=_RAW_METAL).first()
     if not category:
         category = MaterialCategory(
-            category_code=_RAW_METAL,
-            category_name="原材料-金属",
-            level=1,
-            is_active=True
+            category_code=_RAW_METAL, category_name="原材料-金属", level=1, is_active=True
         )
         db.add(category)
         db.flush()
-    
+
     # 创建或获取测试物料
     material_codes = [_M001, _M002, _M003]
     materials = []
-    
+
     material_configs = [
         {
             "material_code": _M001,
@@ -55,7 +51,7 @@ def test_materials(db: Session):
             "lead_time_days": 7,
             "min_order_qty": Decimal("10"),
             "is_active": True,
-            "is_key_material": True
+            "is_key_material": True,
         },
         {
             "material_code": _M002,
@@ -69,7 +65,7 @@ def test_materials(db: Session):
             "lead_time_days": 5,
             "min_order_qty": Decimal("50"),
             "is_active": True,
-            "is_key_material": False
+            "is_key_material": False,
         },
         {
             "material_code": _M003,
@@ -83,10 +79,10 @@ def test_materials(db: Session):
             "lead_time_days": 10,
             "min_order_qty": Decimal("5"),
             "is_active": True,
-            "is_key_material": True
-        }
+            "is_key_material": True,
+        },
     ]
-    
+
     for config in material_configs:
         existing = db.query(Material).filter_by(material_code=config["material_code"]).first()
         if existing:
@@ -96,7 +92,7 @@ def test_materials(db: Session):
             db.add(material)
             db.flush()
             materials.append(material)
-    
+
     db.commit()
     return materials
 
@@ -115,7 +111,7 @@ def test_suppliers(db: Session):
             "address": "上海市浦东新区XX路123号",
             "status": "ACTIVE",
             "supplier_level": "A",
-            "payment_terms": "月结30天"
+            "payment_terms": "月结30天",
         },
         {
             "supplier_code": f"SUP002-{uuid.uuid4().hex[:8]}",
@@ -127,7 +123,7 @@ def test_suppliers(db: Session):
             "address": "广东省深圳市XX区XX路456号",
             "status": "ACTIVE",
             "supplier_level": "B",
-            "payment_terms": "货到付款"
+            "payment_terms": "货到付款",
         },
         {
             "supplier_code": f"SUP003-{uuid.uuid4().hex[:8]}",
@@ -139,10 +135,10 @@ def test_suppliers(db: Session):
             "address": "江苏省南京市XX区XX路789号",
             "status": "ACTIVE",
             "supplier_level": "A",
-            "payment_terms": "月结60天"
-        }
+            "payment_terms": "月结60天",
+        },
     ]
-    
+
     suppliers = []
     for config in supplier_configs:
         existing = db.query(Vendor).filter_by(supplier_code=config["supplier_code"]).first()
@@ -153,7 +149,7 @@ def test_suppliers(db: Session):
             db.add(supplier)
             db.flush()
             suppliers.append(supplier)
-    
+
     db.commit()
     return suppliers
 
@@ -165,7 +161,7 @@ def test_project(db: Session):
     existing_project = db.query(Project).filter_by(project_code=_PRJ2026001).first()
     if existing_project:
         return existing_project
-    
+
     project = Project(
         project_code=_PRJ2026001,
         project_name="自动化生产线项目A",
@@ -174,7 +170,7 @@ def test_project(db: Session):
         stage="S1",
         planned_start_date=datetime.utcnow().date(),
         planned_end_date=(datetime.utcnow() + timedelta(days=90)).date(),
-        is_active=True
+        is_active=True,
     )
     db.add(project)
     db.commit()
@@ -185,18 +181,18 @@ def test_project(db: Session):
 def test_user(db: Session):
     """创建测试用户"""
     from app.core.security import get_password_hash
-    
+
     # 检查用户是否已存在
     existing_user = db.query(User).filter_by(username="test_purchaser").first()
     if existing_user:
         return existing_user
-    
+
     user = User(
         username="test_purchaser",
         email="purchaser@test.com",
         real_name="测试采购员",
         password_hash=get_password_hash("test123456"),
-        is_active=True
+        is_active=True,
     )
     db.add(user)
     db.commit()
@@ -211,5 +207,5 @@ def integration_test_data(db: Session, test_materials, test_suppliers, test_proj
         "suppliers": test_suppliers,
         "project": test_project,
         "user": test_user,
-        "db": db
+        "db": db,
     }

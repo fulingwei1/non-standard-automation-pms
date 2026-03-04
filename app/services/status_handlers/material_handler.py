@@ -2,7 +2,7 @@
 """BOM和物料状态处理器"""
 
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 

@@ -33,11 +33,15 @@ router = APIRouter()
 # ==================== 客户对账单 ====================
 
 
-@router.post("/reconciliations", response_model=ResponseModel[ReconciliationResponse], summary="生成客户对账单")
+@router.post(
+    "/reconciliations",
+    response_model=ResponseModel[ReconciliationResponse],
+    summary="生成客户对账单",
+)
 async def create_reconciliation(
     reconciliation_data: ReconciliationCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """生成客户对账单"""
     try:
@@ -51,7 +55,9 @@ async def create_reconciliation(
 
         # 计算对账期间的数据
         # 1. 期初余额 = 对账开始日期之前的应收余额
-        opening_result = db.execute(text("""
+        opening_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as balance
             FROM project_payment_plans
             WHERE project_id IN (
@@ -59,29 +65,47 @@ async def create_reconciliation(
             )
             AND planned_date < :period_start
             AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {
-            "customer_id": reconciliation_data.customer_id,
-            "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d")
-        }).fetchone()
-        opening_balance = Decimal(str(opening_result[0])) if opening_result and opening_result[0] else Decimal("0")
+        """
+            ),
+            {
+                "customer_id": reconciliation_data.customer_id,
+                "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d"),
+            },
+        ).fetchone()
+        opening_balance = (
+            Decimal(str(opening_result[0]))
+            if opening_result and opening_result[0]
+            else Decimal("0")
+        )
 
         # 2. 本期销售 = 对账期间内签订的合同金额
-        period_sales_result = db.execute(text("""
+        period_sales_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(total_amount), 0) as sales
             FROM contracts
             WHERE customer_id = :customer_id
             AND signed_date >= :period_start
             AND signed_date <= :period_end
             AND status IN ('SIGNED', 'EXECUTING')
-        """), {
-            "customer_id": reconciliation_data.customer_id,
-            "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d"),
-            "period_end": reconciliation_data.period_end.strftime("%Y-%m-%d")
-        }).fetchone()
-        period_sales = Decimal(str(period_sales_result[0])) if period_sales_result and period_sales_result[0] else Decimal("0")
+        """
+            ),
+            {
+                "customer_id": reconciliation_data.customer_id,
+                "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d"),
+                "period_end": reconciliation_data.period_end.strftime("%Y-%m-%d"),
+            },
+        ).fetchone()
+        period_sales = (
+            Decimal(str(period_sales_result[0]))
+            if period_sales_result and period_sales_result[0]
+            else Decimal("0")
+        )
 
         # 3. 本期回款 = 对账期间内的实际回款金额
-        period_receipt_result = db.execute(text("""
+        period_receipt_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(actual_amount), 0) as receipt
             FROM project_payment_plans
             WHERE project_id IN (
@@ -90,12 +114,19 @@ async def create_reconciliation(
             AND planned_date >= :period_start
             AND planned_date <= :period_end
             AND actual_amount > 0
-        """), {
-            "customer_id": reconciliation_data.customer_id,
-            "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d"),
-            "period_end": reconciliation_data.period_end.strftime("%Y-%m-%d")
-        }).fetchone()
-        period_receipt = Decimal(str(period_receipt_result[0])) if period_receipt_result and period_receipt_result[0] else Decimal("0")
+        """
+            ),
+            {
+                "customer_id": reconciliation_data.customer_id,
+                "period_start": reconciliation_data.period_start.strftime("%Y-%m-%d"),
+                "period_end": reconciliation_data.period_end.strftime("%Y-%m-%d"),
+            },
+        ).fetchone()
+        period_receipt = (
+            Decimal(str(period_receipt_result[0]))
+            if period_receipt_result and period_receipt_result[0]
+            else Decimal("0")
+        )
 
         # 4. 期末余额 = 期初余额 + 本期销售 - 本期回款
         closing_balance = opening_balance + period_sales - period_receipt
@@ -112,7 +143,7 @@ async def create_reconciliation(
             period_receipt=period_receipt,
             closing_balance=closing_balance,
             status="draft",
-            remark=reconciliation_data.remark
+            remark=reconciliation_data.remark,
         )
 
         db.add(reconciliation)
@@ -144,8 +175,8 @@ async def create_reconciliation(
                 confirmed_file_id=reconciliation.confirmed_file_id,
                 remark=reconciliation.remark,
                 created_at=reconciliation.created_at,
-                updated_at=reconciliation.updated_at
-            )
+                updated_at=reconciliation.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -154,14 +185,18 @@ async def create_reconciliation(
         raise HTTPException(status_code=500, detail=f"生成客户对账单失败: {str(e)}")
 
 
-@router.get("/reconciliations", response_model=ResponseModel[PaginatedResponse[ReconciliationResponse]], summary="获取客户对账单列表")
+@router.get(
+    "/reconciliations",
+    response_model=ResponseModel[PaginatedResponse[ReconciliationResponse]],
+    summary="获取客户对账单列表",
+)
 async def get_reconciliations(
     pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     reconciliation_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取客户对账单列表"""
     try:
@@ -174,7 +209,9 @@ async def get_reconciliations(
             query = query.filter(Reconciliation.status == reconciliation_status)
 
         # 应用关键词过滤（对账单号/客户名称）
-        query = apply_keyword_filter(query, Reconciliation, search, ["reconciliation_no", "customer_name"])
+        query = apply_keyword_filter(
+            query, Reconciliation, search, ["reconciliation_no", "customer_name"]
+        )
 
         # 总数
         total = query.count()
@@ -211,7 +248,7 @@ async def get_reconciliations(
                 confirmed_file_id=item.confirmed_file_id,
                 remark=item.remark,
                 created_at=item.created_at,
-                updated_at=item.updated_at
+                updated_at=item.updated_at,
             )
             for item in items
         ]
@@ -224,18 +261,22 @@ async def get_reconciliations(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取客户对账单列表失败: {str(e)}")
 
 
-@router.get("/reconciliations/{reconciliation_id}", response_model=ResponseModel[ReconciliationResponse], summary="获取客户对账单详情")
+@router.get(
+    "/reconciliations/{reconciliation_id}",
+    response_model=ResponseModel[ReconciliationResponse],
+    summary="获取客户对账单详情",
+)
 async def get_reconciliation(
     reconciliation_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取客户对账单详情"""
     try:
@@ -266,8 +307,8 @@ async def get_reconciliation(
                 confirmed_file_id=reconciliation.confirmed_file_id,
                 remark=reconciliation.remark,
                 created_at=reconciliation.created_at,
-                updated_at=reconciliation.updated_at
-            )
+                updated_at=reconciliation.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -275,12 +316,16 @@ async def get_reconciliation(
         raise HTTPException(status_code=500, detail=f"获取客户对账单详情失败: {str(e)}")
 
 
-@router.put("/reconciliations/{reconciliation_id}", response_model=ResponseModel[ReconciliationResponse], summary="更新客户对账单")
+@router.put(
+    "/reconciliations/{reconciliation_id}",
+    response_model=ResponseModel[ReconciliationResponse],
+    summary="更新客户对账单",
+)
 async def update_reconciliation(
     reconciliation_id: int,
     reconciliation_data: ReconciliationUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """更新客户对账单"""
     try:
@@ -324,8 +369,8 @@ async def update_reconciliation(
                 confirmed_file_id=reconciliation.confirmed_file_id,
                 remark=reconciliation.remark,
                 created_at=reconciliation.created_at,
-                updated_at=reconciliation.updated_at
-            )
+                updated_at=reconciliation.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -334,11 +379,13 @@ async def update_reconciliation(
         raise HTTPException(status_code=500, detail=f"更新客户对账单失败: {str(e)}")
 
 
-@router.post("/reconciliations/{reconciliation_id}/send", response_model=ResponseModel, summary="发送对账单")
+@router.post(
+    "/reconciliations/{reconciliation_id}/send", response_model=ResponseModel, summary="发送对账单"
+)
 async def send_reconciliation(
     reconciliation_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """发送对账单给客户"""
     try:
@@ -411,13 +458,12 @@ async def send_reconciliation(
                     "customer_name": reconciliation.customer_name,
                     "period_start": str(reconciliation.period_start),
                     "period_end": str(reconciliation.period_end),
-                    "closing_balance": float(reconciliation.closing_balance)
-                }
+                    "closing_balance": float(reconciliation.closing_balance),
+                },
             )
 
         return ResponseModel(
-            code=200,
-            message=f"发送对账单成功，已通知 {len(notified_user_ids)} 位相关人员"
+            code=200, message=f"发送对账单成功，已通知 {len(notified_user_ids)} 位相关人员"
         )
     except HTTPException:
         raise

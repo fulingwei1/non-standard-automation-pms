@@ -38,9 +38,8 @@ class ProjectExecutionService:
         """
         获取跨项目进度概览，默认返回最近更新的 N 个项目及统计指标。
         """
-        query = (
-            self.core_service.get_scoped_query(current_user)
-            .order_by(Project.updated_at.desc().nullslast(), Project.id.desc())
+        query = self.core_service.get_scoped_query(current_user).order_by(
+            Project.updated_at.desc().nullslast(), Project.id.desc()
         )
         total_projects = query.count()
         projects: List[Project] = query.limit(limit).all()

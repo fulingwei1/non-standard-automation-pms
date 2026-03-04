@@ -35,15 +35,24 @@ def get_budget_items(
     """
     get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
-    items = db.query(ProjectBudgetItem).filter(
-        ProjectBudgetItem.budget_id == budget_id
-    ).order_by(ProjectBudgetItem.item_no).all()
+    items = (
+        db.query(ProjectBudgetItem)
+        .filter(ProjectBudgetItem.budget_id == budget_id)
+        .order_by(ProjectBudgetItem.item_no)
+        .all()
+    )
 
-    return [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-            for item in items]
+    return [
+        ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
+        for item in items
+    ]
 
 
-@router.post("/{budget_id}/items", response_model=ProjectBudgetItemResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{budget_id}/items",
+    response_model=ProjectBudgetItemResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_budget_item(
     *,
     db: Session = Depends(deps.get_db),
@@ -69,7 +78,9 @@ def create_budget_item(
     db.commit()
     db.refresh(item)
 
-    return ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
+    return ProjectBudgetItemResponse(
+        **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+    )
 
 
 @router.put("/items/{item_id}", response_model=ProjectBudgetItemResponse)
@@ -104,7 +115,9 @@ def update_budget_item(
     db.commit()
     db.refresh(item)
 
-    return ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
+    return ProjectBudgetItemResponse(
+        **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+    )
 
 
 @router.delete("/items/{item_id}", status_code=status.HTTP_200_OK)

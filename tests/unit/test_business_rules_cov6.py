@@ -3,30 +3,32 @@
 第六批覆盖测试 - business_rules.py
 纯函数，无需 Mock DB
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+
+import pytest
 
 try:
     from app.services.business_rules import (
-        calc_gross_margin,
-        is_warning_required,
-        requires_gm_approval,
-        calc_kit_rate,
-        should_trigger_shortage_alert,
-        calc_spi,
-        get_delay_alert_level,
-        calc_payment_overdue_days,
-        is_overdue_escalation_required,
-        is_daily_overtime,
-        should_hr_review,
-        evaluate_fat_result,
-        calc_final_margin,
-        requires_margin_review,
         calc_bom_kit_rate,
-        recalculate_delivery_date,
+        calc_final_margin,
+        calc_gross_margin,
+        calc_kit_rate,
+        calc_payment_overdue_days,
+        calc_spi,
+        evaluate_fat_result,
         generate_shortage_alert,
+        get_delay_alert_level,
+        is_daily_overtime,
+        is_overdue_escalation_required,
+        is_warning_required,
+        recalculate_delivery_date,
+        requires_gm_approval,
+        requires_margin_review,
+        should_hr_review,
+        should_trigger_shortage_alert,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -49,8 +51,11 @@ class TestCalcGrossMargin:
 
     def test_decimal_inputs(self):
         margin = calc_gross_margin(
-            Decimal("500000"), Decimal("200000"),
-            Decimal("100000"), Decimal("20000"), Decimal("10000")
+            Decimal("500000"),
+            Decimal("200000"),
+            Decimal("100000"),
+            Decimal("20000"),
+            Decimal("10000"),
         )
         assert margin == Decimal("0.34")
 

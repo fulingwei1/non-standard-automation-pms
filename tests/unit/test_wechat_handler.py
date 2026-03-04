@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """WeChatNotificationHandler 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+
     _IMPORT_OK = True
 except ImportError:
     _IMPORT_OK = False

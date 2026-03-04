@@ -7,11 +7,12 @@ import pytest
 pytest.importorskip("app.services.ecn_notification.utils")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.ecn_notification.utils import (
+    check_all_evaluations_completed,
+    find_department_manager,
     find_users_by_department,
     find_users_by_role,
-    find_department_manager,
-    check_all_evaluations_completed,
 )
 
 
@@ -55,7 +56,7 @@ def test_find_users_by_department_found():
 def test_find_users_by_department_not_found():
     db = make_db()
     q1 = MagicMock()
-    q1.filter.return_value.first.return_value = None   # 部门不存在
+    q1.filter.return_value.first.return_value = None  # 部门不存在
     q2 = MagicMock()
     fallback_users = [MagicMock()]
     q2.filter.return_value.all.return_value = fallback_users

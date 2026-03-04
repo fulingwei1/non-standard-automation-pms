@@ -78,9 +78,7 @@ class CostForecastService:
         # 预测完工成本
         # 估算总月数（基于项目时间）
         if project.planned_end_date and project.planned_start_date:
-            total_months = (
-                (project.planned_end_date - project.planned_start_date).days / 30
-            )
+            total_months = (project.planned_end_date - project.planned_start_date).days / 30
         else:
             # 假设按当前进度推算
             current_progress = float(project.progress_pct or 0)
@@ -106,19 +104,15 @@ class CostForecastService:
                         "month": monthly_costs[i - 1]["month"],
                         "type": "actual",
                         "monthly_cost": float(monthly_costs[i - 1]["monthly_cost"]),
-                        "cumulative_cost": float(
-                            monthly_costs[i - 1]["cumulative_cost"]
-                        ),
+                        "cumulative_cost": float(monthly_costs[i - 1]["cumulative_cost"]),
                     }
                 )
             else:
                 # 预测数据
-                month_date = datetime.strptime(
-                    monthly_costs[0]["month"], "%Y-%m"
-                ) + timedelta(days=30 * (i - 1))
-                monthly_cost = (
-                    slope if i > 1 else forecasted_cumulative
-                )  # 月度增量
+                month_date = datetime.strptime(monthly_costs[0]["month"], "%Y-%m") + timedelta(
+                    days=30 * (i - 1)
+                )
+                monthly_cost = slope if i > 1 else forecasted_cumulative  # 月度增量
 
                 monthly_forecast_data.append(
                     {
@@ -144,8 +138,7 @@ class CostForecastService:
                 "monthly_burn_rate": round(slope, 2),
             },
             "monthly_forecast_data": monthly_forecast_data,
-            "is_over_budget": forecasted_completion_cost
-            > float(project.budget_amount or 0),
+            "is_over_budget": forecasted_completion_cost > float(project.budget_amount or 0),
             "budget_variance": round(
                 forecasted_completion_cost - float(project.budget_amount or 0), 2
             ),
@@ -190,16 +183,12 @@ class CostForecastService:
 
         if current_progress > 0:
             remaining_progress = 100 - current_progress
-            periods_to_complete = remaining_progress / (
-                current_progress / len(monthly_costs)
-            )
+            periods_to_complete = remaining_progress / (current_progress / len(monthly_costs))
         else:
             periods_to_complete = len(monthly_costs)
 
         # 指数增长公式: future_cost = current_cost * (1 + growth_rate)^periods
-        forecasted_completion_cost = current_cost * (
-            (1 + avg_growth_rate) ** periods_to_complete
-        )
+        forecasted_completion_cost = current_cost * ((1 + avg_growth_rate) ** periods_to_complete)
 
         # 生成月度预测数据
         monthly_forecast_data = []
@@ -218,9 +207,9 @@ class CostForecastService:
         last_cost = current_cost
         for i in range(1, future_months + 1):
             future_cost = last_cost * (1 + avg_growth_rate)
-            month_date = datetime.strptime(
-                monthly_costs[-1]["month"], "%Y-%m"
-            ) + timedelta(days=30 * i)
+            month_date = datetime.strptime(monthly_costs[-1]["month"], "%Y-%m") + timedelta(
+                days=30 * i
+            )
 
             monthly_forecast_data.append(
                 {
@@ -245,8 +234,7 @@ class CostForecastService:
                 "periods_to_complete": round(periods_to_complete, 2),
             },
             "monthly_forecast_data": monthly_forecast_data,
-            "is_over_budget": forecasted_completion_cost
-            > float(project.budget_amount or 0),
+            "is_over_budget": forecasted_completion_cost > float(project.budget_amount or 0),
             "budget_variance": round(
                 forecasted_completion_cost - float(project.budget_amount or 0), 2
             ),
@@ -307,9 +295,9 @@ class CostForecastService:
         future_months = int(estimated_total_months - len(monthly_costs))
         for i in range(1, future_months + 1):
             cumulative += avg_monthly_cost
-            month_date = datetime.strptime(
-                monthly_costs[-1]["month"], "%Y-%m"
-            ) + timedelta(days=30 * i)
+            month_date = datetime.strptime(monthly_costs[-1]["month"], "%Y-%m") + timedelta(
+                days=30 * i
+            )
 
             monthly_forecast_data.append(
                 {
@@ -333,8 +321,7 @@ class CostForecastService:
                 "estimated_total_months": round(estimated_total_months, 2),
             },
             "monthly_forecast_data": monthly_forecast_data,
-            "is_over_budget": forecasted_completion_cost
-            > float(project.budget_amount or 0),
+            "is_over_budget": forecasted_completion_cost > float(project.budget_amount or 0),
             "budget_variance": round(
                 forecasted_completion_cost - float(project.budget_amount or 0), 2
             ),
@@ -437,9 +424,7 @@ class CostForecastService:
 
         # 计算理想燃尽线
         if project.planned_start_date and project.planned_end_date:
-            total_months = (
-                (project.planned_end_date - project.planned_start_date).days / 30
-            )
+            total_months = (project.planned_end_date - project.planned_start_date).days / 30
         else:
             total_months = len(monthly_costs) * 2 if monthly_costs else 12
 
@@ -463,9 +448,9 @@ class CostForecastService:
                 actual_remaining = None
                 # 预测未来月份
                 if monthly_costs:
-                    month_date = datetime.strptime(
-                        monthly_costs[0]["month"], "%Y-%m"
-                    ) + timedelta(days=30 * i)
+                    month_date = datetime.strptime(monthly_costs[0]["month"], "%Y-%m") + timedelta(
+                        days=30 * i
+                    )
                     month = month_date.strftime("%Y-%m")
                 else:
                     month = None
@@ -479,9 +464,7 @@ class CostForecastService:
                             round(actual_cost, 2) if actual_cost is not None else None
                         ),
                         "actual_remaining": (
-                            round(actual_remaining, 2)
-                            if actual_remaining is not None
-                            else None
+                            round(actual_remaining, 2) if actual_remaining is not None else None
                         ),
                     }
                 )
@@ -498,17 +481,14 @@ class CostForecastService:
             "remaining_budget": round(remaining, 2),
             "burn_rate": round(ideal_monthly_burn, 2),
             "burn_down_data": burn_down_data,
-            "is_on_track": current_spent
-            <= budget * (float(project.progress_pct or 0) / 100),
+            "is_on_track": current_spent <= budget * (float(project.progress_pct or 0) / 100),
         }
 
     # ========================================================================
     # 成本预警检测
     # ========================================================================
 
-    def check_cost_alerts(
-        self, project_id: int, auto_create: bool = True
-    ) -> List[Dict[str, Any]]:
+    def check_cost_alerts(self, project_id: int, auto_create: bool = True) -> List[Dict[str, Any]]:
         """
         检查项目成本预警
 
@@ -624,7 +604,9 @@ class CostForecastService:
             message = f"项目成本已超预算！当前成本{actual_cost}元，预算{budget}元"
         elif consumption_rate >= warning_threshold:
             level = "WARNING"
-            message = f"项目成本接近预算！当前成本{actual_cost}元，已使用{consumption_rate:.1f}%预算"
+            message = (
+                f"项目成本接近预算！当前成本{actual_cost}元，已使用{consumption_rate:.1f}%预算"
+            )
         else:
             return None
 
@@ -637,9 +619,7 @@ class CostForecastService:
                 "budget": budget,
                 "actual_cost": actual_cost,
                 "consumption_rate": round(consumption_rate, 2),
-                "threshold": warning_threshold
-                if level == "WARNING"
-                else critical_threshold,
+                "threshold": warning_threshold if level == "WARNING" else critical_threshold,
             },
         }
 
@@ -728,9 +708,7 @@ class CostForecastService:
 
         return None
 
-    def _create_alert_record(
-        self, project_id: int, alert_data: Dict[str, Any]
-    ) -> None:
+    def _create_alert_record(self, project_id: int, alert_data: Dict[str, Any]) -> None:
         """创建预警记录"""
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
@@ -788,15 +766,9 @@ class CostForecastService:
             forecast_method=forecast_result["method"],
             forecast_date=forecast_result["forecast_date"],
             forecast_month=forecast_result["forecast_date"].strftime("%Y-%m"),
-            forecasted_completion_cost=Decimal(
-                str(forecast_result["forecasted_completion_cost"])
-            ),
-            current_progress_pct=Decimal(
-                str(forecast_result.get("current_progress_pct", 0))
-            ),
-            current_actual_cost=Decimal(
-                str(forecast_result.get("current_actual_cost", 0))
-            ),
+            forecasted_completion_cost=Decimal(str(forecast_result["forecasted_completion_cost"])),
+            current_progress_pct=Decimal(str(forecast_result.get("current_progress_pct", 0))),
+            current_actual_cost=Decimal(str(forecast_result.get("current_actual_cost", 0))),
             current_budget=Decimal(str(forecast_result.get("current_budget", 0))),
             monthly_forecast_data=forecast_result.get("monthly_forecast_data"),
             trend_data=forecast_result.get("trend_data"),

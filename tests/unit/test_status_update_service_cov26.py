@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - status_update_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_update_service")
 
@@ -11,9 +12,7 @@ from app.services.status_update_service import StatusUpdateResult, StatusUpdateS
 
 class TestStatusUpdateResult:
     def test_success_repr(self):
-        r = StatusUpdateResult(
-            success=True, old_status="DRAFT", new_status="APPROVED"
-        )
+        r = StatusUpdateResult(success=True, old_status="DRAFT", new_status="APPROVED")
         assert "True" in repr(r)
         assert "DRAFT" in repr(r)
         assert "APPROVED" in repr(r)
@@ -77,9 +76,7 @@ class TestUpdateStatusValidation:
     def test_transition_rule_blocks_invalid_transition(self):
         entity = MagicMock(status="DRAFT")
         rules = {"DRAFT": ["APPROVED"]}
-        result = self.svc.update_status(
-            entity, "REJECTED", self.operator, transition_rules=rules
-        )
+        result = self.svc.update_status(entity, "REJECTED", self.operator, transition_rules=rules)
         assert result.success is False
         assert any("不允许" in e for e in result.errors)
 
@@ -95,9 +92,7 @@ class TestUpdateStatusValidation:
     def test_unknown_from_state_blocks_transition(self):
         entity = MagicMock(status="COMPLETED")
         rules = {"DRAFT": ["APPROVED"]}
-        result = self.svc.update_status(
-            entity, "REJECTED", self.operator, transition_rules=rules
-        )
+        result = self.svc.update_status(entity, "REJECTED", self.operator, transition_rules=rules)
         assert result.success is False
 
 
@@ -116,9 +111,7 @@ class TestUpdateStatusSideEffects:
     def test_custom_status_field(self):
         entity = MagicMock(state="PENDING")
         with patch("app.services.status_update_service.save_obj"):
-            self.svc.update_status(
-                entity, "DONE", self.operator, status_field="state"
-            )
+            self.svc.update_status(entity, "DONE", self.operator, status_field="state")
         assert entity.state == "DONE"
 
     def test_calls_before_update_callback(self):
@@ -168,16 +161,17 @@ class TestUpdateStatusSideEffects:
         entity = MagicMock(status="DRAFT")
         hist_cb = MagicMock()
         with patch("app.services.status_update_service.save_obj"):
-            self.svc.update_status(
-                entity, "APPROVED", self.operator, history_callback=hist_cb
-            )
+            self.svc.update_status(entity, "APPROVED", self.operator, history_callback=hist_cb)
         hist_cb.assert_called_once()
 
     def test_sets_timestamp_field(self):
         from datetime import datetime
+
         entity = MagicMock(status="DRAFT", completed_at=None)
-        with patch("app.services.status_update_service.save_obj"), \
-             patch("app.services.status_update_service.datetime") as mock_dt:
+        with (
+            patch("app.services.status_update_service.save_obj"),
+            patch("app.services.status_update_service.datetime") as mock_dt,
+        ):
             mock_dt.now.return_value = datetime(2024, 1, 15, 10, 0, 0)
             self.svc.update_status(
                 entity,
@@ -227,7 +221,9 @@ class TestUpdateStatusWithTransitionLog:
 
     def test_delegates_to_update_status(self):
         entity = MagicMock(id=1, status="DRAFT")
-        with patch.object(self.svc, "update_status", return_value=StatusUpdateResult(success=True)) as mock_us:
+        with patch.object(
+            self.svc, "update_status", return_value=StatusUpdateResult(success=True)
+        ) as mock_us:
             self.svc.update_status_with_transition_log(
                 entity, "APPROVED", self.operator, entity_type="PROJECT"
             )

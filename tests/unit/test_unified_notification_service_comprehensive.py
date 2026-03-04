@@ -13,9 +13,9 @@ UnifiedNotificationService (NotificationService) 综合单元测试
 - _determine_channels: 确定通知渠道
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime, time
 from hashlib import md5
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -25,12 +25,16 @@ class TestNotificationServiceInit:
 
     def test_initializes_with_db(self):
         """测试使用数据库会话初始化"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
 
@@ -40,12 +44,22 @@ class TestNotificationServiceInit:
 
     def test_initializes_handlers(self):
         """测试初始化通知处理器"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler') as mock_sys:
-            with patch('app.services.unified_notification_service.EmailChannelHandler') as mock_email:
-                with patch('app.services.unified_notification_service.WeChatChannelHandler') as mock_wechat:
-                    with patch('app.services.unified_notification_service.SMSChannelHandler') as mock_sms:
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler') as mock_webhook:
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler") as mock_sys:
+            with patch(
+                "app.services.unified_notification_service.EmailChannelHandler"
+            ) as mock_email:
+                with patch(
+                    "app.services.unified_notification_service.WeChatChannelHandler"
+                ) as mock_wechat:
+                    with patch(
+                        "app.services.unified_notification_service.SMSChannelHandler"
+                    ) as mock_sms:
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ) as mock_webhook:
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
 
@@ -59,16 +73,22 @@ class TestGetUserSettings:
 
     def test_returns_user_settings(self):
         """测试返回用户设置"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             mock_settings = MagicMock()
-                            mock_db.query.return_value.filter.return_value.first.return_value = mock_settings
+                            mock_db.query.return_value.filter.return_value.first.return_value = (
+                                mock_settings
+                            )
 
                             service = NotificationService(mock_db)
                             result = service._get_user_settings(1)
@@ -77,12 +97,16 @@ class TestGetUserSettings:
 
     def test_returns_none_when_no_settings(self):
         """测试没有设置时返回 None"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -98,12 +122,16 @@ class TestCheckDedup:
 
     def test_returns_false_when_force_send(self):
         """测试强制发送时返回 False"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -117,12 +145,16 @@ class TestCheckDedup:
 
     def test_returns_true_when_duplicate(self):
         """测试重复通知时返回 True"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -144,12 +176,16 @@ class TestCheckDedup:
 
     def test_returns_false_when_not_duplicate(self):
         """测试非重复通知时返回 False"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -172,12 +208,16 @@ class TestDedupKey:
 
     def test_generates_consistent_key(self):
         """测试生成一致的 key"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -195,12 +235,16 @@ class TestDedupKey:
 
     def test_generates_md5_hash(self):
         """测试生成 MD5 哈希"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -222,12 +266,16 @@ class TestUpdateDedupCache:
 
     def test_updates_cache_when_not_force_send(self):
         """测试非强制发送时更新缓存"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -247,12 +295,16 @@ class TestUpdateDedupCache:
 
     def test_skips_update_when_force_send(self):
         """测试强制发送时跳过更新"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -275,12 +327,16 @@ class TestCheckQuietHours:
 
     def test_returns_false_when_no_settings(self):
         """测试没有设置时返回 False"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -291,12 +347,16 @@ class TestCheckQuietHours:
 
     def test_returns_false_when_no_quiet_hours(self):
         """测试没有免打扰时间设置时返回 False"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -315,12 +375,16 @@ class TestShouldSendByCategory:
 
     def test_returns_true_when_no_settings(self):
         """测试没有设置时返回 True"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -335,12 +399,16 @@ class TestShouldSendByCategory:
 
     def test_returns_true_when_force_send(self):
         """测试强制发送时返回 True"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -358,12 +426,16 @@ class TestShouldSendByCategory:
 
     def test_checks_task_notifications(self):
         """测试检查任务通知设置"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -385,12 +457,16 @@ class TestDetermineChannels:
 
     def test_uses_specified_channels(self):
         """测试使用指定的渠道"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             service = NotificationService(mock_db)
@@ -405,13 +481,20 @@ class TestDetermineChannels:
 
     def test_defaults_to_system_channel(self):
         """测试默认使用系统渠道"""
-        with patch('app.services.unified_notification_service.SystemChannelHandler'):
-            with patch('app.services.unified_notification_service.EmailChannelHandler'):
-                with patch('app.services.unified_notification_service.WeChatChannelHandler'):
-                    with patch('app.services.unified_notification_service.SMSChannelHandler'):
-                        with patch('app.services.unified_notification_service.WebhookChannelHandler'):
-                            from app.services.unified_notification_service import NotificationService
-                            from app.services.channel_handlers.base import NotificationChannel, NotificationPriority
+        with patch("app.services.unified_notification_service.SystemChannelHandler"):
+            with patch("app.services.unified_notification_service.EmailChannelHandler"):
+                with patch("app.services.unified_notification_service.WeChatChannelHandler"):
+                    with patch("app.services.unified_notification_service.SMSChannelHandler"):
+                        with patch(
+                            "app.services.unified_notification_service.WebhookChannelHandler"
+                        ):
+                            from app.services.channel_handlers.base import (
+                                NotificationChannel,
+                                NotificationPriority,
+                            )
+                            from app.services.unified_notification_service import (
+                                NotificationService,
+                            )
 
                             mock_db = MagicMock()
                             mock_db.query.return_value.filter.return_value.first.return_value = None

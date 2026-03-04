@@ -23,7 +23,6 @@ from app.services.timesheet_reminder.base import create_timesheet_notification
 logger = logging.getLogger(__name__)
 
 
-
 def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
     """
     提醒审批超时的工时记录
@@ -40,9 +39,7 @@ def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
     # 查询待审批且超过超时阈值的工时记录
     pending_timesheets = (
         db.query(Timesheet)
-        .filter(
-            Timesheet.status == "PENDING", Timesheet.created_at <= timeout_threshold
-        )
+        .filter(Timesheet.status == "PENDING", Timesheet.created_at <= timeout_threshold)
         .all()
     )
 
@@ -58,9 +55,7 @@ def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
         if user and hasattr(user, "department_id") and user.department_id:
             from app.models.organization import Department
 
-            department = (
-                db.query(Department).filter(Department.id == user.department_id).first()
-            )
+            department = db.query(Department).filter(Department.id == user.department_id).first()
             if department and department.manager_id:
                 approver_id = department.manager_id
 
@@ -68,9 +63,7 @@ def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
         if not approver_id and timesheet.project_id:
             from app.models.project import Project
 
-            project = (
-                db.query(Project).filter(Project.id == timesheet.project_id).first()
-            )
+            project = db.query(Project).filter(Project.id == timesheet.project_id).first()
             if project and project.manager_id:
                 approver_id = project.manager_id
 
@@ -90,8 +83,7 @@ def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
             .filter(
                 Notification.user_id == approver_id,
                 Notification.notification_type == "TIMESHEET_APPROVAL_TIMEOUT",
-                Notification.created_at
-                >= datetime.combine(date.today(), datetime.min.time()),
+                Notification.created_at >= datetime.combine(date.today(), datetime.min.time()),
             )
             .first()
         )
@@ -121,5 +113,3 @@ def notify_approval_timeout(db: Session, timeout_hours: int = 24) -> int:
     )
 
     return reminder_count
-
-

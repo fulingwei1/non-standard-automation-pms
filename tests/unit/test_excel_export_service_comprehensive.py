@@ -28,10 +28,7 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "amount": 1000},
-            {"name": "项目B", "amount": 2000}
-        ]
+        data = [{"name": "项目A", "amount": 1000}, {"name": "项目B", "amount": 2000}]
 
         result = service.export_to_excel(data)
 
@@ -43,12 +40,10 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "amount": 1000}
-        ]
+        data = [{"name": "项目A", "amount": 1000}]
         columns = [
             {"key": "name", "label": "项目名称", "width": 20},
-            {"key": "amount", "label": "金额", "width": 15}
+            {"key": "amount", "label": "金额", "width": 15},
         ]
 
         result = service.export_to_excel(data, columns=columns)
@@ -81,9 +76,7 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "amount": Decimal("1234.56")}
-        ]
+        data = [{"name": "项目A", "amount": Decimal("1234.56")}]
 
         result = service.export_to_excel(data)
 
@@ -94,9 +87,7 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "date": date(2026, 1, 15)}
-        ]
+        data = [{"name": "项目A", "date": date(2026, 1, 15)}]
 
         result = service.export_to_excel(data)
 
@@ -107,9 +98,7 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "datetime": datetime(2026, 1, 15, 10, 30, 0)}
-        ]
+        data = [{"name": "项目A", "datetime": datetime(2026, 1, 15, 10, 30, 0)}]
 
         result = service.export_to_excel(data)
 
@@ -120,9 +109,7 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "value": None}
-        ]
+        data = [{"name": "项目A", "value": None}]
 
         result = service.export_to_excel(data)
 
@@ -133,12 +120,10 @@ class TestExportToExcel:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        data = [
-            {"name": "项目A", "amount": 1000}
-        ]
+        data = [{"name": "项目A", "amount": 1000}]
         columns = [
             {"key": "name", "label": "项目名称"},
-            {"key": "amount", "label": "金额", "format": lambda x: f"¥{x:,.2f}"}
+            {"key": "amount", "label": "金额", "format": lambda x: f"¥{x:,.2f}"},
         ]
 
         result = service.export_to_excel(data, columns=columns)
@@ -166,14 +151,8 @@ class TestExportMultisheet:
 
         service = ExcelExportService()
         sheets = [
-            {
-                "name": "项目",
-                "data": [{"name": "项目A"}]
-            },
-            {
-                "name": "成本",
-                "data": [{"item": "材料", "amount": 1000}]
-            }
+            {"name": "项目", "data": [{"name": "项目A"}]},
+            {"name": "成本", "data": [{"item": "材料", "amount": 1000}]},
         ]
 
         result = service.export_multisheet(sheets)
@@ -185,13 +164,7 @@ class TestExportMultisheet:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        sheets = [
-            {
-                "name": "项目列表",
-                "title": "2026年项目汇总",
-                "data": [{"name": "项目A"}]
-            }
-        ]
+        sheets = [{"name": "项目列表", "title": "2026年项目汇总", "data": [{"name": "项目A"}]}]
 
         result = service.export_multisheet(sheets)
 
@@ -208,8 +181,8 @@ class TestExportMultisheet:
                 "data": [{"name": "项目A", "amount": 1000}],
                 "columns": [
                     {"key": "name", "label": "项目名称", "width": 25},
-                    {"key": "amount", "label": "金额", "width": 15}
-                ]
+                    {"key": "amount", "label": "金额", "width": 15},
+                ],
             }
         ]
 
@@ -222,13 +195,7 @@ class TestExportMultisheet:
         from app.services.excel_export_service import ExcelExportService
 
         service = ExcelExportService()
-        sheets = [
-            {
-                "name": "空Sheet",
-                "data": [],
-                "title": "无数据"
-            }
-        ]
+        sheets = [{"name": "空Sheet", "data": [], "title": "无数据"}]
 
         result = service.export_multisheet(sheets)
 
@@ -406,12 +373,15 @@ class TestCreateExcelResponse:
 
         excel_data = io.BytesIO(b"test data")
 
-        with patch('app.services.excel_export_service.StreamingResponse') as mock_response:
+        with patch("app.services.excel_export_service.StreamingResponse") as mock_response:
             create_excel_response(excel_data, "test.xlsx")
 
             mock_response.assert_called_once()
             call_args = mock_response.call_args
-            assert call_args[1]["media_type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            assert (
+                call_args[1]["media_type"]
+                == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
             assert "test.xlsx" in call_args[1]["headers"]["Content-Disposition"]
 
     def test_uses_custom_media_type(self):
@@ -420,7 +390,7 @@ class TestCreateExcelResponse:
 
         excel_data = io.BytesIO(b"test data")
 
-        with patch('app.services.excel_export_service.StreamingResponse') as mock_response:
+        with patch("app.services.excel_export_service.StreamingResponse") as mock_response:
             create_excel_response(excel_data, "test.xls", media_type="application/vnd.ms-excel")
 
             call_args = mock_response.call_args

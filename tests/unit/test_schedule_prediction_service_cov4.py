@@ -1,12 +1,15 @@
 """
 第四批覆盖测试 - schedule_prediction_service
 """
-import pytest
+
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.schedule_prediction_service import SchedulePredictionService
+
     HAS_SERVICE = True
 except Exception:
     HAS_SERVICE = False
@@ -19,7 +22,7 @@ def make_service():
     db.query.return_value.filter.return_value.all.return_value = []
     db.query.return_value.filter.return_value.first.return_value = None
     db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-    with patch('app.services.schedule_prediction_service.AIClientService'):
+    with patch("app.services.schedule_prediction_service.AIClientService"):
         return SchedulePredictionService(db), db
 
 
@@ -45,20 +48,20 @@ class TestSchedulePredictionService:
         assert isinstance(level, str)
 
     def test_assess_risk_level_values(self):
-        assert self.service._assess_risk_level(0) == 'low'
-        assert self.service._assess_risk_level(3) == 'low'
-        assert self.service._assess_risk_level(5) == 'medium'
-        assert self.service._assess_risk_level(10) == 'high'
-        assert self.service._assess_risk_level(20) == 'critical'
+        assert self.service._assess_risk_level(0) == "low"
+        assert self.service._assess_risk_level(3) == "low"
+        assert self.service._assess_risk_level(5) == "medium"
+        assert self.service._assess_risk_level(10) == "high"
+        assert self.service._assess_risk_level(20) == "critical"
 
     def test_predict_linear(self):
         features = {
-            'velocity_ratio': 0.8,
-            'remaining_days': 30,
+            "velocity_ratio": 0.8,
+            "remaining_days": 30,
         }
         result = self.service._predict_linear(features)
         assert isinstance(result, dict)
-        assert 'delay_days' in result
+        assert "delay_days" in result
 
     def test_extract_features(self):
         features = self.service._extract_features(
@@ -70,20 +73,26 @@ class TestSchedulePredictionService:
             project_data=None,
         )
         assert isinstance(features, dict)
-        assert 'progress_deviation' in features or 'current_progress' in features
+        assert "progress_deviation" in features or "current_progress" in features
 
     def test_get_similar_projects_stats_empty(self):
-        result = self.service._get_similar_projects_stats('medium', 5)
+        result = self.service._get_similar_projects_stats("medium", 5)
         assert isinstance(result, dict)
 
     def test_predict_completion_date_no_ai(self):
-        with patch('app.services.schedule_prediction_service.save_obj') as mock_save, \
-             patch.object(self.service, '_assess_risk_level', return_value='low'):
+        with (
+            patch("app.services.schedule_prediction_service.save_obj") as mock_save,
+            patch.object(self.service, "_assess_risk_level", return_value="low"),
+        ):
             mock_save.return_value = MagicMock(
-                id=1, project_id=1, delay_days=0, risk_level='low',
-                confidence=0.7, features={},
+                id=1,
+                project_id=1,
+                delay_days=0,
+                risk_level="low",
+                confidence=0.7,
+                features={},
                 predicted_completion_date=date.today(),
-                similar_projects_stats={}
+                similar_projects_stats={},
             )
             try:
                 result = self.service.predict_completion_date(

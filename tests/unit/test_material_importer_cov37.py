@@ -3,10 +3,11 @@
 第三十七批覆盖率测试 - 物料数据导入器
 tests/unit/test_material_importer_cov37.py
 """
-import pytest
-import pandas as pd
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
 
 pytest.importorskip("app.services.unified_import.material_importer")
 
@@ -23,6 +24,7 @@ def _make_db():
 class TestMaterialImporterMissingColumns:
     def test_raises_http_exception_on_missing_required_columns(self):
         from fastapi import HTTPException
+
         db = _make_db()
         df = pd.DataFrame({"规格型号": ["A"]})  # missing 物料编码* and 物料名称*
         with pytest.raises(HTTPException) as exc_info:
@@ -84,9 +86,7 @@ class TestMaterialImporterImport:
 
     def test_handles_invalid_price_gracefully(self):
         db = _make_db()
-        df = self._make_df([
-            {"物料编码*": "M003", "物料名称*": "弹簧", "参考价格": "not_a_number"}
-        ])
+        df = self._make_df([{"物料编码*": "M003", "物料名称*": "弹簧", "参考价格": "not_a_number"}])
         imported, updated, failed = MaterialImporter.import_material_data(db, df, 1)
         # Should still import, just with default price 0
         assert imported == 1
@@ -97,9 +97,7 @@ class TestMaterialImporterImport:
         call_results = [None, None]
         db.query.return_value.filter.return_value.first.side_effect = call_results
 
-        df = self._make_df([
-            {"物料编码*": "M004", "物料名称*": "齿轮", "默认供应商": "新供应商"}
-        ])
+        df = self._make_df([{"物料编码*": "M004", "物料名称*": "齿轮", "默认供应商": "新供应商"}])
         MaterialImporter.import_material_data(db, df, 1)
         # Supplier should have been added (flush called)
         db.flush.assert_called()

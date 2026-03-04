@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十一批：ECN审批通知单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, datetime
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.ecn_notification.approval_notifications")
 
@@ -36,16 +37,20 @@ def _make_approval(approval_id=1, level=1, role="TECH_REVIEW", due_date=None):
 class TestNotifyApprovalAssigned:
     def test_no_approver_id_skips(self, mock_db):
         from app.services.ecn_notification.approval_notifications import notify_approval_assigned
+
         ecn = _make_ecn()
         approval = _make_approval()
 
-        with patch("app.services.ecn_notification.approval_notifications.find_users_by_role",
-                   return_value=[]):
+        with patch(
+            "app.services.ecn_notification.approval_notifications.find_users_by_role",
+            return_value=[],
+        ):
             notify_approval_assigned(mock_db, ecn, approval, approver_id=None)
         # Should not send any notification
 
     def test_sends_notification_to_approver(self, mock_db):
         from app.services.ecn_notification.approval_notifications import notify_approval_assigned
+
         ecn = _make_ecn()
         approval = _make_approval()
         approver = MagicMock()
@@ -55,13 +60,16 @@ class TestNotifyApprovalAssigned:
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         mock_dispatcher = MagicMock()
-        with patch("app.services.ecn_notification.approval_notifications.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.ecn_notification.approval_notifications.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             notify_approval_assigned(mock_db, ecn, approval, approver_id=10)
         mock_dispatcher.send_notification_request.assert_called()
 
     def test_sends_cc_to_project_members(self, mock_db):
         from app.services.ecn_notification.approval_notifications import notify_approval_assigned
+
         ecn = _make_ecn(project_id=10)
         approval = _make_approval()
 
@@ -84,8 +92,10 @@ class TestNotifyApprovalAssigned:
         mock_db.query.return_value.filter.return_value.all.side_effect = [[pm1, pm2], [approver2]]
 
         mock_dispatcher = MagicMock()
-        with patch("app.services.ecn_notification.approval_notifications.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.ecn_notification.approval_notifications.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             notify_approval_assigned(mock_db, ecn, approval, approver_id=10)
         # dispatcher should be called multiple times (approver + cc members)
         assert mock_dispatcher.send_notification_request.call_count >= 1
@@ -94,6 +104,7 @@ class TestNotifyApprovalAssigned:
 class TestNotifyApprovalResult:
     def test_notifies_applicant_on_approved(self, mock_db):
         from app.services.ecn_notification.approval_notifications import notify_approval_result
+
         ecn = _make_ecn(applicant_id=5, project_id=None)
         approval = _make_approval()
         # No project members, no tasks
@@ -102,27 +113,36 @@ class TestNotifyApprovalResult:
         mock_dispatcher = MagicMock()
         mock_ecn_task = MagicMock()
         mock_ecn_task.task_status = MagicMock()
-        with patch("app.services.ecn_notification.approval_notifications.NotificationDispatcher",
-                   return_value=mock_dispatcher), \
-             patch("app.services.ecn_notification.approval_notifications.EcnTask", mock_ecn_task):
+        with (
+            patch(
+                "app.services.ecn_notification.approval_notifications.NotificationDispatcher",
+                return_value=mock_dispatcher,
+            ),
+            patch("app.services.ecn_notification.approval_notifications.EcnTask", mock_ecn_task),
+        ):
             notify_approval_result(mock_db, ecn, approval, result="APPROVED")
         mock_dispatcher.send_notification_request.assert_called()
 
     def test_notifies_applicant_on_rejected(self, mock_db):
         from app.services.ecn_notification.approval_notifications import notify_approval_result
+
         ecn = _make_ecn(applicant_id=5, project_id=None)
         approval = _make_approval()
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         mock_dispatcher = MagicMock()
-        with patch("app.services.ecn_notification.approval_notifications.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.ecn_notification.approval_notifications.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             notify_approval_result(mock_db, ecn, approval, result="REJECTED")
         mock_dispatcher.send_notification_request.assert_called()
 
     def test_notifies_task_assignees_on_approved(self, mock_db):
-        from app.services.ecn_notification.approval_notifications import notify_approval_result
         from datetime import date
+
+        from app.services.ecn_notification.approval_notifications import notify_approval_result
+
         ecn = _make_ecn(applicant_id=5, project_id=None)
         approval = _make_approval()
 
@@ -137,9 +157,13 @@ class TestNotifyApprovalResult:
         mock_dispatcher = MagicMock()
         mock_ecn_task = MagicMock()
         mock_ecn_task.task_status = MagicMock()
-        with patch("app.services.ecn_notification.approval_notifications.NotificationDispatcher",
-                   return_value=mock_dispatcher), \
-             patch("app.services.ecn_notification.approval_notifications.EcnTask", mock_ecn_task):
+        with (
+            patch(
+                "app.services.ecn_notification.approval_notifications.NotificationDispatcher",
+                return_value=mock_dispatcher,
+            ),
+            patch("app.services.ecn_notification.approval_notifications.EcnTask", mock_ecn_task),
+        ):
             notify_approval_result(mock_db, ecn, approval, result="APPROVED")
         # applicant + task assignee
         assert mock_dispatcher.send_notification_request.call_count >= 2

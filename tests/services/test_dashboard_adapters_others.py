@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """OthersDashboardAdapter / StaffMatchingDashboardAdapter / KitRateDashboardAdapter 单元测试"""
 
-import pytest
 import sys
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime
+from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
+
+from app.schemas.dashboard import DashboardStatCard, DashboardWidget, DetailedDashboardResponse
 from app.services.dashboard_adapters.others import (
+    KitRateDashboardAdapter,
     OthersDashboardAdapter,
     StaffMatchingDashboardAdapter,
-    KitRateDashboardAdapter,
 )
-from app.schemas.dashboard import DashboardStatCard, DashboardWidget, DetailedDashboardResponse
-
 
 # ==================== OthersDashboardAdapter ====================
 
@@ -87,7 +87,9 @@ class TestOthersDashboardAdapter:
     def test_get_system_health_all_healthy(self):
         adapter, db = self._make()
         db.execute.return_value = None
-        with patch("app.services.dashboard_adapters.others.OthersDashboardAdapter.get_system_health") as _:
+        with patch(
+            "app.services.dashboard_adapters.others.OthersDashboardAdapter.get_system_health"
+        ) as _:
             # just call real method
             pass
         # Call directly
@@ -141,10 +143,13 @@ class TestOthersDashboardAdapter:
         chain.all.return_value = ["t1"]
         mock_task = MagicMock()
         mock_approval = MagicMock()
-        with patch.dict("sys.modules", {
-            "app.models.task_center": mock_task,
-            "app.models.approval": mock_approval,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "app.models.task_center": mock_task,
+                "app.models.approval": mock_approval,
+            },
+        ):
             mock_task.TaskItem = MagicMock()
             mock_approval.ApprovalTask = MagicMock()
             result = adapter.get_user_tasks(user_id=1, include_approvals=True)
@@ -333,9 +338,7 @@ class TestKitRateDashboardAdapter:
         adapter, db = self._make()
         svc = MagicMock()
         MockKitRateService.return_value = svc
-        svc.get_dashboard.return_value = {
-            "data": {"project_list": [{"id": 1}, {"id": 2}]}
-        }
+        svc.get_dashboard.return_value = {"data": {"project_list": [{"id": 1}, {"id": 2}]}}
         widgets = adapter.get_widgets()
         assert len(widgets) == 1
         assert widgets[0].widget_type == "table"

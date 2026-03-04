@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十三批 - 知识贡献服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.knowledge_contribution_service import KnowledgeContributionService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -25,13 +27,13 @@ def service(db):
 
 def make_contribution_data(**kwargs):
     data = MagicMock()
-    data.contribution_type = kwargs.get('contribution_type', 'code_module')
-    data.job_type = kwargs.get('job_type', 'mechanical')
-    data.title = kwargs.get('title', '测试知识贡献')
-    data.description = kwargs.get('description', '描述')
-    data.file_path = kwargs.get('file_path', '/files/test.pdf')
-    data.tags = kwargs.get('tags', ['tag1', 'tag2'])
-    data.status = kwargs.get('status', None)
+    data.contribution_type = kwargs.get("contribution_type", "code_module")
+    data.job_type = kwargs.get("job_type", "mechanical")
+    data.title = kwargs.get("title", "测试知识贡献")
+    data.description = kwargs.get("description", "描述")
+    data.file_path = kwargs.get("file_path", "/files/test.pdf")
+    data.tags = kwargs.get("tags", ["tag1", "tag2"])
+    data.status = kwargs.get("status", None)
     return data
 
 
@@ -43,7 +45,7 @@ class TestKnowledgeContributionService:
 
     def test_create_contribution(self, service, db):
         """创建知识贡献"""
-        with patch('app.services.knowledge_contribution_service.save_obj') as mock_save:
+        with patch("app.services.knowledge_contribution_service.save_obj") as mock_save:
             data = make_contribution_data()
             result = service.create_contribution(data, contributor_id=1)
             mock_save.assert_called_once()
@@ -78,15 +80,15 @@ class TestKnowledgeContributionService:
 
         data = make_contribution_data()
         data.status = None
-        data.model_dump.return_value = {'title': '修改标题'}
+        data.model_dump.return_value = {"title": "修改标题"}
 
         with pytest.raises(PermissionError):
             service.update_contribution(1, data, user_id=99)  # 非作者
 
     def test_service_has_create_method(self, service):
         """验证create_contribution方法存在"""
-        assert hasattr(service, 'create_contribution')
+        assert hasattr(service, "create_contribution")
 
     def test_service_has_get_method(self, service):
         """验证get_contribution方法存在"""
-        assert hasattr(service, 'get_contribution')
+        assert hasattr(service, "get_contribution")

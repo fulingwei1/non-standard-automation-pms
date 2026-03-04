@@ -21,9 +21,7 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
         super().__init__(db)
 
     def calculate(
-        self,
-        performance_result: PerformanceResult,
-        bonus_rule: BonusRule
+        self, performance_result: PerformanceResult, bonus_rule: BonusRule
     ) -> Optional[BonusCalculation]:
         """
         基于绩效结果计算奖金
@@ -36,12 +34,12 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
             BonusCalculation: 计算记录，如果不满足条件则返回None
         """
         # 检查触发条件
-        context = {'performance_result': performance_result}
+        context = {"performance_result": performance_result}
         if not self.check_trigger_condition(bonus_rule, context):
             return None
 
         # 获取计算参数
-        base_amount = bonus_rule.base_amount or Decimal('0')
+        base_amount = bonus_rule.base_amount or Decimal("0")
         coefficient = self.get_coefficient_by_level(performance_result.level)
 
         # 计算奖金
@@ -59,14 +57,16 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
                 "base_amount": float(base_amount),
                 "coefficient": float(coefficient),
                 "performance_level": performance_result.level,
-                "performance_score": float(performance_result.total_score) if performance_result.total_score else 0
+                "performance_score": (
+                    float(performance_result.total_score) if performance_result.total_score else 0
+                ),
             },
             calculation_basis={
                 "type": "performance",
                 "period_id": performance_result.period_id,
-                "performance_result_id": performance_result.id
+                "performance_result_id": performance_result.id,
             },
-            status='CALCULATED'
+            status="CALCULATED",
         )
 
         return calculation

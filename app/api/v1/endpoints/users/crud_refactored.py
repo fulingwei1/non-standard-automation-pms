@@ -11,9 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.core.schemas import paginated_response, success_response
 from app.models.organization import Employee
 from app.models.user import User
@@ -21,7 +21,12 @@ from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdat
 from app.services.permission_audit_service import PermissionAuditService
 from app.utils.db_helpers import get_or_404
 
-from .utils import build_user_response, ensure_employee_unbound, prepare_employee_for_new_user, replace_user_roles
+from .utils import (
+    build_user_response,
+    ensure_employee_unbound,
+    prepare_employee_for_new_user,
+    replace_user_roles,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +44,13 @@ def read_users(
 ) -> Any:
     """获取用户列表（支持分页和筛选）"""
     try:
-        from app.models.user import UserRole, Role
+        from app.models.user import Role, UserRole
 
         query = db.query(User)
 
-        query = apply_keyword_filter(query, User, keyword, ["username", "real_name", "employee_no", "email"])
+        query = apply_keyword_filter(
+            query, User, keyword, ["username", "real_name", "employee_no", "email"]
+        )
 
         if department:
             query = query.filter(User.department == department)
@@ -52,7 +59,9 @@ def read_users(
             query = query.filter(User.is_active == is_active)
 
         total = query.count()
-        users = apply_pagination(query.order_by(User.created_at.desc()), pagination.offset, pagination.limit).all()
+        users = apply_pagination(
+            query.order_by(User.created_at.desc()), pagination.offset, pagination.limit
+        ).all()
 
         # 批量查询所有用户的角色（避免N+1查询）
         user_ids = [u.id for u in users]
@@ -76,49 +85,60 @@ def read_users(
             try:
                 # 使用预加载的角色数据（避免N+1查询）
                 roles_data = user_roles_map.get(u.id, {"role_ids": [], "role_names": []})
-                user_responses.append(UserResponse(
-                    id=u.id,
-                    username=u.username,
-                    employee_id=getattr(u, "employee_id", None),
-                    email=u.email or "",
-                    phone=u.phone or "",
-                    real_name=u.real_name or "",
-                    employee_no=u.employee_no or "",
-                    department=u.department or "",
-                    position=u.position or "",
-                    avatar=u.avatar,
-                    is_active=u.is_active,
-                    is_superuser=u.is_superuser,
-                    last_login_at=u.last_login_at,
-                    roles=roles_data["role_names"],
-                    role_ids=roles_data["role_ids"],
-                    created_at=u.created_at,
-                    updated_at=u.updated_at,
-                ))
+                user_responses.append(
+                    UserResponse(
+                        id=u.id,
+                        username=u.username,
+                        employee_id=getattr(u, "employee_id", None),
+                        email=u.email or "",
+                        phone=u.phone or "",
+                        real_name=u.real_name or "",
+                        employee_no=u.employee_no or "",
+                        department=u.department or "",
+                        position=u.position or "",
+                        avatar=u.avatar,
+                        is_active=u.is_active,
+                        is_superuser=u.is_superuser,
+                        last_login_at=u.last_login_at,
+                        roles=roles_data["role_names"],
+                        role_ids=roles_data["role_ids"],
+                        created_at=u.created_at,
+                        updated_at=u.updated_at,
+                    )
+                )
             except Exception as e:
                 logger.error(f"构建用户 {u.username} 响应失败: {e}", exc_info=True)
                 # 构建失败时使用空角色列表
-                user_responses.append(UserResponse(
-                    id=u.id, username=u.username, employee_id=getattr(u, "employee_id", None),
-                    email=u.email or "", phone=u.phone or "", real_name=u.real_name or "",
-                    employee_no=u.employee_no or "", department=u.department or "",
-                    position=u.position or "", avatar=u.avatar, is_active=u.is_active,
-                    is_superuser=u.is_superuser, last_login_at=u.last_login_at,
-                    roles=[], role_ids=[], created_at=u.created_at, updated_at=u.updated_at,
-                ))
+                user_responses.append(
+                    UserResponse(
+                        id=u.id,
+                        username=u.username,
+                        employee_id=getattr(u, "employee_id", None),
+                        email=u.email or "",
+                        phone=u.phone or "",
+                        real_name=u.real_name or "",
+                        employee_no=u.employee_no or "",
+                        department=u.department or "",
+                        position=u.position or "",
+                        avatar=u.avatar,
+                        is_active=u.is_active,
+                        is_superuser=u.is_superuser,
+                        last_login_at=u.last_login_at,
+                        roles=[],
+                        role_ids=[],
+                        created_at=u.created_at,
+                        updated_at=u.updated_at,
+                    )
+                )
 
         # 使用统一分页响应格式
         return paginated_response(
-            items=user_responses,
-            total=total,
-            page=pagination.page,
-            page_size=pagination.page_size
+            items=user_responses, total=total, page=pagination.page, page_size=pagination.page_size
         )
     except Exception as e:
         logger.error(f"获取用户列表失败: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取用户列表失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取用户列表失败: {str(e)}"
         )
 
 
@@ -141,7 +161,7 @@ def create_user(
     # 普通用户必须属于当前用户的租户
     # 只有超级管理员可以创建跨租户用户（但这需要专门的接口，这里不支持）
     user_tenant_id = getattr(current_user, "tenant_id", None)
-    
+
     user = User(
         employee_id=employee.id,
         username=user_in.username,
@@ -158,10 +178,11 @@ def create_user(
     )
     db.add(user)
     db.flush()
-    
+
     # 验证用户数据一致性
     try:
         from app.core.auth import validate_user_tenant_consistency
+
         validate_user_tenant_consistency(user)
     except ValueError as e:
         db.rollback()
@@ -173,20 +194,25 @@ def create_user(
 
     try:
         PermissionAuditService.log_user_operation(
-            db=db, operator_id=current_user.id, user_id=user.id,
+            db=db,
+            operator_id=current_user.id,
+            user_id=user.id,
             action=PermissionAuditService.ACTION_USER_CREATED,
-            changes={"username": user.username, "email": user.email, "real_name": user.real_name, "role_ids": user_in.role_ids},
+            changes={
+                "username": user.username,
+                "email": user.email,
+                "real_name": user.real_name,
+                "role_ids": user_in.role_ids,
+            },
             ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
         )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
 
     # 使用统一响应格式
     return success_response(
-        data=build_user_response(user),
-        message="用户创建成功",
-        code=status.HTTP_201_CREATED
+        data=build_user_response(user), message="用户创建成功", code=status.HTTP_201_CREATED
     )
 
 
@@ -200,12 +226,9 @@ def read_user_by_id(
     user = get_or_404(db, User, user_id, "用户不存在")
     if user.id != current_user.id and not security.check_permission(current_user, "user:read"):
         raise HTTPException(status_code=403, detail="权限不足")
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=build_user_response(user),
-        message="获取用户信息成功"
-    )
+    return success_response(data=build_user_response(user), message="获取用户信息成功")
 
 
 @router.put("/{user_id}", status_code=status.HTTP_200_OK)
@@ -221,8 +244,14 @@ def update_user(
     user = get_or_404(db, User, user_id, "用户不存在")
 
     old_is_active = user.is_active
-    old_data = {"email": user.email, "phone": user.phone, "real_name": user.real_name,
-                "department": user.department, "position": user.position, "is_active": user.is_active}
+    old_data = {
+        "email": user.email,
+        "phone": user.phone,
+        "real_name": user.real_name,
+        "department": user.department,
+        "position": user.position,
+        "is_active": user.is_active,
+    }
 
     update_data = user_in.model_dump(exclude_unset=True)
     role_ids = update_data.pop("role_ids", None)
@@ -239,21 +268,21 @@ def update_user(
         # 防止通过普通更新接口修改敏感字段
         if field in ("is_superuser", "tenant_id"):
             raise HTTPException(
-                status_code=400, 
-                detail=f"不允许通过此接口修改 {field} 字段，请使用专门的管理接口"
+                status_code=400, detail=f"不允许通过此接口修改 {field} 字段，请使用专门的管理接口"
             )
         setattr(user, field, value)
 
     replace_user_roles(db, user.id, role_ids)
-    
+
     # 验证用户数据一致性
     try:
         from app.core.auth import validate_user_tenant_consistency
+
         validate_user_tenant_consistency(user)
     except ValueError as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
-    
+
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -262,19 +291,29 @@ def update_user(
         changes = {k: v for k, v in update_data.items() if k in old_data and old_data[k] != v}
         if role_ids is not None:
             changes["role_ids"] = role_ids
-        action = (PermissionAuditService.ACTION_USER_ACTIVATED if user.is_active else PermissionAuditService.ACTION_USER_DEACTIVATED) if old_is_active != user.is_active else PermissionAuditService.ACTION_USER_UPDATED
+        action = (
+            (
+                PermissionAuditService.ACTION_USER_ACTIVATED
+                if user.is_active
+                else PermissionAuditService.ACTION_USER_DEACTIVATED
+            )
+            if old_is_active != user.is_active
+            else PermissionAuditService.ACTION_USER_UPDATED
+        )
         PermissionAuditService.log_user_operation(
-            db=db, operator_id=current_user.id, user_id=user.id, action=action, changes=changes,
-            ip_address=request.client.host if request.client else None, user_agent=request.headers.get("user-agent")
+            db=db,
+            operator_id=current_user.id,
+            user_id=user.id,
+            action=action,
+            changes=changes,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
         )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
 
     # 使用统一响应格式
-    return success_response(
-        data=build_user_response(user),
-        message="用户更新成功"
-    )
+    return success_response(data=build_user_response(user), message="用户更新成功")
 
 
 @router.put("/{user_id}/roles", status_code=status.HTTP_200_OK)
@@ -294,17 +333,18 @@ def assign_user_roles(
 
     try:
         PermissionAuditService.log_user_role_assignment(
-            db=db, operator_id=current_user.id, user_id=user.id, role_ids=role_data.role_ids,
-            ip_address=request.client.host if request.client else None, user_agent=request.headers.get("user-agent")
+            db=db,
+            operator_id=current_user.id,
+            user_id=user.id,
+            role_ids=role_data.role_ids,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
         )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
 
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="用户角色分配成功"
-    )
+    return success_response(data=None, message="用户角色分配成功")
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
@@ -328,7 +368,4 @@ def delete_user(
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="用户已禁用"
-    )
+    return success_response(data=None, message="用户已禁用")

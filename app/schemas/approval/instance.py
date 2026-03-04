@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class ApprovalInstanceCreate(BaseModel):
     """创建审批实例（提交审批）"""
+
     template_code: str = Field(..., description="审批模板编码")
     entity_type: str = Field(..., description="业务实体类型")
     entity_id: int = Field(..., description="业务实体ID")
@@ -23,6 +24,7 @@ class ApprovalInstanceCreate(BaseModel):
 
 class ApprovalInstanceSaveDraft(BaseModel):
     """保存审批草稿"""
+
     template_code: str = Field(..., description="审批模板编码")
     entity_type: str = Field(..., description="业务实体类型")
     entity_id: int = Field(..., description="业务实体ID")
@@ -32,6 +34,7 @@ class ApprovalInstanceSaveDraft(BaseModel):
 
 class ApprovalInstanceResponse(BaseModel):
     """审批实例响应"""
+
     id: int
     instance_no: str
     template_id: int
@@ -57,6 +60,7 @@ class ApprovalInstanceResponse(BaseModel):
 
 class ApprovalTaskBrief(BaseModel):
     """审批任务简要信息"""
+
     id: int
     node_id: int
     node_name: Optional[str] = None
@@ -74,6 +78,7 @@ class ApprovalTaskBrief(BaseModel):
 
 class ApprovalLogBrief(BaseModel):
     """审批日志简要信息"""
+
     id: int
     operator_id: int
     operator_name: Optional[str] = None
@@ -87,6 +92,7 @@ class ApprovalLogBrief(BaseModel):
 
 class ApprovalInstanceDetail(ApprovalInstanceResponse):
     """审批实例详情（包含任务和日志）"""
+
     form_data: Optional[Dict[str, Any]] = None
     template_name: Optional[str] = None
     current_node_name: Optional[str] = None
@@ -96,6 +102,7 @@ class ApprovalInstanceDetail(ApprovalInstanceResponse):
 
 class ApprovalInstanceListResponse(BaseModel):
     """审批实例列表响应"""
+
     total: int
     page: int
     page_size: int

@@ -5,7 +5,7 @@
 """
 import sys
 
-sys.path.insert(0, '/Users/flw/non-standard-automation-pm')
+sys.path.insert(0, "/Users/flw/non-standard-automation-pm")
 
 from app.models.base import get_db_session
 from app.models.organization import Employee
@@ -51,6 +51,7 @@ def check_user(username: str):
         print(f"\n💡 提示：")
         print(f"  如果登录时显示'密码错误'，说明用户存在但密码不正确。")
         print(f"  请联系管理员重置密码。")
+
 
 if __name__ == "__main__":
     username = sys.argv[1] if len(sys.argv) > 1 else "fulingwei"

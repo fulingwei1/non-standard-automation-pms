@@ -23,7 +23,9 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/outsourcing-orders/{order_id}/print", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-orders/{order_id}/print", response_model=dict, status_code=status.HTTP_200_OK
+)
 def print_outsourcing_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -37,64 +39,82 @@ def print_outsourcing_order(
 
     order = get_or_404(db, OutsourcingOrder, order_id, "外协订单不存在")
 
-    vendor = db.query(Vendor).filter(
-        Vendor.id == order.vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor)
+        .filter(Vendor.id == order.vendor_id, Vendor.vendor_type == "OUTSOURCING")
+        .first()
+    )
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
         machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
 
     # 获取订单明细
-    order_items = db.query(OutsourcingOrderItem).filter(
-        OutsourcingOrderItem.order_id == order_id
-    ).order_by(OutsourcingOrderItem.item_no).all()
+    order_items = (
+        db.query(OutsourcingOrderItem)
+        .filter(OutsourcingOrderItem.order_id == order_id)
+        .order_by(OutsourcingOrderItem.item_no)
+        .all()
+    )
 
     items_data = []
     for item in order_items:
-        items_data.append({
-            "item_no": item.item_no,
-            "material_code": item.material_code,
-            "material_name": item.material_name,
-            "specification": item.specification,
-            "drawing_no": item.drawing_no,
-            "process_type": item.process_type,
-            "unit": item.unit,
-            "quantity": float(item.quantity),
-            "unit_price": float(item.unit_price),
-            "amount": float(item.amount),
-            "material_provided": item.material_provided,
-        })
+        items_data.append(
+            {
+                "item_no": item.item_no,
+                "material_code": item.material_code,
+                "material_name": item.material_name,
+                "specification": item.specification,
+                "drawing_no": item.drawing_no,
+                "process_type": item.process_type,
+                "unit": item.unit,
+                "quantity": float(item.quantity),
+                "unit_price": float(item.unit_price),
+                "amount": float(item.amount),
+                "material_provided": item.material_provided,
+            }
+        )
 
     # 获取交付记录
-    deliveries = db.query(OutsourcingDelivery).filter(
-        OutsourcingDelivery.order_id == order_id
-    ).order_by(OutsourcingDelivery.delivery_date).all()
+    deliveries = (
+        db.query(OutsourcingDelivery)
+        .filter(OutsourcingDelivery.order_id == order_id)
+        .order_by(OutsourcingDelivery.delivery_date)
+        .all()
+    )
 
     deliveries_data = []
     for delivery in deliveries:
-        deliveries_data.append({
-            "delivery_no": delivery.delivery_no,
-            "delivery_date": delivery.delivery_date.isoformat() if delivery.delivery_date else None,
-            "delivery_qty": float(delivery.delivery_qty or 0),
-            "status": delivery.status,
-        })
+        deliveries_data.append(
+            {
+                "delivery_no": delivery.delivery_no,
+                "delivery_date": (
+                    delivery.delivery_date.isoformat() if delivery.delivery_date else None
+                ),
+                "delivery_qty": float(delivery.delivery_qty or 0),
+                "status": delivery.status,
+            }
+        )
 
     # 获取付款记录
-    payments = db.query(OutsourcingPayment).filter(
-        OutsourcingPayment.order_id == order_id
-    ).order_by(OutsourcingPayment.payment_date).all()
+    payments = (
+        db.query(OutsourcingPayment)
+        .filter(OutsourcingPayment.order_id == order_id)
+        .order_by(OutsourcingPayment.payment_date)
+        .all()
+    )
 
     payments_data = []
     for payment in payments:
-        payments_data.append({
-            "payment_type": payment.payment_type,
-            "payment_amount": float(payment.payment_amount or 0),
-            "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
-            "payment_method": payment.payment_method,
-            "status": payment.status,
-        })
+        payments_data.append(
+            {
+                "payment_type": payment.payment_type,
+                "payment_amount": float(payment.payment_amount or 0),
+                "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
+                "payment_method": payment.payment_method,
+                "status": payment.status,
+            }
+        )
 
     return {
         "order": {
@@ -113,20 +133,32 @@ def print_outsourcing_order(
             "paid_amount": float(order.paid_amount or 0),
             "created_at": order.created_at.isoformat() if order.created_at else None,
         },
-        "vendor": {
-            "vendor_name": vendor.supplier_name if vendor else None,
-            "contact_person": vendor.contact_person if vendor else None,
-            "contact_phone": vendor.contact_phone if vendor else None,
-            "address": vendor.address if vendor else None,
-        } if vendor else None,
-        "project": {
-            "project_name": project.project_name if project else None,
-            "project_code": project.project_code if project else None,
-        } if project else None,
-        "machine": {
-            "machine_name": machine.machine_name if machine else None,
-            "machine_code": machine.machine_code if machine else None,
-        } if machine else None,
+        "vendor": (
+            {
+                "vendor_name": vendor.supplier_name if vendor else None,
+                "contact_person": vendor.contact_person if vendor else None,
+                "contact_phone": vendor.contact_phone if vendor else None,
+                "address": vendor.address if vendor else None,
+            }
+            if vendor
+            else None
+        ),
+        "project": (
+            {
+                "project_name": project.project_name if project else None,
+                "project_code": project.project_code if project else None,
+            }
+            if project
+            else None
+        ),
+        "machine": (
+            {
+                "machine_name": machine.machine_name if machine else None,
+                "machine_code": machine.machine_code if machine else None,
+            }
+            if machine
+            else None
+        ),
         "items": items_data,
         "deliveries": deliveries_data,
         "payments": payments_data,

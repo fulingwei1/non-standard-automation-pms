@@ -12,24 +12,24 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
 from app.models.sales import Lead
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.schemas.sales import (
     LeadCreate,
     LeadResponse,
     LeadUpdate,
 )
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 from ..utils import (
     generate_lead_code,
     get_entity_creator_id,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 
 router = APIRouter()
 
@@ -50,9 +50,11 @@ def read_leads(
     query = db.query(Lead)
 
     # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Lead, 'owner_id')
+    query = security.filter_sales_data_by_scope(query, current_user, db, Lead, "owner_id")
 
-    query = apply_keyword_filter(query, Lead, keyword, ["lead_code", "customer_name", "contact_name"])
+    query = apply_keyword_filter(
+        query, Lead, keyword, ["lead_code", "customer_name", "contact_name"]
+    )
 
     if status:
         query = query.filter(Lead.status == status)
@@ -62,10 +64,11 @@ def read_leads(
 
     total = query.count()
     # 默认按优先级排序，如果没有优先级则按创建时间排序
-    leads = apply_pagination(query.order_by(
-        desc(Lead.priority_score).nullslast(),
-        desc(Lead.created_at)
-    ), pagination.offset, pagination.limit).all()
+    leads = apply_pagination(
+        query.order_by(desc(Lead.priority_score).nullslast(), desc(Lead.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 填充负责人名称和优势产品信息
     lead_responses = []
@@ -79,9 +82,9 @@ def read_leads(
         if lead.selected_advantage_products:
             try:
                 product_ids = json.loads(lead.selected_advantage_products)
-                products = db.query(AdvantageProduct).filter(
-                    AdvantageProduct.id.in_(product_ids)
-                ).all()
+                products = (
+                    db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
+                )
                 lead_dict["advantage_products"] = [
                     {
                         "id": p.id,
@@ -101,7 +104,7 @@ def read_leads(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -133,10 +136,11 @@ def create_lead(
     selected_products = lead_data.pop("selected_advantage_products", None)
     if selected_products and len(selected_products) > 0:
         # 验证产品ID是否存在
-        products = db.query(AdvantageProduct).filter(
-            AdvantageProduct.id.in_(selected_products),
-            AdvantageProduct.is_active
-        ).all()
+        products = (
+            db.query(AdvantageProduct)
+            .filter(AdvantageProduct.id.in_(selected_products), AdvantageProduct.is_active)
+            .all()
+        )
 
         if len(products) != len(selected_products):
             raise HTTPException(status_code=400, detail="部分优势产品ID不存在或已禁用")
@@ -164,9 +168,7 @@ def create_lead(
     if lead.selected_advantage_products:
         try:
             product_ids = json.loads(lead.selected_advantage_products)
-            products = db.query(AdvantageProduct).filter(
-                AdvantageProduct.id.in_(product_ids)
-            ).all()
+            products = db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
             lead_dict["advantage_products"] = [
                 {
                     "id": p.id,
@@ -203,9 +205,7 @@ def read_lead(
     if lead.selected_advantage_products:
         try:
             product_ids = json.loads(lead.selected_advantage_products)
-            products = db.query(AdvantageProduct).filter(
-                AdvantageProduct.id.in_(product_ids)
-            ).all()
+            products = db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
             lead_dict["advantage_products"] = [
                 {
                     "id": p.id,

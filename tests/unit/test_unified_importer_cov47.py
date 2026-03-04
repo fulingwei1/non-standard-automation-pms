@@ -41,8 +41,10 @@ def test_import_data_user_type():
     with (
         patch.object(UnifiedImporter, "validate_file"),
         patch.object(UnifiedImporter, "parse_file", return_value=df),
-        patch("app.services.unified_import.unified_importer.UserImporter.import_user_data",
-              return_value=(2, 1, [])) as mock_user,
+        patch(
+            "app.services.unified_import.unified_importer.UserImporter.import_user_data",
+            return_value=(2, 1, []),
+        ) as mock_user,
     ):
         result = UnifiedImporter.import_data(db, b"data", "file.xlsx", "user", 1)
     assert result["imported_count"] == 2
@@ -55,8 +57,10 @@ def test_import_data_timesheet_type():
     with (
         patch.object(UnifiedImporter, "validate_file"),
         patch.object(UnifiedImporter, "parse_file", return_value=df),
-        patch("app.services.unified_import.unified_importer.TimesheetImporter.import_timesheet_data",
-              return_value=(3, 0, [])),
+        patch(
+            "app.services.unified_import.unified_importer.TimesheetImporter.import_timesheet_data",
+            return_value=(3, 0, []),
+        ),
     ):
         result = UnifiedImporter.import_data(db, b"data", "file.xlsx", "TIMESHEET", 1)
     assert result["imported_count"] == 3
@@ -68,8 +72,10 @@ def test_import_data_project_type():
     with (
         patch.object(UnifiedImporter, "validate_file"),
         patch.object(UnifiedImporter, "parse_file", return_value=df),
-        patch("app.services.project_import_service.import_projects_from_dataframe",
-              return_value=(5, 0, [])),
+        patch(
+            "app.services.project_import_service.import_projects_from_dataframe",
+            return_value=(5, 0, []),
+        ),
     ):
         result = UnifiedImporter.import_data(db, b"data", "file.xlsx", "PROJECT", 1)
     assert result["imported_count"] == 5
@@ -83,8 +89,10 @@ def test_import_data_failed_rows_capped():
     with (
         patch.object(UnifiedImporter, "validate_file"),
         patch.object(UnifiedImporter, "parse_file", return_value=df),
-        patch("app.services.unified_import.unified_importer.UserImporter.import_user_data",
-              return_value=(0, 0, many_errors)),
+        patch(
+            "app.services.unified_import.unified_importer.UserImporter.import_user_data",
+            return_value=(0, 0, many_errors),
+        ),
     ):
         result = UnifiedImporter.import_data(db, b"data", "file.xlsx", "USER", 1)
     assert len(result["failed_rows"]) == 20
@@ -97,8 +105,10 @@ def test_import_data_bom_type():
     with (
         patch.object(UnifiedImporter, "validate_file"),
         patch.object(UnifiedImporter, "parse_file", return_value=df),
-        patch("app.services.unified_import.unified_importer.BomImporter.import_bom_data",
-              return_value=(1, 0, [])),
+        patch(
+            "app.services.unified_import.unified_importer.BomImporter.import_bom_data",
+            return_value=(1, 0, []),
+        ),
     ):
         result = UnifiedImporter.import_data(db, b"data", "file.xlsx", "BOM", 1)
     assert result["imported_count"] == 1

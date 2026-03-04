@@ -26,6 +26,7 @@ from app.models.enums import (
 
 class TechnicalAssessment(Base, TimestampMixin):
     """技术评估结果表"""
+
     __tablename__ = "technical_assessments"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
@@ -46,10 +47,10 @@ class TechnicalAssessment(Base, TimestampMixin):
     evaluator = relationship("User", foreign_keys=[evaluator_id])
 
     __table_args__ = (
-        Index('idx_assessment_source', 'source_type', 'source_id'),
-        Index('idx_assessment_status', 'status'),
-        Index('idx_assessment_evaluator', 'evaluator_id'),
-        Index('idx_assessment_decision', 'decision'),
+        Index("idx_assessment_source", "source_type", "source_id"),
+        Index("idx_assessment_status", "status"),
+        Index("idx_assessment_evaluator", "evaluator_id"),
+        Index("idx_assessment_decision", "decision"),
     )
 
     def __repr__(self):
@@ -58,6 +59,7 @@ class TechnicalAssessment(Base, TimestampMixin):
 
 class ScoringRule(Base, TimestampMixin):
     """评分规则配置表"""
+
     __tablename__ = "scoring_rules"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     version = Column(String(20), unique=True, nullable=False, comment="版本号")
@@ -69,8 +71,8 @@ class ScoringRule(Base, TimestampMixin):
     creator = relationship("User", foreign_keys=[created_by])
 
     __table_args__ = (
-        Index('idx_scoring_rule_active', 'is_active'),
-        Index('idx_scoring_rule_version', 'version'),
+        Index("idx_scoring_rule_active", "is_active"),
+        Index("idx_scoring_rule_version", "version"),
     )
 
     def __repr__(self):
@@ -79,6 +81,7 @@ class ScoringRule(Base, TimestampMixin):
 
 class FailureCase(Base, TimestampMixin):
     """失败案例库表"""
+
     __tablename__ = "failure_cases"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     case_code = Column(String(50), unique=True, nullable=False, comment="案例编号")
@@ -104,8 +107,8 @@ class FailureCase(Base, TimestampMixin):
     creator = relationship("User", foreign_keys=[created_by])
 
     __table_args__ = (
-        Index('idx_failure_case_industry', 'industry'),
-        Index('idx_failure_case_code', 'case_code'),
+        Index("idx_failure_case_industry", "industry"),
+        Index("idx_failure_case_code", "case_code"),
     )
 
     def __repr__(self):
@@ -114,6 +117,7 @@ class FailureCase(Base, TimestampMixin):
 
 class LeadRequirementDetail(Base, TimestampMixin):
     """线索需求详情表"""
+
     __tablename__ = "lead_requirement_details"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="线索ID")
@@ -179,8 +183,8 @@ class LeadRequirementDetail(Base, TimestampMixin):
     frozen_by_user = relationship("User", foreign_keys=[frozen_by])
 
     __table_args__ = (
-        Index('idx_requirement_detail_lead', 'lead_id'),
-        Index('idx_requirement_detail_frozen', 'is_frozen'),
+        Index("idx_requirement_detail_lead", "lead_id"),
+        Index("idx_requirement_detail_frozen", "is_frozen"),
     )
 
     def __repr__(self):
@@ -189,6 +193,7 @@ class LeadRequirementDetail(Base, TimestampMixin):
 
 class RequirementFreeze(Base, TimestampMixin):
     """需求冻结记录表"""
+
     __tablename__ = "requirement_freezes"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
@@ -203,9 +208,9 @@ class RequirementFreeze(Base, TimestampMixin):
     frozen_by_user = relationship("User", foreign_keys=[frozen_by])
 
     __table_args__ = (
-        Index('idx_requirement_freeze_source', 'source_type', 'source_id'),
-        Index('idx_requirement_freeze_type', 'freeze_type'),
-        Index('idx_requirement_freeze_time', 'freeze_time'),
+        Index("idx_requirement_freeze_source", "source_type", "source_id"),
+        Index("idx_requirement_freeze_type", "freeze_type"),
+        Index("idx_requirement_freeze_time", "freeze_time"),
     )
 
     def __repr__(self):
@@ -214,6 +219,7 @@ class RequirementFreeze(Base, TimestampMixin):
 
 class OpenItem(Base, TimestampMixin):
     """未决事项表"""
+
     __tablename__ = "open_items"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
@@ -232,11 +238,11 @@ class OpenItem(Base, TimestampMixin):
     responsible_person = relationship("User", foreign_keys=[responsible_person_id])
 
     __table_args__ = (
-        Index('idx_open_item_source', 'source_type', 'source_id'),
-        Index('idx_open_item_status', 'status'),
-        Index('idx_open_item_type', 'item_type'),
-        Index('idx_open_item_blocks', 'blocks_quotation'),
-        Index('idx_open_item_due_date', 'due_date'),
+        Index("idx_open_item_source", "source_type", "source_id"),
+        Index("idx_open_item_status", "status"),
+        Index("idx_open_item_type", "item_type"),
+        Index("idx_open_item_blocks", "blocks_quotation"),
+        Index("idx_open_item_due_date", "due_date"),
     )
 
     def __repr__(self):
@@ -245,6 +251,7 @@ class OpenItem(Base, TimestampMixin):
 
 class AIClarification(Base, TimestampMixin):
     """AI澄清记录表"""
+
     __tablename__ = "ai_clarifications"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
@@ -254,8 +261,8 @@ class AIClarification(Base, TimestampMixin):
     answers = Column(Text, comment="用户回答(JSON Array)")
 
     __table_args__ = (
-        Index('idx_ai_clarification_source', 'source_type', 'source_id'),
-        Index('idx_ai_clarification_round', 'round'),
+        Index("idx_ai_clarification_source", "source_type", "source_id"),
+        Index("idx_ai_clarification_round", "round"),
     )
 
     def __repr__(self):
@@ -264,6 +271,7 @@ class AIClarification(Base, TimestampMixin):
 
 class QuoteApproval(Base, TimestampMixin):
     """报价审批表"""
+
     __tablename__ = "quote_approvals"
     id = Column(Integer, primary_key=True, autoincrement=True)
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")

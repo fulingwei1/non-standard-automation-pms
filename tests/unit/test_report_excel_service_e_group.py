@@ -3,16 +3,18 @@
 E组 - 报表Excel导出服务 单元测试
 覆盖: app/services/report_excel_service.py
 """
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 
-
 # ─── _translate_header ──────────────────────────────────────────────────────
+
 
 class TestTranslateHeader:
 
     def test_known_headers(self):
         from app.services.report_excel_service import ReportExcelService
+
         assert ReportExcelService._translate_header("user_name") == "姓名"
         assert ReportExcelService._translate_header("total_hours") == "总工时"
         assert ReportExcelService._translate_header("department_name") == "部门名称"
@@ -20,12 +22,22 @@ class TestTranslateHeader:
 
     def test_unknown_header_returns_original(self):
         from app.services.report_excel_service import ReportExcelService
+
         assert ReportExcelService._translate_header("my_custom_field") == "my_custom_field"
 
     def test_all_translations_defined(self):
         from app.services.report_excel_service import ReportExcelService
-        headers = ["user_id", "user_name", "department", "total_hours", "work_days",
-                   "overtime_hours", "normal_hours", "project_name"]
+
+        headers = [
+            "user_id",
+            "user_name",
+            "department",
+            "total_hours",
+            "work_days",
+            "overtime_hours",
+            "normal_hours",
+            "project_name",
+        ]
         for h in headers:
             result = ReportExcelService._translate_header(h)
             assert isinstance(result, str) and len(result) > 0
@@ -33,20 +45,23 @@ class TestTranslateHeader:
 
 # ─── export_to_excel (openpyxl not available) ───────────────────────────────
 
+
 class TestExportToExcelNoOpenpyxl:
 
     def test_raises_import_error_when_not_available(self):
         from app.services.report_excel_service import ReportExcelService
+
         with patch("app.services.report_excel_service.OPENPYXL_AVAILABLE", False):
             with pytest.raises(ImportError):
                 ReportExcelService.export_to_excel(
                     {"year": 2025, "month": 1, "period": "2025-01", "summary": []},
                     "test_template",
-                    "/tmp/test_output"
+                    "/tmp/test_output",
                 )
 
 
 # ─── export_to_excel (openpyxl mocked) ──────────────────────────────────────
+
 
 class TestExportToExcelMocked:
 
@@ -67,13 +82,28 @@ class TestExportToExcelMocked:
             "month": 6,
             "period": "2025-06",
             "summary": [
-                {"user_name": "张三", "total_hours": 160, "normal_hours": 140, "overtime_hours": 20},
-                {"user_name": "李四", "total_hours": 170, "normal_hours": 150, "overtime_hours": 20},
+                {
+                    "user_name": "张三",
+                    "total_hours": 160,
+                    "normal_hours": 140,
+                    "overtime_hours": 20,
+                },
+                {
+                    "user_name": "李四",
+                    "total_hours": 170,
+                    "normal_hours": 150,
+                    "overtime_hours": 20,
+                },
             ],
         }
         if with_detail:
             data["detail"] = [
-                {"user_name": "张三", "work_date": "2025-06-01", "hours": 8, "work_content": "开发"},
+                {
+                    "user_name": "张三",
+                    "work_date": "2025-06-01",
+                    "hours": 8,
+                    "work_content": "开发",
+                },
             ]
         return data
 
@@ -103,8 +133,10 @@ class TestExportToExcelMocked:
         mock_path.return_value = mock_path_instance
 
         data = self._make_data()
-        with patch.object(ReportExcelService, "_write_summary_sheet"), \
-             patch.object(ReportExcelService, "_write_chart_sheet"):
+        with (
+            patch.object(ReportExcelService, "_write_summary_sheet"),
+            patch.object(ReportExcelService, "_write_chart_sheet"),
+        ):
             try:
                 ReportExcelService.export_to_excel(data, "test", "/tmp/reports")
             except Exception:
@@ -140,9 +172,11 @@ class TestExportToExcelMocked:
         mock_path.return_value = mock_path_instance
 
         data = self._make_data(with_detail=True)
-        with patch.object(ReportExcelService, "_write_summary_sheet"), \
-             patch.object(ReportExcelService, "_write_detail_sheet"), \
-             patch.object(ReportExcelService, "_write_chart_sheet"):
+        with (
+            patch.object(ReportExcelService, "_write_summary_sheet"),
+            patch.object(ReportExcelService, "_write_detail_sheet"),
+            patch.object(ReportExcelService, "_write_chart_sheet"),
+        ):
             try:
                 ReportExcelService.export_to_excel(data, "test", "/tmp/reports")
             except Exception:
@@ -150,6 +184,7 @@ class TestExportToExcelMocked:
 
 
 # ─── _write_summary_sheet ───────────────────────────────────────────────────
+
 
 class TestWriteSummarySheet:
 
@@ -183,7 +218,7 @@ class TestWriteSummarySheet:
             "period": "2025-06",
             "summary": [
                 {"user_name": "张三", "total_hours": 160},
-            ]
+            ],
         }
         ReportExcelService._write_summary_sheet(ws, data)
         # append should be called for header and data
@@ -191,6 +226,7 @@ class TestWriteSummarySheet:
 
 
 # ─── _write_detail_sheet ────────────────────────────────────────────────────
+
 
 class TestWriteDetailSheet:
 
@@ -219,15 +255,13 @@ class TestWriteDetailSheet:
         ws.columns = [col1]
         ws.__getitem__ = MagicMock(return_value=[MagicMock()])
 
-        data = {
-            "period": "2025-06",
-            "detail": [{"user_name": "张三", "hours": 8}]
-        }
+        data = {"period": "2025-06", "detail": [{"user_name": "张三", "hours": 8}]}
         ReportExcelService._write_detail_sheet(ws, data)
         assert ws.append.call_count >= 2
 
 
 # ─── _write_chart_sheet ─────────────────────────────────────────────────────
+
 
 class TestWriteChartSheet:
 
@@ -252,7 +286,7 @@ class TestWriteChartSheet:
             "period": "2025-06",
             "summary": [
                 {"user_name": "张三", "total_hours": 160},
-            ]
+            ],
         }
         with patch.object(ReportExcelService, "_add_bar_chart"):
             ReportExcelService._write_chart_sheet(ws, data)
@@ -268,14 +302,17 @@ class TestWriteChartSheet:
             "summary": [
                 {"department_name": "研发部", "total_hours": 300},
                 {"department_name": "测试部", "total_hours": 150},
-            ]
+            ],
         }
-        with patch.object(ReportExcelService, "_add_bar_chart"), \
-             patch.object(ReportExcelService, "_add_pie_chart"):
+        with (
+            patch.object(ReportExcelService, "_add_bar_chart"),
+            patch.object(ReportExcelService, "_add_pie_chart"),
+        ):
             ReportExcelService._write_chart_sheet(ws, data)
 
 
 # ─── _add_bar_chart & _add_pie_chart ────────────────────────────────────────
+
 
 class TestAddCharts:
 
@@ -288,8 +325,10 @@ class TestAddCharts:
         summary = [{"user_name": "张三", "total_hours": 160}]
         data = {"period": "2025-06"}
 
-        with patch("app.services.report_excel_service.BarChart") as mock_chart_cls, \
-             patch("app.services.report_excel_service.Reference"):
+        with (
+            patch("app.services.report_excel_service.BarChart") as mock_chart_cls,
+            patch("app.services.report_excel_service.Reference"),
+        ):
             mock_chart = MagicMock()
             mock_chart_cls.return_value = mock_chart
             ReportExcelService._add_bar_chart(ws, summary, data)
@@ -304,8 +343,10 @@ class TestAddCharts:
         summary = [{"project_name": "项目A", "total_hours": 80}]
         data = {"period": "2025-06"}
 
-        with patch("app.services.report_excel_service.BarChart") as mock_chart_cls, \
-             patch("app.services.report_excel_service.Reference"):
+        with (
+            patch("app.services.report_excel_service.BarChart") as mock_chart_cls,
+            patch("app.services.report_excel_service.Reference"),
+        ):
             mock_chart_cls.return_value = MagicMock()
             ReportExcelService._add_bar_chart(ws, summary, data)
 
@@ -321,8 +362,10 @@ class TestAddCharts:
         ]
         data = {"period": "2025-06"}
 
-        with patch("app.services.report_excel_service.PieChart") as mock_chart_cls, \
-             patch("app.services.report_excel_service.Reference"):
+        with (
+            patch("app.services.report_excel_service.PieChart") as mock_chart_cls,
+            patch("app.services.report_excel_service.Reference"),
+        ):
             mock_chart_cls.return_value = MagicMock()
             ReportExcelService._add_pie_chart(ws, summary, data)
             ws.add_chart.assert_called_once()

@@ -13,9 +13,9 @@ DemandForecastEngine 单元测试 - G2组覆盖率提升
 - DemandForecastEngine._calculate_confidence_interval
 """
 
-from decimal import Decimal
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -25,6 +25,7 @@ class TestDemandForecastEngineInit:
 
     def test_init_stores_db(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         db = MagicMock()
         engine = DemandForecastEngine(db)
         assert engine.db is db
@@ -35,6 +36,7 @@ class TestCalculateAverage:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.engine = DemandForecastEngine(MagicMock())
 
     def test_basic_average(self):
@@ -56,6 +58,7 @@ class TestCalculateStd:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.engine = DemandForecastEngine(MagicMock())
 
     def test_zero_std_for_uniform_data(self):
@@ -78,6 +81,7 @@ class TestMovingAverageForecast:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.engine = DemandForecastEngine(MagicMock())
 
     def test_returns_decimal(self):
@@ -97,6 +101,7 @@ class TestExponentialSmoothingForecast:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.engine = DemandForecastEngine(MagicMock())
 
     def test_returns_decimal(self):
@@ -116,6 +121,7 @@ class TestCalculateConfidenceInterval:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.engine = DemandForecastEngine(MagicMock())
 
     def test_lower_bound_less_than_upper(self):
@@ -148,20 +154,21 @@ class TestForecastMaterialDemand:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.db = MagicMock()
         self.engine = DemandForecastEngine(self.db)
 
     def test_raises_when_no_historical_data(self):
         from app.core.exceptions import BusinessException
+
         self.engine._collect_historical_demand = MagicMock(return_value=[])
         with pytest.raises(BusinessException, match="历史数据不足"):
             self.engine.forecast_material_demand(material_id=1)
 
     def test_raises_for_unknown_algorithm(self):
         from app.core.exceptions import BusinessException
-        self.engine._collect_historical_demand = MagicMock(
-            return_value=[Decimal("10")] * 30
-        )
+
+        self.engine._collect_historical_demand = MagicMock(return_value=[Decimal("10")] * 30)
         self.engine._calculate_average = MagicMock(return_value=Decimal("10"))
         self.engine._calculate_std = MagicMock(return_value=Decimal("2"))
         self.engine._detect_seasonality = MagicMock(return_value=1.0)
@@ -176,9 +183,7 @@ class TestForecastMaterialDemand:
         self.engine._detect_seasonality = MagicMock(return_value=1.0)
         self.engine._generate_forecast_no = MagicMock(return_value="FC-20260101-001")
 
-        result = self.engine.forecast_material_demand(
-            material_id=1, algorithm="EXP_SMOOTHING"
-        )
+        result = self.engine.forecast_material_demand(material_id=1, algorithm="EXP_SMOOTHING")
 
         assert result is not None
         mock_save.assert_called_once()
@@ -191,9 +196,7 @@ class TestForecastMaterialDemand:
         self.engine._detect_seasonality = MagicMock(return_value=1.0)
         self.engine._generate_forecast_no = MagicMock(return_value="FC-20260101-002")
 
-        result = self.engine.forecast_material_demand(
-            material_id=1, algorithm="MOVING_AVERAGE"
-        )
+        result = self.engine.forecast_material_demand(material_id=1, algorithm="MOVING_AVERAGE")
 
         assert result is not None
 
@@ -205,9 +208,7 @@ class TestForecastMaterialDemand:
         self.engine._detect_seasonality = MagicMock(return_value=1.0)
         self.engine._generate_forecast_no = MagicMock(return_value="FC-20260101-003")
 
-        result = self.engine.forecast_material_demand(
-            material_id=1, algorithm="LINEAR_REGRESSION"
-        )
+        result = self.engine.forecast_material_demand(material_id=1, algorithm="LINEAR_REGRESSION")
 
         assert result is not None
 
@@ -217,11 +218,13 @@ class TestValidateForecastAccuracy:
 
     def setup_method(self):
         from app.services.shortage.demand_forecast_engine import DemandForecastEngine
+
         self.db = MagicMock()
         self.engine = DemandForecastEngine(self.db)
 
     def test_raises_when_forecast_not_found(self):
         from app.core.exceptions import BusinessException
+
         self.db.query.return_value.filter.return_value.first.return_value = None
         with pytest.raises(BusinessException, match="预测记录不存在"):
             self.engine.validate_forecast_accuracy(forecast_id=999, actual_demand=Decimal("100"))
@@ -233,9 +236,7 @@ class TestValidateForecastAccuracy:
         mock_forecast.upper_bound = Decimal("120")
         self.db.query.return_value.filter.return_value.first.return_value = mock_forecast
 
-        result = self.engine.validate_forecast_accuracy(
-            forecast_id=1, actual_demand=Decimal("110")
-        )
+        result = self.engine.validate_forecast_accuracy(forecast_id=1, actual_demand=Decimal("110"))
 
         assert "accuracy_score" in result
         assert "error_percentage" in result
@@ -249,9 +250,7 @@ class TestValidateForecastAccuracy:
         mock_forecast.upper_bound = Decimal("110")
         self.db.query.return_value.filter.return_value.first.return_value = mock_forecast
 
-        result = self.engine.validate_forecast_accuracy(
-            forecast_id=1, actual_demand=Decimal("100")
-        )
+        result = self.engine.validate_forecast_accuracy(forecast_id=1, actual_demand=Decimal("100"))
 
         assert result["accuracy_score"] == 100.0
 
@@ -262,8 +261,6 @@ class TestValidateForecastAccuracy:
         mock_forecast.upper_bound = Decimal("110")
         self.db.query.return_value.filter.return_value.first.return_value = mock_forecast
 
-        result = self.engine.validate_forecast_accuracy(
-            forecast_id=1, actual_demand=Decimal("200")
-        )
+        result = self.engine.validate_forecast_accuracy(forecast_id=1, actual_demand=Decimal("200"))
 
         assert result["within_confidence_interval"] is False

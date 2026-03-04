@@ -2,12 +2,14 @@
 """
 第三十二批覆盖率测试 - 项目里程碑服务 (project/milestone_service)
 """
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import date
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.project.milestone_service import ProjectMilestoneService
+
     HAS_MS = True
 except Exception:
     HAS_MS = False
@@ -60,11 +62,13 @@ class TestProjectMilestoneServiceCompleteMilestone:
         mock_milestone.planned_date = date(2024, 1, 15)
         mock_milestone.status = "PENDING"
 
-        with patch.object(svc, "_get_object_or_404", return_value=mock_milestone), \
-             patch.object(svc, "_ensure_can_complete"), \
-             patch.object(svc, "_auto_trigger_invoice") as mock_invoice, \
-             patch.object(db, "flush"), \
-             patch.object(db, "refresh"):
+        with (
+            patch.object(svc, "_get_object_or_404", return_value=mock_milestone),
+            patch.object(svc, "_ensure_can_complete"),
+            patch.object(svc, "_auto_trigger_invoice") as mock_invoice,
+            patch.object(db, "flush"),
+            patch.object(db, "refresh"),
+        ):
             try:
                 svc.complete_milestone(1)
             except Exception:
@@ -78,11 +82,13 @@ class TestProjectMilestoneServiceCompleteMilestone:
         mock_milestone.id = 1
         mock_milestone.status = "PENDING"
 
-        with patch.object(svc, "_get_object_or_404", return_value=mock_milestone), \
-             patch.object(svc, "_ensure_can_complete"), \
-             patch.object(svc, "_auto_trigger_invoice"), \
-             patch.object(db, "flush"), \
-             patch.object(db, "refresh"):
+        with (
+            patch.object(svc, "_get_object_or_404", return_value=mock_milestone),
+            patch.object(svc, "_ensure_can_complete"),
+            patch.object(svc, "_auto_trigger_invoice"),
+            patch.object(db, "flush"),
+            patch.object(db, "refresh"),
+        ):
             try:
                 result = svc.complete_milestone(1, actual_date=date(2024, 2, 1))
             except Exception:

@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """标准模板重导出单元测试"""
 import pytest
-from app.services.preset_stage_templates.templates.standard import STANDARD_TEMPLATE, STANDARD_STAGES
+
+from app.services.preset_stage_templates.templates.standard import (
+    STANDARD_STAGES,
+    STANDARD_TEMPLATE,
+)
 
 
 class TestStandardTemplateReexport:

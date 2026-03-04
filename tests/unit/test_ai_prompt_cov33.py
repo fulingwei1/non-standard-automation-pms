@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - AI提示词混入 (AIPromptMixin)
 """
-import pytest
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.work_log_ai.ai_prompt import AIPromptMixin
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -17,6 +19,7 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="ai_prompt 导入失败")
 
 class ConcreteAIPrompt(AIPromptMixin):
     """用于测试的具体实现类"""
+
     pass
 
 
@@ -53,10 +56,7 @@ class TestBuildAiPrompt:
 
     def test_prompt_truncates_to_10_projects(self):
         """超过10个项目时只取前10个"""
-        many_projects = [
-            {"id": i, "code": f"PJ{i:03d}", "name": f"项目{i}"}
-            for i in range(15)
-        ]
+        many_projects = [{"id": i, "code": f"PJ{i:03d}", "name": f"项目{i}"} for i in range(15)]
         prompt = self.mixin._build_ai_prompt("内容", many_projects, self.work_date)
         # PJ014 (第15个) 不应该出现
         assert "PJ014" not in prompt

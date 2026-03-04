@@ -122,9 +122,7 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
         and Path(s.rel_path).suffix.lower() in PAGE_EXTS
     )
     models_count = sum(
-        1
-        for s in file_stats
-        if s.rel_path.startswith("app/models/") and s.rel_path.endswith(".py")
+        1 for s in file_stats if s.rel_path.startswith("app/models/") and s.rel_path.endswith(".py")
     )
     endpoints_count = sum(
         1
@@ -137,7 +135,9 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
         if s.rel_path.startswith("app/services/") and s.rel_path.endswith(".py")
     )
 
-    critical = sorted([s for s in file_stats if s.lines > 2000], key=lambda s: s.lines, reverse=True)
+    critical = sorted(
+        [s for s in file_stats if s.lines > 2000], key=lambda s: s.lines, reverse=True
+    )
     warning = sorted(
         [s for s in file_stats if 1500 <= s.lines <= 2000],
         key=lambda s: s.lines,
@@ -145,9 +145,15 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
     )
 
     # Derived signals for analysis section
-    large_pages = [s for s in file_stats if s.rel_path.startswith("frontend/src/pages/") and s.lines >= 1500]
-    large_endpoints = [s for s in file_stats if s.rel_path.startswith("app/api/v1/endpoints/") and s.lines >= 1500]
-    schema_candidates = [s for s in file_stats if s.rel_path.startswith("app/schemas/") and s.lines >= 1000]
+    large_pages = [
+        s for s in file_stats if s.rel_path.startswith("frontend/src/pages/") and s.lines >= 1500
+    ]
+    large_endpoints = [
+        s for s in file_stats if s.rel_path.startswith("app/api/v1/endpoints/") and s.lines >= 1500
+    ]
+    schema_candidates = [
+        s for s in file_stats if s.rel_path.startswith("app/schemas/") and s.lines >= 1000
+    ]
     api_js = next((s for s in file_stats if s.rel_path == "frontend/src/services/api.js"), None)
 
     overview_rows = [
@@ -169,25 +175,35 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
 
     # Priority suggestions (keep it short & actionable)
     priority_rows = [["优先级", "文件", "建议方案"]]
-    scheduled_tasks = next((s for s in file_stats if s.rel_path == "app/utils/scheduled_tasks.py"), None)
+    scheduled_tasks = next(
+        (s for s in file_stats if s.rel_path == "app/utils/scheduled_tasks.py"), None
+    )
     if scheduled_tasks:
-        priority_rows.append(["P0", scheduled_tasks.rel_path, "按任务类型拆分多个模块（并引入统一入口/注册表）"])
+        priority_rows.append(
+            ["P0", scheduled_tasks.rel_path, "按任务类型拆分多个模块（并引入统一入口/注册表）"]
+        )
     if api_js:
-        priority_rows.append(["P0", api_js.rel_path, "按业务域拆分（project/、sales/、hr/、ecn/…），避免单文件膨胀"])
+        priority_rows.append(
+            ["P0", api_js.rel_path, "按业务域拆分（project/、sales/、hr/、ecn/…），避免单文件膨胀"]
+        )
 
     for s in sorted(
         [x for x in critical if x.rel_path.startswith("frontend/src/pages/")],
         key=lambda x: x.lines,
         reverse=True,
     )[:2]:
-        priority_rows.append(["P1", s.rel_path, "抽离 Tab/表格/对话框/常量与 hooks；将数据请求下沉到 service/hook"])
+        priority_rows.append(
+            ["P1", s.rel_path, "抽离 Tab/表格/对话框/常量与 hooks；将数据请求下沉到 service/hook"]
+        )
 
     for s in sorted(
         [x for x in critical if x.rel_path.startswith("app/api/v1/endpoints/")],
         key=lambda x: x.lines,
         reverse=True,
     )[:2]:
-        priority_rows.append(["P2", s.rel_path, "按子资源/子流程拆分路由模块；复用依赖/校验/响应构建函数"])
+        priority_rows.append(
+            ["P2", s.rel_path, "按子资源/子流程拆分路由模块；复用依赖/校验/响应构建函数"]
+        )
 
     for s in sorted(schema_candidates, key=lambda x: x.lines, reverse=True)[:1]:
         priority_rows.append(["P2", s.rel_path, "按领域拆分 schema；移除重复结构与超大单文件"])
@@ -222,13 +238,21 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
 
     parts.append("## 4. 问题分析")
     parts.append("")
-    parts.append(f"- 上帝组件倾向：前端 pages ≥1500 行的文件 {len(large_pages)} 个；后端 endpoints ≥1500 行的文件 {len(large_endpoints)} 个")
+    parts.append(
+        f"- 上帝组件倾向：前端 pages ≥1500 行的文件 {len(large_pages)} 个；后端 endpoints ≥1500 行的文件 {len(large_endpoints)} 个"
+    )
     if api_js:
-        parts.append(f"- API 集中化：`{api_js.rel_path}` 目前为 {api_js.lines} 行，建议按业务域拆分")
+        parts.append(
+            f"- API 集中化：`{api_js.rel_path}` 目前为 {api_js.lines} 行，建议按业务域拆分"
+        )
     if schema_candidates:
         top_schema = sorted(schema_candidates, key=lambda x: x.lines, reverse=True)[0]
-        parts.append(f"- Schema 臃肿：`{top_schema.rel_path}` 为 {top_schema.lines} 行，建议按领域拆分")
-    parts.append("- 建议优先用 `selectinload/joinedload` 解决 N+1，并用 `func.count/sum` 将聚合统计下推到数据库")
+        parts.append(
+            f"- Schema 臃肿：`{top_schema.rel_path}` 为 {top_schema.lines} 行，建议按领域拆分"
+        )
+    parts.append(
+        "- 建议优先用 `selectinload/joinedload` 解决 N+1，并用 `func.count/sum` 将聚合统计下推到数据库"
+    )
     parts.append("")
 
     parts.append("## 5. 重构优先级建议")
@@ -238,19 +262,23 @@ def build_report(root: Path, file_stats: list[FileStat]) -> str:
 
     parts.append("## 6. 后端核心模块概览（参考）")
     parts.append("")
-    parts.append(md_table([
-        ["模块", "文件（示例）", "说明"],
-        ["项目管理", "project.py, machine.py", "项目与设备管理"],
-        ["物料采购", "material.py, purchase.py", "物料采购与 BOM"],
-        ["工程变更", "ecn.py", "工程变更通知 ECN"],
-        ["验收管理", "acceptance.py", "FAT/SAT 验收"],
-        ["外协管理", "outsourcing.py, supplier.py", "外协与供应商"],
-        ["销售管理", "sales.py, presale.py", "销售与售前"],
-        ["生产进度", "production.py, progress.py", "生产与进度跟踪"],
-        ["组织人员", "user.py, organization.py", "用户与组织架构"],
-        ["预警通知", "alert.py, notification.py", "预警与通知"],
-        ["绩效工时", "performance.py, timesheet.py", "绩效与工时管理"],
-    ]))
+    parts.append(
+        md_table(
+            [
+                ["模块", "文件（示例）", "说明"],
+                ["项目管理", "project.py, machine.py", "项目与设备管理"],
+                ["物料采购", "material.py, purchase.py", "物料采购与 BOM"],
+                ["工程变更", "ecn.py", "工程变更通知 ECN"],
+                ["验收管理", "acceptance.py", "FAT/SAT 验收"],
+                ["外协管理", "outsourcing.py, supplier.py", "外协与供应商"],
+                ["销售管理", "sales.py, presale.py", "销售与售前"],
+                ["生产进度", "production.py, progress.py", "生产与进度跟踪"],
+                ["组织人员", "user.py, organization.py", "用户与组织架构"],
+                ["预警通知", "alert.py, notification.py", "预警与通知"],
+                ["绩效工时", "performance.py, timesheet.py", "绩效与工时管理"],
+            ]
+        )
+    )
     parts.append("")
 
     parts.append("## 生成方式")
@@ -304,4 +332,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

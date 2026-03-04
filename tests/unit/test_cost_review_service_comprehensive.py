@@ -55,7 +55,8 @@ class TestGenerateCostReviewReport:
 
         # First call returns project, second returns existing review
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_project, mock_existing_review
+            mock_project,
+            mock_existing_review,
         ]
 
         with pytest.raises(ValueError, match="已存在结项复盘报告"):
@@ -89,20 +90,20 @@ class TestGenerateCostReviewReport:
         # Setup query chain
         def query_side_effect(model):
             query_mock = MagicMock()
-            if model.__name__ == 'Project':
+            if model.__name__ == "Project":
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model.__name__ == 'ProjectReview':
+            elif model.__name__ == "ProjectReview":
                 # For existing review check
                 query_mock.filter.return_value.first.return_value = None
                 # For generate_review_no
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model.__name__ == 'ProjectBudget':
+            elif model.__name__ == "ProjectBudget":
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model.__name__ == 'ProjectCost':
+            elif model.__name__ == "ProjectCost":
                 query_mock.filter.return_value.all.return_value = []
-            elif model.__name__ == 'Ecn':
+            elif model.__name__ == "Ecn":
                 query_mock.filter.return_value.count.return_value = 2
-            elif model.__name__ == 'User':
+            elif model.__name__ == "User":
                 query_mock.filter.return_value.first.return_value = mock_reviewer
             return query_mock
 
@@ -139,18 +140,18 @@ class TestGenerateCostReviewReport:
 
         def query_side_effect(model):
             query_mock = MagicMock()
-            if model.__name__ == 'Project':
+            if model.__name__ == "Project":
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model.__name__ == 'ProjectReview':
+            elif model.__name__ == "ProjectReview":
                 query_mock.filter.return_value.first.return_value = None
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model.__name__ == 'ProjectBudget':
+            elif model.__name__ == "ProjectBudget":
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model.__name__ == 'ProjectCost':
+            elif model.__name__ == "ProjectCost":
                 query_mock.filter.return_value.all.return_value = []
-            elif model.__name__ == 'Ecn':
+            elif model.__name__ == "Ecn":
                 query_mock.filter.return_value.count.return_value = 0
-            elif model.__name__ == 'User':
+            elif model.__name__ == "User":
                 query_mock.filter.return_value.first.return_value = mock_reviewer
             return query_mock
 
@@ -171,7 +172,9 @@ class TestGenerateReviewNo:
         from app.services.cost_review_service import CostReviewService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = CostReviewService._generate_review_no(mock_db)
 
@@ -187,7 +190,9 @@ class TestGenerateReviewNo:
         today = datetime.now().strftime("%y%m%d")
         mock_existing.review_no = f"REV-{today}-005"
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_existing
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_existing
+        )
 
         result = CostReviewService._generate_review_no(mock_db)
 
@@ -207,7 +212,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("15000"),
             cost_by_type={"材料": Decimal("80000"), "人工": Decimal("35000")},
             cost_by_category={},
-            ecn_count=3
+            ecn_count=3,
         )
 
         assert "严重超支" in result
@@ -223,7 +228,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("8000"),
             cost_by_type={},
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         assert "需要关注" in result
@@ -238,7 +243,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("-10000"),
             cost_by_type={},
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         assert "成本控制良好" in result
@@ -253,7 +258,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("2000"),
             cost_by_type={},
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         assert "与预算基本一致" in result
@@ -269,10 +274,10 @@ class TestGenerateCostSummary:
             cost_by_type={
                 "材料": Decimal("60000"),
                 "人工": Decimal("30000"),
-                "其他": Decimal("10000")
+                "其他": Decimal("10000"),
             },
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         assert "成本构成" in result
@@ -289,7 +294,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("0"),
             cost_by_type={},
             cost_by_category={},
-            ecn_count=5
+            ecn_count=5,
         )
 
         assert "5次工程变更" in result
@@ -304,7 +309,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("50000"),
             cost_by_type={},
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         # Should handle division by zero gracefully
@@ -320,7 +325,7 @@ class TestGenerateCostSummary:
             cost_variance=Decimal("-100000"),
             cost_by_type={"材料": Decimal("0")},
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         assert result is not None
@@ -336,10 +341,10 @@ class TestGenerateCostSummary:
             cost_by_type={
                 "其他": Decimal("10000"),
                 "材料": Decimal("60000"),
-                "人工": Decimal("30000")
+                "人工": Decimal("30000"),
             },
             cost_by_category={},
-            ecn_count=0
+            ecn_count=0,
         )
 
         # 材料应该排在第一位因为金额最高

@@ -5,14 +5,15 @@
 提供租户相关的测试数据准备功能
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.models.tenant import Tenant, TenantStatus, TenantPlan
-from app.models.user import User
-from app.models.project import Project
 from app.core.security import get_password_hash
+from app.models.project import Project
+from app.models.tenant import Tenant, TenantPlan, TenantStatus
+from app.models.user import User
 
 
 @pytest.fixture
@@ -29,7 +30,7 @@ def tenant_a(db: Session) -> Tenant:
         contact_name="张三",
         contact_email="zhangsan@tenant-a.com",
         contact_phone="13800138000",
-        expired_at=datetime.utcnow() + timedelta(days=365)
+        expired_at=datetime.utcnow() + timedelta(days=365),
     )
     db.add(tenant)
     db.commit()
@@ -51,7 +52,7 @@ def tenant_b(db: Session) -> Tenant:
         contact_name="李四",
         contact_email="lisi@tenant-b.com",
         contact_phone="13900139000",
-        expired_at=datetime.utcnow() + timedelta(days=730)
+        expired_at=datetime.utcnow() + timedelta(days=730),
     )
     db.add(tenant)
     db.commit()
@@ -73,7 +74,7 @@ def tenant_c(db: Session) -> Tenant:
         contact_name="王五",
         contact_email="wangwu@tenant-c.com",
         contact_phone="13700137000",
-        expired_at=datetime.utcnow() + timedelta(days=30)
+        expired_at=datetime.utcnow() + timedelta(days=30),
     )
     db.add(tenant)
     db.commit()
@@ -94,7 +95,7 @@ def user_a(db: Session, tenant_a: Tenant) -> User:
         position="工程师",
         is_active=True,
         is_superuser=False,
-        is_tenant_admin=False
+        is_tenant_admin=False,
     )
     db.add(user)
     db.commit()
@@ -115,7 +116,7 @@ def user_b(db: Session, tenant_b: Tenant) -> User:
         position="开发工程师",
         is_active=True,
         is_superuser=False,
-        is_tenant_admin=False
+        is_tenant_admin=False,
     )
     db.add(user)
     db.commit()
@@ -136,7 +137,7 @@ def tenant_admin_a(db: Session, tenant_a: Tenant) -> User:
         position="管理员",
         is_active=True,
         is_superuser=False,
-        is_tenant_admin=True
+        is_tenant_admin=True,
     )
     db.add(user)
     db.commit()
@@ -157,7 +158,7 @@ def superuser(db: Session) -> User:
         position="系统管理员",
         is_active=True,
         is_superuser=True,
-        is_tenant_admin=False
+        is_tenant_admin=False,
     )
     db.add(user)
     db.commit()
@@ -174,7 +175,7 @@ def project_a(db: Session, tenant_a: Tenant, user_a: User) -> Project:
         project_name="租户A项目1",
         project_type="NEW_PROJECT",
         created_by=user_a.id,
-        pm_id=user_a.id
+        pm_id=user_a.id,
     )
     db.add(project)
     db.commit()
@@ -191,7 +192,7 @@ def project_b(db: Session, tenant_b: Tenant, user_b: User) -> Project:
         project_name="租户B项目1",
         project_type="NEW_PROJECT",
         created_by=user_b.id,
-        pm_id=user_b.id
+        pm_id=user_b.id,
     )
     db.add(project)
     db.commit()
@@ -210,7 +211,7 @@ def multiple_projects_a(db: Session, tenant_a: Tenant, user_a: User) -> list:
             project_name=f"租户A项目{i+10}",
             project_type="NEW_PROJECT",
             created_by=user_a.id,
-            pm_id=user_a.id
+            pm_id=user_a.id,
         )
         db.add(project)
         projects.append(project)
@@ -229,7 +230,7 @@ def multiple_projects_b(db: Session, tenant_b: Tenant, user_b: User) -> list:
             project_name=f"租户B项目{i+10}",
             project_type="NEW_PROJECT",
             created_by=user_b.id,
-            pm_id=user_b.id
+            pm_id=user_b.id,
         )
         db.add(project)
         projects.append(project)
@@ -247,7 +248,11 @@ def create_tenant(db: Session, tenant_code: str, tenant_name: str, **kwargs) -> 
         max_users=kwargs.get("max_users", 50),
         max_roles=kwargs.get("max_roles", 20),
         max_storage_gb=kwargs.get("max_storage_gb", 10),
-        **{k: v for k, v in kwargs.items() if k not in ["status", "plan_type", "max_users", "max_roles", "max_storage_gb"]}
+        **{
+            k: v
+            for k, v in kwargs.items()
+            if k not in ["status", "plan_type", "max_users", "max_roles", "max_storage_gb"]
+        },
     )
     db.add(tenant)
     db.commit()
@@ -261,7 +266,7 @@ def create_user(
     tenant_id: int = None,
     is_superuser: bool = False,
     is_tenant_admin: bool = False,
-    **kwargs
+    **kwargs,
 ) -> User:
     """创建用户的辅助函数"""
     user = User(
@@ -274,7 +279,7 @@ def create_user(
         position=kwargs.get("position", "工程师"),
         is_active=kwargs.get("is_active", True),
         is_superuser=is_superuser,
-        is_tenant_admin=is_tenant_admin
+        is_tenant_admin=is_tenant_admin,
     )
     db.add(user)
     db.commit()
@@ -283,12 +288,7 @@ def create_user(
 
 
 def create_project(
-    db: Session,
-    tenant_id: int,
-    created_by: int,
-    project_code: str,
-    project_name: str,
-    **kwargs
+    db: Session, tenant_id: int, created_by: int, project_code: str, project_name: str, **kwargs
 ) -> Project:
     """创建项目的辅助函数"""
     project = Project(
@@ -298,7 +298,7 @@ def create_project(
         project_type=kwargs.get("project_type", "NEW_PROJECT"),
         created_by=created_by,
         pm_id=kwargs.get("pm_id", created_by),
-        **{k: v for k, v in kwargs.items() if k not in ["project_type", "pm_id"]}
+        **{k: v for k, v in kwargs.items() if k not in ["project_type", "pm_id"]},
     )
     db.add(project)
     db.commit()

@@ -21,20 +21,21 @@ import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, Optional
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-
 
 # ============================================================
 # 1. app/core/permissions/tenant_access.py
 # ============================================================
+
 
 class TestCheckTenantAccess:
     """check_tenant_access 测试"""
 
     def setup_method(self):
         from app.core.permissions.tenant_access import check_tenant_access
+
         self.fn = check_tenant_access
 
     def _make_user(self, tenant_id, is_superuser=False):
@@ -88,6 +89,7 @@ class TestValidateTenantMatch:
 
     def setup_method(self):
         from app.core.permissions.tenant_access import validate_tenant_match
+
         self.fn = validate_tenant_match
 
     def _make_user(self, tenant_id, is_superuser=False):
@@ -131,6 +133,7 @@ class TestEnsureTenantConsistency:
 
     def setup_method(self):
         from app.core.permissions.tenant_access import ensure_tenant_consistency
+
         self.fn = ensure_tenant_consistency
 
     def _make_user(self, tenant_id, is_superuser=False):
@@ -177,6 +180,7 @@ class TestCheckBulkAccess:
 
     def setup_method(self):
         from app.core.permissions.tenant_access import check_bulk_access
+
         self.fn = check_bulk_access
 
     def _make_user(self, tenant_id, is_superuser=False):
@@ -216,11 +220,13 @@ class TestCheckBulkAccess:
 # 2. app/core/request_signature.py
 # ============================================================
 
+
 class TestRequestSignatureVerifier:
     """RequestSignatureVerifier 测试"""
 
     def setup_method(self):
         from app.core.request_signature import RequestSignatureVerifier
+
         self.cls = RequestSignatureVerifier
         self.secret = "test-secret-key-for-unit-tests-32ch"
 
@@ -263,6 +269,7 @@ class TestRequestSignatureVerifier:
 
     def test_verify_signature_expired_timestamp(self):
         from fastapi import HTTPException
+
         # 6分钟前的时间戳（超过5分钟阈值）
         old_ts = str(int((time.time() - 400) * 1000))
         body = b""
@@ -279,6 +286,7 @@ class TestRequestSignatureVerifier:
 
     def test_verify_signature_invalid_timestamp_format(self):
         from fastapi import HTTPException
+
         mock_request = MagicMock()
         with pytest.raises(HTTPException) as exc_info:
             self.cls.verify_signature(mock_request, "sig", "not-a-number", b"", self.secret)
@@ -286,6 +294,7 @@ class TestRequestSignatureVerifier:
 
     def test_verify_signature_wrong_signature(self):
         from fastapi import HTTPException
+
         timestamp = str(int(time.time() * 1000))
         mock_request = MagicMock()
         mock_request.method = "GET"
@@ -318,36 +327,44 @@ class TestGenerateClientSignature:
 
     def test_returns_tuple_of_two_strings(self):
         from app.core.request_signature import generate_client_signature
+
         sig, ts = generate_client_signature(
             method="POST",
             url="https://api.example.com/v1/projects",
             body=b'{"name":"test"}',
-            secret="test-secret-key-at-least-32chars!!"
+            secret="test-secret-key-at-least-32chars!!",
         )
         assert isinstance(sig, str)
         assert isinstance(ts, str)
 
     def test_timestamp_is_recent(self):
         from app.core.request_signature import generate_client_signature
-        _, ts = generate_client_signature("GET", "https://api.example.com/path", b"", "secret-32-characters-long-here!!")
+
+        _, ts = generate_client_signature(
+            "GET", "https://api.example.com/path", b"", "secret-32-characters-long-here!!"
+        )
         ts_int = int(ts)
         now_ms = int(time.time() * 1000)
         assert abs(now_ms - ts_int) < 5000  # within 5 seconds
 
     def test_signature_is_base64(self):
         from app.core.request_signature import generate_client_signature
-        sig, _ = generate_client_signature("GET", "https://api.example.com/path", b"", "secret-32-characters-long-here!!")
+
+        sig, _ = generate_client_signature(
+            "GET", "https://api.example.com/path", b"", "secret-32-characters-long-here!!"
+        )
         # Should not raise
         decoded = base64.b64decode(sig)
         assert len(decoded) == 32
 
     def test_url_with_query_params(self):
         from app.core.request_signature import generate_client_signature
+
         sig, ts = generate_client_signature(
             "GET",
             "https://api.example.com/path?page=1&size=10",
             b"",
-            "secret-key-must-be-32-chars-long!"
+            "secret-key-must-be-32-chars-long!",
         )
         assert sig and ts
 
@@ -356,11 +373,13 @@ class TestGenerateClientSignature:
 # 3. app/core/api_key_auth.py
 # ============================================================
 
+
 class TestAPIKeyAuth:
     """APIKeyAuth 测试"""
 
     def setup_method(self):
         from app.core.api_key_auth import APIKeyAuth
+
         self.cls = APIKeyAuth
 
     def test_generate_api_key_format(self):
@@ -471,6 +490,7 @@ class TestRequireApiKeyScope:
 
     def test_creates_callable(self):
         from app.core.api_key_auth import require_api_key_scope
+
         dep = require_api_key_scope("projects:read")
         assert callable(dep)
 
@@ -479,11 +499,13 @@ class TestRequireApiKeyScope:
 # 4. app/core/secret_manager.py
 # ============================================================
 
+
 class TestSecretKeyManager:
     """SecretKeyManager 测试"""
 
     def setup_method(self):
         from app.core.secret_manager import SecretKeyManager
+
         self.cls = SecretKeyManager
 
     def test_generate_key_returns_string(self):
@@ -595,6 +617,7 @@ class TestSecretKeyManager:
     def test_load_keys_from_env_debug_generates_key(self):
         """DEBUG=True 时，无 SECRET_KEY 自动生成"""
         from app.core.secret_manager import SecretKeyManager
+
         mgr = SecretKeyManager()
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("SECRET_KEY", None)
@@ -628,6 +651,7 @@ class TestSecretKeyManager:
 # 5. app/core/encryption.py
 # ============================================================
 
+
 class TestDataEncryption:
     """DataEncryption 测试（mock 掉环境和 settings）"""
 
@@ -640,8 +664,10 @@ class TestDataEncryption:
             with patch("app.core.encryption.settings") as mock_settings:
                 mock_settings.DEBUG = True
                 from app.core import encryption as enc_module
+
                 # 重新实例化以避免模块级单例
                 from app.core.encryption import DataEncryption
+
                 enc = DataEncryption.__new__(DataEncryption)
                 # 手动初始化（避免单例）
                 try:
@@ -650,6 +676,7 @@ class TestDataEncryption:
                     pass
                 # 直接用 generate_key 造一个实例
                 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
                 key = AESGCM.generate_key(bit_length=256)
                 enc.key = key
                 enc.cipher = AESGCM(key)
@@ -686,6 +713,7 @@ class TestDataEncryption:
 
     def test_generate_key_static(self):
         from app.core.encryption import DataEncryption
+
         key = DataEncryption.generate_key()
         assert isinstance(key, str)
         # base64 解码后应为 32 字节
@@ -697,11 +725,13 @@ class TestDataEncryption:
 # 6. app/common/pagination.py
 # ============================================================
 
+
 class TestPaginationParams:
     """PaginationParams 测试"""
 
     def _make_params(self, page, page_size):
         from app.common.pagination import PaginationParams
+
         offset = (page - 1) * page_size
         return PaginationParams(page=page, page_size=page_size, offset=offset, limit=page_size)
 
@@ -719,6 +749,7 @@ class TestPaginationParams:
 
     def test_pages_for_total_zero_page_size(self):
         from app.common.pagination import PaginationParams
+
         params = PaginationParams(page=1, page_size=0, offset=0, limit=0)
         assert params.pages_for_total(100) == 0
 
@@ -741,6 +772,7 @@ class TestGetPaginationParams:
 
     def test_default_page_size(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -750,6 +782,7 @@ class TestGetPaginationParams:
 
     def test_page_clamps_to_minimum_1(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -758,6 +791,7 @@ class TestGetPaginationParams:
 
     def test_negative_page_size_uses_default(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -766,6 +800,7 @@ class TestGetPaginationParams:
 
     def test_page_size_clamps_to_max(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -774,6 +809,7 @@ class TestGetPaginationParams:
 
     def test_correct_offset_calculation(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -783,6 +819,7 @@ class TestGetPaginationParams:
 
     def test_custom_default_page_size(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -791,6 +828,7 @@ class TestGetPaginationParams:
 
     def test_custom_max_page_size(self):
         from app.common.pagination import get_pagination_params
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -803,6 +841,7 @@ class TestPaginateList:
 
     def _run(self, *args, **kwargs):
         from app.common.pagination import paginate_list
+
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.DEFAULT_PAGE_SIZE = 20
             mock_settings.MAX_PAGE_SIZE = 1000
@@ -843,9 +882,11 @@ class TestPaginateList:
 # 7. app/common/statistics/helpers.py
 # ============================================================
 
+
 class TestFormatCurrency:
     def setup_method(self):
         from app.common.statistics.helpers import format_currency
+
         self.fn = format_currency
 
     def test_none_returns_zero(self):
@@ -868,6 +909,7 @@ class TestFormatCurrency:
 class TestFormatHours:
     def setup_method(self):
         from app.common.statistics.helpers import format_hours
+
         self.fn = format_hours
 
     def test_none_returns_zero(self):
@@ -890,6 +932,7 @@ class TestFormatHours:
 class TestFormatPercentage:
     def setup_method(self):
         from app.common.statistics.helpers import format_percentage
+
         self.fn = format_percentage
 
     def test_none_returns_dash(self):
@@ -908,6 +951,7 @@ class TestFormatPercentage:
 class TestCreateStatCard:
     def setup_method(self):
         from app.common.statistics.helpers import create_stat_card
+
         self.fn = create_stat_card
 
     def test_basic_card(self):
@@ -937,7 +981,8 @@ class TestCreateStatCard:
 
 class TestCreateStatsResponse:
     def setup_method(self):
-        from app.common.statistics.helpers import create_stats_response, create_stat_card
+        from app.common.statistics.helpers import create_stat_card, create_stats_response
+
         self.fn = create_stats_response
         self.make_card = create_stat_card
 
@@ -955,6 +1000,7 @@ class TestCreateStatsResponse:
 class TestCalculateTrend:
     def setup_method(self):
         from app.common.statistics.helpers import calculate_trend
+
         self.fn = calculate_trend
 
     def test_positive_trend(self):
@@ -987,18 +1033,21 @@ class TestCalculateTrend:
 # 8. app/common/dashboard/base.py
 # ============================================================
 
+
 class TestBaseDashboardService:
     """BaseDashboardService 抽象基类测试"""
 
     def test_cannot_instantiate_directly(self):
         """抽象类不能直接实例化"""
         from app.common.dashboard.base import BaseDashboardService
+
         with pytest.raises(TypeError):
             BaseDashboardService()
 
     def test_concrete_subclass_works(self):
-        from app.common.dashboard.base import BaseDashboardService
         from sqlalchemy.orm import Session
+
+        from app.common.dashboard.base import BaseDashboardService
 
         class ConcreteDashboard(BaseDashboardService):
             module_name = "test"
@@ -1019,8 +1068,10 @@ class TestBaseDashboardEndpointMethods:
     @pytest.fixture
     def endpoint(self):
         """创建一个具体实现，跳过路由注册的复杂依赖"""
-        with patch("app.common.dashboard.base.security") as mock_security, \
-             patch("app.common.dashboard.base.deps") as mock_deps:
+        with (
+            patch("app.common.dashboard.base.security") as mock_security,
+            patch("app.common.dashboard.base.deps") as mock_deps,
+        ):
             mock_security.get_current_active_user = MagicMock()
             mock_deps.get_db = MagicMock()
 
@@ -1049,12 +1100,13 @@ class TestBaseDashboardEndpointMethods:
 
     def test_create_list_item(self, endpoint):
         from datetime import date
+
         item = endpoint.create_list_item(
             id=1,
             title="Test Item",
             subtitle="Subtitle",
             status="ACTIVE",
-            event_date=date(2026, 1, 1)
+            event_date=date(2026, 1, 1),
         )
         assert item["id"] == 1
         assert item["title"] == "Test Item"
@@ -1106,9 +1158,11 @@ class TestBaseDashboardEndpointMethods:
 # 9. app/common/reports/renderers.py
 # ============================================================
 
+
 class TestBaseRenderer:
     def test_cannot_instantiate_directly(self):
         from app.common.reports.renderers import BaseRenderer
+
         with pytest.raises(TypeError):
             BaseRenderer()
 
@@ -1139,6 +1193,7 @@ class TestExcelRenderer:
     @pytest.fixture
     def renderer(self):
         from app.common.reports.renderers import ExcelRenderer
+
         return ExcelRenderer()
 
     def test_render_raises_import_error_without_deps(self, renderer):
@@ -1150,6 +1205,7 @@ class TestExcelRenderer:
     def test_render_with_mocked_deps(self, renderer):
         """mock pandas 和 openpyxl 后能正常调用"""
         import io
+
         mock_pd = MagicMock()
         mock_df = MagicMock()
         mock_pd.DataFrame.return_value = mock_df
@@ -1164,8 +1220,10 @@ class TestExcelRenderer:
 
         mock_openpyxl = MagicMock()
 
-        with patch.dict("sys.modules", {"pandas": mock_pd, "openpyxl": mock_openpyxl,
-                                        "openpyxl.styles": mock_openpyxl}):
+        with patch.dict(
+            "sys.modules",
+            {"pandas": mock_pd, "openpyxl": mock_openpyxl, "openpyxl.styles": mock_openpyxl},
+        ):
             # 调用会尝试写入，mock 下不会真实写入
             try:
                 renderer.render({"title": "测试", "items": []})
@@ -1179,6 +1237,7 @@ class TestWordRenderer:
     @pytest.fixture
     def renderer(self):
         from app.common.reports.renderers import WordRenderer
+
         return WordRenderer()
 
     def test_render_raises_import_error_without_deps(self, renderer):
@@ -1193,15 +1252,21 @@ class TestPDFRenderer:
     @pytest.fixture
     def renderer(self):
         from app.common.reports.renderers import PDFRenderer
+
         return PDFRenderer()
 
     def test_render_raises_import_error_without_reportlab(self, renderer):
-        with patch.dict("sys.modules", {"reportlab": None,
-                                         "reportlab.lib": None,
-                                         "reportlab.lib.pagesizes": None,
-                                         "reportlab.platypus": None,
-                                         "reportlab.lib.styles": None,
-                                         "reportlab.lib.colors": None}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "reportlab": None,
+                "reportlab.lib": None,
+                "reportlab.lib.pagesizes": None,
+                "reportlab.platypus": None,
+                "reportlab.lib.styles": None,
+                "reportlab.lib.colors": None,
+            },
+        ):
             with pytest.raises((ImportError, Exception)):
                 renderer.render({"title": "Test", "items": []})
 
@@ -1210,11 +1275,13 @@ class TestPDFRenderer:
 # 10. app/common/statistics/base.py  (结构性测试)
 # ============================================================
 
+
 class TestBaseStatisticsService:
     """BaseStatisticsService 结构性测试"""
 
     def test_init_stores_model_and_db(self):
         from app.common.statistics.base import BaseStatisticsService
+
         mock_model = MagicMock()
         mock_db = MagicMock()
         svc = BaseStatisticsService(mock_model, mock_db)
@@ -1235,8 +1302,9 @@ class TestBaseStatisticsService:
 
     @pytest.mark.asyncio
     async def test_count_by_date_range_invalid_period(self):
-        from app.common.statistics.base import BaseStatisticsService
         from datetime import date
+
+        from app.common.statistics.base import BaseStatisticsService
 
         class MockModel:
             id = MagicMock()
@@ -1245,7 +1313,9 @@ class TestBaseStatisticsService:
         mock_db = MagicMock()
         svc = BaseStatisticsService(MockModel, mock_db)
         with pytest.raises(ValueError, match="不支持的周期"):
-            await svc.count_by_date_range("created_at", date.today(), date.today(), period="invalid")
+            await svc.count_by_date_range(
+                "created_at", date.today(), date.today(), period="invalid"
+            )
 
     @pytest.mark.asyncio
     async def test_get_distribution_with_mock_db(self):

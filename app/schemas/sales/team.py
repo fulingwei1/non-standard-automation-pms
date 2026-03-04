@@ -8,12 +8,12 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== 销售团队 ====================
 
 
 class SalesTeamCreate(BaseModel):
     """创建销售团队请求"""
+
     team_code: str = Field(..., max_length=20, description="团队编码")
     team_name: str = Field(..., max_length=100, description="团队名称")
     description: Optional[str] = Field(None, description="团队描述")
@@ -26,6 +26,7 @@ class SalesTeamCreate(BaseModel):
 
 class SalesTeamUpdate(BaseModel):
     """更新销售团队请求"""
+
     team_name: Optional[str] = Field(None, max_length=100, description="团队名称")
     description: Optional[str] = Field(None, description="团队描述")
     team_type: Optional[str] = Field(None, description="团队类型")
@@ -38,6 +39,7 @@ class SalesTeamUpdate(BaseModel):
 
 class SalesTeamMemberInfo(BaseModel):
     """团队成员信息"""
+
     id: int
     user_id: int
     user_name: Optional[str] = None
@@ -54,6 +56,7 @@ class SalesTeamMemberInfo(BaseModel):
 
 class SalesTeamResponse(BaseModel):
     """销售团队响应"""
+
     id: int
     team_code: str
     team_name: str
@@ -78,6 +81,7 @@ class SalesTeamResponse(BaseModel):
 
 class SalesTeamListResponse(BaseModel):
     """销售团队列表响应（简化版）"""
+
     id: int
     team_code: str
     team_name: str
@@ -97,6 +101,7 @@ class SalesTeamListResponse(BaseModel):
 
 class TeamMemberAddRequest(BaseModel):
     """添加团队成员请求"""
+
     user_id: int = Field(..., description="用户ID")
     role: str = Field("MEMBER", description="成员角色：LEADER/DEPUTY/MEMBER")
     is_primary: bool = Field(False, description="是否为主团队")
@@ -105,6 +110,7 @@ class TeamMemberAddRequest(BaseModel):
 
 class TeamMemberUpdateRequest(BaseModel):
     """更新团队成员请求"""
+
     role: Optional[str] = Field(None, description="成员角色")
     is_primary: Optional[bool] = Field(None, description="是否为主团队")
     is_active: Optional[bool] = Field(None, description="是否有效")
@@ -113,6 +119,7 @@ class TeamMemberUpdateRequest(BaseModel):
 
 class TeamMemberBatchAddRequest(BaseModel):
     """批量添加团队成员请求"""
+
     user_ids: List[int] = Field(..., description="用户ID列表")
     role: str = Field("MEMBER", description="成员角色")
 
@@ -122,6 +129,7 @@ class TeamMemberBatchAddRequest(BaseModel):
 
 class TeamPerformanceSnapshotResponse(BaseModel):
     """团队业绩快照响应"""
+
     id: int
     team_id: int
     team_name: Optional[str] = None
@@ -149,6 +157,7 @@ class TeamPerformanceSnapshotResponse(BaseModel):
 
 class TeamPKCreateRequest(BaseModel):
     """创建团队PK请求"""
+
     pk_name: str = Field(..., max_length=100, description="PK名称")
     pk_type: str = Field(..., description="PK类型：CONTRACT_AMOUNT/COLLECTION_AMOUNT/LEAD_COUNT")
     team_ids: List[int] = Field(..., min_length=2, description="参与团队ID列表")
@@ -160,6 +169,7 @@ class TeamPKCreateRequest(BaseModel):
 
 class TeamPKUpdateRequest(BaseModel):
     """更新团队PK请求"""
+
     pk_name: Optional[str] = Field(None, max_length=100, description="PK名称")
     target_value: Optional[Decimal] = Field(None, description="PK目标值")
     status: Optional[str] = Field(None, description="状态：PENDING/ONGOING/COMPLETED/CANCELLED")
@@ -170,6 +180,7 @@ class TeamPKUpdateRequest(BaseModel):
 
 class TeamPKResponse(BaseModel):
     """团队PK响应"""
+
     id: int
     pk_name: str
     pk_type: str
@@ -196,6 +207,7 @@ class TeamPKResponse(BaseModel):
 
 class TeamRankingItem(BaseModel):
     """团队排名项"""
+
     rank: int
     team_id: int
     team_code: str
@@ -216,6 +228,7 @@ class TeamRankingItem(BaseModel):
 
 class TeamRankingResponse(BaseModel):
     """团队排名响应"""
+
     ranking_type: str
     period_type: str
     period_value: str

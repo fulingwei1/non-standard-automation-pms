@@ -15,6 +15,12 @@
 
 from sqlalchemy.orm import Session
 
+# 导入统一通知服务（已启用）
+from app.services.unified_notification_service import (
+    NotificationService,
+    get_notification_service,
+)
+
 from .base import ApprovalNotifyServiceBase
 from .basic_notifications import BasicNotificationsMixin
 from .batch import BatchNotificationMixin
@@ -24,12 +30,6 @@ from .flow_notifications import FlowNotificationsMixin
 from .reminder_notifications import ReminderNotificationsMixin
 from .send_notification import SendNotificationMixin
 from .utils import NotificationUtilsMixin
-
-# 导入统一通知服务（已启用）
-from app.services.unified_notification_service import (
-    get_notification_service,
-    NotificationService,
-)
 
 
 class ApprovalNotifyService(
@@ -44,7 +44,7 @@ class ApprovalNotifyService(
     SendNotificationMixin,
 ):
     """审批通知服务（组合所有功能模块）
-    
+
     现在使用 NotificationDispatcher 进行通知发送，统一服务提供：
     - 自动去重
     - 用户偏好管理

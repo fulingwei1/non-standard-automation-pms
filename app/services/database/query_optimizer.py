@@ -26,9 +26,13 @@ class QueryOptimizer:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_list_optimized(self, skip: int = 0, limit: int = 100,
-                                 status: Optional[str] = None,
-                                 customer_id: Optional[int] = None) -> List[Project]:
+    def get_project_list_optimized(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        status: Optional[str] = None,
+        customer_id: Optional[int] = None,
+    ) -> List[Project]:
         """
         优化的项目列表查询
 
@@ -46,7 +50,7 @@ class QueryOptimizer:
             joinedload(Project.customer),
             joinedload(Project.owner),
             selectinload(Project.milestones),
-            selectinload(Project.issues)
+            selectinload(Project.issues),
         )
 
         # 添加过滤条件
@@ -72,46 +76,56 @@ class QueryOptimizer:
         3. 使用聚合函数减少数据传输
         """
         # 获取项目基本信息（包含关联数据）
-        project = self.db.query(Project).options(
-            joinedload(Project.customer),
-            joinedload(Project.owner),
-            selectinload(Project.milestones),
-            selectinload(Project.issues),
-            selectinload(Project.contracts)
-        ).filter(Project.id == project_id).first()
+        project = (
+            self.db.query(Project)
+            .options(
+                joinedload(Project.customer),
+                joinedload(Project.owner),
+                selectinload(Project.milestones),
+                selectinload(Project.issues),
+                selectinload(Project.contracts),
+            )
+            .filter(Project.id == project_id)
+            .first()
+        )
 
         if not project:
             return {}
 
         # 使用聚合查询获取统计数据
-        milestone_stats = self.db.query(
-            ProjectMilestone.status,
-            func.count(ProjectMilestone.id).label('count')
-        ).filter(
-            ProjectMilestone.project_id == project_id
-        ).group_by(ProjectMilestone.status).all()
+        milestone_stats = (
+            self.db.query(ProjectMilestone.status, func.count(ProjectMilestone.id).label("count"))
+            .filter(ProjectMilestone.project_id == project_id)
+            .group_by(ProjectMilestone.status)
+            .all()
+        )
 
-        issue_stats = self.db.query(
-            Issue.issue_type,
-            Issue.status,
-            func.count(Issue.id).label('count')
-        ).filter(
-            Issue.project_id == project_id
-        ).group_by(Issue.issue_type, Issue.status).all()
+        issue_stats = (
+            self.db.query(Issue.issue_type, Issue.status, func.count(Issue.id).label("count"))
+            .filter(Issue.project_id == project_id)
+            .group_by(Issue.issue_type, Issue.status)
+            .all()
+        )
 
         # 获取最近的活动记录
-        recent_activities = self.db.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == project_id
-        ).order_by(desc(ProjectStatusLog.created_at)).limit(10).all()
+        recent_activities = (
+            self.db.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project_id)
+            .order_by(desc(ProjectStatusLog.created_at))
+            .limit(10)
+            .all()
+        )
 
         return {
-            'project': project,
-            'milestone_stats': dict(milestone_stats),
-            'issue_stats': dict(issue_stats),
-            'recent_activities': recent_activities
+            "project": project,
+            "milestone_stats": dict(milestone_stats),
+            "issue_stats": dict(issue_stats),
+            "recent_activities": recent_activities,
         }
 
-    def search_projects_optimized(self, keyword: str, skip: int = 0, limit: int = 50) -> List[Project]:
+    def search_projects_optimized(
+        self, keyword: str, skip: int = 0, limit: int = 50
+    ) -> List[Project]:
         """
         优化的项目搜索
 
@@ -127,8 +141,7 @@ class QueryOptimizer:
 
         # 使用更高效的搜索查询
         query = self.db.query(Project).options(
-            joinedload(Project.customer),
-            joinedload(Project.owner)
+            joinedload(Project.customer), joinedload(Project.owner)
         )
 
         keyword_conditions = build_keyword_conditions(
@@ -155,12 +168,8 @@ class QueryOptimizer:
 
         query = query.order_by(
             # 优先显示匹配度高的结果
-            func.case(
-                (name_condition[0], 1),
-                (code_condition[0], 2),
-                else_=3
-            ),
-            desc(Project.created_at)
+            func.case((name_condition[0], 1), (code_condition[0], 2), else_=3),
+            desc(Project.created_at),
         )
 
         return query.offset(skip).limit(limit).all()
@@ -177,44 +186,64 @@ class QueryOptimizer:
         start_date = datetime.now() - timedelta(days=days)
 
         # 单个查询获取所有统计数据
-        stats = self.db.query(
-            func.count(AlertRecord.id).label('total_alerts'),
-            func.sum(func.case((AlertRecord.alert_level == 'CRITICAL', 1), else_=0)).label('critical_count'),
-            func.sum(func.case((AlertRecord.alert_level == 'WARNING', 1), else_=0)).label('warning_count'),
-            func.sum(func.case((AlertRecord.alert_level == 'INFO', 1), else_=0)).label('info_count'),
-            func.sum(func.case((AlertRecord.status == 'RESOLVED', 1), else_=0)).label('resolved_count'),
-            func.sum(func.case((AlertRecord.status == 'PENDING', 1), else_=0)).label('pending_count')
-        ).filter(
-            AlertRecord.created_at >= start_date
-        ).first()
+        stats = (
+            self.db.query(
+                func.count(AlertRecord.id).label("total_alerts"),
+                func.sum(func.case((AlertRecord.alert_level == "CRITICAL", 1), else_=0)).label(
+                    "critical_count"
+                ),
+                func.sum(func.case((AlertRecord.alert_level == "WARNING", 1), else_=0)).label(
+                    "warning_count"
+                ),
+                func.sum(func.case((AlertRecord.alert_level == "INFO", 1), else_=0)).label(
+                    "info_count"
+                ),
+                func.sum(func.case((AlertRecord.status == "RESOLVED", 1), else_=0)).label(
+                    "resolved_count"
+                ),
+                func.sum(func.case((AlertRecord.status == "PENDING", 1), else_=0)).label(
+                    "pending_count"
+                ),
+            )
+            .filter(AlertRecord.created_at >= start_date)
+            .first()
+        )
 
         # 按日期分组的告警趋势
-        daily_stats = self.db.query(
-            func.date(AlertRecord.created_at).label('date'),
-            func.count(AlertRecord.id).label('count'),
-            func.sum(func.case((AlertRecord.alert_level == 'CRITICAL', 1), else_=0)).label('critical_count')
-        ).filter(
-            AlertRecord.created_at >= start_date
-        ).group_by(
-            func.date(AlertRecord.created_at)
-        ).order_by(func.date(AlertRecord.created_at)).all()
+        daily_stats = (
+            self.db.query(
+                func.date(AlertRecord.created_at).label("date"),
+                func.count(AlertRecord.id).label("count"),
+                func.sum(func.case((AlertRecord.alert_level == "CRITICAL", 1), else_=0)).label(
+                    "critical_count"
+                ),
+            )
+            .filter(AlertRecord.created_at >= start_date)
+            .group_by(func.date(AlertRecord.created_at))
+            .order_by(func.date(AlertRecord.created_at))
+            .all()
+        )
 
         return {
-            'summary': {
-                'total_alerts': stats.total_alerts or 0,
-                'critical_count': stats.critical_count or 0,
-                'warning_count': stats.warning_count or 0,
-                'info_count': stats.info_count or 0,
-                'resolved_count': stats.resolved_count or 0,
-                'pending_count': stats.pending_count or 0,
+            "summary": {
+                "total_alerts": stats.total_alerts or 0,
+                "critical_count": stats.critical_count or 0,
+                "warning_count": stats.warning_count or 0,
+                "info_count": stats.info_count or 0,
+                "resolved_count": stats.resolved_count or 0,
+                "pending_count": stats.pending_count or 0,
             },
-            'daily_trend': daily_stats
+            "daily_trend": daily_stats,
         }
 
-    def get_shortage_reports_optimized(self, project_id: Optional[int] = None,
-                                     status: Optional[str] = None,
-                                     urgency: Optional[str] = None,
-                                     skip: int = 0, limit: int = 100) -> List[ShortageReport]:
+    def get_shortage_reports_optimized(
+        self,
+        project_id: Optional[int] = None,
+        status: Optional[str] = None,
+        urgency: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[ShortageReport]:
         """
         优化的缺料报告查询
 
@@ -224,8 +253,7 @@ class QueryOptimizer:
         3. 优化排序字段
         """
         query = self.db.query(ShortageReport).options(
-            joinedload(ShortageReport.project),
-            joinedload(ShortageReport.material)
+            joinedload(ShortageReport.project), joinedload(ShortageReport.material)
         )
 
         # 添加过滤条件
@@ -241,12 +269,12 @@ class QueryOptimizer:
         # 优化排序：优先级高的在前
         query = query.order_by(
             func.case(
-                (ShortageReport.urgency_level == 'HIGH', 1),
-                (ShortageReport.urgency_level == 'MEDIUM', 2),
-                (ShortageReport.urgency_level == 'LOW', 3),
-                else_=4
+                (ShortageReport.urgency_level == "HIGH", 1),
+                (ShortageReport.urgency_level == "MEDIUM", 2),
+                (ShortageReport.urgency_level == "LOW", 3),
+                else_=4,
             ),
-            desc(ShortageReport.report_date)
+            desc(ShortageReport.report_date),
         )
 
         return query.offset(skip).limit(limit).all()
@@ -263,34 +291,36 @@ class QueryOptimizer:
         start_date = datetime.now() - timedelta(days=days)
 
         # 合同统计
-        contract_stats = self.db.query(
-            func.count(Contract.id).label('total_contracts'),
-            func.sum(Contract.total_amount).label('total_amount'),
-            func.avg(Contract.total_amount).label('avg_amount')
-        ).filter(
-            Contract.signing_date >= start_date
-        ).first()
+        contract_stats = (
+            self.db.query(
+                func.count(Contract.id).label("total_contracts"),
+                func.sum(Contract.total_amount).label("total_amount"),
+                func.avg(Contract.total_amount).label("avg_amount"),
+            )
+            .filter(Contract.signing_date >= start_date)
+            .first()
+        )
 
         # 按月份分组的趋势
-        monthly_stats = self.db.query(
-            func.date_trunc('month', Contract.signing_date).label('month'),
-            func.count(Contract.id).label('count'),
-            func.sum(Contract.total_amount).label('amount')
-        ).filter(
-            Contract.signing_date >= start_date
-        ).group_by(
-            func.date_trunc('month', Contract.signing_date)
-        ).order_by(
-            func.date_trunc('month', Contract.signing_date)
-        ).all()
+        monthly_stats = (
+            self.db.query(
+                func.date_trunc("month", Contract.signing_date).label("month"),
+                func.count(Contract.id).label("count"),
+                func.sum(Contract.total_amount).label("amount"),
+            )
+            .filter(Contract.signing_date >= start_date)
+            .group_by(func.date_trunc("month", Contract.signing_date))
+            .order_by(func.date_trunc("month", Contract.signing_date))
+            .all()
+        )
 
         return {
-            'summary': {
-                'total_contracts': contract_stats.total_contracts or 0,
-                'total_amount': float(contract_stats.total_amount or 0),
-                'avg_amount': float(contract_stats.avg_amount or 0),
+            "summary": {
+                "total_contracts": contract_stats.total_contracts or 0,
+                "total_amount": float(contract_stats.total_amount or 0),
+                "avg_amount": float(contract_stats.avg_amount or 0),
             },
-            'monthly_trend': monthly_stats
+            "monthly_trend": monthly_stats,
         }
 
     def create_optimized_indexes_suggestions(self) -> List[str]:
@@ -324,7 +354,8 @@ class QueryOptimizer:
         slow_queries = []
 
         # 示例：分析复杂的项目列表查询
-        explain_query = text("""
+        explain_query = text(
+            """
         EXPLAIN ANALYZE
         SELECT p.*, c.name as customer_name, u.username as owner_name
         FROM project p
@@ -333,25 +364,26 @@ class QueryOptimizer:
         WHERE p.status = 'ACTIVE'
         ORDER BY p.created_at DESC
         LIMIT 100;
-        """)
+        """
+        )
 
         try:
             result = self.db.execute(explain_query).fetchall()
-            slow_queries.append({
-                'query': '项目列表查询',
-                'explain': result,
-                'suggestion': '考虑添加复合索引 (status, created_at DESC)'
-            })
+            slow_queries.append(
+                {
+                    "query": "项目列表查询",
+                    "explain": result,
+                    "suggestion": "考虑添加复合索引 (status, created_at DESC)",
+                }
+            )
         except Exception as e:
-            slow_queries.append({
-                'query': '项目列表查询',
-                'error': str(e),
-                'suggestion': '检查表结构和索引是否存在'
-            })
+            slow_queries.append(
+                {"query": "项目列表查询", "error": str(e), "suggestion": "检查表结构和索引是否存在"}
+            )
 
         return {
-            'slow_queries': slow_queries,
-            'optimization_suggestions': self.create_optimized_indexes_suggestions()
+            "slow_queries": slow_queries,
+            "optimization_suggestions": self.create_optimized_indexes_suggestions(),
         }
 
     # ------------------------------------------------------------------
@@ -374,9 +406,10 @@ class QueryOptimizer:
                 query = query.options(joinedload(relation))
         if filters:
             import re
+
             for field, value in filters.items():
                 # 防止 SQL 注入：仅允许合法的列名（字母、数字、下划线、点号）
-                if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_.]*$', field):
+                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_.]*$", field):
                     raise ValueError(f"非法字段名: {field}")
                 query = query.filter(text(f"{field} = :val").params(val=value))
         return query
@@ -393,25 +426,19 @@ class QueryOptimizer:
         try:
             compiled = query.statement.compile(
                 dialect=self.db.bind.dialect if self.db.bind else None,
-                compile_kwargs={"literal_binds": True}
+                compile_kwargs={"literal_binds": True},
             )
             sql_str = str(compiled)
         except Exception:
             sql_str = str(query)
 
-        result = {
-            'query': sql_str,
-            'suggestions': [],
-            'execution_plan': None
-        }
+        result = {"query": sql_str, "suggestions": [], "execution_plan": None}
 
         try:
-            explain_result = self.db.execute(
-                text(f"EXPLAIN QUERY PLAN {sql_str}")
-            ).fetchall()
-            result['execution_plan'] = [str(row) for row in explain_result]
+            explain_result = self.db.execute(text(f"EXPLAIN QUERY PLAN {sql_str}")).fetchall()
+            result["execution_plan"] = [str(row) for row in explain_result]
         except Exception:
-            result['execution_plan'] = []
+            result["execution_plan"] = []
 
         return result
 
@@ -438,9 +465,9 @@ class QueryOptimizer:
         total_pages = pagination.pages_for_total(total)
 
         return {
-            'items': items,
-            'total': total,
-            'page': pagination.page,
-            'page_size': pagination.page_size,
-            'total_pages': total_pages
+            "items": items,
+            "total": total,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "total_pages": total_pages,
         }

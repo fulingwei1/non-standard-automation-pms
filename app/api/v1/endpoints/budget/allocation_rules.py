@@ -10,8 +10,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.budget import ProjectCostAllocationRule
 from app.models.user import User
 from app.schemas.budget import (
@@ -20,13 +21,14 @@ from app.schemas.budget import (
     ProjectCostAllocationRuleUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.get("/allocation-rules", response_model=PaginatedResponse[ProjectCostAllocationRuleResponse])
+@router.get(
+    "/allocation-rules", response_model=PaginatedResponse[ProjectCostAllocationRuleResponse]
+)
 def list_allocation_rules(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -42,15 +44,27 @@ def list_allocation_rules(
         query = query.filter(ProjectCostAllocationRule.is_active == is_active)
 
     total = query.count()
-    rules = apply_pagination(query.order_by(desc(ProjectCostAllocationRule.created_at)), pagination.offset, pagination.limit).all()
+    rules = apply_pagination(
+        query.order_by(desc(ProjectCostAllocationRule.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
-    items = [ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
-             for rule in rules]
+    items = [
+        ProjectCostAllocationRuleResponse(
+            **{c.name: getattr(rule, c.name) for c in rule.__table__.columns}
+        )
+        for rule in rules
+    ]
 
     return pagination.to_response(items, total)
 
 
-@router.post("/allocation-rules", response_model=ProjectCostAllocationRuleResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/allocation-rules",
+    response_model=ProjectCostAllocationRuleResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -61,14 +75,16 @@ def create_allocation_rule(
     创建成本分摊规则
     """
     rule_data = rule_in.model_dump()
-    rule_data['created_by'] = current_user.id
+    rule_data["created_by"] = current_user.id
 
     rule = ProjectCostAllocationRule(**rule_data)
     db.add(rule)
     db.commit()
     db.refresh(rule)
 
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+    return ProjectCostAllocationRuleResponse(
+        **{c.name: getattr(rule, c.name) for c in rule.__table__.columns}
+    )
 
 
 @router.get("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
@@ -83,7 +99,9 @@ def get_allocation_rule(
     """
     rule = get_or_404(db, ProjectCostAllocationRule, rule_id, "分摊规则不存在")
 
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+    return ProjectCostAllocationRuleResponse(
+        **{c.name: getattr(rule, c.name) for c in rule.__table__.columns}
+    )
 
 
 @router.put("/allocation-rules/{rule_id}", response_model=ProjectCostAllocationRuleResponse)
@@ -108,7 +126,9 @@ def update_allocation_rule(
     db.commit()
     db.refresh(rule)
 
-    return ProjectCostAllocationRuleResponse(**{c.name: getattr(rule, c.name) for c in rule.__table__.columns})
+    return ProjectCostAllocationRuleResponse(
+        **{c.name: getattr(rule, c.name) for c in rule.__table__.columns}
+    )
 
 
 @router.delete("/allocation-rules/{rule_id}", status_code=status.HTTP_200_OK)

@@ -2,12 +2,14 @@
 """
 第八批覆盖率测试 - 库存分析服务
 """
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.inventory_analysis_service import InventoryAnalysisService
+
     HAS_IAS = True
 except Exception:
     HAS_IAS = False
@@ -24,9 +26,7 @@ class TestGetTurnoverRateData:
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = []
         db.query.return_value.join.return_value.filter.return_value.first.return_value = None
         result = InventoryAnalysisService.get_turnover_rate_data(
-            db,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            db, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
         assert isinstance(result, dict)
 
@@ -37,10 +37,7 @@ class TestGetTurnoverRateData:
         db.query.return_value.join.return_value.filter.return_value.first.return_value = None
         try:
             result = InventoryAnalysisService.get_turnover_rate_data(
-                db,
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 31),
-                category_id=1
+                db, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31), category_id=1
             )
             assert isinstance(result, dict)
         except Exception:
@@ -60,17 +57,19 @@ class TestGetTurnoverRateData:
         mock_material.standard_price = 50.0
         mock_material.unit = "个"
 
-        db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         mock_consumption = MagicMock()
         mock_consumption.qty = 500
-        db.query.return_value.join.return_value.filter.return_value.first.return_value = mock_consumption
+        db.query.return_value.join.return_value.filter.return_value.first.return_value = (
+            mock_consumption
+        )
 
         try:
             result = InventoryAnalysisService.get_turnover_rate_data(
-                db,
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 31)
+                db, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
             )
             assert isinstance(result, dict)
         except Exception:
@@ -86,13 +85,14 @@ class TestInventoryAnalysisMethods:
 
     def test_get_turnover_rate_data_is_static(self):
         """get_turnover_rate_data 是静态方法"""
-        assert hasattr(InventoryAnalysisService, 'get_turnover_rate_data')
+        assert hasattr(InventoryAnalysisService, "get_turnover_rate_data")
 
     def test_additional_analysis_methods(self):
         """检查是否有其他分析方法"""
         method_count = sum(
-            1 for name in dir(InventoryAnalysisService)
-            if not name.startswith('_') and callable(getattr(InventoryAnalysisService, name))
+            1
+            for name in dir(InventoryAnalysisService)
+            if not name.startswith("_") and callable(getattr(InventoryAnalysisService, name))
         )
         assert method_count >= 1
 

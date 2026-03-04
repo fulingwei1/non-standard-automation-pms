@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/data_sources/service.py"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.data_sources.service import ServiceDataSource
     from app.services.report_framework.data_sources.base import DataSourceError
+    from app.services.report_framework.data_sources.service import ServiceDataSource
     from app.services.report_framework.models import DataSourceConfig, DataSourceType
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -55,7 +56,7 @@ def test_fetch_method_not_found():
     ds = ServiceDataSource(_make_db(), config)
 
     mock_instance = MagicMock(spec=[])  # no attributes
-    with patch.object(ds, '_get_service_instance', return_value=mock_instance):
+    with patch.object(ds, "_get_service_instance", return_value=mock_instance):
         with pytest.raises(DataSourceError, match="not found in service"):
             ds.fetch({})
 
@@ -66,7 +67,7 @@ def test_fetch_success():
 
     mock_instance = MagicMock()
     mock_instance.get_data.return_value = [{"id": 1}]
-    with patch.object(ds, '_get_service_instance', return_value=mock_instance):
+    with patch.object(ds, "_get_service_instance", return_value=mock_instance):
         result = ds.fetch({})
     assert result == [{"id": 1}]
 

@@ -81,17 +81,19 @@ class TestPredictEAC(unittest.TestCase):
             "choices": [
                 {
                     "message": {
-                        "content": json.dumps({
-                            "predicted_eac": 110000,
-                            "confidence": 85,
-                            "prediction_method": "AI_ANALYSIS",
-                            "eac_lower_bound": 105000,
-                            "eac_upper_bound": 115000,
-                            "eac_most_likely": 110000,
-                            "reasoning": "基于CPI趋势分析",
-                            "key_assumptions": ["CPI保持当前水平"],
-                            "uncertainty_factors": ["市场变化"],
-                        })
+                        "content": json.dumps(
+                            {
+                                "predicted_eac": 110000,
+                                "confidence": 85,
+                                "prediction_method": "AI_ANALYSIS",
+                                "eac_lower_bound": 105000,
+                                "eac_upper_bound": 115000,
+                                "eac_most_likely": 110000,
+                                "reasoning": "基于CPI趋势分析",
+                                "key_assumptions": ["CPI保持当前水平"],
+                                "uncertainty_factors": ["市场变化"],
+                            }
+                        )
                     }
                 }
             ]
@@ -123,10 +125,12 @@ class TestPredictEAC(unittest.TestCase):
             "choices": [
                 {
                     "message": {
-                        "content": json.dumps({
-                            "predicted_eac": 105000,
-                            "confidence": 90,
-                        })
+                        "content": json.dumps(
+                            {
+                                "predicted_eac": 105000,
+                                "confidence": 90,
+                            }
+                        )
                     }
                 }
             ]
@@ -134,9 +138,7 @@ class TestPredictEAC(unittest.TestCase):
         mock_post.return_value = mock_response
 
         additional_context = {"risk_level": "low", "team_experience": "high"}
-        result = self.predictor.predict_eac(
-            self.project_data, self.evm_history, additional_context
-        )
+        result = self.predictor.predict_eac(self.project_data, self.evm_history, additional_context)
 
         self.assertIsNotNone(result)
         self.assertIn("predicted_eac", result)
@@ -170,24 +172,26 @@ class TestAnalyzeCostRisks(unittest.TestCase):
             "choices": [
                 {
                     "message": {
-                        "content": json.dumps({
-                            "overrun_probability": 75,
-                            "risk_level": "HIGH",
-                            "risk_score": 78,
-                            "risk_factors": [
-                                {
-                                    "factor": "CPI持续下降",
-                                    "impact": "HIGH",
-                                    "weight": 0.8,
-                                    "description": "成本效率持续恶化",
-                                    "evidence": "CPI从1.0降至0.9",
-                                }
-                            ],
-                            "trend_analysis": "成本绩效恶化趋势明显",
-                            "cost_trend": "DECLINING",
-                            "key_concerns": ["成本超支风险高"],
-                            "early_warning_signals": ["CPI低于0.95"],
-                        })
+                        "content": json.dumps(
+                            {
+                                "overrun_probability": 75,
+                                "risk_level": "HIGH",
+                                "risk_score": 78,
+                                "risk_factors": [
+                                    {
+                                        "factor": "CPI持续下降",
+                                        "impact": "HIGH",
+                                        "weight": 0.8,
+                                        "description": "成本效率持续恶化",
+                                        "evidence": "CPI从1.0降至0.9",
+                                    }
+                                ],
+                                "trend_analysis": "成本绩效恶化趋势明显",
+                                "cost_trend": "DECLINING",
+                                "key_concerns": ["成本超支风险高"],
+                                "early_warning_signals": ["CPI低于0.95"],
+                            }
+                        )
                     }
                 }
             ]
@@ -227,32 +231,34 @@ class TestGenerateOptimizationSuggestions(unittest.TestCase):
             "choices": [
                 {
                     "message": {
-                        "content": json.dumps([
-                            {
-                                "title": "优化资源配置",
-                                "type": "RESOURCE_OPTIMIZATION",
-                                "priority": "HIGH",
-                                "description": "调整资源分配",
-                                "current_situation": "资源利用率低",
-                                "proposed_action": "重新分配人力",
-                                "implementation_steps": [
-                                    {
-                                        "step": 1,
-                                        "action": "评估当前资源",
-                                        "duration_days": 3,
-                                        "responsible": "项目经理",
-                                    }
-                                ],
-                                "estimated_cost_saving": 5000,
-                                "implementation_cost": 1000,
-                                "roi_percentage": 400,
-                                "impact_on_schedule": "NEUTRAL",
-                                "impact_on_quality": "POSITIVE",
-                                "implementation_risk": "LOW",
-                                "ai_confidence_score": 85,
-                                "ai_reasoning": "基于历史数据分析",
-                            }
-                        ])
+                        "content": json.dumps(
+                            [
+                                {
+                                    "title": "优化资源配置",
+                                    "type": "RESOURCE_OPTIMIZATION",
+                                    "priority": "HIGH",
+                                    "description": "调整资源分配",
+                                    "current_situation": "资源利用率低",
+                                    "proposed_action": "重新分配人力",
+                                    "implementation_steps": [
+                                        {
+                                            "step": 1,
+                                            "action": "评估当前资源",
+                                            "duration_days": 3,
+                                            "responsible": "项目经理",
+                                        }
+                                    ],
+                                    "estimated_cost_saving": 5000,
+                                    "implementation_cost": 1000,
+                                    "roi_percentage": 400,
+                                    "impact_on_schedule": "NEUTRAL",
+                                    "impact_on_quality": "POSITIVE",
+                                    "implementation_risk": "LOW",
+                                    "ai_confidence_score": 85,
+                                    "ai_reasoning": "基于历史数据分析",
+                                }
+                            ]
+                        )
                     }
                 }
             ]
@@ -278,11 +284,13 @@ class TestGenerateOptimizationSuggestions(unittest.TestCase):
             "choices": [
                 {
                     "message": {
-                        "content": json.dumps({
-                            "title": "单个建议",
-                            "type": "PROCESS_IMPROVEMENT",
-                            "priority": "MEDIUM",
-                        })
+                        "content": json.dumps(
+                            {
+                                "title": "单个建议",
+                                "type": "PROCESS_IMPROVEMENT",
+                                "priority": "MEDIUM",
+                            }
+                        )
                     }
                 }
             ]
@@ -330,14 +338,10 @@ class TestCallGLM5API(unittest.TestCase):
     def test_call_glm5_api_with_custom_params(self, mock_post):
         """测试自定义参数"""
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "response"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "response"}}]}
         mock_post.return_value = mock_response
 
-        self.predictor._call_glm5_api(
-            "test prompt", temperature=0.8, max_tokens=2000
-        )
+        self.predictor._call_glm5_api("test prompt", temperature=0.8, max_tokens=2000)
 
         call_kwargs = mock_post.call_args.kwargs
         self.assertEqual(call_kwargs["json"]["temperature"], 0.8)
@@ -347,24 +351,20 @@ class TestCallGLM5API(unittest.TestCase):
     def test_call_glm5_api_with_authorization_header(self, mock_post):
         """测试Authorization header"""
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "response"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "response"}}]}
         mock_post.return_value = mock_response
 
         self.predictor._call_glm5_api("test prompt")
 
         call_kwargs = mock_post.call_args.kwargs
-        self.assertEqual(
-            call_kwargs["headers"]["Authorization"], "Bearer test_key_123"
-        )
+        self.assertEqual(call_kwargs["headers"]["Authorization"], "Bearer test_key_123")
         self.assertEqual(call_kwargs["headers"]["Content-Type"], "application/json")
 
     @patch("requests.post")
     def test_call_glm5_api_request_exception(self, mock_post):
         """测试请求异常"""
         import requests
-        
+
         mock_post.side_effect = requests.exceptions.RequestException("Network error")
 
         with self.assertRaises(Exception) as cm:
@@ -376,7 +376,7 @@ class TestCallGLM5API(unittest.TestCase):
     def test_call_glm5_api_http_error(self, mock_post):
         """测试HTTP错误"""
         import requests
-        
+
         mock_response = Mock()
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("HTTP 500")
         mock_post.return_value = mock_response
@@ -401,17 +401,19 @@ class TestParseEACPrediction(unittest.TestCase):
 
     def test_parse_eac_prediction_valid_json(self):
         """测试解析有效JSON"""
-        ai_response = json.dumps({
-            "predicted_eac": 105000,
-            "confidence": 88,
-            "prediction_method": "AI_ANALYSIS",
-            "eac_lower_bound": 100000,
-            "eac_upper_bound": 110000,
-            "eac_most_likely": 105000,
-            "reasoning": "详细分析",
-            "key_assumptions": ["假设1", "假设2"],
-            "uncertainty_factors": ["因素1"],
-        })
+        ai_response = json.dumps(
+            {
+                "predicted_eac": 105000,
+                "confidence": 88,
+                "prediction_method": "AI_ANALYSIS",
+                "eac_lower_bound": 100000,
+                "eac_upper_bound": 110000,
+                "eac_most_likely": 105000,
+                "reasoning": "详细分析",
+                "key_assumptions": ["假设1", "假设2"],
+                "uncertainty_factors": ["因素1"],
+            }
+        )
 
         result = self.predictor._parse_eac_prediction(ai_response, self.project_data)
 
@@ -497,16 +499,18 @@ class TestParseRiskAnalysis(unittest.TestCase):
 
     def test_parse_risk_analysis_valid_json(self):
         """测试解析有效JSON"""
-        ai_response = json.dumps({
-            "overrun_probability": 65,
-            "risk_level": "MEDIUM",
-            "risk_score": 70,
-            "risk_factors": [{"factor": "风险1", "impact": "HIGH"}],
-            "trend_analysis": "趋势分析",
-            "cost_trend": "DECLINING",
-            "key_concerns": ["关注点1"],
-            "early_warning_signals": ["信号1"],
-        })
+        ai_response = json.dumps(
+            {
+                "overrun_probability": 65,
+                "risk_level": "MEDIUM",
+                "risk_score": 70,
+                "risk_factors": [{"factor": "风险1", "impact": "HIGH"}],
+                "trend_analysis": "趋势分析",
+                "cost_trend": "DECLINING",
+                "key_concerns": ["关注点1"],
+                "early_warning_signals": ["信号1"],
+            }
+        )
 
         result = self.predictor._parse_risk_analysis(ai_response)
 
@@ -560,10 +564,12 @@ class TestParseOptimizationSuggestions(unittest.TestCase):
 
     def test_parse_optimization_suggestions_valid_array(self):
         """测试解析有效数组"""
-        ai_response = json.dumps([
-            {"title": "建议1", "type": "RESOURCE_OPTIMIZATION"},
-            {"title": "建议2", "type": "PROCESS_IMPROVEMENT"},
-        ])
+        ai_response = json.dumps(
+            [
+                {"title": "建议1", "type": "RESOURCE_OPTIMIZATION"},
+                {"title": "建议2", "type": "PROCESS_IMPROVEMENT"},
+            ]
+        )
 
         result = self.predictor._parse_optimization_suggestions(ai_response)
 
@@ -630,7 +636,13 @@ class TestSummarizeEVMHistory(unittest.TestCase):
     def test_summarize_evm_history_multiple_periods(self):
         """测试多期数据（显示最近6期）"""
         history = [
-            {"period": f"2024-{i:02d}", "cpi": 1.0 - i * 0.01, "spi": 1.0, "ac": i * 10000, "ev": i * 10000}
+            {
+                "period": f"2024-{i:02d}",
+                "cpi": 1.0 - i * 0.01,
+                "spi": 1.0,
+                "ac": i * 10000,
+                "ev": i * 10000,
+            }
             for i in range(1, 10)
         ]
 
@@ -714,9 +726,7 @@ class TestBuildPrompts(unittest.TestCase):
 
     def test_build_eac_prediction_prompt(self):
         """测试构建EAC预测提示词"""
-        evm_history = [
-            {"period": "2024-01", "cpi": 1.0, "spi": 1.0, "ac": 10000, "ev": 10000}
-        ]
+        evm_history = [{"period": "2024-01", "cpi": 1.0, "spi": 1.0, "ac": 10000, "ev": 10000}]
         additional_context = {"market": "stable"}
 
         prompt = self.predictor._build_eac_prediction_prompt(

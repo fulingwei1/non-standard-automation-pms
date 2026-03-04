@@ -3,6 +3,7 @@
 问题跟踪 API 测试
 """
 import pytest
+
 pytestmark = pytest.mark.skip(reason="fixture依赖问题导致ERROR，需要重写")
 
 import pytest
@@ -219,9 +220,7 @@ class TestEdgeCases:
     def test_create_ticket_validation_error_no_project(self, client, auth_headers):
         """测试缺少项目ID"""
         create_data = {"title": "测试问题", "description": "测试描述", "status": "OPEN"}
-        response = client.post(
-            "/api/v1/issues/", json=create_data, headers=auth_headers
-        )
+        response = client.post("/api/v1/issues/", json=create_data, headers=auth_headers)
         assert response.status_code == 422
 
     def test_update_ticket_validation_error_invalid_status(
@@ -254,9 +253,7 @@ class TestTicketPermissions:
         response = client.get(f"/api/v1/issues/{service_ticket.id}/", headers={})
         assert response.status_code == 401
 
-    def test_update_ticket_without_permission(
-        self, client, auth_headers, service_ticket
-    ):
+    def test_update_ticket_without_permission(self, client, auth_headers, service_ticket):
         """测试更新问题权限"""
         update_data = {"status": "IN_PROGRESS"}
         response = client.patch(

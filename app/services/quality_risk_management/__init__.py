@@ -6,4 +6,4 @@
 
 from .service import QualityRiskManagementService
 
-__all__ = ['QualityRiskManagementService']
+__all__ = ["QualityRiskManagementService"]

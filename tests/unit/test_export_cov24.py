@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - data_integrity/export 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.data_integrity.export")
 

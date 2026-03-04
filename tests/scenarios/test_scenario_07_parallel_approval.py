@@ -3,10 +3,13 @@
 
 测试多个审批人同时审批的并行审批流程
 """
-import pytest
+
 from datetime import datetime
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 from app.models.approval.instance import ApprovalInstance
 from app.models.approval.task import ApprovalTask
 from app.models.purchase import PurchaseRequest
@@ -55,9 +58,7 @@ class TestParallelApproval:
         db_session.add_all([task1, task2])
         db_session.commit()
 
-        tasks = db_session.query(ApprovalTask).filter(
-            ApprovalTask.instance_id == instance.id
-        ).all()
+        tasks = db_session.query(ApprovalTask).filter(ApprovalTask.instance_id == instance.id).all()
         assert len(tasks) == 2
         assert all(t.status == "PENDING" for t in tasks)
 
@@ -160,9 +161,7 @@ class TestParallelApproval:
         db_session.commit()
 
         # 检查所有并行任务是否完成
-        all_approved = all(
-            t.status == "APPROVED" for t in [task1, task2]
-        )
+        all_approved = all(t.status == "APPROVED" for t in [task1, task2])
         assert all_approved is True
 
         # 审批实例通过
@@ -390,7 +389,7 @@ class TestParallelApproval:
             task_order=2,
             status="NOT_STARTED",
         )
-        
+
         db_session.add_all([task1_1, task1_2, task2])
         db_session.commit()
 
@@ -521,10 +520,11 @@ class TestParallelApproval:
         db_session.commit()
 
         # 模拟发送通知（实际项目中会有通知服务）
-        pending_tasks = db_session.query(ApprovalTask).filter(
-            ApprovalTask.instance_id == instance.id,
-            ApprovalTask.status == "PENDING"
-        ).all()
+        pending_tasks = (
+            db_session.query(ApprovalTask)
+            .filter(ApprovalTask.instance_id == instance.id, ApprovalTask.status == "PENDING")
+            .all()
+        )
 
         notification_count = len(pending_tasks)
         assert notification_count == 2
@@ -572,14 +572,13 @@ class TestParallelApproval:
             db_session.commit()
 
             # 检查是否所有并行任务完成
-            parallel_tasks = db_session.query(ApprovalTask).filter(
-                ApprovalTask.instance_id == instance.id,
-                ApprovalTask.sequence == 1
-            ).all()
-
-            all_completed = all(
-                t.status in ["APPROVED", "REJECTED"] for t in parallel_tasks
+            parallel_tasks = (
+                db_session.query(ApprovalTask)
+                .filter(ApprovalTask.instance_id == instance.id, ApprovalTask.sequence == 1)
+                .all()
             )
+
+            all_completed = all(t.status in ["APPROVED", "REJECTED"] for t in parallel_tasks)
 
             if i < len(tasks) - 1:
                 assert all_completed is False

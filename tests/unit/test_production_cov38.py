@@ -5,8 +5,7 @@ Unit tests for standard/production.py and dashboard_adapters/production.py (第�
 import pytest
 
 pytest.importorskip(
-    "app.services.preset_stage_templates.templates.standard.production",
-    reason="导入失败，跳过"
+    "app.services.preset_stage_templates.templates.standard.production", reason="导入失败，跳过"
 )
 
 try:

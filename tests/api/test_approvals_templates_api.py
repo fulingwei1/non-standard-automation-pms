@@ -25,10 +25,7 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Approval templates API not implemented")
@@ -53,21 +50,19 @@ class TestApprovalsTemplatesAPI:
                     "step_order": 1,
                     "step_name": "部门经理审批",
                     "approver_role": "department_manager",
-                    "required": True
+                    "required": True,
                 },
                 {
                     "step_order": 2,
                     "step_name": "采购经理审批",
                     "approver_role": "procurement_manager",
-                    "required": True
-                }
-            ]
+                    "required": True,
+                },
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/templates/",
-            headers=headers,
-            json=template_data
+            f"{settings.API_V1_PREFIX}/approvals/templates/", headers=headers, json=template_data
         )
 
         if response.status_code == 404:
@@ -82,10 +77,7 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No template data or API not implemented")
@@ -99,15 +91,10 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "description": "更新后的模板描述",
-            "is_default": True
-        }
+        update_data = {"description": "更新后的模板描述", "is_default": True}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/approvals/templates/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/approvals/templates/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -123,8 +110,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/approvals/templates/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -139,14 +125,12 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        clone_data = {
-            "name": "复制的审批模板"
-        }
+        clone_data = {"name": "复制的审批模板"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/templates/1/clone",
             headers=headers,
-            json=clone_data
+            json=clone_data,
         )
 
         if response.status_code == 404:
@@ -162,8 +146,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/templates/1/set-default",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/1/set-default", headers=headers
         )
 
         if response.status_code == 404:
@@ -179,8 +162,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/?type=purchase_request",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/?type=purchase_request", headers=headers
         )
 
         if response.status_code == 404:
@@ -196,8 +178,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/?category=procurement",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/?category=procurement", headers=headers
         )
 
         if response.status_code == 404:
@@ -213,8 +194,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/defaults",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/defaults", headers=headers
         )
 
         if response.status_code == 404:
@@ -229,16 +209,12 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        preview_data = {
-            "business_data": {
-                "amount": 50000.0
-            }
-        }
+        preview_data = {"business_data": {"amount": 50000.0}}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/templates/1/preview",
             headers=headers,
-            json=preview_data
+            json=preview_data,
         )
 
         if response.status_code == 404:
@@ -254,8 +230,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/1/usage",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/1/usage", headers=headers
         )
 
         if response.status_code == 404:
@@ -271,8 +246,7 @@ class TestApprovalsTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/1/export",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/1/export", headers=headers
         )
 
         if response.status_code == 404:
@@ -287,17 +261,12 @@ class TestApprovalsTemplatesAPI:
 
         headers = _auth_headers(admin_token)
 
-        import_data = {
-            "template_data": {
-                "name": "导入的模板",
-                "steps": []
-            }
-        }
+        import_data = {"template_data": {"name": "导入的模板", "steps": []}}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/templates/import",
             headers=headers,
-            json=import_data
+            json=import_data,
         )
 
         if response.status_code == 404:
@@ -307,8 +276,6 @@ class TestApprovalsTemplatesAPI:
 
     def test_template_unauthorized(self, client: TestClient):
         """测试未授权访问审批模板"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates/")
 
         assert response.status_code in [401, 403], response.text

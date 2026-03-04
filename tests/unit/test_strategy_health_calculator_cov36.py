@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """战略管理健康度计算器单元测试 - 第三十六批"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.strategy.health_calculator")
 

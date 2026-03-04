@@ -15,7 +15,10 @@ class TestEngineerPerformanceService:
     @patch("app.services.engineer_performance.engineer_performance_service.PerformanceCalculator")
     @patch("app.services.engineer_performance.engineer_performance_service.RankingService")
     def test_init(self, mock_rank, mock_calc, mock_dim, mock_prof):
-        from app.services.engineer_performance.engineer_performance_service import EngineerPerformanceService
+        from app.services.engineer_performance.engineer_performance_service import (
+            EngineerPerformanceService,
+        )
+
         svc = EngineerPerformanceService(self.db)
         assert svc.db == self.db
 
@@ -24,7 +27,10 @@ class TestEngineerPerformanceService:
     @patch("app.services.engineer_performance.engineer_performance_service.PerformanceCalculator")
     @patch("app.services.engineer_performance.engineer_performance_service.RankingService")
     def test_get_engineer_profile(self, mock_rank, mock_calc, mock_dim, mock_prof):
-        from app.services.engineer_performance.engineer_performance_service import EngineerPerformanceService
+        from app.services.engineer_performance.engineer_performance_service import (
+            EngineerPerformanceService,
+        )
+
         svc = EngineerPerformanceService(self.db)
         profile = MagicMock()
         svc.profile_service.get_profile.return_value = profile
@@ -36,8 +42,12 @@ class TestEngineerPerformanceService:
     @patch("app.services.engineer_performance.engineer_performance_service.PerformanceCalculator")
     @patch("app.services.engineer_performance.engineer_performance_service.RankingService")
     def test_calculate_grade(self, mock_rank, mock_calc, mock_dim, mock_prof):
-        from app.services.engineer_performance.engineer_performance_service import EngineerPerformanceService
         from decimal import Decimal
+
+        from app.services.engineer_performance.engineer_performance_service import (
+            EngineerPerformanceService,
+        )
+
         svc = EngineerPerformanceService(self.db)
         svc.performance_calculator.calculate_grade.return_value = "A"
         grade = svc.calculate_grade(Decimal("85"))

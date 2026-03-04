@@ -2,8 +2,9 @@
 """
 Unit tests for app/services/win_rate_prediction_service/base.py
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.win_rate_prediction_service.base import WinRatePredictionService

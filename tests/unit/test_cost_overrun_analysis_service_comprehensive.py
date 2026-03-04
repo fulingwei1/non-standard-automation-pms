@@ -16,7 +16,7 @@ CostOverrunAnalysisService 综合单元测试
 
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -105,7 +105,9 @@ class TestAnalyzeReasons:
         from app.services.cost_overrun_analysis_service import CostOverrunAnalysisService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         with patch("app.services.cost_overrun_analysis_service.HourlyRateService"):
             service = CostOverrunAnalysisService(mock_db)
@@ -132,7 +134,10 @@ class TestAnalyzeReasons:
         mock_project2.id = 2
         mock_project2.project_code = "PJ002"
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_project1,
+            mock_project2,
+        ]
 
         with patch("app.services.cost_overrun_analysis_service.HourlyRateService"):
             service = CostOverrunAnalysisService(mock_db)
@@ -158,10 +163,7 @@ class TestAnalyzeReasons:
                 result = service.analyze_reasons()
 
         # 工时超支应该出现2次
-        work_hours_reason = next(
-            (r for r in result["reasons"] if r["reason"] == "工时超支"),
-            None
-        )
+        work_hours_reason = next((r for r in result["reasons"] if r["reason"] == "工时超支"), None)
         assert work_hours_reason is not None
         assert work_hours_reason["count"] == 2
 
@@ -323,8 +325,12 @@ class TestAnalyzeProjectOverrun:
 
             with patch.object(service, "_calculate_actual_cost", return_value=Decimal("120000")):
                 with patch.object(service, "_calculate_actual_hours", return_value=150):
-                    with patch.object(service, "_calculate_material_cost", return_value=Decimal("30000")):
-                        with patch.object(service, "_calculate_outsourcing_cost", return_value=Decimal("10000")):
+                    with patch.object(
+                        service, "_calculate_material_cost", return_value=Decimal("30000")
+                    ):
+                        with patch.object(
+                            service, "_calculate_outsourcing_cost", return_value=Decimal("10000")
+                        ):
                             result = service._analyze_project_overrun(mock_project)
 
         assert result["has_overrun"] is True
@@ -351,8 +357,12 @@ class TestAnalyzeProjectOverrun:
 
             with patch.object(service, "_calculate_actual_cost", return_value=Decimal("120000")):
                 with patch.object(service, "_calculate_actual_hours", return_value=90):
-                    with patch.object(service, "_calculate_material_cost", return_value=Decimal("30000")):
-                        with patch.object(service, "_calculate_outsourcing_cost", return_value=Decimal("10000")):
+                    with patch.object(
+                        service, "_calculate_material_cost", return_value=Decimal("30000")
+                    ):
+                        with patch.object(
+                            service, "_calculate_outsourcing_cost", return_value=Decimal("10000")
+                        ):
                             result = service._analyze_project_overrun(mock_project)
 
         assert "需求变更导致成本增加" in result["reasons"]
@@ -395,7 +405,9 @@ class TestCalculateActualCost:
 
             with patch.object(service, "_calculate_material_cost", return_value=Decimal("30000")):
                 with patch.object(service, "_calculate_labor_cost", return_value=Decimal("50000")):
-                    with patch.object(service, "_calculate_outsourcing_cost", return_value=Decimal("10000")):
+                    with patch.object(
+                        service, "_calculate_outsourcing_cost", return_value=Decimal("10000")
+                    ):
                         result = service._calculate_actual_cost(project_id=1)
 
         # 30000 + 50000 + 10000 + 5000 = 95000
@@ -453,7 +465,9 @@ class TestCalculateLaborCost:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_timesheet]
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
-        with patch("app.services.cost_overrun_analysis_service.HourlyRateService") as MockHourlyService:
+        with patch(
+            "app.services.cost_overrun_analysis_service.HourlyRateService"
+        ) as MockHourlyService:
             mock_hourly_service = MagicMock()
             mock_hourly_service.get_user_hourly_rate.return_value = Decimal("100")
             MockHourlyService.return_value = mock_hourly_service

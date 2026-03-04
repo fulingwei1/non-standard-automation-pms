@@ -14,8 +14,8 @@ class TestInit:
         assert CostCollectionService is not None
 
     def test_has_methods(self):
-        assert hasattr(CostCollectionService, 'collect_from_purchase_order')
-        assert hasattr(CostCollectionService, 'collect_from_outsourcing_order')
-        assert hasattr(CostCollectionService, 'collect_from_ecn')
-        assert hasattr(CostCollectionService, 'remove_cost_from_source')
-        assert hasattr(CostCollectionService, 'collect_from_bom')
+        assert hasattr(CostCollectionService, "collect_from_purchase_order")
+        assert hasattr(CostCollectionService, "collect_from_outsourcing_order")
+        assert hasattr(CostCollectionService, "collect_from_ecn")
+        assert hasattr(CostCollectionService, "remove_cost_from_source")
+        assert hasattr(CostCollectionService, "collect_from_bom")

@@ -41,22 +41,22 @@ class TestAnalyzeScheduleImpact:
 
     def test_with_schedule_impact_approved(self, db_session):
         """测试已批准变更的进度影响"""
-        from app.services.change_impact_analysis_service import analyze_schedule_impact
         from app.models.progress import Task
+        from app.services.change_impact_analysis_service import analyze_schedule_impact
 
         change = MagicMock()
         change.schedule_impact = "延期1周"
         change.change_level = "MAJOR"
         change.status = "APPROVED"
 
-            # 模拟查询结果
+        # 模拟查询结果
         mock_task = MagicMock()
         mock_task.id = 1
         mock_task.task_name = "任务1"
         mock_task.plan_start = date(2025, 1, 1)
         mock_task.plan_end = date(2025, 1, 15)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.all.return_value = [mock_task]
 
             result = analyze_schedule_impact(db_session, change, 1)
@@ -234,11 +234,13 @@ class TestCalculateChangeStatistics:
         from app.services.change_impact_analysis_service import calculate_change_statistics
 
         changes = []
-        for i, (change_type, level, status, cost) in enumerate([
-            ("DESIGN", "MAJOR", "APPROVED", Decimal("5000")),
-            ("DESIGN", "MINOR", "DRAFT", None),
-            ("PROCESS", "MAJOR", "APPROVED", Decimal("3000")),
-        ]):
+        for i, (change_type, level, status, cost) in enumerate(
+            [
+                ("DESIGN", "MAJOR", "APPROVED", Decimal("5000")),
+                ("DESIGN", "MINOR", "DRAFT", None),
+                ("PROCESS", "MAJOR", "APPROVED", Decimal("3000")),
+            ]
+        ):
             change = MagicMock()
             change.change_type = change_type
             change.change_level = level
@@ -263,16 +265,17 @@ class TestCalculateChangeStatistics:
         """测试有受影响项目的统计"""
         from app.services.change_impact_analysis_service import calculate_change_statistics
 
-        changes = [MagicMock(change_type="DESIGN", change_level="MAJOR", status="APPROVED", cost_impact=None)]
+        changes = [
+            MagicMock(
+                change_type="DESIGN", change_level="MAJOR", status="APPROVED", cost_impact=None
+            )
+        ]
 
         impact_analysis = [
             {
                 "impacts": {
                     "related_projects": {
-                        "affected_projects": [
-                            {"project_id": 1},
-                            {"project_id": 2}
-                        ]
+                        "affected_projects": [{"project_id": 1}, {"project_id": 2}]
                     }
                 }
             }
@@ -290,6 +293,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

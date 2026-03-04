@@ -7,7 +7,7 @@ ECN审批适配器单元测试
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
 
@@ -30,9 +30,7 @@ class TestEcnApprovalAdapterBasicMethods(unittest.TestCase):
         mock_ecn.id = 1
         mock_ecn.ecn_no = "ECN-2024-001"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         result = self.adapter.get_entity(1)
 
@@ -229,9 +227,7 @@ class TestCallbackMethods(unittest.TestCase):
         mock_ecn.status = "DRAFT"
         mock_ecn.current_step = None
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         mock_instance = MagicMock()
         self.adapter.on_submit(1, mock_instance)
@@ -255,9 +251,7 @@ class TestCallbackMethods(unittest.TestCase):
         mock_ecn = MagicMock()
         mock_ecn.status = "EVALUATING"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         mock_instance = MagicMock()
         self.adapter.on_approved(1, mock_instance)
@@ -272,9 +266,7 @@ class TestCallbackMethods(unittest.TestCase):
         mock_ecn = MagicMock()
         mock_ecn.status = "EVALUATING"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         mock_instance = MagicMock()
         self.adapter.on_rejected(1, mock_instance)
@@ -289,9 +281,7 @@ class TestCallbackMethods(unittest.TestCase):
         mock_ecn.status = "EVALUATING"
         mock_ecn.current_step = "APPROVAL"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         mock_instance = MagicMock()
         self.adapter.on_withdrawn(1, mock_instance)
@@ -314,9 +304,7 @@ class TestTitleAndSummary(unittest.TestCase):
         mock_ecn.ecn_no = "ECN-2024-001"
         mock_ecn.ecn_title = "设计变更"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         result = self.adapter.get_title(1)
 
@@ -412,9 +400,7 @@ class TestSubmitForApproval(unittest.TestCase):
         mock_engine.create_instance.return_value = mock_instance
         mock_workflow_engine_class.return_value = mock_engine
 
-        result = self.adapter.submit_for_approval(
-            ecn=mock_ecn, initiator_id=100, urgency="URGENT"
-        )
+        result = self.adapter.submit_for_approval(ecn=mock_ecn, initiator_id=100, urgency="URGENT")
 
         # 验证创建了审批实例
         self.assertEqual(result.id, 1001)
@@ -433,9 +419,7 @@ class TestSubmitForApproval(unittest.TestCase):
         # 模拟已存在的审批实例
         mock_instance = MagicMock()
         mock_instance.id = 1001
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_instance
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_instance
 
         result = self.adapter.submit_for_approval(ecn=mock_ecn, initiator_id=100)
 
@@ -516,9 +500,7 @@ class TestEvaluationMethods(unittest.TestCase):
         mock_ecn.ecn_type = "DESIGN"
         mock_ecn.cost_impact = Decimal("5000.00")
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         result = self.adapter.get_required_evaluators(1)
 
@@ -532,9 +514,7 @@ class TestEvaluationMethods(unittest.TestCase):
         mock_ecn.ecn_type = "MATERIAL"
         mock_ecn.cost_impact = Decimal("3000.00")
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         result = self.adapter.get_required_evaluators(1)
 
@@ -549,9 +529,7 @@ class TestEvaluationMethods(unittest.TestCase):
         mock_ecn.ecn_type = "DESIGN"
         mock_ecn.cost_impact = Decimal("15000.00")
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_ecn
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         result = self.adapter.get_required_evaluators(1)
 
@@ -687,9 +665,7 @@ class TestApprovalRecordMethods(unittest.TestCase):
         mock_node = MagicMock()
         mock_node.node_order = 2
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            mock_node
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = mock_node
 
         mock_ecn = MagicMock()
         result = self.adapter._determine_approval_level(1, mock_ecn)

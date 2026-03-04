@@ -2,12 +2,13 @@
 """
 Tests for app/services/alert_rule_engine/base.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.alert_rule_engine.base import AlertRuleEngineBase
     from app.models.enums import AlertLevelEnum
+    from app.services.alert_rule_engine.base import AlertRuleEngineBase
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -74,4 +75,7 @@ def test_get_field_value_from_context(engine):
 def test_response_timeout_constants():
     """响应时限常量配置合理"""
     engine = AlertRuleEngineBase()
-    assert engine.RESPONSE_TIMEOUT[AlertLevelEnum.URGENT.value] < engine.RESPONSE_TIMEOUT[AlertLevelEnum.INFO.value]
+    assert (
+        engine.RESPONSE_TIMEOUT[AlertLevelEnum.URGENT.value]
+        < engine.RESPONSE_TIMEOUT[AlertLevelEnum.INFO.value]
+    )

@@ -6,7 +6,7 @@ PerformanceCalculator 深度覆盖测试 - N5组
 
 import unittest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.services.engineer_performance.performance_calculator import PerformanceCalculator
 
@@ -78,7 +78,7 @@ class TestCalculateMechanicalScoreEdgeCases(unittest.TestCase):
         mock_query.first.return_value = period
         mock_query.all.side_effect = [
             [review1, review2],  # design_reviews (100% pass)
-            [],                  # collaboration ratings
+            [],  # collaboration ratings
         ]
         mock_query.count.side_effect = [5, 2]  # 5 debug issues, 2 contributions
 
@@ -227,18 +227,21 @@ class TestCalculateSolutionScore(unittest.TestCase):
         actual_ratings = collaboration_ratings if collaboration_ratings is not None else []
 
         mock_query.all.side_effect = [
-            actual_solutions,    # PresaleSolution.all()
-            actual_ratings,      # CollaborationRating.all()
+            actual_solutions,  # PresaleSolution.all()
+            actual_ratings,  # CollaborationRating.all()
         ]
         mock_query.count.return_value = templates  # PresaleSolutionTemplate count
         return mock_query
 
     def test_solution_no_solutions_uses_defaults(self):
         """无方案时使用默认分值"""
-        with patch.dict('sys.modules', {
-            'app.models.presale': MagicMock(),
-            'app.models.sales': MagicMock(),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "app.models.presale": MagicMock(),
+                "app.models.sales": MagicMock(),
+            },
+        ):
             mock_query = _make_mock_query(self.db)
             period = MagicMock(id=1, start_date="2025-01-01", end_date="2025-12-31")
             mock_query.first.return_value = period
@@ -251,10 +254,13 @@ class TestCalculateSolutionScore(unittest.TestCase):
 
     def test_solution_with_templates_knowledge_score(self):
         """方案模板贡献影响知识分"""
-        with patch.dict('sys.modules', {
-            'app.models.presale': MagicMock(),
-            'app.models.sales': MagicMock(),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "app.models.presale": MagicMock(),
+                "app.models.sales": MagicMock(),
+            },
+        ):
             mock_query = _make_mock_query(self.db)
             period = MagicMock(id=1, start_date="2025-01-01", end_date="2025-12-31")
             mock_query.first.return_value = period
@@ -266,10 +272,13 @@ class TestCalculateSolutionScore(unittest.TestCase):
 
     def test_calculate_dimension_score_solution_type(self):
         """通过 calculate_dimension_score 调用方案工程师路径"""
-        with patch.dict('sys.modules', {
-            'app.models.presale': MagicMock(),
-            'app.models.sales': MagicMock(),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "app.models.presale": MagicMock(),
+                "app.models.sales": MagicMock(),
+            },
+        ):
             mock_query = _make_mock_query(self.db)
             period = MagicMock(id=1, start_date="2025-01-01", end_date="2025-12-31")
             mock_query.first.return_value = period
@@ -289,6 +298,7 @@ class TestCalculateTotalScoreEdgeCases(unittest.TestCase):
 
     def _make_scores(self, **overrides):
         from app.schemas.engineer_performance import EngineerDimensionScore
+
         defaults = dict(
             technical_score=Decimal("80"),
             execution_score=Decimal("70"),
@@ -316,11 +326,11 @@ class TestCalculateTotalScoreEdgeCases(unittest.TestCase):
         result = self.calc.calculate_total_score(scores, config, job_type="solution")
         # 应当 fallback 到标准加权
         expected = (
-            Decimal("80") * 30 / 100 +
-            Decimal("70") * 25 / 100 +
-            Decimal("75") * 20 / 100 +
-            Decimal("60") * 15 / 100 +
-            Decimal("85") * 10 / 100
+            Decimal("80") * 30 / 100
+            + Decimal("70") * 25 / 100
+            + Decimal("75") * 20 / 100
+            + Decimal("60") * 15 / 100
+            + Decimal("85") * 10 / 100
         )
         self.assertEqual(result, Decimal(str(round(expected, 2))))
 

@@ -5,9 +5,10 @@
 测试项目里程碑的创建、查询、更新、删除及相关功能
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
 
 from app.core.config import settings
 
@@ -27,10 +28,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取一个项目
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
         if projects_response.status_code != 200:
             pytest.skip("No projects available")
 
@@ -48,13 +46,13 @@ class TestProjectMilestonesAPI:
             "description": "完成需求文档编写和评审",
             "planned_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
             "milestone_type": "phase",
-            "weight": 15.0
+            "weight": 15.0,
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             headers=headers,
-            json=milestone_data
+            json=milestone_data,
         )
 
         # 如果端点不存在或未实现，跳过测试
@@ -74,10 +72,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 获取项目
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
         if projects_response.status_code != 200:
             pytest.skip("No projects available")
 
@@ -90,8 +85,7 @@ class TestProjectMilestonesAPI:
 
         # 获取里程碑列表
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/", headers=headers
         )
 
         if response.status_code == 404:
@@ -112,10 +106,7 @@ class TestProjectMilestonesAPI:
 
         # 这个测试假设系统中有里程碑数据
         # 实际应该先创建一个里程碑，然后获取详情
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/milestones/1", headers=headers)
 
         # 如果没有数据或端点不存在，跳过
         if response.status_code in [404, 422]:
@@ -134,13 +125,11 @@ class TestProjectMilestonesAPI:
             "name": "需求分析完成（已更新）",
             "status": "completed",
             "actual_date": datetime.now().strftime("%Y-%m-%d"),
-            "completion_rate": 100.0
+            "completion_rate": 100.0,
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -156,8 +145,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/999", headers=headers
         )
 
         # 可能返回 404（不存在）或 204/200（删除成功）
@@ -168,9 +156,7 @@ class TestProjectMilestonesAPI:
 
     def test_milestone_unauthorized(self, client: TestClient):
         """测试未授权访问里程碑"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/milestones/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -182,8 +168,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/999999/milestones/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/999999/milestones/", headers=headers
         )
 
         if response.status_code == 404:
@@ -200,8 +185,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/?page=1&page_size=10", headers=headers
         )
 
         if response.status_code == 404:
@@ -220,8 +204,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/?status=completed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/?status=completed", headers=headers
         )
 
         if response.status_code == 404:
@@ -242,7 +225,7 @@ class TestProjectMilestonesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/milestones/"
             f"?start_date={start_date}&end_date={end_date}",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -258,14 +241,10 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 缺少必填字段
-        invalid_data = {
-            "description": "没有名称的里程碑"
-        }
+        invalid_data = {"description": "没有名称的里程碑"}
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:
@@ -281,14 +260,10 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 无效的完成率
-        invalid_data = {
-            "completion_rate": 150.0  # 超过100
-        }
+        invalid_data = {"completion_rate": 150.0}  # 超过100
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/1",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/1", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:
@@ -309,13 +284,13 @@ class TestProjectMilestonesAPI:
             "status": "completed",
             "actual_date": datetime.now().strftime("%Y-%m-%d"),
             "completion_rate": 100.0,
-            "remarks": "按时完成"
+            "remarks": "按时完成",
         }
 
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/1/milestones/1",
             headers=headers,
-            json=completion_data
+            json=completion_data,
         )
 
         if response.status_code in [404, 422]:
@@ -331,8 +306,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/milestones/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/milestones/statistics", headers=headers
         )
 
         if response.status_code == 404:

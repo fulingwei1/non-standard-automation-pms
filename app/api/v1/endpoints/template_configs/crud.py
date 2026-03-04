@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.project_template_config import ProjectTemplateConfig, StageConfig, NodeConfig
+from app.models.project_template_config import NodeConfig, ProjectTemplateConfig, StageConfig
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -30,28 +30,31 @@ def list_configs(
 ) -> Any:
     """获取模板配置列表"""
     offset = (page - 1) * page_size
-    
+
     query = db.query(ProjectTemplateConfig).filter(ProjectTemplateConfig.is_active == True)
-    
+
     if base_template:
         query = query.filter(ProjectTemplateConfig.base_template_code == base_template)
     if is_active is not None:
         query = query.filter(ProjectTemplateConfig.is_active == is_active)
-    
+
     total = query.count()
     items = query.offset(offset).limit(page_size).all()
-    
+
     return PaginatedResponse(
-        items=[{
-            "id": item.id,
-            "config_code": item.config_code,
-            "config_name": item.config_name,
-            "description": item.description,
-            "base_template_code": item.base_template_code,
-            "is_active": item.is_active,
-            "is_default": item.is_default,
-            "created_at": item.created_at.isoformat() if item.created_at else None,
-        } for item in items],
+        items=[
+            {
+                "id": item.id,
+                "config_code": item.config_code,
+                "config_name": item.config_name,
+                "description": item.description,
+                "base_template_code": item.base_template_code,
+                "is_active": item.is_active,
+                "is_default": item.is_default,
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+            }
+            for item in items
+        ],
         total=total,
         page=page,
         page_size=page_size,
@@ -67,42 +70,47 @@ def get_config(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取模板配置详情（含阶段和节点）"""
-    config = db.query(ProjectTemplateConfig).filter(
-        ProjectTemplateConfig.id == config_id,
-        ProjectTemplateConfig.is_active == True
-    ).first()
-    
+    config = (
+        db.query(ProjectTemplateConfig)
+        .filter(ProjectTemplateConfig.id == config_id, ProjectTemplateConfig.is_active == True)
+        .first()
+    )
+
     if not config:
         raise HTTPException(status_code=404, detail="配置不存在")
-    
+
     # 加载阶段和节点
     stages = []
     for stage in sorted(config.stages, key=lambda s: s.sequence):
         nodes = []
         for node in sorted(stage.nodes, key=lambda n: n.sequence):
-            nodes.append({
-                "id": node.id,
-                "node_code": node.node_code,
-                "node_name": node.node_name,
-                "sequence": node.sequence,
-                "is_enabled": node.is_enabled,
-                "is_required": node.is_required,
-                "custom_owner_role_code": node.custom_owner_role_code,
-                "custom_estimated_days": node.custom_estimated_days,
-            })
-        
-        stages.append({
-            "id": stage.id,
-            "stage_code": stage.stage_code,
-            "stage_name": stage.stage_name,
-            "sequence": stage.sequence,
-            "is_enabled": stage.is_enabled,
-            "is_required": stage.is_required,
-            "custom_description": stage.custom_description,
-            "custom_estimated_days": stage.custom_estimated_days,
-            "nodes": nodes,
-        })
-    
+            nodes.append(
+                {
+                    "id": node.id,
+                    "node_code": node.node_code,
+                    "node_name": node.node_name,
+                    "sequence": node.sequence,
+                    "is_enabled": node.is_enabled,
+                    "is_required": node.is_required,
+                    "custom_owner_role_code": node.custom_owner_role_code,
+                    "custom_estimated_days": node.custom_estimated_days,
+                }
+            )
+
+        stages.append(
+            {
+                "id": stage.id,
+                "stage_code": stage.stage_code,
+                "stage_name": stage.stage_name,
+                "sequence": stage.sequence,
+                "is_enabled": stage.is_enabled,
+                "is_required": stage.is_required,
+                "custom_description": stage.custom_description,
+                "custom_estimated_days": stage.custom_estimated_days,
+                "nodes": nodes,
+            }
+        )
+
     return {
         "id": config.id,
         "config_code": config.config_code,
@@ -125,12 +133,14 @@ def create_config(
 ) -> Any:
     """创建模板配置"""
     # 检查编码是否重复
-    existing = db.query(ProjectTemplateConfig).filter(
-        ProjectTemplateConfig.config_code == config_data.get("config_code")
-    ).first()
+    existing = (
+        db.query(ProjectTemplateConfig)
+        .filter(ProjectTemplateConfig.config_code == config_data.get("config_code"))
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="配置编码已存在")
-    
+
     # 创建配置
     config = ProjectTemplateConfig(
         config_code=config_data.get("config_code"),
@@ -142,10 +152,10 @@ def create_config(
         is_default=False,
         created_by=current_user.id,
     )
-    
+
     db.add(config)
     db.flush()
-    
+
     # 创建阶段和节点配置
     stages_data = config_data.get("stages", [])
     for stage_data in stages_data:
@@ -161,7 +171,7 @@ def create_config(
         )
         db.add(stage)
         db.flush()
-        
+
         # 创建节点
         nodes_data = stage_data.get("nodes", [])
         for node_data in nodes_data:
@@ -176,10 +186,10 @@ def create_config(
                 custom_estimated_days=node_data.get("custom_estimated_days"),
             )
             db.add(node)
-    
+
     db.commit()
     db.refresh(config)
-    
+
     return ResponseModel(message="创建成功", data={"id": config.id})
 
 
@@ -192,21 +202,19 @@ def update_config(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新模板配置"""
-    config = db.query(ProjectTemplateConfig).filter(
-        ProjectTemplateConfig.id == config_id
-    ).first()
+    config = db.query(ProjectTemplateConfig).filter(ProjectTemplateConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="配置不存在")
-    
+
     # 更新基本信息
     config.config_name = config_data.get("config_name", config.config_name)
     config.description = config_data.get("description", config.description)
     config.config_json = json.dumps(config_data.get("config", {}))
     config.is_active = config_data.get("is_active", config.is_active)
-    
+
     # 更新阶段和节点（简化：先删除再创建）
     db.query(StageConfig).filter(StageConfig.config_id == config_id).delete()
-    
+
     stages_data = config_data.get("stages", [])
     for stage_data in stages_data:
         stage = StageConfig(
@@ -221,7 +229,7 @@ def update_config(
         )
         db.add(stage)
         db.flush()
-        
+
         nodes_data = stage_data.get("nodes", [])
         for node_data in nodes_data:
             node = NodeConfig(
@@ -235,9 +243,9 @@ def update_config(
                 custom_estimated_days=node_data.get("custom_estimated_days"),
             )
             db.add(node)
-    
+
     db.commit()
-    
+
     return ResponseModel(message="更新成功")
 
 
@@ -249,13 +257,11 @@ def delete_config(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """删除模板配置（软删除）"""
-    config = db.query(ProjectTemplateConfig).filter(
-        ProjectTemplateConfig.id == config_id
-    ).first()
+    config = db.query(ProjectTemplateConfig).filter(ProjectTemplateConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="配置不存在")
-    
+
     config.is_active = False
     db.commit()
-    
+
     return ResponseModel(message="删除成功")

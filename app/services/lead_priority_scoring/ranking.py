@@ -47,9 +47,7 @@ class RankingMixin:
 
         else:  # opportunity
             opportunities = (
-                self.db.query(Opportunity)
-                .filter(Opportunity.stage.notin_(["WON", "LOST"]))
-                .all()
+                self.db.query(Opportunity).filter(Opportunity.stage.notin_(["WON", "LOST"])).all()
             )
 
             for opp in opportunities:

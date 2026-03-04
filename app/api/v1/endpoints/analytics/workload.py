@@ -25,6 +25,7 @@ router = APIRouter()
 
 # ==================== Department Workload ====================
 
+
 @router.get("/departments/{dept_id}/workload/summary", response_model=ResponseModel)
 def get_department_workload_summary(
     dept_id: int,
@@ -41,32 +42,42 @@ def get_department_workload_summary(
         start_date, end_date = get_month_range(date.today())
 
     # 获取部门成员
-    members = db.query(User).filter(
-        User.department_id == dept_id,
-        User.is_active,
-    ).all()
+    members = (
+        db.query(User)
+        .filter(
+            User.department_id == dept_id,
+            User.is_active,
+        )
+        .all()
+    )
 
     member_ids = [m.id for m in members]
 
     if not member_ids:
-        return ResponseModel(data={
-            "department_id": dept_id,
-            "period": f"{start_date} ~ {end_date}",
-            "members": [],
-            "summary": {
-                "total_members": 0,
-                "avg_allocation": 0,
-                "overloaded_count": 0,
-                "underutilized_count": 0,
-            },
-        })
+        return ResponseModel(
+            data={
+                "department_id": dept_id,
+                "period": f"{start_date} ~ {end_date}",
+                "members": [],
+                "summary": {
+                    "total_members": 0,
+                    "avg_allocation": 0,
+                    "overloaded_count": 0,
+                    "underutilized_count": 0,
+                },
+            }
+        )
 
     # 获取该期间的资源分配
-    allocations = db.query(ProjectStageResourcePlan).filter(
-        ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
-        ProjectStageResourcePlan.planned_start <= end_date,
-        ProjectStageResourcePlan.planned_end >= start_date,
-    ).all()
+    allocations = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
+            ProjectStageResourcePlan.planned_start <= end_date,
+            ProjectStageResourcePlan.planned_end >= start_date,
+        )
+        .all()
+    )
 
     # 按员工汇总
     member_workload = {m.id: {"user": m, "total_allocation": 0, "projects": []} for m in members}
@@ -76,11 +87,13 @@ def get_department_workload_summary(
         if emp_id in member_workload:
             pct = float(alloc.allocation_pct) if alloc.allocation_pct else 100.0
             member_workload[emp_id]["total_allocation"] += pct
-            member_workload[emp_id]["projects"].append({
-                "project_id": alloc.project_id,
-                "stage_code": alloc.stage_code,
-                "allocation_pct": pct,
-            })
+            member_workload[emp_id]["projects"].append(
+                {
+                    "project_id": alloc.project_id,
+                    "stage_code": alloc.stage_code,
+                    "allocation_pct": pct,
+                }
+            )
 
     # 构建响应
     members_data = []
@@ -100,28 +113,32 @@ def get_department_workload_summary(
             status = "underutilized"
             underutilized += 1
 
-        members_data.append({
-            "id": emp_id,
-            "name": data["user"].username,
-            "total_allocation": round(alloc, 1),
-            "status": status,
-            "project_count": len(data["projects"]),
-        })
+        members_data.append(
+            {
+                "id": emp_id,
+                "name": data["user"].username,
+                "total_allocation": round(alloc, 1),
+                "status": status,
+                "project_count": len(data["projects"]),
+            }
+        )
 
     # 按分配率排序
     members_data.sort(key=lambda x: x["total_allocation"], reverse=True)
 
-    return ResponseModel(data={
-        "department_id": dept_id,
-        "period": f"{start_date} ~ {end_date}",
-        "members": members_data,
-        "summary": {
-            "total_members": len(members),
-            "avg_allocation": round(total_alloc / len(members), 1) if members else 0,
-            "overloaded_count": overloaded,
-            "underutilized_count": underutilized,
-        },
-    })
+    return ResponseModel(
+        data={
+            "department_id": dept_id,
+            "period": f"{start_date} ~ {end_date}",
+            "members": members_data,
+            "summary": {
+                "total_members": len(members),
+                "avg_allocation": round(total_alloc / len(members), 1) if members else 0,
+                "overloaded_count": overloaded,
+                "underutilized_count": underutilized,
+            },
+        }
+    )
 
 
 @router.get("/departments/{dept_id}/workload/distribution", response_model=ResponseModel)
@@ -138,18 +155,26 @@ def get_department_workload_distribution(
     if not start_date:
         start_date, end_date = get_month_range(date.today())
 
-    members = db.query(User).filter(
-        User.department_id == dept_id,
-        User.is_active,
-    ).all()
+    members = (
+        db.query(User)
+        .filter(
+            User.department_id == dept_id,
+            User.is_active,
+        )
+        .all()
+    )
 
     member_ids = [m.id for m in members]
 
-    allocations = db.query(ProjectStageResourcePlan).filter(
-        ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
-        ProjectStageResourcePlan.planned_start <= end_date,
-        ProjectStageResourcePlan.planned_end >= start_date,
-    ).all()
+    allocations = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
+            ProjectStageResourcePlan.planned_start <= end_date,
+            ProjectStageResourcePlan.planned_end >= start_date,
+        )
+        .all()
+    )
 
     # 计算分配
     member_alloc = {}
@@ -162,11 +187,11 @@ def get_department_workload_distribution(
 
     # 分布区间
     distribution = {
-        "overloaded_high": [],    # >150%
-        "overloaded": [],         # 100-150%
-        "optimal": [],            # 80-100%
-        "available": [],          # 50-80%
-        "underutilized": [],      # <50%
+        "overloaded_high": [],  # >150%
+        "overloaded": [],  # 100-150%
+        "optimal": [],  # 80-100%
+        "available": [],  # 50-80%
+        "underutilized": [],  # <50%
     }
 
     for m in members:
@@ -184,15 +209,18 @@ def get_department_workload_distribution(
         else:
             distribution["underutilized"].append(item)
 
-    return ResponseModel(data={
-        "department_id": dept_id,
-        "period": f"{start_date} ~ {end_date}",
-        "distribution": distribution,
-        "counts": {k: len(v) for k, v in distribution.items()},
-    })
+    return ResponseModel(
+        data={
+            "department_id": dept_id,
+            "period": f"{start_date} ~ {end_date}",
+            "distribution": distribution,
+            "counts": {k: len(v) for k, v in distribution.items()},
+        }
+    )
 
 
 # ==================== Global Workload Analytics ====================
+
 
 @router.get("/analytics/workload/overview", response_model=ResponseModel)
 def get_global_workload_overview(
@@ -212,10 +240,14 @@ def get_global_workload_overview(
 
     dept_stats = []
     for dept in departments:
-        members = db.query(User).filter(
-            User.department_id == dept.id,
-            User.is_active,
-        ).all()
+        members = (
+            db.query(User)
+            .filter(
+                User.department_id == dept.id,
+                User.is_active,
+            )
+            .all()
+        )
 
         if not members:
             continue
@@ -223,34 +255,51 @@ def get_global_workload_overview(
         member_ids = [m.id for m in members]
 
         # 统计分配
-        total_alloc = db.query(func.sum(ProjectStageResourcePlan.allocation_pct)).filter(
-            ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
-            ProjectStageResourcePlan.planned_start <= end_date,
-            ProjectStageResourcePlan.planned_end >= start_date,
-        ).scalar() or 0
+        total_alloc = (
+            db.query(func.sum(ProjectStageResourcePlan.allocation_pct))
+            .filter(
+                ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
+                ProjectStageResourcePlan.planned_start <= end_date,
+                ProjectStageResourcePlan.planned_end >= start_date,
+            )
+            .scalar()
+            or 0
+        )
 
         avg_alloc = float(total_alloc) / len(members) if members else 0
 
-        dept_stats.append({
-            "department_id": dept.id,
-            "department_name": dept.name,
-            "member_count": len(members),
-            "avg_allocation": round(avg_alloc, 1),
-            "status": "overloaded" if avg_alloc > 100 else ("optimal" if avg_alloc >= 70 else "available"),
-        })
+        dept_stats.append(
+            {
+                "department_id": dept.id,
+                "department_name": dept.name,
+                "member_count": len(members),
+                "avg_allocation": round(avg_alloc, 1),
+                "status": (
+                    "overloaded"
+                    if avg_alloc > 100
+                    else ("optimal" if avg_alloc >= 70 else "available")
+                ),
+            }
+        )
 
     # 排序
     dept_stats.sort(key=lambda x: x["avg_allocation"], reverse=True)
 
-    return ResponseModel(data={
-        "period": f"{start_date} ~ {end_date}",
-        "departments": dept_stats,
-        "summary": {
-            "total_departments": len(dept_stats),
-            "overloaded_count": len([d for d in dept_stats if d["status"] == "overloaded"]),
-            "avg_global_allocation": round(sum(d["avg_allocation"] for d in dept_stats) / len(dept_stats), 1) if dept_stats else 0,
-        },
-    })
+    return ResponseModel(
+        data={
+            "period": f"{start_date} ~ {end_date}",
+            "departments": dept_stats,
+            "summary": {
+                "total_departments": len(dept_stats),
+                "overloaded_count": len([d for d in dept_stats if d["status"] == "overloaded"]),
+                "avg_global_allocation": (
+                    round(sum(d["avg_allocation"] for d in dept_stats) / len(dept_stats), 1)
+                    if dept_stats
+                    else 0
+                ),
+            },
+        }
+    )
 
 
 @router.get("/analytics/workload/bottlenecks", response_model=ResponseModel)
@@ -269,28 +318,32 @@ def get_workload_bottlenecks(
     bottlenecks = []
 
     # 1. 检测严重超载的员工
-    overloaded_employees = db.query(
-        ProjectStageResourcePlan.assigned_employee_id,
-        func.sum(ProjectStageResourcePlan.allocation_pct).label("total_alloc"),
-    ).filter(
-        ProjectStageResourcePlan.assigned_employee_id.isnot(None),
-        ProjectStageResourcePlan.planned_start <= end_date,
-        ProjectStageResourcePlan.planned_end >= start_date,
-    ).group_by(
-        ProjectStageResourcePlan.assigned_employee_id
-    ).having(
-        func.sum(ProjectStageResourcePlan.allocation_pct) > 150
-    ).all()
+    overloaded_employees = (
+        db.query(
+            ProjectStageResourcePlan.assigned_employee_id,
+            func.sum(ProjectStageResourcePlan.allocation_pct).label("total_alloc"),
+        )
+        .filter(
+            ProjectStageResourcePlan.assigned_employee_id.isnot(None),
+            ProjectStageResourcePlan.planned_start <= end_date,
+            ProjectStageResourcePlan.planned_end >= start_date,
+        )
+        .group_by(ProjectStageResourcePlan.assigned_employee_id)
+        .having(func.sum(ProjectStageResourcePlan.allocation_pct) > 150)
+        .all()
+    )
 
     for emp_id, total in overloaded_employees:
         emp = db.query(User).filter(User.id == emp_id).first()
-        bottlenecks.append({
-            "type": "EMPLOYEE_OVERLOAD",
-            "severity": "HIGH",
-            "employee": {"id": emp_id, "name": emp.username if emp else None},
-            "detail": f"总分配 {float(total):.0f}%，严重超载",
-            "recommendation": "考虑重新分配部分任务或增加人手",
-        })
+        bottlenecks.append(
+            {
+                "type": "EMPLOYEE_OVERLOAD",
+                "severity": "HIGH",
+                "employee": {"id": emp_id, "name": emp.username if emp else None},
+                "detail": f"总分配 {float(total):.0f}%，严重超载",
+                "recommendation": "考虑重新分配部分任务或增加人手",
+            }
+        )
 
     # 2. 检测超载部门
     departments = db.query(Department).filter(Department.is_active).all()
@@ -300,25 +353,34 @@ def get_workload_bottlenecks(
             continue
 
         member_ids = [m.id for m in members]
-        total_alloc = db.query(func.sum(ProjectStageResourcePlan.allocation_pct)).filter(
-            ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
-            ProjectStageResourcePlan.planned_start <= end_date,
-            ProjectStageResourcePlan.planned_end >= start_date,
-        ).scalar() or 0
+        total_alloc = (
+            db.query(func.sum(ProjectStageResourcePlan.allocation_pct))
+            .filter(
+                ProjectStageResourcePlan.assigned_employee_id.in_(member_ids),
+                ProjectStageResourcePlan.planned_start <= end_date,
+                ProjectStageResourcePlan.planned_end >= start_date,
+            )
+            .scalar()
+            or 0
+        )
 
         avg = float(total_alloc) / len(members)
         if avg > 120:
-            bottlenecks.append({
-                "type": "DEPARTMENT_OVERLOAD",
-                "severity": "MEDIUM" if avg < 150 else "HIGH",
-                "department": {"id": dept.id, "name": dept.name},
-                "detail": f"部门平均负载 {avg:.0f}%",
-                "recommendation": "考虑跨部门借调或外协",
-            })
+            bottlenecks.append(
+                {
+                    "type": "DEPARTMENT_OVERLOAD",
+                    "severity": "MEDIUM" if avg < 150 else "HIGH",
+                    "department": {"id": dept.id, "name": dept.name},
+                    "detail": f"部门平均负载 {avg:.0f}%",
+                    "recommendation": "考虑跨部门借调或外协",
+                }
+            )
 
-    return ResponseModel(data={
-        "period": f"{start_date} ~ {end_date}",
-        "bottlenecks": bottlenecks,
-        "total_count": len(bottlenecks),
-        "high_severity_count": len([b for b in bottlenecks if b["severity"] == "HIGH"]),
-    })
+    return ResponseModel(
+        data={
+            "period": f"{start_date} ~ {end_date}",
+            "bottlenecks": bottlenecks,
+            "total_count": len(bottlenecks),
+            "high_severity_count": len([b for b in bottlenecks if b["severity"] == "HIGH"]),
+        }
+    )

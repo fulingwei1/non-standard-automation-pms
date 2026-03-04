@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.common import PageResponse
 from app.schemas.strategy import (
     KPICollectRequest,
@@ -24,7 +25,6 @@ from app.schemas.strategy import (
     KPIWithHistoryResponse,
 )
 from app.services import strategy as strategy_service
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ router = APIRouter()
 def create_kpi(
     data: KPICreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建 KPI
@@ -41,10 +41,7 @@ def create_kpi(
     # 验证 CSF 是否存在
     csf = strategy_service.get_csf(db, data.csf_id)
     if not csf:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="关联的 CSF 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="关联的 CSF 不存在")
 
     kpi = strategy_service.create_kpi(db, data)
     return kpi
@@ -69,7 +66,7 @@ def list_kpis(
         ipooc_type=ipooc_type,
         data_source_type=data_source_type,
         skip=pagination.offset,
-        limit=pagination.limit
+        limit=pagination.limit,
     )
     return PageResponse(
         items=items,
@@ -89,10 +86,7 @@ def get_kpi(
     """
     detail = strategy_service.get_kpi_detail(db, kpi_id)
     if not detail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
     return detail
 
 
@@ -107,10 +101,7 @@ def get_kpi_history(
     """
     kpi = strategy_service.get_kpi(db, kpi_id)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
 
     return strategy_service.get_kpi_history(db, kpi_id, limit)
 
@@ -125,10 +116,7 @@ def get_kpi_with_history(
     """
     result = strategy_service.get_kpi_with_history(db, kpi_id)
     if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
     return result
 
 
@@ -137,17 +125,14 @@ def update_kpi(
     kpi_id: int,
     data: KPIUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     更新 KPI
     """
     kpi = strategy_service.update_kpi(db, kpi_id, data)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
     return kpi
 
 
@@ -156,19 +141,14 @@ def update_kpi_value(
     kpi_id: int,
     data: KPIValueUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     更新 KPI 当前值
     """
-    kpi = strategy_service.update_kpi_value(
-        db, kpi_id, data.value, current_user.id, data.remark
-    )
+    kpi = strategy_service.update_kpi_value(db, kpi_id, data.value, current_user.id, data.remark)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
     return kpi
 
 
@@ -176,17 +156,14 @@ def update_kpi_value(
 def delete_kpi(
     kpi_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     删除 KPI（软删除）
     """
     success = strategy_service.delete_kpi(db, kpi_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
     return None
 
 
@@ -194,11 +171,12 @@ def delete_kpi(
 # 数据采集
 # ============================================
 
+
 @router.post("/{kpi_id}/collect", response_model=KPIResponse)
 def collect_kpi(
     kpi_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     采集单个 KPI 数据
@@ -206,8 +184,7 @@ def collect_kpi(
     kpi = strategy_service.auto_collect_kpi(db, kpi_id, current_user.id)
     if not kpi:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="KPI 采集失败，请检查数据源配置"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="KPI 采集失败，请检查数据源配置"
         )
     return kpi
 
@@ -216,15 +193,13 @@ def collect_kpi(
 def batch_collect_kpis(
     data: KPICollectRequest,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     批量采集 KPI 数据
     """
     result = strategy_service.batch_collect_kpis(
-        db,
-        strategy_id=data.strategy_id,
-        frequency=data.frequency
+        db, strategy_id=data.strategy_id, frequency=data.frequency
     )
     return KPICollectResponse(
         total=result["total"],
@@ -250,22 +225,24 @@ def get_collection_status(
 # 数据源管理
 # ============================================
 
-@router.post("/{kpi_id}/data-sources", response_model=KPIDataSourceResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{kpi_id}/data-sources",
+    response_model=KPIDataSourceResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_data_source(
     kpi_id: int,
     data: KPIDataSourceCreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建 KPI 数据源配置
     """
     kpi = strategy_service.get_kpi(db, kpi_id)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
 
     data.kpi_id = kpi_id
     source = strategy_service.create_kpi_data_source(db, data)
@@ -282,9 +259,6 @@ def get_data_sources(
     """
     kpi = strategy_service.get_kpi(db, kpi_id)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KPI 不存在")
 
     return strategy_service.get_kpi_data_sources(db, kpi_id)

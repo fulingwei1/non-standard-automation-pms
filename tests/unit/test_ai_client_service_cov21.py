@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十一批：AI客户端服务单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.ai_client_service")
 
@@ -11,6 +12,7 @@ pytest.importorskip("app.services.ai_client_service")
 def service_no_keys():
     with patch.dict("os.environ", {"OPENAI_API_KEY": "", "KIMI_API_KEY": "", "ZHIPU_API_KEY": ""}):
         from app.services.ai_client_service import AIClientService
+
         return AIClientService()
 
 

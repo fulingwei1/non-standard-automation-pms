@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/shortage/shortage_management_service.py"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.shortage.shortage_management_service import ShortageManagementService
 

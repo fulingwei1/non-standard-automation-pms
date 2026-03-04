@@ -3,33 +3,33 @@
 项目变更管理端点
 """
 
-from typing import Any, Optional
 from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.schemas import list_response, success_response
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.models.user import User
 from app.models.enums import (
+    ChangeSourceEnum,
     ChangeStatusEnum,
     ChangeTypeEnum,
-    ChangeSourceEnum,
 )
+from app.models.user import User
 from app.schemas.change_request import (
-    ChangeRequestCreate,
-    ChangeRequestUpdate,
-    ChangeRequestResponse,
-    ChangeRequestListResponse,
-    ChangeApprovalRequest,
     ChangeApprovalRecordResponse,
-    ChangeStatusUpdateRequest,
-    ChangeImplementationRequest,
-    ChangeVerificationRequest,
+    ChangeApprovalRequest,
     ChangeCloseRequest,
+    ChangeImplementationRequest,
+    ChangeRequestCreate,
+    ChangeRequestListResponse,
+    ChangeRequestResponse,
+    ChangeRequestUpdate,
+    ChangeStatusUpdateRequest,
+    ChangeVerificationRequest,
 )
 from app.services.project_change_requests import ProjectChangeRequestsService
 
@@ -46,7 +46,7 @@ def create_change_request(
     """提交变更请求"""
     service = ProjectChangeRequestsService(db)
     change_request = service.create_change_request(change_in, current_user)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更请求提交成功")
 
@@ -75,10 +75,10 @@ def list_change_requests(
         submitter_id=submitter_id,
         search=search,
     )
-    
+
     # 转换为响应模型
     change_responses = [ChangeRequestListResponse.model_validate(c) for c in changes]
-    
+
     return list_response(items=change_responses, message="获取变更请求列表成功")
 
 
@@ -91,7 +91,7 @@ def get_change_request(
     """获取变更请求详情"""
     service = ProjectChangeRequestsService(db)
     change_request = service.get_change_request(change_id)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="获取变更请求详情成功")
 
@@ -107,7 +107,7 @@ def update_change_request(
     """更新变更请求"""
     service = ProjectChangeRequestsService(db)
     change_request = service.update_change_request(change_id, change_in)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更请求更新成功")
 
@@ -123,7 +123,7 @@ def approve_change_request(
     """审批变更请求"""
     service = ProjectChangeRequestsService(db)
     change_request = service.approve_change_request(change_id, approval_in, current_user)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="审批完成")
 
@@ -137,7 +137,7 @@ def get_approval_records(
     """获取审批记录"""
     service = ProjectChangeRequestsService(db)
     records = service.get_approval_records(change_id)
-    
+
     record_responses = [ChangeApprovalRecordResponse.model_validate(r) for r in records]
     return list_response(items=record_responses, message="获取审批记录成功")
 
@@ -153,11 +153,10 @@ def update_change_status(
     """更新变更状态"""
     service = ProjectChangeRequestsService(db)
     change_request, old_status = service.update_change_status(change_id, status_in)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(
-        data=response,
-        message=f"状态已从 {old_status} 更新为 {status_in.new_status.value}"
+        data=response, message=f"状态已从 {old_status} 更新为 {status_in.new_status.value}"
     )
 
 
@@ -172,7 +171,7 @@ def update_implementation_info(
     """更新实施信息"""
     service = ProjectChangeRequestsService(db)
     change_request = service.update_implementation_info(change_id, impl_in)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="实施信息更新成功")
 
@@ -188,7 +187,7 @@ def verify_change_request(
     """验证变更"""
     service = ProjectChangeRequestsService(db)
     change_request = service.verify_change_request(change_id, verify_in, current_user)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更验证完成")
 
@@ -204,7 +203,7 @@ def close_change_request(
     """关闭变更"""
     service = ProjectChangeRequestsService(db)
     change_request = service.close_change_request(change_id, close_in)
-    
+
     response = ChangeRequestResponse.model_validate(change_request)
     return success_response(data=response, message="变更已关闭")
 
@@ -224,5 +223,5 @@ def get_change_statistics(
         start_date=start_date,
         end_date=end_date,
     )
-    
+
     return success_response(data=statistics, message="获取统计信息成功")

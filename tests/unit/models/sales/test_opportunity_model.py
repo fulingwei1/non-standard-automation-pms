@@ -3,10 +3,12 @@
 Opportunity Model 测试
 """
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.exc import IntegrityError
+
 from app.models.sales.leads import Opportunity
 
 
@@ -22,11 +24,11 @@ class TestOpportunityModel:
             owner_id=sample_user.id,
             stage="需求分析",
             probability=Decimal("60.00"),
-            expected_amount=Decimal("500000.00")
+            expected_amount=Decimal("500000.00"),
         )
         db_session.add(opp)
         db_session.commit()
-        
+
         assert opp.id is not None
         assert opp.opp_code == "OPP001"
         assert opp.opp_name == "测试商机"
@@ -38,19 +40,19 @@ class TestOpportunityModel:
             opp_code="OPP001",
             opp_name="商机1",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            owner_id=sample_user.id,
         )
         db_session.add(opp1)
         db_session.commit()
-        
+
         opp2 = Opportunity(
             opp_code="OPP001",
             opp_name="商机2",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            owner_id=sample_user.id,
         )
         db_session.add(opp2)
-        
+
         with pytest.raises(IntegrityError):
             db_session.commit()
 
@@ -62,16 +64,16 @@ class TestOpportunityModel:
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             stage="初步接洽",
-            probability=Decimal("20.00")
+            probability=Decimal("20.00"),
         )
         db_session.add(opp)
         db_session.commit()
-        
+
         # 推进阶段
         opp.stage = "需求分析"
         opp.probability = Decimal("40.00")
         db_session.commit()
-        
+
         db_session.refresh(opp)
         assert opp.stage == "需求分析"
         assert opp.probability == Decimal("40.00")
@@ -84,11 +86,11 @@ class TestOpportunityModel:
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             expected_amount=Decimal("1000000.00"),
-            actual_amount=Decimal("950000.00")
+            actual_amount=Decimal("950000.00"),
         )
         db_session.add(opp)
         db_session.commit()
-        
+
         assert opp.expected_amount == Decimal("1000000.00")
         assert opp.actual_amount == Decimal("950000.00")
 
@@ -99,29 +101,29 @@ class TestOpportunityModel:
             opp_name="概率测试",
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
-            probability=Decimal("75.50")
+            probability=Decimal("75.50"),
         )
         db_session.add(opp)
         db_session.commit()
-        
+
         assert opp.probability == Decimal("75.50")
 
     def test_opportunity_close_date(self, db_session, sample_user, sample_customer):
         """测试商机关闭日期"""
         expected_date = date.today() + timedelta(days=60)
         actual_date = date.today() + timedelta(days=65)
-        
+
         opp = Opportunity(
             opp_code="OPP005",
             opp_name="日期测试",
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             expected_close_date=expected_date,
-            actual_close_date=actual_date
+            actual_close_date=actual_date,
         )
         db_session.add(opp)
         db_session.commit()
-        
+
         assert opp.expected_close_date == expected_date
         assert opp.actual_close_date == actual_date
 
@@ -136,7 +138,7 @@ class TestOpportunityModel:
         sample_opportunity.opp_name = "更新后的商机名"
         sample_opportunity.stage = "方案设计"
         db_session.commit()
-        
+
         db_session.refresh(sample_opportunity)
         assert sample_opportunity.opp_name == "更新后的商机名"
         assert sample_opportunity.stage == "方案设计"
@@ -147,15 +149,15 @@ class TestOpportunityModel:
             opp_code="OPP_DEL",
             opp_name="待删除",
             customer_id=sample_customer.id,
-            owner_id=sample_user.id
+            owner_id=sample_user.id,
         )
         db_session.add(opp)
         db_session.commit()
         opp_id = opp.id
-        
+
         db_session.delete(opp)
         db_session.commit()
-        
+
         deleted = db_session.query(Opportunity).filter_by(id=opp_id).first()
         assert deleted is None
 
@@ -171,11 +173,12 @@ class TestOpportunityModel:
                 opp_name=f"商机{i}",
                 customer_id=sample_customer.id,
                 owner_id=sample_user.id,
-                expected_amount=Decimal(f"{i*100000}.00")
-            ) for i in range(1, 6)
+                expected_amount=Decimal(f"{i*100000}.00"),
+            )
+            for i in range(1, 6)
         ]
         db_session.add_all(opps)
         db_session.commit()
-        
+
         count = db_session.query(Opportunity).count()
         assert count >= 5

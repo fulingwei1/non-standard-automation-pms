@@ -17,6 +17,7 @@ MODULE = "app.utils.scheduled_tasks.issue_scheduled_tasks"
 # 辅助函数
 # ============================================================================
 
+
 def make_mock_db_ctx():
     mock_session = MagicMock()
     mock_ctx = MagicMock()
@@ -256,8 +257,7 @@ class TestCheckBlockingIssues:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import check_blocking_issues
 
         issues = [
-            make_mock_issue(issue_id=i, priority="URGENT", status="OPEN")
-            for i in range(1, 4)
+            make_mock_issue(issue_id=i, priority="URGENT", status="OPEN") for i in range(1, 4)
         ]
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = issues
@@ -389,11 +389,14 @@ class TestDailyIssueStatisticsSnapshot:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             daily_issue_statistics_snapshot,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         # 模拟各 count 查询
         mock_session.query.return_value.filter.return_value.count.return_value = 10
         mock_session.query.return_value.filter.return_value.all.return_value = []
-        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
         mock_session.query.return_value.count.return_value = 10
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -409,12 +412,15 @@ class TestDailyIssueStatisticsSnapshot:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             daily_issue_statistics_snapshot,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         # 模拟不同查询返回不同数字
         call_counts = [20, 5, 8, 7, 3, 6, 4, 2]  # total, open, processing, resolved, urgent...
         mock_session.query.return_value.filter.return_value.count.side_effect = call_counts * 5
         mock_session.query.return_value.filter.return_value.all.return_value = []
-        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
         mock_session.query.return_value.count.side_effect = call_counts * 5
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -422,7 +428,13 @@ class TestDailyIssueStatisticsSnapshot:
 
         assert result is not None
         # 返回值包含必要字段
-        for key in ["total_issues", "open_issues", "processing_issues", "resolved_issues", "timestamp"]:
+        for key in [
+            "total_issues",
+            "open_issues",
+            "processing_issues",
+            "resolved_issues",
+            "timestamp",
+        ]:
             assert key in result
 
     def test_exception_returns_error(self):
@@ -430,6 +442,7 @@ class TestDailyIssueStatisticsSnapshot:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             daily_issue_statistics_snapshot,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Snapshot DB error")
             result = daily_issue_statistics_snapshot()
@@ -441,10 +454,13 @@ class TestDailyIssueStatisticsSnapshot:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             daily_issue_statistics_snapshot,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.count.return_value = 0
         mock_session.query.return_value.filter.return_value.all.return_value = []
-        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
         mock_session.query.return_value.count.return_value = 0
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -468,6 +484,7 @@ class TestCheckIssueAssignmentTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_assignment_timeout,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -482,6 +499,7 @@ class TestCheckIssueAssignmentTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_assignment_timeout,
         )
+
         issue = make_mock_issue(
             assignee_id=None,
             created_at=datetime.now() - timedelta(hours=30),
@@ -502,6 +520,7 @@ class TestCheckIssueAssignmentTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_assignment_timeout,
         )
+
         issue = make_mock_issue(assignee_id=None, created_at=datetime.now() - timedelta(hours=30))
         existing = MagicMock()
         mock_ctx, mock_session = make_mock_db_ctx()
@@ -518,6 +537,7 @@ class TestCheckIssueAssignmentTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_assignment_timeout,
         )
+
         issue = make_mock_issue(assignee_id=None, created_at=datetime.now() - timedelta(hours=30))
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [issue]
@@ -534,6 +554,7 @@ class TestCheckIssueAssignmentTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_assignment_timeout,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Assignment error")
             result = check_issue_assignment_timeout()
@@ -555,6 +576,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -569,6 +591,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         issue = make_mock_issue(
             status="IN_PROGRESS",
             due_date=(date.today() - timedelta(days=4)),
@@ -588,6 +611,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         issue = make_mock_issue(
             status="IN_PROGRESS",
             due_date=(date.today() - timedelta(days=4)),
@@ -607,6 +631,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         issue = make_mock_issue(
             status="IN_PROGRESS",
             due_date=(date.today() - timedelta(days=5)),
@@ -626,6 +651,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         issue = make_mock_issue(
             status="IN_PROGRESS",
             due_date=(date.today() - timedelta(days=1)),
@@ -645,6 +671,7 @@ class TestCheckIssueResolutionTimeout:
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
             check_issue_resolution_timeout,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Resolution timeout error")
             result = check_issue_resolution_timeout()

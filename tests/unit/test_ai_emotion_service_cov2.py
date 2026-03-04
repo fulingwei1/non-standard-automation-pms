@@ -3,15 +3,17 @@
 ai_emotion_service.py 单元测试（第二批）
 使用 Mock 绕过 OpenAI 调用
 """
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 def _make_service(mock_db=None):
     """创建 AIEmotionService 实例（绕过环境变量）"""
     from app.services.ai_emotion_service import AIEmotionService
+
     if mock_db is None:
         mock_db = MagicMock()
     return AIEmotionService(mock_db)
@@ -20,18 +22,21 @@ def _make_service(mock_db=None):
 # ─── 1. _determine_sentiment ──────────────────────────────────────────────────
 def test_determine_sentiment_positive():
     from app.services.ai_emotion_service import SentimentType
+
     svc = _make_service()
     assert svc._determine_sentiment(50.0) == SentimentType.POSITIVE
 
 
 def test_determine_sentiment_negative():
     from app.services.ai_emotion_service import SentimentType
+
     svc = _make_service()
     assert svc._determine_sentiment(-50.0) == SentimentType.NEGATIVE
 
 
 def test_determine_sentiment_neutral():
     from app.services.ai_emotion_service import SentimentType
+
     svc = _make_service()
     assert svc._determine_sentiment(0.0) == SentimentType.NEUTRAL
     assert svc._determine_sentiment(29.9) == SentimentType.NEUTRAL
@@ -41,6 +46,7 @@ def test_determine_sentiment_neutral():
 # ─── 2. _determine_churn_risk ────────────────────────────────────────────────
 def test_determine_churn_risk_high():
     from app.services.ai_emotion_service import ChurnRiskLevel
+
     svc = _make_service()
     result = svc._determine_churn_risk({"risk_score": 80})
     assert result == ChurnRiskLevel.HIGH
@@ -48,6 +54,7 @@ def test_determine_churn_risk_high():
 
 def test_determine_churn_risk_medium():
     from app.services.ai_emotion_service import ChurnRiskLevel
+
     svc = _make_service()
     result = svc._determine_churn_risk({"risk_score": 50})
     assert result == ChurnRiskLevel.MEDIUM
@@ -55,6 +62,7 @@ def test_determine_churn_risk_medium():
 
 def test_determine_churn_risk_low():
     from app.services.ai_emotion_service import ChurnRiskLevel
+
     svc = _make_service()
     result = svc._determine_churn_risk({"risk_score": 20})
     assert result == ChurnRiskLevel.LOW
@@ -62,6 +70,7 @@ def test_determine_churn_risk_low():
 
 def test_determine_churn_risk_default():
     from app.services.ai_emotion_service import ChurnRiskLevel
+
     svc = _make_service()
     # 没有 risk_score key，默认50 -> MEDIUM
     result = svc._determine_churn_risk({})
@@ -71,18 +80,21 @@ def test_determine_churn_risk_default():
 # ─── 3. _determine_priority ──────────────────────────────────────────────────
 def test_determine_priority_high():
     from app.services.ai_emotion_service import ReminderPriority
+
     svc = _make_service()
     assert svc._determine_priority("high") == ReminderPriority.HIGH
 
 
 def test_determine_priority_low():
     from app.services.ai_emotion_service import ReminderPriority
+
     svc = _make_service()
     assert svc._determine_priority("low") == ReminderPriority.LOW
 
 
 def test_determine_priority_medium():
     from app.services.ai_emotion_service import ReminderPriority
+
     svc = _make_service()
     assert svc._determine_priority("medium") == ReminderPriority.MEDIUM
 
@@ -117,6 +129,7 @@ def test_calculate_recommended_time_medium():
 # ─── 5. batch_analyze_customers（async）────────────────────────────────────────
 import asyncio
 
+
 def test_batch_analyze_customers_no_analysis():
     svc = _make_service()
     # db.query().filter().order_by().first() returns None
@@ -131,7 +144,8 @@ def test_batch_analyze_customers_no_analysis():
 
 
 def test_batch_analyze_customers_with_analysis():
-    from app.services.ai_emotion_service import SentimentType, ChurnRiskLevel
+    from app.services.ai_emotion_service import ChurnRiskLevel, SentimentType
+
     svc = _make_service()
 
     mock_analysis = MagicMock()
@@ -139,7 +153,9 @@ def test_batch_analyze_customers_with_analysis():
     mock_analysis.purchase_intent_score = Decimal("75.0")
     mock_analysis.churn_risk = ChurnRiskLevel.LOW
 
-    svc.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_analysis
+    svc.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+        mock_analysis
+    )
 
     result = asyncio.run(svc.batch_analyze_customers([10]))
     assert result["success_count"] == 1

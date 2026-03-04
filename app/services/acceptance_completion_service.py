@@ -27,10 +27,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def validate_required_check_items(
-    db: Session,
-    order_id: int
-) -> None:
+def validate_required_check_items(db: Session, order_id: int) -> None:
     """
     验证所有必检项是否已完成检查
 
@@ -39,11 +36,15 @@ def validate_required_check_items(
     """
     from fastapi import HTTPException
 
-    pending_items = db.query(AcceptanceOrderItem).filter(
-        AcceptanceOrderItem.order_id == order_id,
-        AcceptanceOrderItem.is_required,
-        AcceptanceOrderItem.result_status == "PENDING"
-    ).count()
+    pending_items = (
+        db.query(AcceptanceOrderItem)
+        .filter(
+            AcceptanceOrderItem.order_id == order_id,
+            AcceptanceOrderItem.is_required,
+            AcceptanceOrderItem.result_status == "PENDING",
+        )
+        .count()
+    )
 
     if pending_items > 0:
         raise HTTPException(status_code=400, detail=f"还有 {pending_items} 个必检项未完成检查")
@@ -54,7 +55,7 @@ def update_acceptance_order_status(
     order: AcceptanceOrder,
     overall_result: str,
     conclusion: Optional[str],
-    conditions: Optional[str]
+    conditions: Optional[str],
 ) -> None:
     """
     更新验收单状态
@@ -76,11 +77,7 @@ def update_acceptance_order_status(
     db.flush()
 
 
-def trigger_invoice_on_acceptance(
-    db: Session,
-    order_id: int,
-    auto_trigger: bool
-) -> Dict[str, Any]:
+def trigger_invoice_on_acceptance(db: Session, order_id: int, auto_trigger: bool) -> Dict[str, Any]:
     """
     验收通过后自动触发开票
 
@@ -96,12 +93,13 @@ def trigger_invoice_on_acceptance(
         from app.services.invoice_auto_service import InvoiceAutoService
 
         # 默认创建发票申请（不直接创建发票）
-        auto_create_invoice = os.getenv("AUTO_CREATE_INVOICE_ON_ACCEPTANCE", "false").lower() == "true"
+        auto_create_invoice = (
+            os.getenv("AUTO_CREATE_INVOICE_ON_ACCEPTANCE", "false").lower() == "true"
+        )
 
         service = InvoiceAutoService(db)
         result = service.check_and_create_invoice_request(
-            acceptance_order_id=order_id,
-            auto_create=auto_create_invoice
+            acceptance_order_id=order_id, auto_create=auto_create_invoice
         )
 
         if result.get("success") and result.get("invoice_requests"):
@@ -117,9 +115,7 @@ def trigger_invoice_on_acceptance(
 
 
 def handle_acceptance_status_transition(
-    db: Session,
-    order: AcceptanceOrder,
-    overall_result: str
+    db: Session, order: AcceptanceOrder, overall_result: str
 ) -> None:
     """
     处理验收状态联动（FAT/SAT/FINAL）
@@ -131,6 +127,7 @@ def handle_acceptance_status_transition(
     """
     try:
         from app.services.status_transition_service import StatusTransitionService
+
         transition_service = StatusTransitionService(db)
 
         # 根据验收类型和结果更新项目状态
@@ -139,12 +136,19 @@ def handle_acceptance_status_transition(
                 transition_service.handle_fat_passed(order.project_id, order.machine_id)
                 logger.info("FAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
-                issues = db.query(AcceptanceIssue).filter(
-                    AcceptanceIssue.order_id == order.id,
-                    AcceptanceIssue.status != "RESOLVED"
-                ).all()
-                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
-                transition_service.handle_fat_failed(order.project_id, order.machine_id, issue_descriptions)
+                issues = (
+                    db.query(AcceptanceIssue)
+                    .filter(
+                        AcceptanceIssue.order_id == order.id, AcceptanceIssue.status != "RESOLVED"
+                    )
+                    .all()
+                )
+                issue_descriptions = [
+                    issue.issue_description for issue in issues if issue.issue_description
+                ]
+                transition_service.handle_fat_failed(
+                    order.project_id, order.machine_id, issue_descriptions
+                )
                 logger.info("FAT验收不通过，项目状态已更新")
 
         elif order.acceptance_type == "SAT":
@@ -152,12 +156,19 @@ def handle_acceptance_status_transition(
                 transition_service.handle_sat_passed(order.project_id, order.machine_id)
                 logger.info("SAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
-                issues = db.query(AcceptanceIssue).filter(
-                    AcceptanceIssue.order_id == order.id,
-                    AcceptanceIssue.status != "RESOLVED"
-                ).all()
-                issue_descriptions = [issue.issue_description for issue in issues if issue.issue_description]
-                transition_service.handle_sat_failed(order.project_id, order.machine_id, issue_descriptions)
+                issues = (
+                    db.query(AcceptanceIssue)
+                    .filter(
+                        AcceptanceIssue.order_id == order.id, AcceptanceIssue.status != "RESOLVED"
+                    )
+                    .all()
+                )
+                issue_descriptions = [
+                    issue.issue_description for issue in issues if issue.issue_description
+                ]
+                transition_service.handle_sat_failed(
+                    order.project_id, order.machine_id, issue_descriptions
+                )
                 logger.info("SAT验收不通过，项目状态已更新")
 
         elif order.acceptance_type == "FINAL":
@@ -169,9 +180,7 @@ def handle_acceptance_status_transition(
 
 
 def handle_progress_integration(
-    db: Session,
-    order: AcceptanceOrder,
-    overall_result: str
+    db: Session, order: AcceptanceOrder, overall_result: str
 ) -> Dict[str, Any]:
     """
     处理验收结果对进度跟踪的影响
@@ -181,6 +190,7 @@ def handle_progress_integration(
     """
     try:
         from app.services.progress_integration_service import ProgressIntegrationService
+
         integration_service = ProgressIntegrationService(db)
 
         if overall_result == "FAILED":
@@ -199,9 +209,7 @@ def handle_progress_integration(
 
 
 def check_auto_stage_transition_after_acceptance(
-    db: Session,
-    order: AcceptanceOrder,
-    overall_result: str
+    db: Session, order: AcceptanceOrder, overall_result: str
 ) -> Dict[str, Any]:
     """
     验收通过后自动触发阶段流转检查
@@ -214,6 +222,7 @@ def check_auto_stage_transition_after_acceptance(
 
     try:
         from app.services.status_transition_service import StatusTransitionService
+
         transition_service = StatusTransitionService(db)
 
         project = db.query(Project).filter(Project.id == order.project_id).first()
@@ -223,8 +232,7 @@ def check_auto_stage_transition_after_acceptance(
         # 检查是否可以自动推进阶段
         if order.acceptance_type == "FAT" and project.stage == "S7":
             auto_transition_result = transition_service.check_auto_stage_transition(
-                order.project_id,
-                auto_advance=True
+                order.project_id, auto_advance=True
             )
             if auto_transition_result.get("auto_advanced"):
                 logger.info(f"FAT验收通过后自动推进项目 {order.project_id} 至 S8 阶段")
@@ -232,8 +240,7 @@ def check_auto_stage_transition_after_acceptance(
 
         elif order.acceptance_type in ["SAT", "FINAL"] and project.stage == "S8":
             auto_transition_result = transition_service.check_auto_stage_transition(
-                order.project_id,
-                auto_advance=True
+                order.project_id, auto_advance=True
             )
             if auto_transition_result.get("auto_advanced"):
                 logger.info(f"终验收通过后自动推进项目 {order.project_id} 至 S9 阶段")
@@ -245,11 +252,7 @@ def check_auto_stage_transition_after_acceptance(
     return {}
 
 
-def trigger_warranty_period(
-    db: Session,
-    order: AcceptanceOrder,
-    overall_result: str
-) -> None:
+def trigger_warranty_period(db: Session, order: AcceptanceOrder, overall_result: str) -> None:
     """
     终验收通过后自动触发质保期
 
@@ -283,11 +286,7 @@ def trigger_warranty_period(
         logger.error(f"终验收后质保期触发失败: {str(e)}", exc_info=True)
 
 
-def trigger_bonus_calculation(
-    db: Session,
-    order: AcceptanceOrder,
-    overall_result: str
-) -> None:
+def trigger_bonus_calculation(db: Session, order: AcceptanceOrder, overall_result: str) -> None:
     """
     验收通过后自动触发奖金计算
 
@@ -301,6 +300,7 @@ def trigger_bonus_calculation(
 
     try:
         from app.services.bonus import BonusCalculator
+
         calculator = BonusCalculator(db)
 
         project = db.query(Project).filter(Project.id == order.project_id).first()

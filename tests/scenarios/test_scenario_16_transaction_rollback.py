@@ -3,16 +3,19 @@
 
 测试各种异常情况下的事务回滚机制
 """
-import pytest
+
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy.orm import Session
+
+import pytest
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 try:
-    from app.models.project import Project, Customer
-    from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-    from app.models.material import Material, MaterialInventory
     from app.models.approval.instance import ApprovalInstance
+    from app.models.material import Material, MaterialInventory
+    from app.models.project import Customer, Project
+    from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
 
@@ -35,7 +38,9 @@ class TestTransactionRollback:
         db_session.refresh(customer)
         return customer
 
-    def test_01_rollback_on_constraint_violation(self, db_session: Session, test_customer: Customer):
+    def test_01_rollback_on_constraint_violation(
+        self, db_session: Session, test_customer: Customer
+    ):
         """测试1：约束违反时回滚"""
         # 创建项目
         project1 = Project(
@@ -67,9 +72,7 @@ class TestTransactionRollback:
         except IntegrityError:
             db_session.rollback()
             # 验证第一个项目仍然存在
-            proj = db_session.query(Project).filter(
-                Project.project_code == "PJ-UNIQUE-001"
-            ).first()
+            proj = db_session.query(Project).filter(Project.project_code == "PJ-UNIQUE-001").first()
             assert proj is not None
             assert proj.project_name == "唯一性测试项目1"
 
@@ -99,7 +102,7 @@ class TestTransactionRollback:
             # 尝试扣减超过可用库存
             if inventory.available_quantity < Decimal("20"):
                 raise ValueError("库存不足")
-            
+
             inventory.available_quantity -= Decimal("20")
             db_session.commit()
         except ValueError:
@@ -131,7 +134,7 @@ class TestTransactionRollback:
                 if i == 1:
                     # 模拟第2个失败
                     raise Exception("库位不存在")
-                
+
                 inv = MaterialInventory(
                     material_id=mat.id,
                     warehouse_code="WH-001",
@@ -139,15 +142,17 @@ class TestTransactionRollback:
                     available_quantity=Decimal("100"),
                 )
                 db_session.add(inv)
-            
+
             db_session.commit()
         except Exception:
             db_session.rollback()
-            
+
             # 验证所有库存都未创建
-            inv_count = db_session.query(MaterialInventory).filter(
-                MaterialInventory.material_id.in_([m.id for m in materials])
-            ).count()
+            inv_count = (
+                db_session.query(MaterialInventory)
+                .filter(MaterialInventory.material_id.in_([m.id for m in materials]))
+                .count()
+            )
             assert inv_count == 0
 
     def test_04_nested_transaction_rollback(self, db_session: Session, test_customer: Customer):
@@ -180,7 +185,7 @@ class TestTransactionRollback:
 
                 # 模拟失败
                 raise Exception("审批创建失败")
-            
+
             except Exception:
                 # 内层回滚
                 db_session.rollback()
@@ -191,9 +196,7 @@ class TestTransactionRollback:
             db_session.rollback()
 
         # 验证项目未创建
-        proj = db_session.query(Project).filter(
-            Project.project_code == "PJ-NESTED-001"
-        ).first()
+        proj = db_session.query(Project).filter(Project.project_code == "PJ-NESTED-001").first()
         assert proj is None
 
     def test_05_rollback_with_savepoint(self, db_session: Session, test_customer: Customer):
@@ -229,15 +232,11 @@ class TestTransactionRollback:
             db_session.rollback()
 
         # 验证第一个项目仍然存在
-        proj1 = db_session.query(Project).filter(
-            Project.project_code == "PJ-SAVE-001"
-        ).first()
+        proj1 = db_session.query(Project).filter(Project.project_code == "PJ-SAVE-001").first()
         assert proj1 is not None
 
         # 验证第二个项目未创建
-        proj2 = db_session.query(Project).filter(
-            Project.project_code == "PJ-SAVE-002"
-        ).first()
+        proj2 = db_session.query(Project).filter(Project.project_code == "PJ-SAVE-002").first()
         assert proj2 is None
 
     def test_06_rollback_on_concurrent_modification(self, db_session: Session):
@@ -268,17 +267,18 @@ class TestTransactionRollback:
 
         # 会话1：读取并准备修改
         sess1 = SessionLocal()
-        inv1 = sess1.query(MaterialInventory).filter(
-            MaterialInventory.id == inventory.id
-        ).first()
+        inv1 = sess1.query(MaterialInventory).filter(MaterialInventory.id == inventory.id).first()
         original_version = inv1.version
 
         # 会话2：先完成修改
         sess2 = SessionLocal()
-        inv2 = sess2.query(MaterialInventory).filter(
-            MaterialInventory.id == inventory.id,
-            MaterialInventory.version == original_version
-        ).first()
+        inv2 = (
+            sess2.query(MaterialInventory)
+            .filter(
+                MaterialInventory.id == inventory.id, MaterialInventory.version == original_version
+            )
+            .first()
+        )
         inv2.available_quantity -= 10
         inv2.version += 1
         sess2.commit()
@@ -286,14 +286,18 @@ class TestTransactionRollback:
 
         # 会话1：尝试基于旧版本修改（应该失败）
         try:
-            inv1_update = sess1.query(MaterialInventory).filter(
-                MaterialInventory.id == inventory.id,
-                MaterialInventory.version == original_version
-            ).first()
-            
+            inv1_update = (
+                sess1.query(MaterialInventory)
+                .filter(
+                    MaterialInventory.id == inventory.id,
+                    MaterialInventory.version == original_version,
+                )
+                .first()
+            )
+
             if not inv1_update:
                 raise Exception("版本冲突")
-            
+
             inv1_update.available_quantity -= 20
             inv1_update.version += 1
             sess1.commit()
@@ -307,7 +311,9 @@ class TestTransactionRollback:
         assert inventory.available_quantity == Decimal("40")
         assert inventory.version == 2
 
-    def test_07_rollback_on_cascading_delete_failure(self, db_session: Session, test_customer: Customer):
+    def test_07_rollback_on_cascading_delete_failure(
+        self, db_session: Session, test_customer: Customer
+    ):
         """测试7：级联删除失败回滚"""
         project = Project(
             project_code="PJ-CASCADE-001",
@@ -339,15 +345,15 @@ class TestTransactionRollback:
             db_session.commit()
         except Exception:
             db_session.rollback()
-            
+
             # 验证项目和审批都还存在
-            proj = db_session.query(Project).filter(
-                Project.id == project.id
-            ).first()
-            appr = db_session.query(ApprovalInstance).filter(
-                ApprovalInstance.id == approval.id
-            ).first()
-            
+            proj = db_session.query(Project).filter(Project.id == project.id).first()
+            appr = (
+                db_session.query(ApprovalInstance)
+                .filter(ApprovalInstance.id == approval.id)
+                .first()
+            )
+
             # 至少项目应该存在（是否保留审批取决于级联设置）
             assert proj is not None or appr is not None
 
@@ -400,13 +406,15 @@ class TestTransactionRollback:
             db_session.rollback()
 
             # 验证所有操作都已回滚
-            proj = db_session.query(Project).filter(
-                Project.project_code == "PJ-COMPLEX-001"
-            ).first()
-            mat = db_session.query(Material).filter(
-                Material.material_code == "MAT-COMPLEX-001"
-            ).first()
-            
+            proj = (
+                db_session.query(Project).filter(Project.project_code == "PJ-COMPLEX-001").first()
+            )
+            mat = (
+                db_session.query(Material)
+                .filter(Material.material_code == "MAT-COMPLEX-001")
+                .first()
+            )
+
             assert proj is None
             assert mat is None
 

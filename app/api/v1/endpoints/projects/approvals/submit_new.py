@@ -74,23 +74,19 @@ def submit_project_approval(
             "priority": project.priority,
             "customer_id": project.customer_id,
             "customer_name": project.customer_name,
-            "contract_amount": float(project.contract_amount)
-            if project.contract_amount
-            else 0,
-            "budget_amount": float(project.budget_amount)
-            if project.budget_amount
-            else 0,
+            "contract_amount": float(project.contract_amount) if project.contract_amount else 0,
+            "budget_amount": float(project.budget_amount) if project.budget_amount else 0,
             "actual_cost": float(project.actual_cost) if project.actual_cost else 0,
             "progress_pct": float(project.progress_pct) if project.progress_pct else 0,
             "pm_id": project.pm_id,
             "pm_name": project.pm_name,
             "dept_id": project.dept_id,
-            "planned_start_date": project.planned_start_date.isoformat()
-            if project.planned_start_date
-            else None,
-            "planned_end_date": project.planned_end_date.isoformat()
-            if project.planned_end_date
-            else None,
+            "planned_start_date": (
+                project.planned_start_date.isoformat() if project.planned_start_date else None
+            ),
+            "planned_end_date": (
+                project.planned_end_date.isoformat() if project.planned_end_date else None
+            ),
         }
 
         # 提交审批
@@ -122,7 +118,5 @@ def submit_project_approval(
         # 验证错误（如状态不允许提交）
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(
-            f"提交项目审批失败: project_id={project_id}, error={str(e)}", exc_info=True
-        )
+        logger.error(f"提交项目审批失败: project_id={project_id}, error={str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="提交审批失败，请稍后重试")

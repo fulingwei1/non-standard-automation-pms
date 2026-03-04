@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十批：PipelineBreakAnalysisService 单元测试"""
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -93,7 +95,6 @@ def test_analyze_pipeline_breaks_with_data(service, db):
     """有数据时的断链分析"""
     _mock_detect_methods(service)
     result = service.analyze_pipeline_breaks(
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 12, 31)
+        start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
     )
     assert isinstance(result, dict)

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/project/project_risk_service.py"""
-import pytest
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.project.project_risk_service import ProjectRiskService
 
@@ -21,33 +22,57 @@ class TestProjectRiskService:
         assert self.service._is_risk_upgrade("LOW", "LOW") is False
 
     def test_calculate_risk_level_critical(self):
-        factors = {"overdue_milestone_ratio": 0.6, "critical_risks_count": 0,
-                   "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.6,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         assert self.service._calculate_risk_level(factors) == "CRITICAL"
 
     def test_calculate_risk_level_critical_by_risks(self):
-        factors = {"overdue_milestone_ratio": 0, "critical_risks_count": 1,
-                   "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0,
+            "critical_risks_count": 1,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         assert self.service._calculate_risk_level(factors) == "CRITICAL"
 
     def test_calculate_risk_level_high(self):
-        factors = {"overdue_milestone_ratio": 0.35, "critical_risks_count": 0,
-                   "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.35,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         assert self.service._calculate_risk_level(factors) == "HIGH"
 
     def test_calculate_risk_level_high_by_variance(self):
-        factors = {"overdue_milestone_ratio": 0, "critical_risks_count": 0,
-                   "high_risks_count": 0, "schedule_variance": -25}
+        factors = {
+            "overdue_milestone_ratio": 0,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": -25,
+        }
         assert self.service._calculate_risk_level(factors) == "HIGH"
 
     def test_calculate_risk_level_medium(self):
-        factors = {"overdue_milestone_ratio": 0.15, "critical_risks_count": 0,
-                   "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.15,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         assert self.service._calculate_risk_level(factors) == "MEDIUM"
 
     def test_calculate_risk_level_low(self):
-        factors = {"overdue_milestone_ratio": 0, "critical_risks_count": 0,
-                   "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         assert self.service._calculate_risk_level(factors) == "LOW"
 
     def test_calculate_project_risk_not_found(self):
@@ -73,7 +98,9 @@ class TestProjectRiskService:
 
     def test_get_risk_history(self):
         mock_query = self.db.query.return_value
-        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = self.service.get_risk_history(1)
         assert result == []
 

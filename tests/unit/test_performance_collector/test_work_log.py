@@ -9,7 +9,6 @@ Batch: 2
 """
 
 
-
 class TestPerformanceCollectorWorkLog:
     """Test suite for performance_collector/work_log."""
 

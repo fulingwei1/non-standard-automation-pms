@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.approval import (
     ApprovalFlowDefinition,
     ApprovalNodeDefinition,
@@ -25,8 +27,6 @@ from app.schemas.approval.flow import (
     ApprovalRoutingRuleCreate,
     ApprovalRoutingRuleResponse,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.schemas.approval.template import (
     ApprovalTemplateCreate,
     ApprovalTemplateListResponse,
@@ -39,6 +39,7 @@ router = APIRouter()
 
 
 # ==================== 模板 CRUD ====================
+
 
 @router.get("", response_model=ApprovalTemplateListResponse)
 def list_templates(
@@ -55,10 +56,14 @@ def list_templates(
         query = query.filter(ApprovalTemplate.category == category)
     if is_active is not None:
         query = query.filter(ApprovalTemplate.is_active == is_active)
-    query = apply_keyword_filter(query, ApprovalTemplate, keyword, ["template_name", "template_code"])
+    query = apply_keyword_filter(
+        query, ApprovalTemplate, keyword, ["template_name", "template_code"]
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(ApprovalTemplate.id.desc()), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(ApprovalTemplate.id.desc()), pagination.offset, pagination.limit
+    ).all()
 
     return ApprovalTemplateListResponse(
         total=total,
@@ -85,7 +90,11 @@ def create_template(
 ):
     """创建审批模板"""
     # 检查编码唯一性
-    existing = db.query(ApprovalTemplate).filter(ApprovalTemplate.template_code == data.template_code).first()
+    existing = (
+        db.query(ApprovalTemplate)
+        .filter(ApprovalTemplate.template_code == data.template_code)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail=f"模板编码已存在: {data.template_code}")
 
@@ -158,6 +167,7 @@ def publish_template(
 
 
 # ==================== 流程定义 ====================
+
 
 @router.get("/{template_id}/flows", response_model=list[ApprovalFlowResponse])
 def list_flows(
@@ -283,6 +293,7 @@ def delete_flow(
 
 # ==================== 节点定义 ====================
 
+
 @router.post("/flows/{flow_id}/nodes", response_model=ApprovalNodeResponse)
 def create_node(
     flow_id: int,
@@ -335,6 +346,7 @@ def delete_node(
 
 
 # ==================== 路由规则 ====================
+
 
 @router.get("/{template_id}/rules", response_model=list[ApprovalRoutingRuleResponse])
 def list_routing_rules(

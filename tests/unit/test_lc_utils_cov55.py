@@ -2,19 +2,20 @@
 """
 Tests for app/services/labor_cost/utils.py
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.labor_cost.utils import (
-        group_timesheets_by_user,
-        find_existing_cost,
-        update_existing_cost,
-        create_new_cost,
         check_budget_alert,
+        create_new_cost,
         delete_existing_costs,
+        find_existing_cost,
+        group_timesheets_by_user,
+        update_existing_cost,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)

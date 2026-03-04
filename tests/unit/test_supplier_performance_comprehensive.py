@@ -66,6 +66,6 @@ class TestBatchEvaluate:
         s1 = MagicMock()
         s1.id = 1
         mock_db.query.return_value.filter.return_value.all.return_value = [s1]
-        with patch.object(svc, 'evaluate_supplier', return_value=MagicMock()):
+        with patch.object(svc, "evaluate_supplier", return_value=MagicMock()):
             result = svc.batch_evaluate_all_suppliers("2024-Q1")
             assert result >= 0

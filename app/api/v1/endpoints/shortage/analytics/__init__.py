@@ -5,9 +5,10 @@
 - 统计概览、原因分析（statistics）
 - 看板、日报、趋势（dashboard）
 """
+
 from fastapi import APIRouter
 
-from . import statistics, dashboard
+from . import dashboard, statistics
 
 router = APIRouter()
 

@@ -5,7 +5,6 @@
 
 from datetime import datetime
 
-
 from app.models.material import Material
 from app.models.project import Project
 
@@ -17,14 +16,10 @@ def _validate_project_row(row, row_num, errors):
     project_name = str(row.get("项目名称*", row.get("项目名称", ""))).strip()
 
     if not project_code:
-        errors.append(
-            {"row": row_num, "field": "项目编码", "message": "项目编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
         is_valid = False
     if not project_name:
-        errors.append(
-            {"row": row_num, "field": "项目名称", "message": "项目名称不能为空"}
-        )
+        errors.append({"row": row_num, "field": "项目名称", "message": "项目名称不能为空"})
         is_valid = False
     return is_valid
 
@@ -46,14 +41,10 @@ def _validate_timesheet_row(row, row_num, errors, pd):
     hours = row.get("工时(小时)*") or row.get("工时(小时)") or row.get("工时")
 
     if pd.isna(work_date) or not work_date:
-        errors.append(
-            {"row": row_num, "field": "工作日期", "message": "工作日期不能为空"}
-        )
+        errors.append({"row": row_num, "field": "工作日期", "message": "工作日期不能为空"})
         is_valid = False
     if not user_name:
-        errors.append(
-            {"row": row_num, "field": "人员姓名", "message": "人员姓名不能为空"}
-        )
+        errors.append({"row": row_num, "field": "人员姓名", "message": "人员姓名不能为空"})
         is_valid = False
     if pd.isna(hours):
         errors.append({"row": row_num, "field": "工时", "message": "工时不能为空"})
@@ -68,14 +59,10 @@ def _validate_task_row(row, row_num, errors):
     project_code = str(row.get("项目编码*", row.get("项目编码", ""))).strip()
 
     if not task_name:
-        errors.append(
-            {"row": row_num, "field": "任务名称", "message": "任务名称不能为空"}
-        )
+        errors.append({"row": row_num, "field": "任务名称", "message": "任务名称不能为空"})
         is_valid = False
     if not project_code:
-        errors.append(
-            {"row": row_num, "field": "项目编码", "message": "项目编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
         is_valid = False
     return is_valid
 
@@ -87,14 +74,10 @@ def _validate_material_row(row, row_num, errors):
     material_name = str(row.get("物料名称*", row.get("物料名称", ""))).strip()
 
     if not material_code:
-        errors.append(
-            {"row": row_num, "field": "物料编码", "message": "物料编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
         is_valid = False
     if not material_name:
-        errors.append(
-            {"row": row_num, "field": "物料名称", "message": "物料名称不能为空"}
-        )
+        errors.append({"row": row_num, "field": "物料名称", "message": "物料名称不能为空"})
         is_valid = False
     return is_valid
 
@@ -108,19 +91,13 @@ def _validate_bom_row(row, row_num, errors, pd):
     quantity = row.get("用量*") or row.get("用量")
 
     if not bom_code:
-        errors.append(
-            {"row": row_num, "field": "BOM编码", "message": "BOM编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "BOM编码", "message": "BOM编码不能为空"})
         is_valid = False
     if not project_code:
-        errors.append(
-            {"row": row_num, "field": "项目编码", "message": "项目编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "项目编码", "message": "项目编码不能为空"})
         is_valid = False
     if not material_code:
-        errors.append(
-            {"row": row_num, "field": "物料编码", "message": "物料编码不能为空"}
-        )
+        errors.append({"row": row_num, "field": "物料编码", "message": "物料编码不能为空"})
         is_valid = False
     if pd.isna(quantity):
         errors.append({"row": row_num, "field": "用量", "message": "用量不能为空"})
@@ -149,18 +126,12 @@ def _validate_date_fields(row_data, row_errors):
             try:
                 datetime.strptime(str(row_data[date_field]), "%Y-%m-%d")
             except ValueError:
-                row_errors.append(
-                    {"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"}
-                )
+                row_errors.append({"field": date_field, "message": "日期格式错误，应为YYYY-MM-DD"})
 
     if row_data.get("planned_start_date") and row_data.get("planned_end_date"):
         try:
-            start_date = datetime.strptime(
-                str(row_data["planned_start_date"]), "%Y-%m-%d"
-            ).date()
-            end_date = datetime.strptime(
-                str(row_data["planned_end_date"]), "%Y-%m-%d"
-            ).date()
+            start_date = datetime.strptime(str(row_data["planned_start_date"]), "%Y-%m-%d").date()
+            end_date = datetime.strptime(str(row_data["planned_end_date"]), "%Y-%m-%d").date()
             if start_date > end_date:
                 row_errors.append(
                     {
@@ -179,9 +150,7 @@ def _validate_amount_fields(row_data, row_errors):
             try:
                 float(row_data[amount_field])
             except (ValueError, TypeError):
-                row_errors.append(
-                    {"field": amount_field, "message": f"{amount_field} 必须是数字"}
-                )
+                row_errors.append({"field": amount_field, "message": f"{amount_field} 必须是数字"})
 
 
 def _validate_project_data(row_data, idx, db, row_errors):
@@ -195,9 +164,7 @@ def _validate_project_data(row_data, idx, db, row_errors):
         row_errors.append({"field": "project_name", "message": "项目名称不能为空"})
 
     if project_code:
-        existing = (
-            db.query(Project).filter(Project.project_code == project_code).first()
-        )
+        existing = db.query(Project).filter(Project.project_code == project_code).first()
         if existing:
             row_errors.append(
                 {"field": "project_code", "message": f"项目编码 {project_code} 已存在"}
@@ -226,9 +193,7 @@ def _validate_timesheet_data(row_data, row_errors):
         try:
             datetime.strptime(str(work_date), "%Y-%m-%d")
         except ValueError:
-            row_errors.append(
-                {"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"}
-            )
+            row_errors.append({"field": "work_date", "message": "日期格式错误，应为YYYY-MM-DD"})
 
     if not user_name:
         row_errors.append({"field": "user_name", "message": "人员姓名不能为空"})
@@ -256,9 +221,7 @@ def _validate_task_data(row_data, db, row_errors):
     elif project_code:
         project = db.query(Project).filter(Project.project_code == project_code).first()
         if not project:
-            row_errors.append(
-                {"field": "project_code", "message": f"项目 {project_code} 不存在"}
-            )
+            row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
 
 
 def _validate_material_data(row_data, db, row_errors):
@@ -272,9 +235,7 @@ def _validate_material_data(row_data, db, row_errors):
         row_errors.append({"field": "material_name", "message": "物料名称不能为空"})
 
     if material_code:
-        existing = (
-            db.query(Material).filter(Material.material_code == material_code).first()
-        )
+        existing = db.query(Material).filter(Material.material_code == material_code).first()
         if existing:
             row_errors.append(
                 {
@@ -310,18 +271,12 @@ def _validate_bom_data(row_data, db, row_errors):
     if project_code:
         project = db.query(Project).filter(Project.project_code == project_code).first()
         if not project:
-            row_errors.append(
-                {"field": "project_code", "message": f"项目 {project_code} 不存在"}
-            )
+            row_errors.append({"field": "project_code", "message": f"项目 {project_code} 不存在"})
 
     if material_code:
-        material = (
-            db.query(Material).filter(Material.material_code == material_code).first()
-        )
+        material = db.query(Material).filter(Material.material_code == material_code).first()
         if not material:
-            row_errors.append(
-                {"field": "material_code", "message": f"物料 {material_code} 不存在"}
-            )
+            row_errors.append({"field": "material_code", "message": f"物料 {material_code} 不存在"})
 
 
 def _validate_row_data(row_data, idx, db, template_type):

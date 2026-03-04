@@ -7,12 +7,12 @@ API 速率限制配置
 注意：这是一个兼容性模块，实际实现在 rate_limiting.py
 """
 from app.core.rate_limiting import (
-    limiter,
-    user_limiter,
-    strict_limiter,
+    get_ip_and_user,
     get_remote_address,
     get_user_or_ip,
-    get_ip_and_user,
+    limiter,
+    strict_limiter,
+    user_limiter,
 )
 
 __all__ = [

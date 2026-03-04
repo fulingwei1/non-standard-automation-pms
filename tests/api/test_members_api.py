@@ -17,10 +17,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from tests.factories import (
-    ProjectWithCustomerFactory,
-    ProjectMemberFactory,
-    UserFactory,
     DepartmentFactory,
+    ProjectMemberFactory,
+    ProjectWithCustomerFactory,
+    UserFactory,
 )
 
 
@@ -44,20 +44,19 @@ class TestMembersAPI:
         """测试 POST /api/v1/members/projects/{project_id}/members - 添加成员"""
         project = ProjectWithCustomerFactory()
         user = UserFactory()
-        
+
         member_data = {
             "user_id": user.id,
             "role_code": "ENGINEER",
             "allocation_pct": 100,
             "start_date": "2026-01-01",
-            "end_date": "2026-12-31"
+            "end_date": "2026-12-31",
         }
-        
+
         response = api_client.post(
-            f"/api/v1/members/projects/{project.id}/members",
-            json=member_data
+            f"/api/v1/members/projects/{project.id}/members", json=member_data
         )
-        
+
         assert response.status_code in [200, 201]
         data = response.json()
         assert data["user_id"] == user.id
@@ -69,17 +68,11 @@ class TestMembersAPI:
         project = ProjectWithCustomerFactory()
         user = UserFactory()
         member = ProjectMemberFactory(project_id=project.id, user_id=user.id)
-        
-        update_data = {
-            "allocation_pct": 80,
-            "role_code": "SENIOR_ENGINEER"
-        }
-        
-        response = api_client.put(
-            f"/api/v1/members/project-members/{member.id}",
-            json=update_data
-        )
-        
+
+        update_data = {"allocation_pct": 80, "role_code": "SENIOR_ENGINEER"}
+
+        response = api_client.put(f"/api/v1/members/project-members/{member.id}", json=update_data)
+
         assert response.status_code == 200
         data = response.json()
         assert data["allocation_pct"] == 80
@@ -89,21 +82,21 @@ class TestMembersAPI:
         """测试 GET /api/v1/members/projects/{project_id}/members/conflicts - 冲突检查"""
         project = ProjectWithCustomerFactory()
         user = UserFactory()
-        
+
         # 创建有冲突的成员（时间重叠）
         other_project = ProjectWithCustomerFactory()
         ProjectMemberFactory(
             project_id=other_project.id,
             user_id=user.id,
             start_date="2026-01-01",
-            end_date="2026-06-30"
+            end_date="2026-06-30",
         )
-        
+
         response = api_client.get(
             f"/api/v1/members/projects/{project.id}/members/conflicts",
-            params={"user_id": user.id, "start_date": "2026-03-01", "end_date": "2026-12-31"}
+            params={"user_id": user.id, "start_date": "2026-03-01", "end_date": "2026-12-31"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "conflicts" in data or "has_conflict" in data
@@ -114,53 +107,55 @@ class TestMembersAPI:
         project = ProjectWithCustomerFactory()
         user1 = UserFactory()
         user2 = UserFactory()
-        
+
         batch_data = {
             "user_ids": [user1.id, user2.id],
             "role_code": "ENGINEER",
-            "allocation_pct": 100
+            "allocation_pct": 100,
         }
-        
+
         response = api_client.post(
-            f"/api/v1/members/projects/{project.id}/members/batch",
-            json=batch_data
+            f"/api/v1/members/projects/{project.id}/members/batch", json=batch_data
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "added_count" in data
         assert data["added_count"] >= 1
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_post_members_projects_project_id_members_member_id_notify_dept_manager(self, api_client, db_session):
+    def test_post_members_projects_project_id_members_member_id_notify_dept_manager(
+        self, api_client, db_session
+    ):
         """测试 POST /api/v1/members/projects/{project_id}/members/{member_id}/notify-dept-manager - 通知部门经理"""
         project = ProjectWithCustomerFactory()
         user = UserFactory()
         member = ProjectMemberFactory(project_id=project.id, user_id=user.id)
-        
+
         response = api_client.post(
             f"/api/v1/members/projects/{project.id}/members/{member.id}/notify-dept-manager"
         )
-        
+
         assert response.status_code in [200, 201]
         data = response.json()
         assert "code" in data or "message" in data
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_get_members_projects_project_id_members_from_dept_dept_id(self, api_client, db_session):
+    def test_get_members_projects_project_id_members_from_dept_dept_id(
+        self, api_client, db_session
+    ):
         """测试 GET /api/v1/members/projects/{project_id}/members/from-dept/{dept_id} - 从部门获取成员"""
         project = ProjectWithCustomerFactory()
         dept = DepartmentFactory()
         user = UserFactory(department=dept.dept_name)
-        
+
         response = api_client.get(
             f"/api/v1/members/projects/{project.id}/members/from-dept/{dept.id}"
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "items" in data or isinstance(data, list)
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

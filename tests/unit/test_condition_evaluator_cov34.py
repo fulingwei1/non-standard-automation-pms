@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """条件评估器单元测试 - 第三十四批"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.alert_rule_engine.condition_evaluator")
 
@@ -39,8 +40,12 @@ class TestCheckCondition:
 
     def test_deviation_type_dispatches(self):
         ev = make_evaluator()
-        rule = make_rule(rule_type="DEVIATION", target_field="actual_value",
-                         threshold_value="10", condition_operator="GT")
+        rule = make_rule(
+            rule_type="DEVIATION",
+            target_field="actual_value",
+            threshold_value="10",
+            condition_operator="GT",
+        )
         data = {"actual_value": 120, "planned_value": 100}
         assert ev.check_condition(rule, data) is True
 
@@ -80,15 +85,23 @@ class TestMatchThreshold:
 class TestMatchDeviation:
     def test_positive_deviation_gt(self):
         ev = make_evaluator()
-        rule = make_rule(rule_type="DEVIATION", target_field="actual_value",
-                         threshold_value="5", condition_operator="GT")
+        rule = make_rule(
+            rule_type="DEVIATION",
+            target_field="actual_value",
+            threshold_value="5",
+            condition_operator="GT",
+        )
         data = {"actual_value": 110, "planned_value": 100}
         assert ev.match_deviation(rule, data) is True
 
     def test_missing_planned_returns_false(self):
         ev = make_evaluator()
-        rule = make_rule(rule_type="DEVIATION", target_field="actual_value",
-                         threshold_value="5", condition_operator="GT")
+        rule = make_rule(
+            rule_type="DEVIATION",
+            target_field="actual_value",
+            threshold_value="5",
+            condition_operator="GT",
+        )
         data = {"actual_value": 110}
         assert ev.match_deviation(rule, data) is False
 

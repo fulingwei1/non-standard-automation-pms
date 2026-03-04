@@ -9,12 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.staff_matching import HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
@@ -27,7 +27,7 @@ def list_tags(
     keyword: Optional[str] = Query(None, description="搜索关键词"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取标签列表"""
     query = db.query(HrTagDict)
@@ -38,7 +38,11 @@ def list_tags(
         query = query.filter(HrTagDict.is_active == is_active)
     query = apply_keyword_filter(query, HrTagDict, keyword, ["tag_code", "tag_name"])
 
-    tags = apply_pagination(query.order_by(HrTagDict.tag_type, HrTagDict.sort_order), pagination.offset, pagination.limit).all()
+    tags = apply_pagination(
+        query.order_by(HrTagDict.tag_type, HrTagDict.sort_order),
+        pagination.offset,
+        pagination.limit,
+    ).all()
     return tags
 
 
@@ -46,7 +50,7 @@ def list_tags(
 def get_tag_tree(
     tag_type: Optional[str] = Query(None, description="标签类型筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取标签层级树"""
     query = db.query(HrTagDict).filter(HrTagDict.is_active)
@@ -57,21 +61,24 @@ def get_tag_tree(
     all_tags = query.order_by(HrTagDict.sort_order).all()
 
     # 构建树结构
-    tag_dict = {tag.id: {
-        'id': tag.id,
-        'tag_code': tag.tag_code,
-        'tag_name': tag.tag_name,
-        'tag_type': tag.tag_type,
-        'weight': tag.weight,
-        'is_required': tag.is_required,
-        'sort_order': tag.sort_order,
-        'children': []
-    } for tag in all_tags}
+    tag_dict = {
+        tag.id: {
+            "id": tag.id,
+            "tag_code": tag.tag_code,
+            "tag_name": tag.tag_name,
+            "tag_type": tag.tag_type,
+            "weight": tag.weight,
+            "is_required": tag.is_required,
+            "sort_order": tag.sort_order,
+            "children": [],
+        }
+        for tag in all_tags
+    }
 
     roots = []
     for tag in all_tags:
         if tag.parent_id and tag.parent_id in tag_dict:
-            tag_dict[tag.parent_id]['children'].append(tag_dict[tag.id])
+            tag_dict[tag.parent_id]["children"].append(tag_dict[tag.id])
         else:
             roots.append(tag_dict[tag.id])
 
@@ -82,7 +89,7 @@ def get_tag_tree(
 def create_tag(
     tag_data: schemas.TagDictCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:create"))
+    current_user: User = Depends(security.require_permission("staff_matching:create")),
 ):
     """创建标签"""
     # 检查编码唯一性
@@ -99,7 +106,7 @@ def update_tag(
     tag_id: int,
     tag_data: schemas.TagDictUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:update"))
+    current_user: User = Depends(security.require_permission("staff_matching:update")),
 ):
     """更新标签"""
     tag = get_or_404(db, HrTagDict, tag_id, "标签不存在")
@@ -116,7 +123,7 @@ def update_tag(
 def delete_tag(
     tag_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """删除标签（软删除）"""
     tag = get_or_404(db, HrTagDict, tag_id, "标签不存在")

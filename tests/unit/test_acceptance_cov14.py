@@ -2,12 +2,14 @@
 """
 第十四批：验收单审批适配器 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -125,8 +127,12 @@ class TestAcceptanceOrderApprovalAdapter:
     def test_validate_submit_unchecked_items(self):
         db = make_db()
         order = make_order(
-            total_items=10, passed_items=5, failed_items=0, na_items=0,
-            overall_result="PASSED", status="DRAFT"
+            total_items=10,
+            passed_items=5,
+            failed_items=0,
+            na_items=0,
+            overall_result="PASSED",
+            status="DRAFT",
         )
         db.query.return_value.filter.return_value.first.return_value = order
         adapter = self._adapter(db)

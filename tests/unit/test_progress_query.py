@@ -55,7 +55,9 @@ def _make_stage(status="COMPLETED", sequence=1, nodes=None):
 class TestGetProjectProgress:
     def test_empty_project(self):
         m = _make_mixin()
-        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = []
+        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         result = m.get_project_progress(1)
         assert result["total_stages"] == 0
         assert result["progress_pct"] == 0
@@ -64,7 +66,9 @@ class TestGetProjectProgress:
         m = _make_mixin()
         node = _make_node(status=StageStatusEnum.COMPLETED.value)
         stage = _make_stage(status=StageStatusEnum.COMPLETED.value, nodes=[node])
-        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = [stage]
+        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = [
+            stage
+        ]
         result = m.get_project_progress(1)
         assert result["total_stages"] == 1
         assert result["completed_stages"] == 1
@@ -74,7 +78,9 @@ class TestGetProjectProgress:
         m = _make_mixin()
         node = _make_node(status=StageStatusEnum.PENDING.value)
         stage = _make_stage(status=StageStatusEnum.IN_PROGRESS.value, nodes=[node])
-        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = [stage]
+        m.db.query.return_value.filter.return_value.options.return_value.order_by.return_value.all.return_value = [
+            stage
+        ]
         result = m.get_project_progress(1)
         assert result["current_stage"] is not None
 

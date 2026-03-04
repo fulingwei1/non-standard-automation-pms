@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/engineer.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.engineer import (
-    TaskStatsResponse,
-    MyProjectResponse,
-    MyProjectListResponse,
-    TaskCreateRequest,
-    TaskUpdateRequest,
-    TaskResponse,
-    ProgressUpdateRequest,
-    ProgressUpdateResponse,
-    TaskCompleteRequest,
-    TaskCompleteResponse,
     DelayReportRequest,
     DelayReportResponse,
-    TaskApprovalRequest,
-    TaskRejectionRequest,
-    TaskApprovalResponse,
-    MemberProgressSummary,
     DepartmentProgressSummary,
+    MemberProgressSummary,
+    MyProjectListResponse,
+    MyProjectResponse,
+    ProgressUpdateRequest,
+    ProgressUpdateResponse,
+    TaskApprovalRequest,
+    TaskApprovalResponse,
+    TaskCompleteRequest,
+    TaskCompleteResponse,
+    TaskCreateRequest,
     TaskListResponse,
+    TaskRejectionRequest,
+    TaskResponse,
+    TaskStatsResponse,
+    TaskUpdateRequest,
 )
 
 
@@ -41,8 +42,12 @@ class TestTaskStatsResponse:
 class TestMyProjectResponse:
     def test_valid(self):
         p = MyProjectResponse(
-            project_id=1, project_code="P001", project_name="项目A",
-            stage="S3", status="IN_PROGRESS", health="GREEN",
+            project_id=1,
+            project_code="P001",
+            project_name="项目A",
+            stage="S3",
+            status="IN_PROGRESS",
+            health="GREEN",
             task_stats=TaskStatsResponse(),
         )
         assert p.progress_pct == 0
@@ -70,7 +75,8 @@ class TestTaskCreateRequest:
 
     def test_with_dates(self):
         t = TaskCreateRequest(
-            project_id=1, title="任务",
+            project_id=1,
+            title="任务",
             plan_start_date=date(2024, 1, 1),
             plan_end_date=date(2024, 3, 1),
             estimated_hours=Decimal("40"),
@@ -97,9 +103,15 @@ class TestTaskResponse:
     def test_valid(self):
         now = datetime.now()
         t = TaskResponse(
-            id=1, task_code="T001", title="任务", task_type="DESIGN",
-            assignee_id=1, status="IN_PROGRESS", priority="MEDIUM",
-            created_at=now, updated_at=now,
+            id=1,
+            task_code="T001",
+            title="任务",
+            task_type="DESIGN",
+            assignee_id=1,
+            status="IN_PROGRESS",
+            priority="MEDIUM",
+            created_at=now,
+            updated_at=now,
         )
         assert t.progress == 0
         assert t.is_urgent is False

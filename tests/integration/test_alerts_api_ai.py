@@ -38,9 +38,7 @@ class TestAlertsRecordsAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/alerts", params=params, resource_type="alerts_list"
-        )
+        response = self.helper.get("/alerts", params=params, resource_type="alerts_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -90,9 +88,7 @@ class TestAlertRulesAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/alert-rules", params=params, resource_type="alert_rules_list"
-        )
+        response = self.helper.get("/alert-rules", params=params, resource_type="alert_rules_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -114,9 +110,7 @@ class TestAlertRulesAPI:
             "conditions": {"threshold": 80},
         }
 
-        response = self.helper.post(
-            "/alert-rules", rule_data, resource_type="alert_rule"
-        )
+        response = self.helper.post("/alert-rules", rule_data, resource_type="alert_rule")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -137,9 +131,7 @@ class TestAlertRulesAPI:
         self.helper.print_info("测试获取预警规则详情...")
 
         rule_id = 1
-        response = self.helper.get(
-            f"/alert-rules/{rule_id}", resource_type=f"alert_rule_{rule_id}"
-        )
+        response = self.helper.get(f"/alert-rules/{rule_id}", resource_type=f"alert_rule_{rule_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -184,9 +176,7 @@ class TestAlertStatisticsAPI:
         """测试获取预警统计"""
         self.helper.print_info("测试获取预警统计...")
 
-        response = self.helper.get(
-            "/alerts/statistics", resource_type="alert_statistics"
-        )
+        response = self.helper.get("/alerts/statistics", resource_type="alert_statistics")
 
         if self.helper.assert_success(response):
             self.helper.print_success("预警统计获取成功")
@@ -197,9 +187,7 @@ class TestAlertStatisticsAPI:
         """测试获取预警仪表板"""
         self.helper.print_info("测试获取预警仪表板...")
 
-        response = self.helper.get(
-            "/alerts/statistics/dashboard", resource_type="alert_dashboard"
-        )
+        response = self.helper.get("/alerts/statistics/dashboard", resource_type="alert_dashboard")
 
         if self.helper.assert_success(response):
             self.helper.print_success("预警仪表板获取成功")

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+
 from app.services.stage_template.stage_management import StageManagementMixin
 
 
@@ -22,14 +24,19 @@ class TestStageManagementMixin:
     def test_add_stage_duplicate_code(self):
         template_mock = MagicMock()
         existing_mock = MagicMock()
-        self.db.query.return_value.filter.return_value.first.side_effect = [template_mock, existing_mock]
+        self.db.query.return_value.filter.return_value.first.side_effect = [
+            template_mock,
+            existing_mock,
+        ]
         with pytest.raises(ValueError, match="已存在"):
             self.service.add_stage(template_id=1, stage_code="S1", stage_name="阶段1")
 
     def test_add_stage_success(self):
         template_mock = MagicMock()
         self.db.query.return_value.filter.return_value.first.side_effect = [template_mock, None]
-        result = self.service.add_stage(template_id=1, stage_code="S1", stage_name="阶段1", sequence=0)
+        result = self.service.add_stage(
+            template_id=1, stage_code="S1", stage_name="阶段1", sequence=0
+        )
         self.db.add.assert_called_once()
         self.db.flush.assert_called_once()
 

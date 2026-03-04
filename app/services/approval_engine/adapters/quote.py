@@ -13,17 +13,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from app.models.sales.technical_assessment import QuoteApproval
 
+import logging
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.user import User
+from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
-
-from datetime import datetime
-from app.schemas.approval.instance import ApprovalInstanceCreate
-from app.models.user import User
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -91,19 +91,13 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             data.update(
                 {
                     "version_no": version.version_no,
-                    "total_price": float(version.total_price)
-                    if version.total_price
-                    else 0,
-                    "cost_total": float(version.cost_total)
-                    if version.cost_total
-                    else 0,
-                    "gross_margin": float(gross_margin)
-                    if gross_margin is not None
-                    else None,
+                    "total_price": float(version.total_price) if version.total_price else 0,
+                    "cost_total": float(version.cost_total) if version.cost_total else 0,
+                    "gross_margin": float(gross_margin) if gross_margin is not None else None,
                     "lead_time_days": version.lead_time_days,
-                    "delivery_date": version.delivery_date.isoformat()
-                    if version.delivery_date
-                    else None,
+                    "delivery_date": (
+                        version.delivery_date.isoformat() if version.delivery_date else None
+                    ),
                 }
             )
 
@@ -190,11 +184,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
 
         # 检查是否有版本
         if not quote.current_version:
-            versions = (
-                self.db.query(QuoteVersion)
-                .filter(QuoteVersion.quote_id == quote.id)
-                .count()
-            )
+            versions = self.db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote.id).count()
             if versions == 0:
                 return False, "报价未添加任何版本，无法提交审批"
 
@@ -239,12 +229,16 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             "quote_id": quote_version.quote_id,
             "quote_version_id": quote_version.id,
             "quote_code": quote_version.quote_code if quote_version else "",
-            "quote_total": float(quote_version.quote_total)
-            if quote_version and quote_version.quote_total
-            else 0,
-            "margin_percent": float(quote_version.margin_percent)
-            if quote_version and quote_version.margin_percent
-            else 0,
+            "quote_total": (
+                float(quote_version.quote_total)
+                if quote_version and quote_version.quote_total
+                else 0
+            ),
+            "margin_percent": (
+                float(quote_version.margin_percent)
+                if quote_version and quote_version.margin_percent
+                else 0
+            ),
             "status": quote_version.status if quote_version else "DRAFT",
         }
 
@@ -254,10 +248,8 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             entity_type="QUOTE",
             entity_id=quote_version.id,
             form_data=form_data,
-            title=title
-            or f"报价审批 - {quote_version.quote_code if quote_version else ''}",
-            summary=summary
-            or f"报价审批：{quote_version.quote_code if quote_version else ''}",
+            title=title or f"报价审批 - {quote_version.quote_code if quote_version else ''}",
+            summary=summary or f"报价审批：{quote_version.quote_code if quote_version else ''}",
             urgency=urgency,
             cc_user_ids=cc_user_ids,
         )
@@ -282,9 +274,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         self.db.add(quote_version)
         self.db.commit()
 
-        logger.info(
-            f"报价 {quote_version.quote_code} 已提交审批，实例ID: {instance.id}"
-        )
+        logger.info(f"报价 {quote_version.quote_code} 已提交审批，实例ID: {instance.id}")
 
         return instance
 
@@ -338,7 +328,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
     ) -> Optional[QuoteApproval]:
         """更新报价审批记录"""
         from app.models.sales.technical_assessment import QuoteApproval
-        
+
         approval_level = task.node_order
         approval = (
             self.db.query(QuoteApproval)

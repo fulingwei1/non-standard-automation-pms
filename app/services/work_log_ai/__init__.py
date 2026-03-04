@@ -31,10 +31,7 @@ class WorkLogAIService(
 
 # 便捷函数
 def analyze_work_log_content(
-    db: Session,
-    content: str,
-    user_id: int,
-    work_date: date
+    db: Session, content: str, user_id: int, work_date: date
 ) -> Dict[str, Any]:
     """
     分析工作日志内容的便捷函数
@@ -56,22 +53,14 @@ def analyze_work_log_content(
         if loop.is_running():
             # 如果事件循环正在运行，使用同步方式（规则引擎）
             return service._analyze_with_rules(
-                content,
-                service._get_user_projects(user_id),
-                work_date
+                content, service._get_user_projects(user_id), work_date
             )
         else:
             # 如果事件循环未运行，可以创建新的
-            return loop.run_until_complete(
-                service.analyze_work_log(content, user_id, work_date)
-            )
+            return loop.run_until_complete(service.analyze_work_log(content, user_id, work_date))
     except RuntimeError:
         # 没有事件循环，使用同步方式（规则引擎）
-        return service._analyze_with_rules(
-            content,
-            service._get_user_projects(user_id),
-            work_date
-        )
+        return service._analyze_with_rules(content, service._get_user_projects(user_id), work_date)
 
 
 __all__ = ["WorkLogAIService", "analyze_work_log_content"]

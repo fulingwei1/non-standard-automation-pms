@@ -12,8 +12,8 @@
 """
 
 import argparse
-import sys
 import subprocess
+import sys
 
 
 def run_command(command, description):
@@ -36,13 +36,9 @@ def run_command(command, description):
 def main():
     parser = argparse.ArgumentParser(description="运行测试并生成覆盖率报告")
     parser.add_argument("--unit-only", action="store_true", help="只运行单元测试")
-    parser.add_argument(
-        "--integration-only", action="store_true", help="只运行集成测试"
-    )
+    parser.add_argument("--integration-only", action="store_true", help="只运行集成测试")
     parser.add_argument("--no-slow", action="store_true", help="跳过慢速测试")
-    parser.add_argument(
-        "--cov-only", action="store_true", help="只生成覆盖率报告，不运行测试"
-    )
+    parser.add_argument("--cov-only", action="store_true", help="只生成覆盖率报告，不运行测试")
     parser.add_argument("--verbose", "-v", action="store_true", help="详细输出")
 
     args = parser.parse_args()

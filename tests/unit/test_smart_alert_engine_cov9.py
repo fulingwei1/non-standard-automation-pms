@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """第九批: test_smart_alert_engine_cov9.py - SmartAlertEngine 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.shortage.smart_alert_engine")
 
@@ -42,17 +43,13 @@ class TestCalculateAlertLevel:
 
     def test_level_urgent_overdue(self, engine):
         result = engine.calculate_alert_level(
-            shortage_qty=Decimal("50"),
-            required_qty=Decimal("100"),
-            days_to_shortage=0
+            shortage_qty=Decimal("50"), required_qty=Decimal("100"), days_to_shortage=0
         )
         assert result == "URGENT"
 
     def test_level_info_plenty_time(self, engine):
         result = engine.calculate_alert_level(
-            shortage_qty=Decimal("10"),
-            required_qty=Decimal("200"),
-            days_to_shortage=60
+            shortage_qty=Decimal("10"), required_qty=Decimal("200"), days_to_shortage=60
         )
         assert result == "INFO"
 
@@ -61,15 +58,13 @@ class TestCalculateAlertLevel:
             shortage_qty=Decimal("40"),
             required_qty=Decimal("100"),
             days_to_shortage=5,
-            is_critical_path=True
+            is_critical_path=True,
         )
         assert result in ("URGENT", "CRITICAL", "WARNING")
 
     def test_level_warning_short_days(self, engine):
         result = engine.calculate_alert_level(
-            shortage_qty=Decimal("60"),
-            required_qty=Decimal("100"),
-            days_to_shortage=6
+            shortage_qty=Decimal("60"), required_qty=Decimal("100"), days_to_shortage=6
         )
         assert result in ("CRITICAL", "WARNING", "URGENT")
 
@@ -80,10 +75,7 @@ class TestCalculateRiskScore:
     def test_calculate_risk_score_normal(self, engine):
         # _calculate_risk_score(delay_days, cost_impact, project_count, shortage_qty)
         result = engine._calculate_risk_score(
-            delay_days=10,
-            cost_impact=Decimal("20000"),
-            project_count=2,
-            shortage_qty=Decimal("50")
+            delay_days=10, cost_impact=Decimal("20000"), project_count=2, shortage_qty=Decimal("50")
         )
         assert isinstance(result, Decimal)
         assert 0 <= result <= 100
@@ -93,16 +85,13 @@ class TestCalculateRiskScore:
             delay_days=60,
             cost_impact=Decimal("200000"),
             project_count=10,
-            shortage_qty=Decimal("2000")
+            shortage_qty=Decimal("2000"),
         )
         assert result == Decimal("100")
 
     def test_calculate_risk_score_zero(self, engine):
         result = engine._calculate_risk_score(
-            delay_days=0,
-            cost_impact=Decimal("0"),
-            project_count=0,
-            shortage_qty=Decimal("0")
+            delay_days=0, cost_impact=Decimal("0"), project_count=0, shortage_qty=Decimal("0")
         )
         assert result == Decimal("0")
 

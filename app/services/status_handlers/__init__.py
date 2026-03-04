@@ -30,30 +30,35 @@ def register_all_handlers():
 def get_contract_handler():
     """延迟加载 ContractStatusHandler"""
     from app.services.status_handlers.contract_handler import ContractStatusHandler
+
     return ContractStatusHandler
 
 
 def get_material_handler():
     """延迟加载 MaterialStatusHandler"""
     from app.services.status_handlers.material_handler import MaterialStatusHandler
+
     return MaterialStatusHandler
 
 
 def get_acceptance_handler():
     """延迟加载 AcceptanceStatusHandler"""
     from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+
     return AcceptanceStatusHandler
 
 
 def get_ecn_handler():
     """延迟加载 ECNStatusHandler"""
     from app.services.status_handlers.ecn_handler import ECNStatusHandler
+
     return ECNStatusHandler
 
 
 def get_milestone_handler():
     """延迟加载 MilestoneStatusHandler"""
     from app.services.status_handlers.milestone_handler import MilestoneStatusHandler
+
     return MilestoneStatusHandler
 
 
@@ -65,4 +70,3 @@ __all__ = [
     "get_ecn_handler",
     "get_milestone_handler",
 ]
-

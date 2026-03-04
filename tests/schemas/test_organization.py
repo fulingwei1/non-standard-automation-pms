@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/organization.py"""
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.organization import (
     DepartmentCreate,
-    DepartmentUpdate,
     DepartmentResponse,
-    EmployeeCreate,
-    EmployeeUpdate,
-    EmployeeResponse,
-    EmployeeHrProfileCreate,
-    EmployeeHrProfileUpdate,
-    EmployeeHrProfileResponse,
-    HrTransactionCreate,
+    DepartmentUpdate,
     EmployeeContractCreate,
     EmployeeContractUpdate,
+    EmployeeCreate,
+    EmployeeHrProfileCreate,
+    EmployeeHrProfileResponse,
+    EmployeeHrProfileUpdate,
+    EmployeeOrgAssignmentCreate,
+    EmployeeResponse,
+    EmployeeUpdate,
+    HrTransactionCreate,
+    JobLevelCreate,
+    JobLevelUpdate,
     OrganizationUnitCreate,
     OrganizationUnitUpdate,
     PositionCreate,
     PositionUpdate,
-    JobLevelCreate,
-    JobLevelUpdate,
-    EmployeeOrgAssignmentCreate,
 )
 
 
@@ -63,7 +64,9 @@ class TestDepartmentUpdate:
 
 class TestDepartmentResponse:
     def test_valid(self):
-        d = DepartmentResponse(id=1, dept_code="D001", dept_name="T", level=1, sort_order=0, is_active=True)
+        d = DepartmentResponse(
+            id=1, dept_code="D001", dept_name="T", level=1, sort_order=0, is_active=True
+        )
         assert d.parent_id is None
 
 
@@ -82,8 +85,12 @@ class TestEmployeeCreate:
 
     def test_full(self):
         e = EmployeeCreate(
-            employee_code="E001", name="张三",
-            department="IT", role="Dev", phone="123", wechat_userid="wx001"
+            employee_code="E001",
+            name="张三",
+            department="IT",
+            role="Dev",
+            phone="123",
+            wechat_userid="wx001",
         )
         assert e.wechat_userid == "wx001"
 
@@ -137,7 +144,8 @@ class TestHrTransactionCreate:
 
     def test_resignation(self):
         t = HrTransactionCreate(
-            employee_id=1, transaction_type="resignation",
+            employee_id=1,
+            transaction_type="resignation",
             transaction_date=date(2024, 6, 1),
             resignation_date=date(2024, 6, 30),
             resignation_reason="个人原因",
@@ -152,14 +160,16 @@ class TestHrTransactionCreate:
 class TestEmployeeContractCreate:
     def test_valid(self):
         c = EmployeeContractCreate(
-            employee_id=1, contract_type="fixed_term",
+            employee_id=1,
+            contract_type="fixed_term",
             start_date=date(2024, 1, 1),
         )
         assert c.end_date is None
 
     def test_with_salary(self):
         c = EmployeeContractCreate(
-            employee_id=1, contract_type="fixed_term",
+            employee_id=1,
+            contract_type="fixed_term",
             start_date=date(2024, 1, 1),
             base_salary=Decimal("10000"),
             probation_salary=Decimal("8000"),
@@ -173,9 +183,7 @@ class TestEmployeeContractCreate:
 
 class TestOrganizationUnitCreate:
     def test_valid(self):
-        o = OrganizationUnitCreate(
-            unit_code="ORG001", unit_name="总部", unit_type="COMPANY"
-        )
+        o = OrganizationUnitCreate(unit_code="ORG001", unit_name="总部", unit_type="COMPANY")
         assert o.sort_order == 0
 
     def test_missing(self):
@@ -186,7 +194,8 @@ class TestOrganizationUnitCreate:
 class TestPositionCreate:
     def test_valid(self):
         p = PositionCreate(
-            position_code="P001", position_name="工程师",
+            position_code="P001",
+            position_name="工程师",
             position_category="TECHNICAL",
         )
         assert p.sort_order == 0
@@ -199,8 +208,10 @@ class TestPositionCreate:
 class TestJobLevelCreate:
     def test_valid(self):
         j = JobLevelCreate(
-            level_code="P5", level_name="高级工程师",
-            level_category="P", level_rank=5,
+            level_code="P5",
+            level_name="高级工程师",
+            level_category="P",
+            level_rank=5,
         )
         assert j.sort_order == 0
 
@@ -217,8 +228,10 @@ class TestEmployeeOrgAssignmentCreate:
 
     def test_with_dates(self):
         a = EmployeeOrgAssignmentCreate(
-            employee_id=1, org_unit_id=2,
-            position_id=3, job_level_id=4,
+            employee_id=1,
+            org_unit_id=2,
+            position_id=3,
+            job_level_id=4,
             start_date=date(2024, 1, 1),
         )
         assert a.position_id == 3

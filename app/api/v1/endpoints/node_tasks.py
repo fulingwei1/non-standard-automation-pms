@@ -160,7 +160,11 @@ def get_node_task_progress(
     return service.get_node_task_progress(node_instance_id)
 
 
-@router.post("/node/{node_instance_id}/batch", response_model=List[NodeTaskResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/node/{node_instance_id}/batch",
+    response_model=List[NodeTaskResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def batch_create_tasks(
     node_instance_id: int,
     batch_in: BatchCreateTasksRequest,

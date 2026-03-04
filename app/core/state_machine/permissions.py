@@ -8,7 +8,7 @@
 - 灵活的用户对象适配
 """
 
-from typing import Optional, Tuple, Any
+from typing import Any, Optional, Tuple
 
 from app.core.state_machine.exceptions import PermissionDeniedError  # noqa: F401 - re-exported
 
@@ -106,8 +106,8 @@ class StateMachinePermissionChecker:
         2. permissions 属性（列表或集合）
         """
         # 方法1：has_permission 函数
-        if hasattr(current_user, 'has_permission'):
-            has_perm_attr = getattr(current_user, 'has_permission')
+        if hasattr(current_user, "has_permission"):
+            has_perm_attr = getattr(current_user, "has_permission")
             if callable(has_perm_attr):
                 try:
                     if not has_perm_attr(required_permission):
@@ -119,8 +119,8 @@ class StateMachinePermissionChecker:
                 return False, "has_permission 应该是方法"
 
         # 方法2：permissions 属性
-        if hasattr(current_user, 'permissions'):
-            permissions = getattr(current_user, 'permissions')
+        if hasattr(current_user, "permissions"):
+            permissions = getattr(current_user, "permissions")
             if isinstance(permissions, (list, set)):
                 if required_permission not in permissions:
                     return False, f"缺少权限: {required_permission}"
@@ -139,8 +139,8 @@ class StateMachinePermissionChecker:
         2. roles 属性（列表，元素可能是字符串或Role对象）
         """
         # 方法1：has_role 函数
-        if hasattr(current_user, 'has_role'):
-            has_role_attr = getattr(current_user, 'has_role')
+        if hasattr(current_user, "has_role"):
+            has_role_attr = getattr(current_user, "has_role")
             if callable(has_role_attr):
                 try:
                     if not has_role_attr(required_role):
@@ -152,15 +152,15 @@ class StateMachinePermissionChecker:
                 return False, "has_role 应该是方法"
 
         # 方法2：roles 属性
-        if hasattr(current_user, 'roles'):
-            roles = getattr(current_user, 'roles')
+        if hasattr(current_user, "roles"):
+            roles = getattr(current_user, "roles")
             if isinstance(roles, (list, set)):
                 # 支持字符串列表或Role对象列表
                 role_names = []
                 for role in roles:
                     if isinstance(role, str):
                         role_names.append(role)
-                    elif hasattr(role, 'name'):
+                    elif hasattr(role, "name"):
                         role_names.append(role.name)
 
                 if required_role not in role_names:

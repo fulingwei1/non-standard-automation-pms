@@ -265,7 +265,9 @@ class TestAnalyzeRelatedProjectImpact:
         mock_related_project.project_name = "关联项目"
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_allocation]
-        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(2,)]
+        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+            (2,)
+        ]
         mock_db.query.return_value.filter.return_value.first.return_value = mock_related_project
 
         result = analyze_related_project_impact(mock_db, mock_change, project_id=1)

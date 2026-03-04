@@ -24,12 +24,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from datetime import date
 from decimal import Decimal
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 from app.models.pmo import PmoProjectInitiation
-from app.models.project import Project, Customer
+from app.models.project import Customer, Project
 from app.models.user import User
 from app.utils.project_utils import init_project_stages
 
@@ -48,10 +49,13 @@ def get_pending_initiations(db):
     Returns:
         list: 已批准但未创建项目的立项申请列表
     """
-    initiations = db.query(PmoProjectInitiation).filter(
-        PmoProjectInitiation.status == 'APPROVED',
-        PmoProjectInitiation.project_id.is_(None)
-    ).all()
+    initiations = (
+        db.query(PmoProjectInitiation)
+        .filter(
+            PmoProjectInitiation.status == "APPROVED", PmoProjectInitiation.project_id.is_(None)
+        )
+        .all()
+    )
 
     return initiations
 
@@ -64,9 +68,7 @@ def get_available_pms(db):
         list: 用户列表（可以选择作为项目经理）
     """
     # 获取所有用户，实际项目中可能需要根据角色过滤
-    users = db.query(User).filter(
-        User.is_active == True
-    ).order_by(User.real_name).all()
+    users = db.query(User).filter(User.is_active == True).order_by(User.real_name).all()
 
     return users
 
@@ -94,7 +96,9 @@ def create_project_from_initiation(db, initiation, pm_id):
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
 
         # 查找或创建客户
-        customer = db.query(Customer).filter(Customer.customer_name == initiation.customer_name).first()
+        customer = (
+            db.query(Customer).filter(Customer.customer_name == initiation.customer_name).first()
+        )
         customer_id = customer.id if customer else None
 
         # 获取项目经理信息
@@ -117,9 +121,9 @@ def create_project_from_initiation(db, initiation, pm_id):
             pm_id=pm_id,
             pm_name=pm.real_name or pm.username,
             project_type=initiation.project_type,
-            stage='S1',
-            status='ST01',
-            health='H1',
+            stage="S1",
+            status="ST01",
+            health="H1",
         )
 
         db.add(project)
@@ -186,12 +190,14 @@ def interactive_mode(db, initiations, pms):
         # 获取用户输入
         while True:
             try:
-                choice = input(f"\n请选择项目经理 (1-{len(pm_map)}, 或跳过输入 s, 退出输入 q): ").strip()
+                choice = input(
+                    f"\n请选择项目经理 (1-{len(pm_map)}, 或跳过输入 s, 退出输入 q): "
+                ).strip()
 
-                if choice.lower() == 'q':
+                if choice.lower() == "q":
                     print("退出修复流程")
                     return
-                elif choice.lower() == 's':
+                elif choice.lower() == "s":
                     print("跳过此立项申请")
                     break
 
@@ -249,7 +255,7 @@ def auto_mode(db, initiations, pm_id):
     failed_count = 0
 
     for idx, initiation in enumerate(initiations, 1):
-        print(f"[{idx}/{len(initiations)}] {initiation.project_name}... ", end='', flush=True)
+        print(f"[{idx}/{len(initiations)}] {initiation.project_name}... ", end="", flush=True)
 
         project = create_project_from_initiation(db, initiation, pm_id)
 
@@ -269,13 +275,14 @@ def main():
     """主函数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='立项申请项目修复脚本')
-    parser.add_argument('--interactive', '-i', action='store_true',
-                        help='交互模式：逐个选择项目经理并创建项目')
-    parser.add_argument('--auto', '-a', action='store_true',
-                        help='自动模式：使用指定项目经理批量创建')
-    parser.add_argument('--pm-id', type=int,
-                        help='自动模式下使用的项目经理ID')
+    parser = argparse.ArgumentParser(description="立项申请项目修复脚本")
+    parser.add_argument(
+        "--interactive", "-i", action="store_true", help="交互模式：逐个选择项目经理并创建项目"
+    )
+    parser.add_argument(
+        "--auto", "-a", action="store_true", help="自动模式：使用指定项目经理批量创建"
+    )
+    parser.add_argument("--pm-id", type=int, help="自动模式下使用的项目经理ID")
 
     args = parser.parse_args()
 
@@ -314,5 +321,5 @@ def main():
         db.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -227,9 +227,9 @@ class TestGetAffectedUserIds:
         mock_instance.id = 100
 
         mock_tasks = [
-        MagicMock(assignee_id=1),
-        MagicMock(assignee_id=2),
-        MagicMock(assignee_id=3),
+            MagicMock(assignee_id=1),
+            MagicMock(assignee_id=2),
+            MagicMock(assignee_id=3),
         ]
 
         mock_query = MagicMock()
@@ -267,17 +267,17 @@ class TestLogAction:
         service = ApprovalEngineCore(mock_db)
 
         service._log_action(
-        instance_id=100,
-        operator_id=1,
-        action="APPROVE",
-        task_id=50,
-        node_id=10,
-        operator_name="Test User",
-        comment="Test comment",
-        attachments=[{"name": "file.pdf"}],
-        action_detail={"key": "value"},
-        before_status="PENDING",
-        after_status="APPROVED",
+            instance_id=100,
+            operator_id=1,
+            action="APPROVE",
+            task_id=50,
+            node_id=10,
+            operator_name="Test User",
+            comment="Test comment",
+            attachments=[{"name": "file.pdf"}],
+            action_detail={"key": "value"},
+            before_status="PENDING",
+            after_status="APPROVED",
         )
 
         mock_db.add.assert_called_once()
@@ -296,9 +296,9 @@ class TestLogAction:
         service = ApprovalEngineCore(mock_db)
 
         service._log_action(
-        instance_id=100,
-        operator_id=1,
-        action="APPROVE",
+            instance_id=100,
+            operator_id=1,
+            action="APPROVE",
         )
 
         mock_db.add.assert_called_once()
@@ -373,7 +373,7 @@ class TestReturnToNode:
             assert mock_instance.current_node_id == 5
             mock_query.filter.assert_called_once()
             mock_query.filter.return_value.update.assert_called_once_with(
-            {"status": "CANCELLED"}, synchronize_session=False
+                {"status": "CANCELLED"}, synchronize_session=False
             )
 
     def test_return_to_node_cancel_multiple_tasks(self):

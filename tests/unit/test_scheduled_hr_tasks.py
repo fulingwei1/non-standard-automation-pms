@@ -20,6 +20,7 @@ def _make_db():
 #  check_contract_expiry_reminder
 # ================================================================
 
+
 class TestCheckContractExpiryReminder:
 
     def _setup_db(self, contracts, existing_reminder=None):
@@ -47,6 +48,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["contracts_checked"] == 0
@@ -68,6 +70,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["reminders_created"] == 1
@@ -88,6 +91,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["reminders_created"] == 1
@@ -107,6 +111,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["reminders_created"] == 1
@@ -126,6 +131,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["reminders_created"] == 1
@@ -147,6 +153,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert result["reminders_created"] == 0
@@ -157,6 +164,7 @@ class TestCheckContractExpiryReminder:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("DB连接失败")
 
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
+
         result = check_contract_expiry_reminder()
 
         assert "error" in result
@@ -165,6 +173,7 @@ class TestCheckContractExpiryReminder:
 # ================================================================
 #  check_employee_confirmation_reminder
 # ================================================================
+
 
 class TestCheckEmployeeConfirmationReminder:
 
@@ -190,8 +199,9 @@ class TestCheckEmployeeConfirmationReminder:
             m = MagicMock()
             name = getattr(model_cls, "__name__", str(model_cls))
             if "Employee" in name and "Hr" not in name:
-                m.join.return_value.filter.return_value.filter.return_value\
-                 .filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+                m.join.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+                    []
+                )
                 m.filter.return_value.all.return_value = []
             elif "Role" in name:
                 m.filter.return_value.all.return_value = []
@@ -208,6 +218,7 @@ class TestCheckEmployeeConfirmationReminder:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
+
         result = check_employee_confirmation_reminder()
 
         assert result["employees_checked"] == 0
@@ -233,7 +244,9 @@ class TestCheckEmployeeConfirmationReminder:
                 m.filter.return_value.first.return_value = profile
             elif "HrTransaction" in name:
                 # 代码: .filter(cond1).filter(cond2).filter(cond3).first()
-                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+                    None
+                )
             elif "Role" in name:
                 m.filter.return_value.all.return_value = []
                 m.filter.return_value.filter.return_value.all.return_value = []
@@ -248,8 +261,11 @@ class TestCheckEmployeeConfirmationReminder:
         mock_db_ctx.return_value.__enter__.return_value = db
         mock_db_ctx.return_value.__exit__.return_value = False
 
-        with patch("app.common.query_filters.apply_keyword_filter", return_value=MagicMock(all=lambda: [])):
+        with patch(
+            "app.common.query_filters.apply_keyword_filter", return_value=MagicMock(all=lambda: [])
+        ):
             from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
+
             result = check_employee_confirmation_reminder()
 
         assert result["employees_checked"] == 1
@@ -275,7 +291,9 @@ class TestCheckEmployeeConfirmationReminder:
             elif "EmployeeHrProfile" in name:
                 m.filter.return_value.first.return_value = profile
             elif "HrTransaction" in name:
-                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing_transaction
+                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+                    existing_transaction
+                )
             elif "Role" in name:
                 m.filter.return_value.all.return_value = []
                 m.filter.return_value.filter.return_value.all.return_value = []
@@ -290,8 +308,11 @@ class TestCheckEmployeeConfirmationReminder:
         mock_db_ctx.return_value.__enter__.return_value = db
         mock_db_ctx.return_value.__exit__.return_value = False
 
-        with patch("app.common.query_filters.apply_keyword_filter", return_value=MagicMock(all=lambda: [])):
+        with patch(
+            "app.common.query_filters.apply_keyword_filter", return_value=MagicMock(all=lambda: [])
+        ):
             from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
+
             result = check_employee_confirmation_reminder()
 
         assert result["reminders_created"] == 0
@@ -320,7 +341,9 @@ class TestCheckEmployeeConfirmationReminder:
             elif "EmployeeHrProfile" in name:
                 m.filter.return_value.first.return_value = profile
             elif "HrTransaction" in name:
-                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+                m.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+                    None
+                )
             elif "Role" in name:
                 filt = MagicMock()
                 filt.all.return_value = [hr_role]
@@ -330,7 +353,9 @@ class TestCheckEmployeeConfirmationReminder:
                 m.filter.return_value.all.return_value = [user_role]
             elif "User" in name:
                 m.filter.return_value.filter.return_value.all.return_value = [hr_user]
-                m.filter.return_value.filter.return_value.filter.return_value.all.return_value = [hr_user]
+                m.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+                    hr_user
+                ]
             return m
 
         db.query.side_effect = q
@@ -339,8 +364,12 @@ class TestCheckEmployeeConfirmationReminder:
 
         mock_dispatcher = MagicMock()
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher", return_value=mock_dispatcher):
+        with patch(
+            "app.services.notification_dispatcher.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
+
             result = check_employee_confirmation_reminder()
 
         assert result["reminders_created"] == 1
@@ -351,6 +380,7 @@ class TestCheckEmployeeConfirmationReminder:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("HR任务失败")
 
         from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
+
         result = check_employee_confirmation_reminder()
 
         assert "error" in result

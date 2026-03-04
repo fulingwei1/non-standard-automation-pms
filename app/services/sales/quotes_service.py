@@ -33,18 +33,17 @@ class QuotesService:
         customer_id: Optional[int] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        current_user: Optional[User] = None
+        current_user: Optional[User] = None,
     ) -> PaginatedResponse:
         """获取报价列表（已集成数据权限过滤）"""
         query = self.db.query(Quote).options(
-            joinedload(Quote.customer),
-            joinedload(Quote.owner),
-            joinedload(Quote.opportunity)
+            joinedload(Quote.customer), joinedload(Quote.owner), joinedload(Quote.opportunity)
         )
 
         # 应用数��权限过滤
         if current_user:
             from app.core.sales_permissions import filter_sales_data_by_scope
+
             query = filter_sales_data_by_scope(query, current_user, self.db, Quote, "owner_id")
 
         # 搜索条件
@@ -73,26 +72,28 @@ class QuotesService:
         # 转换为响应格式
         quote_responses = []
         for quote in items:
-            quote_responses.append({
-                "id": quote.id,
-                "quote_code": quote.quote_code,
-                "opportunity_id": quote.opportunity_id,
-                "customer_id": quote.customer_id,
-                "status": quote.status,
-                "valid_until": quote.valid_until,
-                "owner_id": quote.owner_id,
-                "customer_name": quote.customer.customer_name if quote.customer else None,
-                "owner_name": quote.owner.real_name if quote.owner else None,
-                "created_at": quote.created_at,
-                "updated_at": quote.updated_at,
-            })
+            quote_responses.append(
+                {
+                    "id": quote.id,
+                    "quote_code": quote.quote_code,
+                    "opportunity_id": quote.opportunity_id,
+                    "customer_id": quote.customer_id,
+                    "status": quote.status,
+                    "valid_until": quote.valid_until,
+                    "owner_id": quote.owner_id,
+                    "customer_name": quote.customer.customer_name if quote.customer else None,
+                    "owner_name": quote.owner.real_name if quote.owner else None,
+                    "created_at": quote.created_at,
+                    "updated_at": quote.updated_at,
+                }
+            )
 
         return PaginatedResponse(
             total=total,
             page=pagination.page,
             page_size=pagination.page_size,
             pages=pagination.pages_for_total(total),
-            items=quote_responses
+            items=quote_responses,
         )
 
     def create_quote(self, quote_data: QuoteCreate, current_user: User) -> Quote:
@@ -106,7 +107,7 @@ class QuotesService:
             valid_until=quote_data.valid_until,
             terms=quote_data.terms,
             status="draft",
-            created_by=current_user.id
+            created_by=current_user.id,
         )
 
         save_obj(self.db, quote)
@@ -116,9 +117,7 @@ class QuotesService:
     def _generate_quote_number(self) -> str:
         """生成报价编号"""
         today = date.today()
-        count = self.db.query(Quote).filter(
-            func.date(Quote.created_at) == today
-        ).count()
+        count = self.db.query(Quote).filter(func.date(Quote.created_at) == today).count()
 
         return f"QT{today.strftime('%Y%m%d')}{count+1:04d}"
 

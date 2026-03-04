@@ -142,9 +142,7 @@ class WorkshopService:
 
         # 计算总产能
         total_capacity = (
-            capacity_hours * work_days
-            if capacity_hours > 0
-            else work_days * 8 * worker_count
+            capacity_hours * work_days if capacity_hours > 0 else work_days * 8 * worker_count
         )
 
         # 统计该期间的工单

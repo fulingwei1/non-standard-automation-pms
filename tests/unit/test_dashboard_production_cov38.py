@@ -2,8 +2,9 @@
 """
 Unit tests for ProductionDashboardAdapter (dashboard_adapters/production.py) (第三十八批)
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.dashboard_adapters.production", reason="导入失败，跳过")
 
@@ -21,8 +22,9 @@ def mock_db():
 
 @pytest.fixture
 def adapter(mock_db):
-    with patch("app.services.dashboard_adapters.production.DashboardAdapter.__init__",
-               return_value=None):
+    with patch(
+        "app.services.dashboard_adapters.production.DashboardAdapter.__init__", return_value=None
+    ):
         adp = ProductionDashboardAdapter.__new__(ProductionDashboardAdapter)
         adp.db = mock_db
         adp.user = MagicMock()
@@ -83,7 +85,9 @@ class TestProductionGetStats:
 
     def test_get_dashboard_returns_response(self, adapter):
         """调用 get_stats 和 get_widgets 无错误"""
-        with patch.object(adapter, "get_stats", return_value=[MagicMock()]), \
-             patch.object(adapter, "get_widgets", return_value=[MagicMock()]):
+        with (
+            patch.object(adapter, "get_stats", return_value=[MagicMock()]),
+            patch.object(adapter, "get_widgets", return_value=[MagicMock()]),
+        ):
             # ProductionDashboardAdapter 没有 get_dashboard，验证基础属性
             assert adapter.module_id == "production"

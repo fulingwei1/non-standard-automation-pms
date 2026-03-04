@@ -2,13 +2,16 @@
 售前AI系统集成 - Pydantic Schemas
 Team 10: 售前AI系统集成与前端UI
 """
-from datetime import datetime, date
-from typing import Optional, List, Dict, Any
+
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class AIUsageStatsBase(BaseModel):
     """AI使用统计基础schema"""
+
     user_id: int
     ai_function: str
     usage_count: int = 0
@@ -19,11 +22,13 @@ class AIUsageStatsBase(BaseModel):
 
 class AIUsageStatsCreate(AIUsageStatsBase):
     """创建AI使用统计"""
+
     pass
 
 
 class AIUsageStatsUpdate(BaseModel):
     """更新AI使用统计"""
+
     usage_count: Optional[int] = None
     success_count: Optional[int] = None
     avg_response_time: Optional[int] = None
@@ -31,6 +36,7 @@ class AIUsageStatsUpdate(BaseModel):
 
 class AIUsageStatsResponse(AIUsageStatsBase):
     """AI使用统计响应"""
+
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
@@ -41,6 +47,7 @@ class AIUsageStatsResponse(AIUsageStatsBase):
 
 class AIFeedbackBase(BaseModel):
     """AI反馈基础schema"""
+
     ai_function: str
     presale_ticket_id: Optional[int] = None
     rating: int = Field(..., ge=1, le=5, description="评分1-5星")
@@ -49,11 +56,13 @@ class AIFeedbackBase(BaseModel):
 
 class AIFeedbackCreate(AIFeedbackBase):
     """创建AI反馈"""
+
     pass
 
 
 class AIFeedbackResponse(AIFeedbackBase):
     """AI反馈响应"""
+
     id: int
     user_id: int
     created_at: datetime
@@ -65,6 +74,7 @@ class AIFeedbackResponse(AIFeedbackBase):
 
 class AIConfigBase(BaseModel):
     """AI配置基础schema"""
+
     ai_function: str
     enabled: bool = True
     model_name: Optional[str] = None
@@ -76,11 +86,13 @@ class AIConfigBase(BaseModel):
 
 class AIConfigCreate(AIConfigBase):
     """创建AI配置"""
+
     pass
 
 
 class AIConfigUpdate(BaseModel):
     """更新AI配置"""
+
     enabled: Optional[bool] = None
     model_name: Optional[str] = None
     temperature: Optional[float] = Field(None, ge=0.0, le=2.0)
@@ -91,6 +103,7 @@ class AIConfigUpdate(BaseModel):
 
 class AIConfigResponse(AIConfigBase):
     """AI配置响应"""
+
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
@@ -101,6 +114,7 @@ class AIConfigResponse(AIConfigBase):
 
 class AIWorkflowLogBase(BaseModel):
     """AI工作流日志基础schema"""
+
     presale_ticket_id: int
     workflow_step: str
     status: str = "pending"
@@ -111,11 +125,13 @@ class AIWorkflowLogBase(BaseModel):
 
 class AIWorkflowLogCreate(AIWorkflowLogBase):
     """创建AI工作流日志"""
+
     pass
 
 
 class AIWorkflowLogResponse(AIWorkflowLogBase):
     """AI工作流日志响应"""
+
     id: int
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
@@ -127,6 +143,7 @@ class AIWorkflowLogResponse(AIWorkflowLogBase):
 
 class AIAuditLogBase(BaseModel):
     """AI审计日志基础schema"""
+
     action: str
     ai_function: Optional[str] = None
     resource_type: Optional[str] = None
@@ -138,11 +155,13 @@ class AIAuditLogBase(BaseModel):
 
 class AIAuditLogCreate(AIAuditLogBase):
     """创建AI审计日志"""
+
     user_id: int
 
 
 class AIAuditLogResponse(AIAuditLogBase):
     """AI审计日志响应"""
+
     id: int
     user_id: int
     created_at: datetime
@@ -153,8 +172,10 @@ class AIAuditLogResponse(AIAuditLogBase):
 
 # ============ 业务逻辑相关 Schemas ============
 
+
 class DashboardStatsResponse(BaseModel):
     """仪表盘统计响应"""
+
     total_usage: int
     total_success: int
     success_rate: float
@@ -166,6 +187,7 @@ class DashboardStatsResponse(BaseModel):
 
 class WorkflowStartRequest(BaseModel):
     """启动工作流请求"""
+
     presale_ticket_id: int
     initial_data: Optional[Dict[str, Any]] = None
     auto_run: bool = True  # 是否自动运行所有步骤
@@ -173,6 +195,7 @@ class WorkflowStartRequest(BaseModel):
 
 class WorkflowStatusResponse(BaseModel):
     """工作流状态响应"""
+
     presale_ticket_id: int
     current_step: str
     overall_status: str
@@ -183,6 +206,7 @@ class WorkflowStatusResponse(BaseModel):
 
 class BatchProcessRequest(BaseModel):
     """批量处理请求"""
+
     ticket_ids: List[int]
     ai_function: str
     options: Optional[Dict[str, Any]] = None
@@ -190,6 +214,7 @@ class BatchProcessRequest(BaseModel):
 
 class BatchProcessResponse(BaseModel):
     """批量处理响应"""
+
     job_id: str
     total_count: int
     status: str
@@ -198,6 +223,7 @@ class BatchProcessResponse(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """健康检查响应"""
+
     status: str  # healthy, degraded, unhealthy
     services: Dict[str, Dict[str, Any]]
     timestamp: datetime
@@ -205,6 +231,7 @@ class HealthCheckResponse(BaseModel):
 
 class ExportReportRequest(BaseModel):
     """导出报告请求"""
+
     start_date: date
     end_date: date
     ai_functions: Optional[List[str]] = None
@@ -214,6 +241,7 @@ class ExportReportRequest(BaseModel):
 
 class ExportReportResponse(BaseModel):
     """导出报告响应"""
+
     file_url: str
     file_name: str
     file_size: int
@@ -222,6 +250,7 @@ class ExportReportResponse(BaseModel):
 
 class AIUsageStatsQuery(BaseModel):
     """AI使用统计查询"""
+
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     ai_functions: Optional[List[str]] = None
@@ -231,6 +260,7 @@ class AIUsageStatsQuery(BaseModel):
 
 class AIFeedbackQuery(BaseModel):
     """AI反馈查询"""
+
     ai_function: Optional[str] = None
     min_rating: Optional[int] = Field(None, ge=1, le=5)
     max_rating: Optional[int] = Field(None, ge=1, le=5)

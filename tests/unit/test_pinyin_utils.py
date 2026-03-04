@@ -5,7 +5,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from app.utils.pinyin_utils import (
     batch_generate_pinyin_for_employees,
     generate_initial_password,
@@ -72,18 +71,16 @@ class TestGenerateInitialPassword:
         result = generate_initial_password()
 
         # 密码应只包含 base64-safe 字符
-        valid_chars = set(
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-        )
+        valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
         assert all(c in valid_chars for c in result)
 
     def test_multiple_passwords_unique(self):
         """多次生成密码应该是唯一的"""
         with patch("app.utils.pinyin_utils.secrets") as mock_secrets:
             mock_secrets.token_urlsafe.side_effect = [
-            "password1",
-            "password2",
-            "password3",
+                "password1",
+                "password2",
+                "password3",
             ]
 
             result1 = generate_initial_password()
@@ -132,8 +129,8 @@ class TestBatchGeneratePinyinForEmployees:
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.all.return_value = [
-        mock_emp1,
-        mock_emp2,
+            mock_emp1,
+            mock_emp2,
         ]
 
         result = batch_generate_pinyin_for_employees(mock_db)

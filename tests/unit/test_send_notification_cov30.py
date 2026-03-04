@@ -2,7 +2,7 @@
 """
 Unit tests for SendNotificationMixin (第三十批)
 """
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -32,9 +32,12 @@ def notifier(mock_db):
 # _get_dispatcher
 # ---------------------------------------------------------------------------
 
+
 class TestGetDispatcher:
     def test_creates_dispatcher_if_none(self, notifier, mock_db):
-        with patch("app.services.approval_engine.notify.send_notification.NotificationDispatcher") as MockDispatcher:
+        with patch(
+            "app.services.approval_engine.notify.send_notification.NotificationDispatcher"
+        ) as MockDispatcher:
             instance = MagicMock()
             MockDispatcher.return_value = instance
 
@@ -54,16 +57,20 @@ class TestGetDispatcher:
 # _map_notification_type
 # ---------------------------------------------------------------------------
 
+
 class TestMapNotificationType:
-    @pytest.mark.parametrize("input_type,expected", [
-        ("APPROVAL_PENDING", "APPROVAL_PENDING"),
-        ("APPROVAL_APPROVED", "APPROVAL_RESULT"),
-        ("APPROVAL_REJECTED", "APPROVAL_RESULT"),
-        ("APPROVAL_CC", "APPROVAL_CC"),
-        ("APPROVAL_TIMEOUT_WARNING", "APPROVAL_PENDING"),
-        ("APPROVAL_WITHDRAWN", "APPROVAL_RESULT"),
-        ("UNKNOWN_TYPE", "APPROVAL_PENDING"),
-    ])
+    @pytest.mark.parametrize(
+        "input_type,expected",
+        [
+            ("APPROVAL_PENDING", "APPROVAL_PENDING"),
+            ("APPROVAL_APPROVED", "APPROVAL_RESULT"),
+            ("APPROVAL_REJECTED", "APPROVAL_RESULT"),
+            ("APPROVAL_CC", "APPROVAL_CC"),
+            ("APPROVAL_TIMEOUT_WARNING", "APPROVAL_PENDING"),
+            ("APPROVAL_WITHDRAWN", "APPROVAL_RESULT"),
+            ("UNKNOWN_TYPE", "APPROVAL_PENDING"),
+        ],
+    )
     def test_maps_type_correctly(self, notifier, input_type, expected):
         result = notifier._map_notification_type(input_type)
         assert result == expected
@@ -72,6 +79,7 @@ class TestMapNotificationType:
 # ---------------------------------------------------------------------------
 # _map_urgency_to_priority
 # ---------------------------------------------------------------------------
+
 
 class TestMapUrgencyToPriority:
     def test_maps_urgent(self, notifier):
@@ -106,6 +114,7 @@ class TestMapUrgencyToPriority:
 # ---------------------------------------------------------------------------
 # _send_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendNotification:
     def test_skips_when_no_receiver_id(self, notifier):

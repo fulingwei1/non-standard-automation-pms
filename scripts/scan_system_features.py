@@ -154,7 +154,8 @@ def update_feature_table(features: List[Dict]):
         except Exception:
             # 创建表
             session.execute(
-                text("""
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS system_features (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     feature_code VARCHAR(100) UNIQUE NOT NULL,
@@ -173,14 +174,16 @@ def update_feature_table(features: List[Dict]):
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+                )
             )
             session.commit()
 
         # 更新或插入功能
         for feature in features:
             session.execute(
-                text("""
+                text(
+                    """
                 INSERT OR REPLACE INTO system_features (
                     feature_code, feature_name, module, api_file, api_prefix,
                     api_endpoint_count, has_permission, permission_count,
@@ -192,7 +195,8 @@ def update_feature_table(features: List[Dict]):
                     :has_frontend, :frontend_page_count, :is_enabled, :priority,
                     CURRENT_TIMESTAMP
                 )
-            """),
+            """
+                ),
                 {
                     "code": feature["code"],
                     "name": feature.get("name", feature["code"]),

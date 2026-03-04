@@ -38,9 +38,7 @@ class DeptReportGenerator:
         Returns:
             报表数据字典
         """
-        department = (
-            db.query(Department).filter(Department.id == department_id).first()
-        )
+        department = db.query(Department).filter(Department.id == department_id).first()
         if not department:
             return {"error": "部门不存在", "department_id": department_id}
 
@@ -51,7 +49,9 @@ class DeptReportGenerator:
         # 基础信息
         summary = {
             "department_id": department.id,
-            "department_name": getattr(department, "dept_name", department.name if hasattr(department, "name") else ""),
+            "department_name": getattr(
+                department, "dept_name", department.name if hasattr(department, "name") else ""
+            ),
             "department_code": getattr(department, "dept_code", ""),
             "member_count": len(dept_members),
             "period_start": start_date.isoformat(),
@@ -69,9 +69,7 @@ class DeptReportGenerator:
         )
 
         # 人员负荷
-        workload = DeptReportGenerator._get_member_workload(
-            db, dept_members, start_date, end_date
-        )
+        workload = DeptReportGenerator._get_member_workload(db, dept_members, start_date, end_date)
 
         return {
             "summary": summary,
@@ -105,9 +103,7 @@ class DeptReportGenerator:
         Returns:
             报表数据字典
         """
-        department = (
-            db.query(Department).filter(Department.id == department_id).first()
-        )
+        department = db.query(Department).filter(Department.id == department_id).first()
         if not department:
             return {"error": "部门不存在", "department_id": department_id}
 
@@ -118,7 +114,9 @@ class DeptReportGenerator:
         # 基础信息
         summary = {
             "department_id": department.id,
-            "department_name": getattr(department, "dept_name", department.name if hasattr(department, "name") else ""),
+            "department_name": getattr(
+                department, "dept_name", department.name if hasattr(department, "name") else ""
+            ),
             "department_code": getattr(department, "dept_code", ""),
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
@@ -158,9 +156,7 @@ class DeptReportGenerator:
             "total_members": len(dept_members),
             "total_hours": timesheet_data["total_hours"],
             "avg_hours_per_member": (
-                round(timesheet_data["total_hours"] / len(dept_members), 2)
-                if dept_members
-                else 0
+                round(timesheet_data["total_hours"] / len(dept_members), 2) if dept_members else 0
             ),
             "avg_utilization_rate": round(avg_utilization, 1),
             "projects_involved": project_stats["total"],
@@ -180,9 +176,7 @@ class DeptReportGenerator:
         }
 
     @staticmethod
-    def _get_department_members(
-        db: Session, department: Department
-    ) -> List[User]:
+    def _get_department_members(db: Session, department: Department) -> List[User]:
         """获取部门成员"""
         # 尝试通过 department_id 查询
         members = (
@@ -287,9 +281,7 @@ class DeptReportGenerator:
                     "hours": round(data["hours"], 2),
                     "timesheet_count": data["count"],
                     "percentage": (
-                        round(data["hours"] / total_hours * 100, 1)
-                        if total_hours > 0
-                        else 0
+                        round(data["hours"] / total_hours * 100, 1) if total_hours > 0 else 0
                     ),
                 }
             )
@@ -361,11 +353,7 @@ class DeptReportGenerator:
             user_timesheets = [t for t in timesheets if t.user_id == user.id]
             user_hours = sum(float(t.hours or 0) for t in user_timesheets)
             expected_hours = working_days * 8
-            utilization = (
-                round(user_hours / expected_hours * 100, 1)
-                if expected_hours > 0
-                else 0
-            )
+            utilization = round(user_hours / expected_hours * 100, 1) if expected_hours > 0 else 0
 
             result.append(
                 {
@@ -402,9 +390,7 @@ class DeptReportGenerator:
 
         # 获取部门参与的项目
         project_memberships = (
-            db.query(ProjectMember)
-            .filter(ProjectMember.user_id.in_(user_ids))
-            .all()
+            db.query(ProjectMember).filter(ProjectMember.user_id.in_(user_ids)).all()
         )
         project_ids = list(set(pm.project_id for pm in project_memberships))
 

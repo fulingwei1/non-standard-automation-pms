@@ -75,7 +75,7 @@ class TestSaveUploadedFile:
         mock_file = MagicMock()
         mock_file.filename = "test.xlsx"
 
-        with patch('os.makedirs'):
+        with patch("os.makedirs"):
             file_path, relative_path, file_size = save_uploaded_file(mock_file)
 
             assert file_path.endswith(".xlsx")
@@ -88,7 +88,7 @@ class TestSaveUploadedFile:
         mock_file = MagicMock()
         mock_file.filename = "test.xlsx"
 
-        with patch('os.makedirs'):
+        with patch("os.makedirs"):
             file_path1, _, _ = save_uploaded_file(mock_file)
             file_path2, _, _ = save_uploaded_file(mock_file)
 
@@ -104,14 +104,17 @@ class TestParseExcelFile:
         from app.services.bonus_allocation_parser import parse_excel_file
 
         # 创建模拟Excel内容
-        df = pd.DataFrame({
-            '计算记录ID*': [1, 2],
-            '受益人ID*': [10, 20],
-            '发放金额*': [1000, 2000],
-            '发放日期*': ['2026-01-15', '2026-01-16']
-        })
+        df = pd.DataFrame(
+            {
+                "计算记录ID*": [1, 2],
+                "受益人ID*": [10, 20],
+                "发放金额*": [1000, 2000],
+                "发放日期*": ["2026-01-15", "2026-01-16"],
+            }
+        )
 
         import io
+
         buffer = io.BytesIO()
         df.to_excel(buffer, index=False)
         buffer.seek(0)
@@ -120,18 +123,16 @@ class TestParseExcelFile:
         result = parse_excel_file(content)
 
         assert len(result) == 2
-        assert '计算记录ID*' in result.columns
+        assert "计算记录ID*" in result.columns
 
     def test_drops_empty_rows(self):
         """测试删除空行"""
         from app.services.bonus_allocation_parser import parse_excel_file
 
-        df = pd.DataFrame({
-            'A': [1, None, 3],
-            'B': [10, None, 30]
-        })
+        df = pd.DataFrame({"A": [1, None, 3], "B": [10, None, 30]})
 
         import io
+
         buffer = io.BytesIO()
         df.to_excel(buffer, index=False)
         buffer.seek(0)
@@ -160,12 +161,14 @@ class TestValidateRequiredColumns:
         """测试接受有计算记录ID的列"""
         from app.services.bonus_allocation_parser import validate_required_columns
 
-        df = pd.DataFrame({
-            '计算记录ID*': [1],
-            '受益人ID*': [10],
-            '发放金额*': [1000],
-            '发放日期*': ['2026-01-15']
-        })
+        df = pd.DataFrame(
+            {
+                "计算记录ID*": [1],
+                "受益人ID*": [10],
+                "发放金额*": [1000],
+                "发放日期*": ["2026-01-15"],
+            }
+        )
 
         # 不应抛出异常
         validate_required_columns(df)
@@ -174,12 +177,14 @@ class TestValidateRequiredColumns:
         """测试接受有团队奖金分配ID的列"""
         from app.services.bonus_allocation_parser import validate_required_columns
 
-        df = pd.DataFrame({
-            '团队奖金分配ID*': [1],
-            '受益人ID*': [10],
-            '发放金额*': [1000],
-            '发放日期*': ['2026-01-15']
-        })
+        df = pd.DataFrame(
+            {
+                "团队奖金分配ID*": [1],
+                "受益人ID*": [10],
+                "发放金额*": [1000],
+                "发放日期*": ["2026-01-15"],
+            }
+        )
 
         # 不应抛出异常
         validate_required_columns(df)
@@ -188,11 +193,7 @@ class TestValidateRequiredColumns:
         """测试拒绝缺少ID列"""
         from app.services.bonus_allocation_parser import validate_required_columns
 
-        df = pd.DataFrame({
-            '受益人ID*': [10],
-            '发放金额*': [1000],
-            '发放日期*': ['2026-01-15']
-        })
+        df = pd.DataFrame({"受益人ID*": [10], "发放金额*": [1000], "发放日期*": ["2026-01-15"]})
 
         with pytest.raises(HTTPException) as exc_info:
             validate_required_columns(df)
@@ -203,11 +204,13 @@ class TestValidateRequiredColumns:
         """测试拒绝缺少必需列"""
         from app.services.bonus_allocation_parser import validate_required_columns
 
-        df = pd.DataFrame({
-            '计算记录ID*': [1],
-            '受益人ID*': [10]
-            # 缺少发放金额和发放日期
-        })
+        df = pd.DataFrame(
+            {
+                "计算记录ID*": [1],
+                "受益人ID*": [10],
+                # 缺少发放金额和发放日期
+            }
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             validate_required_columns(df)
@@ -222,9 +225,9 @@ class TestGetColumnValue:
         """测试获取带*的列值"""
         from app.services.bonus_allocation_parser import get_column_value
 
-        row = pd.Series({'计算记录ID*': 123})
+        row = pd.Series({"计算记录ID*": 123})
 
-        result = get_column_value(row, '计算记录ID*')
+        result = get_column_value(row, "计算记录ID*")
 
         assert result == 123
 
@@ -232,9 +235,9 @@ class TestGetColumnValue:
         """测试获取不带*的列值"""
         from app.services.bonus_allocation_parser import get_column_value
 
-        row = pd.Series({'计算记录ID': 456})
+        row = pd.Series({"计算记录ID": 456})
 
-        result = get_column_value(row, '计算记录ID*')
+        result = get_column_value(row, "计算记录ID*")
 
         assert result == 456
 
@@ -242,9 +245,9 @@ class TestGetColumnValue:
         """测试优先使用带*的列"""
         from app.services.bonus_allocation_parser import get_column_value
 
-        row = pd.Series({'计算记录ID*': 100, '计算记录ID': 200})
+        row = pd.Series({"计算记录ID*": 100, "计算记录ID": 200})
 
-        result = get_column_value(row, '计算记录ID*')
+        result = get_column_value(row, "计算记录ID*")
 
         assert result == 100
 
@@ -252,9 +255,9 @@ class TestGetColumnValue:
         """测试缺少列时返回None"""
         from app.services.bonus_allocation_parser import get_column_value
 
-        row = pd.Series({'其他列': 999})
+        row = pd.Series({"其他列": 999})
 
-        result = get_column_value(row, '计算记录ID*')
+        result = get_column_value(row, "计算记录ID*")
 
         assert result is None
 
@@ -266,7 +269,7 @@ class TestParseDate:
         """测试解析字符串日期"""
         from app.services.bonus_allocation_parser import parse_date
 
-        result = parse_date('2026-01-15')
+        result = parse_date("2026-01-15")
 
         assert result == date(2026, 1, 15)
 
@@ -283,7 +286,7 @@ class TestParseDate:
         """测试解析pandas时间戳"""
         from app.services.bonus_allocation_parser import parse_date
 
-        ts = pd.Timestamp('2026-01-15')
+        ts = pd.Timestamp("2026-01-15")
         result = parse_date(ts)
 
         assert result == date(2026, 1, 15)
@@ -302,12 +305,17 @@ class TestValidateRowData:
         mock_user = MagicMock()
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_calculation, mock_user
+            mock_calculation,
+            mock_user,
         ]
 
         errors = validate_row_data(
-            mock_db, calc_id=1, team_allocation_id=None,
-            user_id=10, calc_amount=Decimal("1000"), dist_amount=Decimal("1000")
+            mock_db,
+            calc_id=1,
+            team_allocation_id=None,
+            user_id=10,
+            calc_amount=Decimal("1000"),
+            dist_amount=Decimal("1000"),
         )
 
         assert errors == []
@@ -320,8 +328,12 @@ class TestValidateRowData:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         errors = validate_row_data(
-            mock_db, calc_id=None, team_allocation_id=999,
-            user_id=10, calc_amount=Decimal("1000"), dist_amount=Decimal("1000")
+            mock_db,
+            calc_id=None,
+            team_allocation_id=999,
+            user_id=10,
+            calc_amount=Decimal("1000"),
+            dist_amount=Decimal("1000"),
         )
 
         assert any("团队奖金分配ID" in e for e in errors)
@@ -334,8 +346,12 @@ class TestValidateRowData:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         errors = validate_row_data(
-            mock_db, calc_id=999, team_allocation_id=None,
-            user_id=10, calc_amount=Decimal("1000"), dist_amount=Decimal("1000")
+            mock_db,
+            calc_id=999,
+            team_allocation_id=None,
+            user_id=10,
+            calc_amount=Decimal("1000"),
+            dist_amount=Decimal("1000"),
         )
 
         assert any("计算记录ID" in e for e in errors)
@@ -348,12 +364,17 @@ class TestValidateRowData:
 
         mock_calculation = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_calculation, None  # calculation exists, user doesn't
+            mock_calculation,
+            None,  # calculation exists, user doesn't
         ]
 
         errors = validate_row_data(
-            mock_db, calc_id=1, team_allocation_id=None,
-            user_id=999, calc_amount=Decimal("1000"), dist_amount=Decimal("1000")
+            mock_db,
+            calc_id=1,
+            team_allocation_id=None,
+            user_id=999,
+            calc_amount=Decimal("1000"),
+            dist_amount=Decimal("1000"),
         )
 
         assert any("受益人ID" in e for e in errors)
@@ -370,23 +391,26 @@ class TestParseRowData:
         mock_calculation = MagicMock()
         mock_user = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_calculation, mock_user
+            mock_calculation,
+            mock_user,
         ]
 
-        row = pd.Series({
-            '计算记录ID*': 1,
-            '受益人ID*': 10,
-            '计算金额*': 1000,
-            '发放金额*': 1000,
-            '发放日期*': '2026-01-15'
-        })
+        row = pd.Series(
+            {
+                "计算记录ID*": 1,
+                "受益人ID*": 10,
+                "计算金额*": 1000,
+                "发放金额*": 1000,
+                "发放日期*": "2026-01-15",
+            }
+        )
 
         data, errors = parse_row_data(row, 2, mock_db)
 
         assert errors == []
-        assert data['calculation_id'] == 1
-        assert data['user_id'] == 10
-        assert data['distributed_amount'] == 1000.0
+        assert data["calculation_id"] == 1
+        assert data["user_id"] == 10
+        assert data["distributed_amount"] == 1000.0
 
     def test_returns_errors_for_invalid_row(self):
         """测试无效行返回错误"""
@@ -394,13 +418,15 @@ class TestParseRowData:
 
         mock_db = MagicMock()
 
-        row = pd.Series({
-            '计算记录ID*': None,
-            '团队奖金分配ID*': None,
-            '受益人ID*': None,
-            '发放金额*': None,
-            '发放日期*': None
-        })
+        row = pd.Series(
+            {
+                "计算记录ID*": None,
+                "团队奖金分配ID*": None,
+                "受益人ID*": None,
+                "发放金额*": None,
+                "发放日期*": None,
+            }
+        )
 
         data, errors = parse_row_data(row, 2, mock_db)
 
@@ -419,17 +445,21 @@ class TestParseAllocationSheet:
         mock_calculation = MagicMock()
         mock_user = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_calculation, mock_user,
-            mock_calculation, mock_user
+            mock_calculation,
+            mock_user,
+            mock_calculation,
+            mock_user,
         ]
 
-        df = pd.DataFrame({
-            '计算记录ID*': [1, 2],
-            '受益人ID*': [10, 20],
-            '计算金额*': [1000, 2000],
-            '发放金额*': [1000, 2000],
-            '发放日期*': ['2026-01-15', '2026-01-16']
-        })
+        df = pd.DataFrame(
+            {
+                "计算记录ID*": [1, 2],
+                "受益人ID*": [10, 20],
+                "计算金额*": [1000, 2000],
+                "发放金额*": [1000, 2000],
+                "发放日期*": ["2026-01-15", "2026-01-16"],
+            }
+        )
 
         valid_rows, errors = parse_allocation_sheet(df, mock_db)
 
@@ -443,12 +473,14 @@ class TestParseAllocationSheet:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        df = pd.DataFrame({
-            '计算记录ID*': [1, None],
-            '受益人ID*': [None, 20],
-            '发放金额*': [1000, 2000],
-            '发放日期*': ['2026-01-15', '2026-01-16']
-        })
+        df = pd.DataFrame(
+            {
+                "计算记录ID*": [1, None],
+                "受益人ID*": [None, 20],
+                "发放金额*": [1000, 2000],
+                "发放日期*": ["2026-01-15", "2026-01-16"],
+            }
+        )
 
         valid_rows, errors = parse_allocation_sheet(df, mock_db)
 

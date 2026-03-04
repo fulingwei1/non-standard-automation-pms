@@ -30,9 +30,13 @@ class TestProjectListPerformance:
         start_time = time.time()
 
         # 执行查询
-        projects = db.query(Project).filter(
-            Project.is_active == True
-        ).order_by(Project.created_at.desc()).limit(20).all()
+        projects = (
+            db.query(Project)
+            .filter(Project.is_active == True)
+            .order_by(Project.created_at.desc())
+            .limit(20)
+            .all()
+        )
 
         elapsed_time = (time.time() - start_time) * 1000  # 转换为毫秒
 
@@ -47,9 +51,7 @@ class TestProjectListPerformance:
         start_time = time.time()
 
         query = db.query(Project).filter(
-            Project.is_active == True,
-            Project.stage == "S5",
-            Project.health == "H1"
+            Project.is_active == True, Project.stage == "S5", Project.health == "H1"
         )
 
         total = query.count()
@@ -65,9 +67,7 @@ class TestProjectListPerformance:
 
         # 第一次查询（无缓存）
         start_time = time.time()
-        projects = db.query(Project).filter(
-            Project.is_active == True
-        ).limit(20).all()
+        projects = db.query(Project).filter(Project.is_active == True).limit(20).all()
         first_query_time = (time.time() - start_time) * 1000
 
         # 模拟缓存数据
@@ -75,7 +75,7 @@ class TestProjectListPerformance:
             "items": [{"id": p.id, "name": p.project_name} for p in projects],
             "total": len(projects),
             "page": 1,
-            "page_size": 20
+            "page_size": 20,
         }
         cache.set_project_list(cache_data, expire_seconds=300, page=1, page_size=20)
 

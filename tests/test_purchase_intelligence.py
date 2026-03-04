@@ -9,17 +9,20 @@
 4. API接口测试
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models import (
+    GoodsReceipt,
+    GoodsReceiptItem,
     Material,
     MaterialCategory,
     MaterialShortage,
     MaterialSupplier,
+    Project,
     PurchaseOrder,
     PurchaseOrderItem,
     PurchaseSuggestion,
@@ -27,15 +30,12 @@ from app.models import (
     SupplierQuotation,
     User,
     Vendor,
-    GoodsReceipt,
-    GoodsReceiptItem,
-    Project,
 )
 from app.services.purchase_suggestion_engine import PurchaseSuggestionEngine
 from app.services.supplier_performance_evaluator import SupplierPerformanceEvaluator
 
-
 # ==================== Fixtures ====================
+
 
 @pytest.fixture
 def test_db(db_session):
@@ -98,7 +98,7 @@ def test_material(test_db, test_supplier):
     )
     test_db.add(category)
     test_db.flush()
-    
+
     material = Material(
         material_code="MAT001",
         material_name="测试物料A",
@@ -114,7 +114,7 @@ def test_material(test_db, test_supplier):
     )
     test_db.add(material)
     test_db.flush()
-    
+
     # 创建物料-供应商关联
     ms = MaterialSupplier(
         material_id=material.id,
@@ -128,11 +128,12 @@ def test_material(test_db, test_supplier):
     test_db.add(ms)
     test_db.commit()
     test_db.refresh(material)
-    
+
     return material
 
 
 # ==================== 数据模型测试 ====================
+
 
 def test_purchase_suggestion_model(test_db, test_material, test_supplier):
     """测试采购建议模型"""
@@ -153,10 +154,10 @@ def test_purchase_suggestion_model(test_db, test_material, test_supplier):
         estimated_total_amount=Decimal("4750.00"),
         status="PENDING",
     )
-    
+
     test_db.add(suggestion)
     test_db.commit()
-    
+
     # 验证
     assert suggestion.id is not None
     assert suggestion.suggestion_no == "PS20260216001"
@@ -181,10 +182,10 @@ def test_supplier_quotation_model(test_db, test_material, test_supplier):
         valid_to=date.today() + timedelta(days=90),
         status="ACTIVE",
     )
-    
+
     test_db.add(quotation)
     test_db.commit()
-    
+
     # 验证
     assert quotation.id is not None
     assert quotation.quotation_no == "QT20260216001"
@@ -213,10 +214,10 @@ def test_supplier_performance_model(test_db, test_supplier):
         rating="A+",
         status="CALCULATED",
     )
-    
+
     test_db.add(performance)
     test_db.commit()
-    
+
     # 验证
     assert performance.id is not None
     assert performance.overall_score == Decimal("92.13")
@@ -225,15 +226,16 @@ def test_supplier_performance_model(test_db, test_supplier):
 
 # ==================== 采购建议引擎测试 ====================
 
+
 def test_generate_from_safety_stock(test_db, test_material):
     """测试基于安全库存生成建议"""
     engine = PurchaseSuggestionEngine(test_db)
-    
+
     # 当前库存50，安全库存100，应生成建议
     suggestions = engine.generate_from_safety_stock()
-    
+
     assert len(suggestions) > 0
-    
+
     # 验证建议
     suggestion = next((s for s in suggestions if s.material_id == test_material.id), None)
     assert suggestion is not None
@@ -258,10 +260,10 @@ def test_generate_from_shortages(test_db, test_material, test_project):
     )
     test_db.add(shortage)
     test_db.commit()
-    
+
     engine = PurchaseSuggestionEngine(test_db)
     suggestions = engine.generate_from_shortages(project_id=test_project.id)
-    
+
     assert len(suggestions) > 0
     suggestion = suggestions[0]
     assert suggestion.source_type == "SHORTAGE"
@@ -272,9 +274,9 @@ def test_generate_from_shortages(test_db, test_material, test_project):
 def test_recommend_supplier(test_db, test_material, test_supplier):
     """测试AI推荐供应商"""
     engine = PurchaseSuggestionEngine(test_db)
-    
+
     supplier_id, confidence, reason, alternatives = engine._recommend_supplier(test_material.id)
-    
+
     assert supplier_id == test_supplier.id
     assert confidence is not None
     assert reason is not None
@@ -284,32 +286,33 @@ def test_recommend_supplier(test_db, test_material, test_supplier):
 def test_supplier_scoring(test_db, test_material, test_supplier):
     """测试供应商评分算法"""
     engine = PurchaseSuggestionEngine(test_db)
-    
+
     weight_config = {
-        'performance': Decimal('40'),
-        'price': Decimal('30'),
-        'delivery': Decimal('20'),
-        'history': Decimal('10'),
+        "performance": Decimal("40"),
+        "price": Decimal("30"),
+        "delivery": Decimal("20"),
+        "history": Decimal("10"),
     }
-    
+
     scores = engine._calculate_supplier_score(test_supplier.id, test_material.id, weight_config)
-    
-    assert 'total_score' in scores
-    assert 'performance_score' in scores
-    assert 'price_score' in scores
-    assert scores['total_score'] >= Decimal('0')
-    assert scores['total_score'] <= Decimal('100')
+
+    assert "total_score" in scores
+    assert "performance_score" in scores
+    assert "price_score" in scores
+    assert scores["total_score"] >= Decimal("0")
+    assert scores["total_score"] <= Decimal("100")
 
 
 # ==================== 供应商绩效评估测试 ====================
 
+
 def test_evaluate_supplier_basic(test_db, test_supplier):
     """测试基本供应商评估"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     evaluation_period = "2026-01"
     performance = evaluator.evaluate_supplier(test_supplier.id, evaluation_period)
-    
+
     # 即使没有订单数据，也应创建记录
     assert performance is not None
     assert performance.supplier_id == test_supplier.id
@@ -331,7 +334,7 @@ def test_delivery_metrics_calculation(test_db, test_supplier, test_material, tes
     )
     test_db.add(order)
     test_db.flush()
-    
+
     # 创建收货记录（延迟2天）
     receipt = GoodsReceipt(
         receipt_no="GR20260122001",
@@ -342,18 +345,14 @@ def test_delivery_metrics_calculation(test_db, test_supplier, test_material, tes
     )
     test_db.add(receipt)
     test_db.commit()
-    
+
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     orders = [order]
-    metrics = evaluator._calculate_delivery_metrics(
-        orders,
-        date(2026, 1, 1),
-        date(2026, 1, 31)
-    )
-    
-    assert metrics['late_orders'] == 1
-    assert metrics['avg_delay_days'] == Decimal('2')
+    metrics = evaluator._calculate_delivery_metrics(orders, date(2026, 1, 1), date(2026, 1, 31))
+
+    assert metrics["late_orders"] == 1
+    assert metrics["avg_delay_days"] == Decimal("2")
 
 
 def test_quality_metrics_calculation(test_db, test_supplier, test_material, test_project):
@@ -368,7 +367,7 @@ def test_quality_metrics_calculation(test_db, test_supplier, test_material, test
     )
     test_db.add(order)
     test_db.flush()
-    
+
     # 创建订单明细
     order_item = PurchaseOrderItem(
         order_id=order.id,
@@ -382,7 +381,7 @@ def test_quality_metrics_calculation(test_db, test_supplier, test_material, test
     )
     test_db.add(order_item)
     test_db.flush()
-    
+
     # 创建收货单
     receipt = GoodsReceipt(
         receipt_no="GR20260122002",
@@ -393,7 +392,7 @@ def test_quality_metrics_calculation(test_db, test_supplier, test_material, test
     )
     test_db.add(receipt)
     test_db.flush()
-    
+
     # 创建收货明细（98个合格，2个不合格）
     receipt_item = GoodsReceiptItem(
         receipt_id=receipt.id,
@@ -407,87 +406,79 @@ def test_quality_metrics_calculation(test_db, test_supplier, test_material, test
     )
     test_db.add(receipt_item)
     test_db.commit()
-    
+
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     orders = [order]
-    metrics = evaluator._calculate_quality_metrics(
-        orders,
-        date(2026, 1, 1),
-        date(2026, 1, 31)
-    )
-    
-    assert metrics['pass_rate'] == Decimal('98.00')
-    assert metrics['total_qty'] == Decimal('100')
-    assert metrics['qualified_qty'] == Decimal('98')
-    assert metrics['rejected_qty'] == Decimal('2')
+    metrics = evaluator._calculate_quality_metrics(orders, date(2026, 1, 1), date(2026, 1, 31))
+
+    assert metrics["pass_rate"] == Decimal("98.00")
+    assert metrics["total_qty"] == Decimal("100")
+    assert metrics["qualified_qty"] == Decimal("98")
+    assert metrics["rejected_qty"] == Decimal("2")
 
 
 def test_overall_score_calculation(test_db):
     """测试综合评分计算"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     delivery_metrics = {
-        'on_time_rate': Decimal('95.00'),
-        'on_time_orders': 19,
-        'late_orders': 1,
-        'avg_delay_days': Decimal('1.00'),
+        "on_time_rate": Decimal("95.00"),
+        "on_time_orders": 19,
+        "late_orders": 1,
+        "avg_delay_days": Decimal("1.00"),
     }
-    
+
     quality_metrics = {
-        'pass_rate': Decimal('98.50'),
-        'total_qty': Decimal('1000'),
-        'qualified_qty': Decimal('985'),
-        'rejected_qty': Decimal('15'),
+        "pass_rate": Decimal("98.50"),
+        "total_qty": Decimal("1000"),
+        "qualified_qty": Decimal("985"),
+        "rejected_qty": Decimal("15"),
     }
-    
+
     price_metrics = {
-        'competitiveness': Decimal('85.00'),
-        'vs_market': Decimal('-5.00'),
+        "competitiveness": Decimal("85.00"),
+        "vs_market": Decimal("-5.00"),
     }
-    
+
     response_metrics = {
-        'score': Decimal('90.00'),
-        'avg_hours': Decimal('6.00'),
+        "score": Decimal("90.00"),
+        "avg_hours": Decimal("6.00"),
     }
-    
+
     weight_config = {
-        'on_time_delivery': Decimal('30'),
-        'quality': Decimal('30'),
-        'price': Decimal('20'),
-        'response': Decimal('20'),
+        "on_time_delivery": Decimal("30"),
+        "quality": Decimal("30"),
+        "price": Decimal("20"),
+        "response": Decimal("20"),
     }
-    
+
     overall_score = evaluator._calculate_overall_score(
-        delivery_metrics,
-        quality_metrics,
-        price_metrics,
-        response_metrics,
-        weight_config
+        delivery_metrics, quality_metrics, price_metrics, response_metrics, weight_config
     )
-    
+
     # 95*0.3 + 98.5*0.3 + 85*0.2 + 90*0.2 = 92.55
-    expected = Decimal('92.55')
-    assert abs(overall_score - expected) < Decimal('0.01')
+    expected = Decimal("92.55")
+    assert abs(overall_score - expected) < Decimal("0.01")
 
 
 def test_rating_determination(test_db):
     """测试评级判定"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
-    assert evaluator._determine_rating(Decimal('95.00')) == 'A+'
-    assert evaluator._determine_rating(Decimal('85.00')) == 'A'
-    assert evaluator._determine_rating(Decimal('75.00')) == 'B'
-    assert evaluator._determine_rating(Decimal('65.00')) == 'C'
-    assert evaluator._determine_rating(Decimal('55.00')) == 'D'
+
+    assert evaluator._determine_rating(Decimal("95.00")) == "A+"
+    assert evaluator._determine_rating(Decimal("85.00")) == "A"
+    assert evaluator._determine_rating(Decimal("75.00")) == "B"
+    assert evaluator._determine_rating(Decimal("65.00")) == "C"
+    assert evaluator._determine_rating(Decimal("55.00")) == "D"
 
 
 def test_batch_evaluate_all_suppliers(test_db, test_supplier):
     """测试批量评估所有供应商"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     count = evaluator.batch_evaluate_all_suppliers("2026-01")
-    
+
     assert count > 0
 
 
@@ -507,20 +498,22 @@ def test_get_supplier_ranking(test_db, test_supplier):
     )
     test_db.add(perf1)
     test_db.commit()
-    
+
     evaluator = SupplierPerformanceEvaluator(test_db)
     rankings = evaluator.get_supplier_ranking("2026-01", limit=10)
-    
+
     assert len(rankings) > 0
     assert rankings[0].supplier_id == test_supplier.id
 
 
 # ==================== API 接口测试 (使用 TestClient) ====================
 
+
 def test_api_get_purchase_suggestions(client, test_user, test_material):
     """测试获取采购建议列表 API"""
     # 创建测试建议
     from app.models import PurchaseSuggestion
+
     suggestion = PurchaseSuggestion(
         tenant_id=1,
         suggestion_no="PS20260216TEST",
@@ -534,10 +527,12 @@ def test_api_get_purchase_suggestions(client, test_user, test_material):
     )
     client.db.add(suggestion)
     client.db.commit()
-    
+
     # 调用 API
-    response = client.get("/api/v1/purchase/suggestions", headers={"Authorization": f"Bearer {test_user.token}"})
-    
+    response = client.get(
+        "/api/v1/purchase/suggestions", headers={"Authorization": f"Bearer {test_user.token}"}
+    )
+
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -547,6 +542,7 @@ def test_api_approve_suggestion(client, test_user, test_material):
     """测试批准采购建议 API"""
     # 创建测试建议
     from app.models import PurchaseSuggestion
+
     suggestion = PurchaseSuggestion(
         tenant_id=1,
         suggestion_no="PS20260216APPROVE",
@@ -560,14 +556,14 @@ def test_api_approve_suggestion(client, test_user, test_material):
     )
     client.db.add(suggestion)
     client.db.commit()
-    
+
     # 调用 API
     response = client.post(
         f"/api/v1/purchase/suggestions/{suggestion.id}/approve",
         json={"approved": True, "review_note": "批准"},
-        headers={"Authorization": f"Bearer {test_user.token}"}
+        headers={"Authorization": f"Bearer {test_user.token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "采购建议已批准"
@@ -585,13 +581,13 @@ def test_api_create_quotation(client, test_user, test_supplier, test_material):
         "valid_from": str(date.today()),
         "valid_to": str(date.today() + timedelta(days=90)),
     }
-    
+
     response = client.post(
         "/api/v1/purchase/quotations",
         json=quotation_data,
-        headers={"Authorization": f"Bearer {test_user.token}"}
+        headers={"Authorization": f"Bearer {test_user.token}"},
     )
-    
+
     assert response.status_code == 201
     data = response.json()
     assert "quotation_no" in data
@@ -614,13 +610,13 @@ def test_api_compare_quotations(client, test_user, test_supplier, test_material)
     )
     client.db.add(quotation)
     client.db.commit()
-    
+
     # 调用 API
     response = client.get(
         f"/api/v1/purchase/quotations/compare?material_id={test_material.id}",
-        headers={"Authorization": f"Bearer {test_user.token}"}
+        headers={"Authorization": f"Bearer {test_user.token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "material_id" in data
@@ -633,13 +629,13 @@ def test_api_evaluate_supplier(client, test_user, test_supplier):
         "supplier_id": test_supplier.id,
         "evaluation_period": "2026-01",
     }
-    
+
     response = client.post(
         f"/api/v1/purchase/suppliers/{test_supplier.id}/evaluate",
         json=eval_data,
-        headers={"Authorization": f"Bearer {test_user.token}"}
+        headers={"Authorization": f"Bearer {test_user.token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "overall_score" in data
@@ -661,13 +657,13 @@ def test_api_get_supplier_ranking(client, test_user, test_supplier):
     )
     client.db.add(perf)
     client.db.commit()
-    
+
     # 调用 API
     response = client.get(
         "/api/v1/purchase/suppliers/ranking?evaluation_period=2026-01",
-        headers={"Authorization": f"Bearer {test_user.token}"}
+        headers={"Authorization": f"Bearer {test_user.token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "rankings" in data
@@ -675,55 +671,57 @@ def test_api_get_supplier_ranking(client, test_user, test_supplier):
 
 # ==================== 边界情况测试 ====================
 
+
 def test_suggestion_duplicate_prevention(test_db, test_material):
     """测试防止重复建议"""
     engine = PurchaseSuggestionEngine(test_db)
-    
+
     # 第一次生成
     suggestions1 = engine.generate_from_safety_stock()
     count1 = len([s for s in suggestions1 if s.material_id == test_material.id])
-    
+
     # 第二次生成（应跳过已存在的）
     suggestions2 = engine.generate_from_safety_stock()
     count2 = len([s for s in suggestions2 if s.material_id == test_material.id])
-    
+
     assert count2 == 0  # 不应重复创建
 
 
 def test_performance_without_orders(test_db, test_supplier):
     """测试无订单时的绩效评估"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     performance = evaluator.evaluate_supplier(test_supplier.id, "2026-02")
-    
+
     assert performance is not None
     assert performance.total_orders == 0
-    assert performance.overall_score == Decimal('0')
+    assert performance.overall_score == Decimal("0")
 
 
 def test_invalid_evaluation_period(test_db, test_supplier):
     """测试无效的评估期间"""
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     performance = evaluator.evaluate_supplier(test_supplier.id, "invalid-period")
-    
+
     assert performance is None
 
 
 # ==================== 性能测试 ====================
 
+
 def test_batch_suggestion_generation_performance(test_db, test_material):
     """测试批量生成建议的性能"""
     import time
-    
+
     engine = PurchaseSuggestionEngine(test_db)
-    
+
     start_time = time.time()
     suggestions = engine.generate_from_safety_stock()
     end_time = time.time()
-    
+
     elapsed = end_time - start_time
-    
+
     # 应在1秒内完成
     assert elapsed < 1.0
     assert len(suggestions) >= 0
@@ -732,20 +730,21 @@ def test_batch_suggestion_generation_performance(test_db, test_material):
 def test_batch_evaluation_performance(test_db):
     """测试批量评估性能"""
     import time
-    
+
     evaluator = SupplierPerformanceEvaluator(test_db)
-    
+
     start_time = time.time()
     count = evaluator.batch_evaluate_all_suppliers("2026-01")
     end_time = time.time()
-    
+
     elapsed = end_time - start_time
-    
+
     # 应在5秒内完成
     assert elapsed < 5.0
 
 
 # ==================== 集成测试 ====================
+
 
 def test_full_purchase_workflow(test_db, test_material, test_supplier, test_project, test_user):
     """测试完整采购流程"""
@@ -763,20 +762,20 @@ def test_full_purchase_workflow(test_db, test_material, test_supplier, test_proj
     )
     test_db.add(shortage)
     test_db.commit()
-    
+
     # 2. 生成采购建议
     engine = PurchaseSuggestionEngine(test_db)
     suggestions = engine.generate_from_shortages(project_id=test_project.id)
-    
+
     assert len(suggestions) > 0
     suggestion = suggestions[0]
-    
+
     # 3. 批准建议
     suggestion.status = "APPROVED"
     suggestion.reviewed_by = test_user.id
     suggestion.reviewed_at = datetime.now()
     test_db.commit()
-    
+
     # 4. 创建报价
     quotation = SupplierQuotation(
         tenant_id=1,
@@ -792,7 +791,7 @@ def test_full_purchase_workflow(test_db, test_material, test_supplier, test_proj
     )
     test_db.add(quotation)
     test_db.commit()
-    
+
     # 5. 创建订单
     order = PurchaseOrder(
         order_no="PO20260216WF",
@@ -804,18 +803,18 @@ def test_full_purchase_workflow(test_db, test_material, test_supplier, test_proj
     )
     test_db.add(order)
     test_db.flush()
-    
+
     # 更新建议状态
     suggestion.purchase_order_id = order.id
     suggestion.status = "ORDERED"
     test_db.commit()
-    
+
     # 6. 评估供应商
     evaluator = SupplierPerformanceEvaluator(test_db)
     performance = evaluator.evaluate_supplier(test_supplier.id, "2026-02")
-    
+
     assert performance is not None
-    
+
     # 验证完整流程
     assert suggestion.status == "ORDERED"
     assert suggestion.purchase_order_id == order.id

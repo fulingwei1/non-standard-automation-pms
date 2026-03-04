@@ -232,9 +232,7 @@ def get_procurement_overview(
                 "quarter_orders": cost_trend["summary"]["total_orders"],
                 "avg_on_time_rate": delivery_performance["summary"]["avg_on_time_rate"],
                 "avg_quality_rate": quality_rate["summary"]["avg_pass_rate"],
-                "delayed_orders_count": delivery_performance["summary"][
-                    "total_delayed_orders"
-                ],
+                "delayed_orders_count": delivery_performance["summary"]["total_delayed_orders"],
             },
             "period": {
                 "start_date": last_quarter.isoformat(),

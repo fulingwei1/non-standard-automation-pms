@@ -3,21 +3,21 @@
 库存管理服务单元测试
 覆盖 app/services/inventory_management_service.py
 """
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from app.services.inventory_management_service import (
-    InventoryManagementService,
     InsufficientStockError,
+    InventoryManagementService,
 )
-
 
 # ────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────
+
 
 def _make_db():
     """Return a fresh MagicMock acting as a SQLAlchemy Session."""
@@ -29,8 +29,9 @@ def _make_service(db=None, tenant_id=1):
     return InventoryManagementService(db=db, tenant_id=tenant_id), db
 
 
-def _make_material(material_id=1, code="MAT-001", name="测试物料",
-                   unit="个", safety_stock=Decimal("10")):
+def _make_material(
+    material_id=1, code="MAT-001", name="测试物料", unit="个", safety_stock=Decimal("10")
+):
     m = MagicMock()
     m.id = material_id
     m.material_code = code
@@ -40,10 +41,16 @@ def _make_material(material_id=1, code="MAT-001", name="测试物料",
     return m
 
 
-def _make_stock(material_id=1, location="A区", quantity=Decimal("100"),
-                available_quantity=Decimal("100"), reserved_quantity=Decimal("0"),
-                unit_price=Decimal("5"), batch_number="B001",
-                last_in_date=None):
+def _make_stock(
+    material_id=1,
+    location="A区",
+    quantity=Decimal("100"),
+    available_quantity=Decimal("100"),
+    reserved_quantity=Decimal("0"),
+    unit_price=Decimal("5"),
+    batch_number="B001",
+    last_in_date=None,
+):
     s = MagicMock()
     s.material_id = material_id
     s.location = location
@@ -62,6 +69,7 @@ def _make_stock(material_id=1, location="A区", quantity=Decimal("100"),
 # ────────────────────────────────────────────────
 # 1. get_available_quantity
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestGetAvailableQuantity:
@@ -98,6 +106,7 @@ class TestGetAvailableQuantity:
 # 2. get_total_quantity
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestGetTotalQuantity:
 
@@ -117,6 +126,7 @@ class TestGetTotalQuantity:
 # ────────────────────────────────────────────────
 # 3. create_transaction
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestCreateTransaction:
@@ -166,6 +176,7 @@ class TestCreateTransaction:
 # ────────────────────────────────────────────────
 # 4. update_stock – inbound types
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestUpdateStockInbound:
@@ -225,6 +236,7 @@ class TestUpdateStockInbound:
 # 5. update_stock – outbound / insufficient stock
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestUpdateStockOutbound:
 
@@ -272,6 +284,7 @@ class TestUpdateStockOutbound:
 # 6. _calculate_stock_status
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestCalculateStockStatus:
 
@@ -312,6 +325,7 @@ class TestCalculateStockStatus:
 # ────────────────────────────────────────────────
 # 7. reserve_material
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestReserveMaterial:
@@ -360,6 +374,7 @@ class TestReserveMaterial:
 # 8. cancel_reservation
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestCancelReservation:
 
@@ -404,6 +419,7 @@ class TestCancelReservation:
 # 9. calculate_turnover_rate
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestCalculateTurnoverRate:
 
@@ -417,31 +433,31 @@ class TestCalculateTurnoverRate:
 
     def test_calculates_non_zero_rate(self):
         svc, db = _make_service()
-        
+
         # 准备交易数据
         tx = MagicMock()
         tx.total_amount = Decimal("200")
-        
+
         # 准备库存数据
         stock = MagicMock()
         stock.total_value = Decimal("400")
-        
+
         # 为两个不同的查询配置不同的返回值
         def query_side_effect(*args):
             mock_query = MagicMock()
             mock_query.filter.return_value = mock_query
             # 判断查询的是交易还是库存
-            if args and hasattr(args[0], '__name__'):
-                if 'Transaction' in args[0].__name__:
+            if args and hasattr(args[0], "__name__"):
+                if "Transaction" in args[0].__name__:
                     mock_query.all.return_value = [tx]
                 else:
                     mock_query.all.return_value = [stock]
             else:
                 mock_query.all.return_value = []
             return mock_query
-        
+
         db.query.side_effect = query_side_effect
-        
+
         result = svc.calculate_turnover_rate()
         assert "turnover_rate" in result
         assert "period" in result
@@ -453,14 +469,20 @@ class TestCalculateTurnoverRate:
         svc, db = _make_service()
         db.query.return_value.filter.return_value.all.return_value = []
         result = svc.calculate_turnover_rate()
-        for key in ("period", "total_issue_value", "avg_stock_value",
-                    "turnover_rate", "turnover_days"):
+        for key in (
+            "period",
+            "total_issue_value",
+            "avg_stock_value",
+            "turnover_rate",
+            "turnover_days",
+        ):
             assert key in result
 
 
 # ────────────────────────────────────────────────
 # 10. analyze_aging
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestAnalyzeAging:
@@ -475,7 +497,7 @@ class TestAnalyzeAging:
         s.quantity = Decimal("50")
         s.unit_price = Decimal("10")
         s.total_value = Decimal("500")
-        s.last_in_date = datetime.now() - __import__('datetime').timedelta(days=days_ago)
+        s.last_in_date = datetime.now() - __import__("datetime").timedelta(days=days_ago)
         s.expire_date = None
         return s
 
@@ -483,48 +505,46 @@ class TestAnalyzeAging:
         svc, db = _make_service()
         db.query.return_value.filter.return_value.all.return_value = []
         result = svc.analyze_aging()
-        assert 'aging_summary' in result
-        assert 'details' in result
-        assert result['details'] == []
+        assert "aging_summary" in result
+        assert "details" in result
+        assert result["details"] == []
 
     def test_categorizes_0_to_30_days(self):
         svc, db = _make_service()
-        db.query.return_value.filter.return_value.all.return_value = [
-            self._make_aged_stock(15)
-        ]
+        db.query.return_value.filter.return_value.all.return_value = [self._make_aged_stock(15)]
         result = svc.analyze_aging()
-        assert result['details'][0]["aging_category"] == "0-30天"
-        assert result['aging_summary']['0-30天']['count'] == 1
+        assert result["details"][0]["aging_category"] == "0-30天"
+        assert result["aging_summary"]["0-30天"]["count"] == 1
 
     def test_categorizes_31_to_90_days(self):
         svc, db = _make_service()
-        db.query.return_value.filter.return_value.all.return_value = [
-            self._make_aged_stock(60)
-        ]
+        db.query.return_value.filter.return_value.all.return_value = [self._make_aged_stock(60)]
         result = svc.analyze_aging()
-        assert result['details'][0]["aging_category"] == "31-90天"
-        assert result['aging_summary']['31-90天']['count'] == 1
+        assert result["details"][0]["aging_category"] == "31-90天"
+        assert result["aging_summary"]["31-90天"]["count"] == 1
 
     def test_categorizes_over_365_days(self):
         svc, db = _make_service()
-        db.query.return_value.filter.return_value.all.return_value = [
-            self._make_aged_stock(400)
-        ]
+        db.query.return_value.filter.return_value.all.return_value = [self._make_aged_stock(400)]
         result = svc.analyze_aging()
-        assert result['details'][0]["aging_category"] == "365天以上"
-        assert result['aging_summary']['365天以上']['count'] == 1
+        assert result["details"][0]["aging_category"] == "365天以上"
+        assert result["aging_summary"]["365天以上"]["count"] == 1
 
     def test_result_contains_required_fields(self):
         svc, db = _make_service()
-        db.query.return_value.filter.return_value.all.return_value = [
-            self._make_aged_stock(10)
-        ]
+        db.query.return_value.filter.return_value.all.return_value = [self._make_aged_stock(10)]
         result = svc.analyze_aging()
-        assert 'aging_summary' in result
-        assert 'details' in result
-        for field in ("material_id", "material_code", "days_in_stock",
-                      "aging_category", "quantity", "total_value"):
-            assert field in result['details'][0]
+        assert "aging_summary" in result
+        assert "details" in result
+        for field in (
+            "material_id",
+            "material_code",
+            "days_in_stock",
+            "aging_category",
+            "quantity",
+            "total_value",
+        ):
+            assert field in result["details"][0]
 
     def test_skips_stocks_without_last_in_date(self):
         svc, db = _make_service()
@@ -533,4 +553,4 @@ class TestAnalyzeAging:
         s.quantity = Decimal("10")
         db.query.return_value.filter.return_value.all.return_value = [s]
         result = svc.analyze_aging()
-        assert result['details'] == []
+        assert result["details"] == []

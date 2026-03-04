@@ -20,16 +20,21 @@ def mock_db():
 # match_sla_policy
 # ---------------------------------------------------------------------------
 
+
 class TestMatchSlaPolicy:
     def test_returns_exact_match(self, mock_db):
         policy = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = policy
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            policy
+        )
 
         result = sla_service.match_sla_policy(mock_db, "NETWORK", "URGENT")
         assert result is policy
 
     def test_returns_none_when_no_policy(self, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = sla_service.match_sla_policy(mock_db, "UNKNOWN", "LOW")
         assert result is None
@@ -45,7 +50,9 @@ class TestMatchSlaPolicy:
                 return None
             return generic_policy
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.side_effect = first_side_effect
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.side_effect = (
+            first_side_effect
+        )
 
         result = sla_service.match_sla_policy(mock_db, "HARDWARE", "NORMAL")
         assert result is generic_policy
@@ -54,6 +61,7 @@ class TestMatchSlaPolicy:
 # ---------------------------------------------------------------------------
 # create_sla_monitor
 # ---------------------------------------------------------------------------
+
 
 class TestCreateSlaMonitor:
     @patch("app.services.sla_service.save_obj")
@@ -81,6 +89,7 @@ class TestCreateSlaMonitor:
 # ---------------------------------------------------------------------------
 # update_sla_monitor_status
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateSlaMonitorStatus:
     def test_sets_response_overdue_when_actual_time_is_late(self, mock_db):
@@ -129,6 +138,7 @@ class TestUpdateSlaMonitorStatus:
 # sync_ticket_to_sla_monitor
 # ---------------------------------------------------------------------------
 
+
 class TestSyncTicketToSlaMonitor:
     def test_returns_none_when_no_monitor_and_no_policy(self, mock_db):
         ticket = MagicMock()
@@ -164,10 +174,13 @@ class TestSyncTicketToSlaMonitor:
 # check_sla_warnings
 # ---------------------------------------------------------------------------
 
+
 class TestCheckSlaWarnings:
     def test_returns_list_of_monitors(self, mock_db):
         monitor = MagicMock()
-        mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = [monitor]
+        mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            monitor
+        ]
 
         result = sla_service.check_sla_warnings(mock_db)
         assert isinstance(result, list)
@@ -182,6 +195,7 @@ class TestCheckSlaWarnings:
 # ---------------------------------------------------------------------------
 # mark_warning_sent
 # ---------------------------------------------------------------------------
+
 
 class TestMarkWarningSent:
     def test_marks_response_warning_sent(self, mock_db):

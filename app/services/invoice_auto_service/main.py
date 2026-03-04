@@ -35,24 +35,16 @@ def check_and_create_invoice_request(
     Returns:
         处理结果字典
     """
-    order = service.db.query(AcceptanceOrder).filter(
-        AcceptanceOrder.id == acceptance_order_id
-    ).first()
+    order = (
+        service.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == acceptance_order_id).first()
+    )
 
     if not order:
-        return {
-            "success": False,
-            "message": "验收单不存在",
-            "invoice_requests": []
-        }
+        return {"success": False, "message": "验收单不存在", "invoice_requests": []}
 
     # 只处理验收通过的订单
     if order.overall_result != "PASSED" or order.status != "COMPLETED":
-        return {
-            "success": True,
-            "message": "验收未通过或未完成，无需开票",
-            "invoice_requests": []
-        }
+        return {"success": True, "message": "验收未通过或未完成，无需开票", "invoice_requests": []}
 
     # 查找关联的里程碑
     # 根据验收类型匹配里程碑类型
@@ -64,35 +56,35 @@ def check_and_create_invoice_request(
     milestone_type = milestone_type_map.get(order.acceptance_type)
 
     if not milestone_type:
-        return {
-            "success": True,
-            "message": "验收类型不支持自动开票",
-            "invoice_requests": []
-        }
+        return {"success": True, "message": "验收类型不支持自动开票", "invoice_requests": []}
 
     # 查找关联的里程碑
-    milestones = service.db.query(ProjectMilestone).filter(
-        ProjectMilestone.project_id == order.project_id,
-        ProjectMilestone.milestone_type == milestone_type,
-        ProjectMilestone.status == "COMPLETED"
-    ).all()
+    milestones = (
+        service.db.query(ProjectMilestone)
+        .filter(
+            ProjectMilestone.project_id == order.project_id,
+            ProjectMilestone.milestone_type == milestone_type,
+            ProjectMilestone.status == "COMPLETED",
+        )
+        .all()
+    )
 
     if not milestones:
-        return {
-            "success": True,
-            "message": "未找到关联的里程碑",
-            "invoice_requests": []
-        }
+        return {"success": True, "message": "未找到关联的里程碑", "invoice_requests": []}
 
     created_requests = []
 
     for milestone in milestones:
         # 查找关联的收款计划
-        payment_plans = service.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.milestone_id == milestone.id,
-            ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
-            ProjectPaymentPlan.payment_type == "ACCEPTANCE"
-        ).all()
+        payment_plans = (
+            service.db.query(ProjectPaymentPlan)
+            .filter(
+                ProjectPaymentPlan.milestone_id == milestone.id,
+                ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
+                ProjectPaymentPlan.payment_type == "ACCEPTANCE",
+            )
+            .all()
+        )
 
         for plan in payment_plans:
             # 检查是否已开票
@@ -139,5 +131,5 @@ def check_and_create_invoice_request(
     return {
         "success": True,
         "message": f"已创建 {len(created_requests)} 个发票{'申请' if not auto_create else ''}",
-        "invoice_requests": created_requests
+        "invoice_requests": created_requests,
     }

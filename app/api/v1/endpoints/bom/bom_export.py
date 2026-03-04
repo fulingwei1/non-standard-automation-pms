@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.import_export_engine import ExcelExportEngine
 from app.models.material import BomHeader, BomItem
 from app.models.user import User
+from app.services.import_export_engine import ExcelExportEngine
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -48,9 +48,7 @@ def export_bom_to_excel(
                 "单价": float(item.unit_price) if item.unit_price else 0,
                 "金额": float(item.amount) if item.amount else 0,
                 "来源类型": item.source_type,
-                "需求日期": item.required_date.strftime("%Y-%m-%d")
-                if item.required_date
-                else "",
+                "需求日期": item.required_date.strftime("%Y-%m-%d") if item.required_date else "",
                 "已采购数量": float(item.purchased_qty or 0),
                 "已到货数量": float(item.received_qty or 0),
                 "是否关键": "是" if item.is_key_item else "否",
@@ -91,7 +89,5 @@ def export_bom_to_excel(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheet",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
-        },
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"},
     )

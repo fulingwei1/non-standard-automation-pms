@@ -31,4 +31,3 @@ def check_rhythm_level_permission(current_user: Any, rhythm_level: str) -> bool:
 
     # 目前按会议组织者权限过滤，层级不额外限制。
     return True
-

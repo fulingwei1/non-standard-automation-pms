@@ -25,7 +25,9 @@ class AcceptanceTracking(Base, TimestampMixin):
     __tablename__ = "acceptance_tracking"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    acceptance_order_id = Column(Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID")
+    acceptance_order_id = Column(
+        Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
+    )
     acceptance_order_no = Column(String(50), comment="验收单号")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     project_code = Column(String(50), comment="项目编号")
@@ -33,13 +35,17 @@ class AcceptanceTracking(Base, TimestampMixin):
     customer_name = Column(String(200), comment="客户名称")
 
     # 验收条件检查
-    condition_check_status = Column(String(20), default="pending", comment="验收条件检查状态：pending/checking/met/not_met")
+    condition_check_status = Column(
+        String(20), default="pending", comment="验收条件检查状态：pending/checking/met/not_met"
+    )
     condition_check_result = Column(Text, comment="验收条件检查结果")
     condition_check_date = Column(DateTime, comment="验收条件检查日期")
     condition_checker_id = Column(Integer, ForeignKey("users.id"), comment="检查人ID")
 
     # 验收单跟踪
-    tracking_status = Column(String(20), default="pending", comment="跟踪状态：pending/reminded/received")
+    tracking_status = Column(
+        String(20), default="pending", comment="跟踪状态：pending/reminded/received"
+    )
     reminder_count = Column(Integer, default=0, comment="催签次数")
     last_reminder_date = Column(DateTime, comment="最后催签日期")
     last_reminder_by = Column(Integer, ForeignKey("users.id"), comment="最后催签人ID")
@@ -47,7 +53,9 @@ class AcceptanceTracking(Base, TimestampMixin):
     signed_file_id = Column(Integer, comment="签收验收单文件ID")
 
     # 验收报告跟踪
-    report_status = Column(String(20), default="pending", comment="报告状态：pending/generated/signed/archived")
+    report_status = Column(
+        String(20), default="pending", comment="报告状态：pending/generated/signed/archived"
+    )
     report_generated_date = Column(DateTime, comment="报告生成日期")
     report_signed_date = Column(DateTime, comment="报告签署日期")
     report_archived_date = Column(DateTime, comment="报告归档日期")
@@ -55,7 +63,9 @@ class AcceptanceTracking(Base, TimestampMixin):
     # 质保期跟踪
     warranty_start_date = Column(Date, comment="质保开始日期")
     warranty_end_date = Column(Date, comment="质保结束日期")
-    warranty_status = Column(String(20), default="not_started", comment="质保状态：not_started/active/expiring/expired")
+    warranty_status = Column(
+        String(20), default="not_started", comment="质保状态：not_started/active/expiring/expired"
+    )
     warranty_expiry_reminded = Column(Boolean, default=False, comment="是否已提醒质保到期")
 
     # 关联合同
@@ -78,7 +88,9 @@ class AcceptanceTracking(Base, TimestampMixin):
     last_reminder_by_user = relationship("User", foreign_keys=[last_reminder_by])
     sales_person = relationship("User", foreign_keys=[sales_person_id])
     support_person = relationship("User", foreign_keys=[support_person_id])
-    tracking_records = relationship("AcceptanceTrackingRecord", back_populates="tracking", cascade="all, delete-orphan")
+    tracking_records = relationship(
+        "AcceptanceTrackingRecord", back_populates="tracking", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_acceptance_order", "acceptance_order_id"),
@@ -98,8 +110,14 @@ class AcceptanceTrackingRecord(Base, TimestampMixin):
     __tablename__ = "acceptance_tracking_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    tracking_id = Column(Integer, ForeignKey("acceptance_tracking.id"), nullable=False, comment="跟踪记录ID")
-    record_type = Column(String(20), nullable=False, comment="记录类型：reminder/condition_check/report_track/warranty_reminder")
+    tracking_id = Column(
+        Integer, ForeignKey("acceptance_tracking.id"), nullable=False, comment="跟踪记录ID"
+    )
+    record_type = Column(
+        String(20),
+        nullable=False,
+        comment="记录类型：reminder/condition_check/report_track/warranty_reminder",
+    )
     record_content = Column(Text, comment="记录内容")
     record_date = Column(DateTime, nullable=False, comment="记录日期")
     operator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="操作人ID")

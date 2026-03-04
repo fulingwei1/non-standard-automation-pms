@@ -23,6 +23,7 @@ def mock_db():
 # generate_report_no
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateReportNo:
     def test_fat_prefix(self, mock_db):
         mock_query = MagicMock()
@@ -88,6 +89,7 @@ class TestGenerateReportNo:
 # get_report_version
 # ---------------------------------------------------------------------------
 
+
 class TestGetReportVersion:
     def test_returns_one_when_no_existing(self, mock_db):
         mock_query = MagicMock()
@@ -117,6 +119,7 @@ class TestGetReportVersion:
 # save_report_file
 # ---------------------------------------------------------------------------
 
+
 class TestSaveReportFile:
     def test_returns_none_when_no_report_dir_configured(self, mock_db):
         """save_report_file 依赖 settings；当路径为空时应优雅处理"""
@@ -125,9 +128,7 @@ class TestSaveReportFile:
         user = MagicMock()
         user.id = 1
 
-        with patch(
-            "app.services.acceptance.report_utils.settings"
-        ) as mock_settings:
+        with patch("app.services.acceptance.report_utils.settings") as mock_settings:
             mock_settings.REPORT_DIR = ""
             # 路径为空时直接返回 None 或抛出异常均可，只需不崩溃
             try:

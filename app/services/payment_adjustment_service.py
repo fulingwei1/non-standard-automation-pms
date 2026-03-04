@@ -41,29 +41,25 @@ class PaymentAdjustmentService:
         Returns:
             调整结果字典
         """
-        milestone = self.db.query(ProjectMilestone).filter(
-            ProjectMilestone.id == milestone_id
-        ).first()
+        milestone = (
+            self.db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
+        )
 
         if not milestone:
-            return {
-                "success": False,
-                "message": "里程碑不存在",
-                "adjusted_plans": []
-            }
+            return {"success": False, "message": "里程碑不存在", "adjusted_plans": []}
 
         # 查找关联的收款计划
-        payment_plans = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.milestone_id == milestone_id,
-            ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"])
-        ).all()
+        payment_plans = (
+            self.db.query(ProjectPaymentPlan)
+            .filter(
+                ProjectPaymentPlan.milestone_id == milestone_id,
+                ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
+            )
+            .all()
+        )
 
         if not payment_plans:
-            return {
-                "success": True,
-                "message": "没有需要调整的收款计划",
-                "adjusted_plans": []
-            }
+            return {"success": True, "message": "没有需要调整的收款计划", "adjusted_plans": []}
 
         adjusted_plans = []
 
@@ -82,16 +78,18 @@ class PaymentAdjustmentService:
                         str(old_date),
                         str(plan.planned_date),
                         reason,
-                        adjusted_by
+                        adjusted_by,
                     )
 
-                    adjusted_plans.append({
-                        "plan_id": plan.id,
-                        "payment_name": plan.payment_name,
-                        "old_date": str(old_date),
-                        "new_date": str(plan.planned_date),
-                        "reason": reason
-                    })
+                    adjusted_plans.append(
+                        {
+                            "plan_id": plan.id,
+                            "payment_name": plan.payment_name,
+                            "old_date": str(old_date),
+                            "new_date": str(plan.planned_date),
+                            "reason": reason,
+                        }
+                    )
 
             # 如果里程碑提前完成，可以提前触发开票（需配置）
             elif milestone.status == "COMPLETED" and milestone.actual_date:
@@ -110,16 +108,18 @@ class PaymentAdjustmentService:
                             str(old_date),
                             str(plan.planned_date),
                             f"里程碑提前完成，允许提前开票: {reason}",
-                            adjusted_by
+                            adjusted_by,
                         )
 
-                        adjusted_plans.append({
-                            "plan_id": plan.id,
-                            "payment_name": plan.payment_name,
-                            "old_date": str(old_date),
-                            "new_date": str(plan.planned_date),
-                            "reason": "里程碑提前完成，允许提前开票"
-                        })
+                        adjusted_plans.append(
+                            {
+                                "plan_id": plan.id,
+                                "payment_name": plan.payment_name,
+                                "old_date": str(old_date),
+                                "new_date": str(plan.planned_date),
+                                "reason": "里程碑提前完成，允许提前开票",
+                            }
+                        )
 
         if adjusted_plans:
             self.db.commit()
@@ -130,7 +130,7 @@ class PaymentAdjustmentService:
         return {
             "success": True,
             "message": f"已调整 {len(adjusted_plans)} 个收款计划",
-            "adjusted_plans": adjusted_plans
+            "adjusted_plans": adjusted_plans,
         }
 
     def manual_adjust_payment_plan(
@@ -152,15 +152,10 @@ class PaymentAdjustmentService:
         Returns:
             调整结果字典
         """
-        plan = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.id == plan_id
-        ).first()
+        plan = self.db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.id == plan_id).first()
 
         if not plan:
-            return {
-                "success": False,
-                "message": "收款计划不存在"
-            }
+            return {"success": False, "message": "收款计划不存在"}
 
         old_date = plan.planned_date
         plan.planned_date = new_date
@@ -172,7 +167,7 @@ class PaymentAdjustmentService:
             str(old_date) if old_date else None,
             str(new_date),
             reason,
-            adjusted_by
+            adjusted_by,
         )
 
         self.db.commit()
@@ -182,14 +177,16 @@ class PaymentAdjustmentService:
         if milestone:
             self._send_adjustment_notifications(
                 milestone,
-                [{
-                    "plan_id": plan.id,
-                    "payment_name": plan.payment_name,
-                    "old_date": str(old_date) if old_date else None,
-                    "new_date": str(new_date),
-                    "reason": reason
-                }],
-                reason
+                [
+                    {
+                        "plan_id": plan.id,
+                        "payment_name": plan.payment_name,
+                        "old_date": str(old_date) if old_date else None,
+                        "new_date": str(new_date),
+                        "reason": reason,
+                    }
+                ],
+                reason,
             )
 
         return {
@@ -197,7 +194,7 @@ class PaymentAdjustmentService:
             "message": "收款计划已调整",
             "plan_id": plan.id,
             "old_date": str(old_date) if old_date else None,
-            "new_date": str(new_date)
+            "new_date": str(new_date),
         }
 
     def _record_adjustment_history(
@@ -215,9 +212,7 @@ class PaymentAdjustmentService:
         注意：这里简化实现，将历史记录存储在收款计划的 remark 字段中
         实际项目中可以创建专门的调整历史表
         """
-        plan = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.id == plan_id
-        ).first()
+        plan = self.db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.id == plan_id).first()
 
         if not plan:
             return
@@ -229,11 +224,12 @@ class PaymentAdjustmentService:
             "new_value": new_value,
             "reason": reason,
             "adjusted_by": adjusted_by,
-            "adjusted_at": datetime.now().isoformat()
+            "adjusted_at": datetime.now().isoformat(),
         }
 
         # 将历史记录追加到备注中（JSON格式）
         import json
+
         try:
             if plan.remark:
                 # 尝试解析现有备注为JSON数组
@@ -277,18 +273,20 @@ class PaymentAdjustmentService:
             # 获取合同信息
             contract = None
             if project.contract_id:
-                contract = self.db.query(Contract).filter(
-                    Contract.id == project.contract_id
-                ).first()
+                contract = (
+                    self.db.query(Contract).filter(Contract.id == project.contract_id).first()
+                )
 
             # 确定通知对象
             recipient_ids = set()
 
             # 1. 收款责任人（从收款计划中获取）
             for plan_dict in adjusted_plans:
-                plan = self.db.query(ProjectPaymentPlan).filter(
-                    ProjectPaymentPlan.id == plan_dict["plan_id"]
-                ).first()
+                plan = (
+                    self.db.query(ProjectPaymentPlan)
+                    .filter(ProjectPaymentPlan.id == plan_dict["plan_id"])
+                    .first()
+                )
                 if plan and plan.contract:
                     # 合同负责人
                     if plan.contract.owner_id:
@@ -303,14 +301,19 @@ class PaymentAdjustmentService:
             # 3. 财务（这里简化处理，实际应该从角色中查找）
             # 通过 UserRole 关联查找财务角色用户
             from app.models.user import Role, UserRole
-            finance_role_ids = self.db.query(Role.id).filter(
-                Role.role_code.in_(["FINANCE", "财务", "FINANCE_MANAGER", "财务经理"])
-            ).all()
+
+            finance_role_ids = (
+                self.db.query(Role.id)
+                .filter(Role.role_code.in_(["FINANCE", "财务", "FINANCE_MANAGER", "财务经理"]))
+                .all()
+            )
             finance_role_ids = [r[0] for r in finance_role_ids]
             if finance_role_ids:
-                finance_user_ids = self.db.query(UserRole.user_id).filter(
-                    UserRole.role_id.in_(finance_role_ids)
-                ).all()
+                finance_user_ids = (
+                    self.db.query(UserRole.user_id)
+                    .filter(UserRole.role_id.in_(finance_role_ids))
+                    .all()
+                )
                 for uid in finance_user_ids:
                     recipient_ids.add(uid[0])
 
@@ -357,14 +360,13 @@ class PaymentAdjustmentService:
         Returns:
             调整历史列表
         """
-        plan = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.id == plan_id
-        ).first()
+        plan = self.db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.id == plan_id).first()
 
         if not plan or not plan.remark:
             return []
 
         import json
+
         try:
             # 尝试解析为JSON数组
             history_list = json.loads(plan.remark)
@@ -394,39 +396,34 @@ class PaymentAdjustmentService:
         try:
             # 查询所有活跃项目的延期里程碑
             today = date.today()
-            delayed_milestones = self.db.query(ProjectMilestone).join(
-                Project, ProjectMilestone.project_id == Project.id
-            ).filter(
-                Project.is_active,
-                ProjectMilestone.planned_date < today,
-                ProjectMilestone.status.in_(['PENDING', 'IN_PROGRESS'])
-            ).all()
+            delayed_milestones = (
+                self.db.query(ProjectMilestone)
+                .join(Project, ProjectMilestone.project_id == Project.id)
+                .filter(
+                    Project.is_active,
+                    ProjectMilestone.planned_date < today,
+                    ProjectMilestone.status.in_(["PENDING", "IN_PROGRESS"]),
+                )
+                .all()
+            )
 
             checked_count = len(delayed_milestones)
 
             for milestone in delayed_milestones:
                 try:
                     result = self.adjust_payment_plan_by_milestone(
-                        milestone_id=milestone.id,
-                        reason="定时任务自动检测并调整"
+                        milestone_id=milestone.id, reason="定时任务自动检测并调整"
                     )
-                    if result.get('adjusted_count', 0) > 0:
-                        adjusted_count += result['adjusted_count']
+                    if result.get("adjusted_count", 0) > 0:
+                        adjusted_count += result["adjusted_count"]
                 except Exception as e:
-                    errors.append({
-                        'milestone_id': milestone.id,
-                        'error': str(e)
-                    })
+                    errors.append({"milestone_id": milestone.id, "error": str(e)})
                     logger.warning(f"调整里程碑 {milestone.id} 的收款计划失败: {e}")
 
             self.db.commit()
 
         except Exception as e:
             logger.error(f"检查并调整收款计划失败: {e}", exc_info=True)
-            errors.append({'error': str(e)})
+            errors.append({"error": str(e)})
 
-        return {
-            'checked': checked_count,
-            'adjusted': adjusted_count,
-            'errors': errors
-        }
+        return {"checked": checked_count, "adjusted": adjusted_count, "errors": errors}

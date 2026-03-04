@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.core import security
 from app.models.user import User
 from app.schemas.alert import (
     ExceptionEventCreate,
@@ -60,7 +60,9 @@ def read_exception_events(
     return pagination.to_response(items, total)
 
 
-@router.post("/exceptions", response_model=ExceptionEventResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/exceptions", response_model=ExceptionEventResponse, status_code=status.HTTP_201_CREATED
+)
 def create_exception_event(
     *,
     db: Session = Depends(deps.get_db),
@@ -83,7 +85,9 @@ def create_exception_event(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/exceptions/{event_id}", response_model=ExceptionEventResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/exceptions/{event_id}", response_model=ExceptionEventResponse, status_code=status.HTTP_200_OK
+)
 def read_exception_event(
     event_id: int,
     db: Session = Depends(deps.get_db),
@@ -96,7 +100,11 @@ def read_exception_event(
     return service.get_exception_event_detail(event_id)
 
 
-@router.put("/exceptions/{event_id}/status", response_model=ExceptionEventResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/exceptions/{event_id}/status",
+    response_model=ExceptionEventResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_exception_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -116,7 +124,11 @@ def update_exception_status(
     return service.get_exception_event_detail(event_id)
 
 
-@router.post("/exceptions/{event_id}/actions", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/exceptions/{event_id}/actions",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_exception_action(
     *,
     db: Session = Depends(deps.get_db),
@@ -143,11 +155,15 @@ def add_exception_action(
         data={
             "action_id": action.id,
             "event_id": event_id,
-        }
+        },
     )
 
 
-@router.post("/exceptions/{event_id}/escalate", response_model=ExceptionEventResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/exceptions/{event_id}/escalate",
+    response_model=ExceptionEventResponse,
+    status_code=status.HTTP_200_OK,
+)
 def escalate_exception(
     *,
     db: Session = Depends(deps.get_db),
@@ -175,7 +191,11 @@ def escalate_exception(
     return service.get_exception_event_detail(event_id)
 
 
-@router.post("/exceptions/from-issue", response_model=ExceptionEventResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/exceptions/from-issue",
+    response_model=ExceptionEventResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_exception_from_issue(
     *,
     db: Session = Depends(deps.get_db),

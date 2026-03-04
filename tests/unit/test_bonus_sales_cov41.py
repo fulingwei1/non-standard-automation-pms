@@ -4,9 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.bonus.sales")
 
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -17,6 +17,7 @@ def db():
 @pytest.fixture
 def calculator(db):
     from app.services.bonus.sales import SalesBonusCalculator
+
     return SalesBonusCalculator(db)
 
 

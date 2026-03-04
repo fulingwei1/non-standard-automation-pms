@@ -77,9 +77,7 @@ class TestAcceptanceReportUnifiedAPI:
             assert "report_type" in data
             assert data["report_type"] == "FAT"
 
-    def test_generate_acceptance_report_with_unified_endpoint(
-        self, pm_auth_headers, db_session
-    ):
+    def test_generate_acceptance_report_with_unified_endpoint(self, pm_auth_headers, db_session):
         """测试使用统一报表框架端点生成验收报表"""
         from app.models.acceptance import AcceptanceOrder
 

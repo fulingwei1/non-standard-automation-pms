@@ -8,7 +8,7 @@ Customer360Service 综合单元测试
 - _build_summary: 构建汇总统计
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -99,15 +99,19 @@ class TestBuildOverview:
             if model.__name__ == "Customer":
                 result.filter.return_value.first.return_value = mock_customer
             else:
-                result.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-                result.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+                result.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    []
+                )
+                result.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    []
+                )
             return result
 
         mock_db.query = MagicMock(side_effect=query_side_effect)
 
         service = Customer360Service(mock_db)
 
-        with patch.object(service, '_build_summary', return_value={}):
+        with patch.object(service, "_build_summary", return_value={}):
             result = service.build_overview(1)
 
         assert "basic_info" in result
@@ -130,12 +134,16 @@ class TestBuildOverview:
         mock_customer.customer_name = "测试客户"
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_customer
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
+        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         service = Customer360Service(mock_db)
 
-        with patch.object(service, '_build_summary', return_value={}):
+        with patch.object(service, "_build_summary", return_value={}):
             service.build_overview(1)
 
         # 验证limit(8)被调用
@@ -165,10 +173,10 @@ class TestBuildSummary:
             quotes=[],
             contracts=[mock_contract1, mock_contract2],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['total_contract_amount'] == Decimal("150000")
+        assert result["total_contract_amount"] == Decimal("150000")
 
     def test_calculates_open_receivables(self):
         """测试计算未收款金额"""
@@ -196,11 +204,11 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[mock_plan1, mock_plan2],
-            communications=[]
+            communications=[],
         )
 
         # 10000 + (20000 - 5000) = 25000
-        assert result['open_receivables'] == Decimal("25000")
+        assert result["open_receivables"] == Decimal("25000")
 
     def test_calculates_win_rate(self):
         """测试计算赢单率"""
@@ -234,11 +242,11 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
         # 2 won out of 4 = 50%
-        assert result['win_rate'] == 50.0
+        assert result["win_rate"] == 50.0
 
     def test_calculates_pipeline_amount(self):
         """测试计算商机管道金额"""
@@ -268,10 +276,10 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['pipeline_amount'] == Decimal("180000")
+        assert result["pipeline_amount"] == Decimal("180000")
 
     def test_calculates_active_projects(self):
         """测试计算活跃项目数"""
@@ -301,11 +309,11 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['total_projects'] == 3
-        assert result['active_projects'] == 2
+        assert result["total_projects"] == 3
+        assert result["active_projects"] == 2
 
     def test_calculates_average_margin(self):
         """测试计算平均毛利率"""
@@ -333,10 +341,10 @@ class TestBuildSummary:
             quotes=[mock_quote1, mock_quote2],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['avg_margin'] == Decimal("35")
+        assert result["avg_margin"] == Decimal("35")
 
     def test_handles_zero_opportunities(self):
         """测试处理零商机情况"""
@@ -354,11 +362,11 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['win_rate'] == 0.0
-        assert result['pipeline_amount'] == Decimal("0")
+        assert result["win_rate"] == 0.0
+        assert result["pipeline_amount"] == Decimal("0")
 
     def test_finds_last_activity(self):
         """测试查找最后活动时间"""
@@ -380,7 +388,7 @@ class TestBuildSummary:
             quotes=[],
             contracts=[],
             payment_plans=[],
-            communications=[]
+            communications=[],
         )
 
-        assert result['last_activity'] == now
+        assert result["last_activity"] == now

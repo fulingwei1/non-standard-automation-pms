@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 协作评价管理器（collaboration_rating/ratings.py）单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.collaboration_rating.ratings")
 
 
 def _make_manager(db=None, service=None):
     from app.services.collaboration_rating.ratings import RatingManager
+
     return RatingManager(db or MagicMock(), service or MagicMock())
 
 
@@ -21,8 +23,14 @@ class TestRatingManager:
         db.query.return_value.filter.return_value.first.return_value = None
         mgr = _make_manager(db)
         with pytest.raises(ValueError, match="不存在或无权限"):
-            mgr.submit_rating(999, rater_id=1, communication_score=3, response_score=3,
-                              delivery_score=3, interface_score=3)
+            mgr.submit_rating(
+                999,
+                rater_id=1,
+                communication_score=3,
+                response_score=3,
+                delivery_score=3,
+                interface_score=3,
+            )
 
     def test_submit_rating_invalid_score_range(self):
         """评分超出 1-5 范围时抛出 ValueError"""
@@ -31,22 +39,36 @@ class TestRatingManager:
         db.query.return_value.filter.return_value.first.return_value = rating
         mgr = _make_manager(db)
         with pytest.raises(ValueError, match="1-5"):
-            mgr.submit_rating(1, rater_id=1, communication_score=6, response_score=3,
-                              delivery_score=3, interface_score=3)
+            mgr.submit_rating(
+                1,
+                rater_id=1,
+                communication_score=6,
+                response_score=3,
+                delivery_score=3,
+                interface_score=3,
+            )
 
     def test_submit_rating_calculates_total_score(self):
         """submit_rating 正确计算百分制总分"""
         db = MagicMock()
+
         # 使用真实对象代替 MagicMock 以便验证属性赋值
         class FakeRating:
             pass
+
         rating = FakeRating()
         db.query.return_value.filter.return_value.first.return_value = rating
         db.refresh = MagicMock(return_value=None)
         mgr = _make_manager(db)
 
-        mgr.submit_rating(1, rater_id=1, communication_score=4, response_score=4,
-                          delivery_score=4, interface_score=4)
+        mgr.submit_rating(
+            1,
+            rater_id=1,
+            communication_score=4,
+            response_score=4,
+            delivery_score=4,
+            interface_score=4,
+        )
 
         # 4*25+4*25+4*25+4*25 = 400, /5*20 = 1600
         expected = Decimal(str(round(400 / 5 * 20, 2)))
@@ -99,9 +121,7 @@ class TestRatingManager:
         db.query.return_value.filter.return_value.first.return_value = existing
         mgr = _make_manager(db)
 
-        result = mgr.create_rating_invitations(
-            engineer_id=2, period_id=1, collaborator_ids=[10]
-        )
+        result = mgr.create_rating_invitations(engineer_id=2, period_id=1, collaborator_ids=[10])
         # 已存在 -> 跳过，invitations 为空
         assert result == []
 
@@ -124,6 +144,7 @@ class TestRatingManager:
         post_commit_rating.id = 55
 
         call_count = 0
+
         def filter_side_effect(*args, **kwargs):
             nonlocal call_count
             call_count += 1

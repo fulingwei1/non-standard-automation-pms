@@ -2,17 +2,23 @@
 """
 第三十二批覆盖率测试 - 知识自动识别服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.knowledge_auto_identification_service import KnowledgeAutoIdentificationService
+    from app.services.knowledge_auto_identification_service import (
+        KnowledgeAutoIdentificationService,
+    )
+
     HAS_KAIS = True
 except Exception:
     HAS_KAIS = False
 
-pytestmark = pytest.mark.skipif(not HAS_KAIS, reason="knowledge_auto_identification_service 导入失败")
+pytestmark = pytest.mark.skipif(
+    not HAS_KAIS, reason="knowledge_auto_identification_service 导入失败"
+)
 
 
 def make_service():
@@ -79,7 +85,9 @@ class TestIdentifyFromServiceTicket:
 
         db.query.side_effect = query_side
 
-        with patch("app.services.knowledge_auto_identification_service.apply_keyword_filter") as mock_kf:
+        with patch(
+            "app.services.knowledge_auto_identification_service.apply_keyword_filter"
+        ) as mock_kf:
             mock_kf.return_value = MagicMock()
             mock_kf.return_value.first.return_value = mock_existing
             result = svc.identify_from_service_ticket(1)
@@ -160,12 +168,13 @@ class TestBatchIdentifyFromServiceTickets:
     def test_batch_with_date_range(self):
         """带日期范围的批量识别"""
         svc, db = make_service()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.all.return_value = []
 
         result = svc.batch_identify_from_service_tickets(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
         )
         assert "total_tickets" in result
         assert "errors" in result

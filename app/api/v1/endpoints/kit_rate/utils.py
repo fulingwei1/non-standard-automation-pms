@@ -13,9 +13,7 @@ from app.models.purchase import PurchaseOrderItem
 
 
 def calculate_kit_rate(
-    db: Session,
-    bom_items: List[BomItem],
-    calculate_by: str = "quantity"  # "quantity" or "amount"
+    db: Session, bom_items: List[BomItem], calculate_by: str = "quantity"  # "quantity" or "amount"
 ) -> Dict[str, Any]:
     """
     计算齐套率

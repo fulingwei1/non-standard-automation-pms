@@ -35,12 +35,16 @@ class ApprovalDelegate(Base, TimestampMixin):
     delegate_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="代理人ID")
 
     # 代理范围
-    scope = Column(String(20), default="ALL", comment="""
+    scope = Column(
+        String(20),
+        default="ALL",
+        comment="""
         代理范围：
         ALL: 全部审批
         TEMPLATE: 指定模板
         CATEGORY: 指定分类
-    """)
+    """,
+    )
 
     # 指定的模板/分类（scope不为ALL时使用）
     template_ids = Column(JSON, comment="指定的模板ID列表")
@@ -84,9 +88,13 @@ class ApprovalDelegateLog(Base, TimestampMixin):
     __tablename__ = "approval_delegate_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    delegate_config_id = Column(Integer, ForeignKey("approval_delegates.id"), nullable=False, comment="代理配置ID")
+    delegate_config_id = Column(
+        Integer, ForeignKey("approval_delegates.id"), nullable=False, comment="代理配置ID"
+    )
     task_id = Column(Integer, ForeignKey("approval_tasks.id"), nullable=False, comment="任务ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="实例ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="实例ID"
+    )
 
     # 原审批人和代理人
     original_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="原审批人ID")

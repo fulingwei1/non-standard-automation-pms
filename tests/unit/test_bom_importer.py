@@ -22,36 +22,48 @@ class TestBomImporter(unittest.TestCase):
             BomImporter.import_bom_data(self.db, df, 1)
 
     def test_nan_quantity_fails(self):
-        df = pd.DataFrame([{
-            "BOM编码*": "BOM001",
-            "项目编码*": "P001",
-            "物料编码*": "M001",
-            "用量*": float("nan"),
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "BOM编码*": "BOM001",
+                    "项目编码*": "P001",
+                    "物料编码*": "M001",
+                    "用量*": float("nan"),
+                }
+            ]
+        )
         imported, updated, failed = BomImporter.import_bom_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertEqual(len(failed), 1)
         self.assertIn("必填项", failed[0]["error"])
 
     def test_zero_quantity_fails(self):
-        df = pd.DataFrame([{
-            "BOM编码*": "BOM001",
-            "项目编码*": "P001",
-            "物料编码*": "M001",
-            "用量*": 0,
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "BOM编码*": "BOM001",
+                    "项目编码*": "P001",
+                    "物料编码*": "M001",
+                    "用量*": 0,
+                }
+            ]
+        )
         imported, updated, failed = BomImporter.import_bom_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertTrue(len(failed) > 0)
 
     def test_project_not_found(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
-        df = pd.DataFrame([{
-            "BOM编码*": "BOM001",
-            "项目编码*": "P999",
-            "物料编码*": "M001",
-            "用量*": 5,
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "BOM编码*": "BOM001",
+                    "项目编码*": "P999",
+                    "物料编码*": "M001",
+                    "用量*": 5,
+                }
+            ]
+        )
         imported, updated, failed = BomImporter.import_bom_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertIn("未找到项目", failed[0]["error"])
@@ -61,12 +73,16 @@ class TestBomImporter(unittest.TestCase):
         project.id = 1
         # first call: project found, second: material not found
         self.db.query.return_value.filter.return_value.first.side_effect = [project, None]
-        df = pd.DataFrame([{
-            "BOM编码*": "BOM001",
-            "项目编码*": "P001",
-            "物料编码*": "M999",
-            "用量*": 5,
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "BOM编码*": "BOM001",
+                    "项目编码*": "P001",
+                    "物料编码*": "M999",
+                    "用量*": 5,
+                }
+            ]
+        )
         imported, updated, failed = BomImporter.import_bom_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertIn("未找到物料", failed[0]["error"])
@@ -87,16 +103,23 @@ class TestBomImporter(unittest.TestCase):
 
         # project, material, bom_header, existing bom_item (None)
         self.db.query.return_value.filter.return_value.first.side_effect = [
-            project, material, bom_header, None
+            project,
+            material,
+            bom_header,
+            None,
         ]
         self.db.query.return_value.filter.return_value.count.return_value = 0
 
-        df = pd.DataFrame([{
-            "BOM编码*": "BOM001",
-            "项目编码*": "P001",
-            "物料编码*": "M001",
-            "用量*": 5,
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "BOM编码*": "BOM001",
+                    "项目编码*": "P001",
+                    "物料编码*": "M001",
+                    "用量*": 5,
+                }
+            ]
+        )
         imported, updated, failed = BomImporter.import_bom_data(self.db, df, 1)
         self.assertEqual(imported, 1)
         self.assertEqual(len(failed), 0)

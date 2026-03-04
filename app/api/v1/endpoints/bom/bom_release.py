@@ -13,9 +13,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.material import BomHeader
-from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.material import BomResponse
 from app.utils.db_helpers import get_or_404
 
@@ -47,9 +47,9 @@ def release_bom(
         raise HTTPException(status_code=400, detail="BOM没有明细，无法发布")
 
     # 将同一BOM编号的其他版本标记为非最新版本
-    db.query(BomHeader).filter(
-        BomHeader.bom_no == bom.bom_no, BomHeader.id != bom_id
-    ).update({"is_latest": False})
+    db.query(BomHeader).filter(BomHeader.bom_no == bom.bom_no, BomHeader.id != bom_id).update(
+        {"is_latest": False}
+    )
 
     # 更新BOM状态和版本信息
     bom.status = "RELEASED"
@@ -101,7 +101,9 @@ def release_bom(
                 supplier_name = "未指定供应商"
                 if supplier_id and supplier_id != 0:
                     supplier = (
-                        db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
+                        db.query(Vendor)
+                        .filter(Vendor.id == supplier_id, Vendor.vendor_type == "MATERIAL")
+                        .first()
                     )
                     if supplier:
                         supplier_name = supplier.supplier_name

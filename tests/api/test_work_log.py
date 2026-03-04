@@ -9,9 +9,9 @@
 """
 
 from datetime import date
+from typing import Optional
 
 import pytest
-from typing import Optional
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
@@ -23,10 +23,7 @@ def _auth_headers(token: str) -> dict:
 
 def _get_first_project(client: TestClient, token: str) -> Optional[dict]:
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
     if response.status_code != 200:
         return None
     projects = response.json()
@@ -48,7 +45,7 @@ class TestMyWorkLogs:
         response = client.get(
             f"{settings.API_V1_PREFIX}/my/work-logs",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -66,7 +63,7 @@ class TestMyWorkLogs:
         response = client.get(
             f"{settings.API_V1_PREFIX}/my/work-logs",
             params={"start_date": today, "end_date": today, "page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -90,8 +87,7 @@ class TestProjectWorkLogs:
         headers = _auth_headers(admin_token)
         project_id = project["id"]
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/", headers=headers
         )
 
         if response.status_code == 404:
@@ -121,8 +117,7 @@ class TestProjectWorkLogs:
         headers = _auth_headers(admin_token)
         project_id = project["id"]
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/summary", headers=headers
         )
 
         if response.status_code == 404:

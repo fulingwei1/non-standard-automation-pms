@@ -3,18 +3,19 @@
 Milestone Status Change Handler.
 """
 
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
-import logging
 
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
-from app.models.project import ProjectMilestone, ProjectPaymentPlan
-from app.models.sales import Contract, Invoice as InvoiceModel
 from app.models.enums import InvoiceStatusEnum
+from app.models.project import ProjectMilestone, ProjectPaymentPlan
+from app.models.sales import Contract
+from app.models.sales import Invoice as InvoiceModel
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +54,7 @@ class MilestoneStatusHandler:
             # 获取合同信息
             contract = None
             if plan.contract_id:
-                contract = (
-                    db.query(Contract).filter(Contract.id == plan.contract_id).first()
-                )
+                contract = db.query(Contract).filter(Contract.id == plan.contract_id).first()
 
             if contract:
                 # 自动创建发票
@@ -95,12 +94,8 @@ class MilestoneStatusHandler:
                     payment_status="PENDING",
                     issue_date=date.today(),
                     due_date=date.today() + timedelta(days=30),
-                    buyer_name=contract.customer.customer_name
-                    if contract.customer
-                    else None,
-                    buyer_tax_no=contract.customer.tax_no
-                    if contract.customer
-                    else None,
+                    buyer_name=contract.customer.customer_name if contract.customer else None,
+                    buyer_tax_no=contract.customer.tax_no if contract.customer else None,
                 )
                 db.add(invoice)
                 db.flush()
@@ -113,9 +108,7 @@ class MilestoneStatusHandler:
                 plan.status = "INVOICED"
 
                 db.add(plan)
-                logger.info(
-                    f"Created invoice {invoice_code} for payment plan {plan.id}"
-                )
+                logger.info(f"Created invoice {invoice_code} for payment plan {plan.id}")
 
 
 def register_milestone_handlers():

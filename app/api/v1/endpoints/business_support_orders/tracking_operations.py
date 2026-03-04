@@ -29,12 +29,16 @@ from .utils import _send_department_notification
 router = APIRouter()
 
 
-@router.post("/acceptance-tracking/{tracking_id}/check-condition", response_model=ResponseModel[AcceptanceTrackingResponse], summary="验收条件检查")
+@router.post(
+    "/acceptance-tracking/{tracking_id}/check-condition",
+    response_model=ResponseModel[AcceptanceTrackingResponse],
+    summary="验收条件检查",
+)
 async def check_acceptance_condition(
     tracking_id: int,
     check_data: ConditionCheckRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """验收条件检查"""
     try:
@@ -55,7 +59,7 @@ async def check_acceptance_condition(
             operator_id=current_user.id,
             operator_name=current_user.username,
             result="success" if check_data.condition_check_status == "met" else "pending",
-            remark=check_data.remark
+            remark=check_data.remark,
         )
         db.add(record)
 
@@ -63,9 +67,7 @@ async def check_acceptance_condition(
         db.refresh(tracking)
 
         return ResponseModel(
-            code=200,
-            message="验收条件检查成功",
-            data=build_tracking_response(tracking)
+            code=200, message="验收条件检查成功", data=build_tracking_response(tracking)
         )
     except HTTPException:
         raise
@@ -74,12 +76,16 @@ async def check_acceptance_condition(
         raise HTTPException(status_code=500, detail=f"验收条件检查失败: {str(e)}")
 
 
-@router.post("/acceptance-tracking/{tracking_id}/remind", response_model=ResponseModel[AcceptanceTrackingResponse], summary="催签验收单")
+@router.post(
+    "/acceptance-tracking/{tracking_id}/remind",
+    response_model=ResponseModel[AcceptanceTrackingResponse],
+    summary="催签验收单",
+)
 async def remind_acceptance_signature(
     tracking_id: int,
     reminder_data: ReminderRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """催签验收单"""
     try:
@@ -95,12 +101,13 @@ async def remind_acceptance_signature(
         record = AcceptanceTrackingRecord(
             tracking_id=tracking_id,
             record_type="reminder",
-            record_content=reminder_data.reminder_content or f"第{tracking.reminder_count}次催签验收单",
+            record_content=reminder_data.reminder_content
+            or f"第{tracking.reminder_count}次催签验收单",
             record_date=datetime.now(),
             operator_id=current_user.id,
             operator_name=current_user.username,
             result="success",
-            remark=reminder_data.remark
+            remark=reminder_data.remark,
         )
         db.add(record)
 
@@ -109,17 +116,19 @@ async def remind_acceptance_signature(
 
         # 实际发送催签通知（邮件、短信、系统消息等）
         # 获取验收单信息
-        acceptance_order = db.query(AcceptanceOrder).filter(
-            AcceptanceOrder.id == tracking.acceptance_order_id
-        ).first()
+        acceptance_order = (
+            db.query(AcceptanceOrder)
+            .filter(AcceptanceOrder.id == tracking.acceptance_order_id)
+            .first()
+        )
 
         if acceptance_order:
             # 获取项目信息
             project = None
             if acceptance_order.project_id:
-                project = db.query(Project).filter(
-                    Project.id == acceptance_order.project_id
-                ).first()
+                project = (
+                    db.query(Project).filter(Project.id == acceptance_order.project_id).first()
+                )
 
             # 通知项目经理和销售人员
             notified_users = set()
@@ -140,8 +149,8 @@ async def remind_acceptance_signature(
                     priority="HIGH",
                     extra_data={
                         "order_no": acceptance_order.order_no,
-                        "reminder_count": tracking.reminder_count
-                    }
+                        "reminder_count": tracking.reminder_count,
+                    },
                 )
                 notified_users.add(project.pm_id)
 
@@ -155,15 +164,11 @@ async def remind_acceptance_signature(
                     content=f"验收单 {acceptance_order.order_no} 需要催签，已催签{tracking.reminder_count or 0}次。",
                     source_type="ACCEPTANCE_TRACKING",
                     source_id=tracking.id,
-                    priority="HIGH"
+                    priority="HIGH",
                 )
                 notified_users.add(acceptance_order.sales_id)
 
-        return ResponseModel(
-            code=200,
-            message="催签成功",
-            data=build_tracking_response(tracking)
-        )
+        return ResponseModel(code=200, message="催签成功", data=build_tracking_response(tracking))
     except HTTPException:
         raise
     except Exception as e:

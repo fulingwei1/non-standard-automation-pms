@@ -14,7 +14,7 @@ GLM_CONFIG = {
     "apiKey": "6f80249e3d434099a3fb8c898f9b65ef.OmqhpVVwiQaNLkDp",
     "baseUrl": "https://open.bigmodel.cn/api/coding/paas/v4",
     "modelName": "GLM-4.7",
-    "provider": "openai"
+    "provider": "openai",
 }
 
 # Cursor 配置文件路径
@@ -24,8 +24,9 @@ CURSOR_SETTINGS_PATH = Path.home() / "Library/Application Support/Cursor/User/se
 def backup_settings():
     """备份当前设置文件"""
     if CURSOR_SETTINGS_PATH.exists():
-        backup_path = CURSOR_SETTINGS_PATH.with_suffix('.json.backup')
+        backup_path = CURSOR_SETTINGS_PATH.with_suffix(".json.backup")
         import shutil
+
         shutil.copy2(CURSOR_SETTINGS_PATH, backup_path)
         print(f"✅ 已备份设置文件到: {backup_path}")
         return True
@@ -35,7 +36,7 @@ def backup_settings():
 def load_settings():
     """加载当前设置"""
     if CURSOR_SETTINGS_PATH.exists():
-        with open(CURSOR_SETTINGS_PATH, 'r', encoding='utf-8') as f:
+        with open(CURSOR_SETTINGS_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
@@ -43,7 +44,7 @@ def load_settings():
 def save_settings(settings):
     """保存设置"""
     CURSOR_SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(CURSOR_SETTINGS_PATH, 'w', encoding='utf-8') as f:
+    with open(CURSOR_SETTINGS_PATH, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=4, ensure_ascii=False)
     print(f"✅ 已保存设置到: {CURSOR_SETTINGS_PATH}")
 
@@ -97,4 +98,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ 配置失败: {e}")
         import traceback
+
         traceback.print_exc()

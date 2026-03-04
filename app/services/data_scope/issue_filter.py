@@ -93,13 +93,12 @@ class IssueFilterService:
 
             # 2) 本部门项目的问题（即使参与人跨部门，经理也应可见）
             import logging
+
             logger = logging.getLogger(__name__)
             try:
                 if user.department:
                     dept = (
-                        db.query(Department)
-                        .filter(Department.dept_name == user.department)
-                        .first()
+                        db.query(Department).filter(Department.dept_name == user.department).first()
                     )
                     if dept:
                         dept_project_rows = (

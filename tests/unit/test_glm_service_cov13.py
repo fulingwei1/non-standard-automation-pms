@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十三批 - GLM AI服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.ai_planning.glm_service import GLMService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -16,9 +18,10 @@ pytestmark = pytest.mark.skipif(SKIP, reason="导入失败，跳过")
 @pytest.fixture
 def service_no_key():
     """无API密钥的服务"""
-    with patch.dict('os.environ', {}, clear=False):
+    with patch.dict("os.environ", {}, clear=False):
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         svc = GLMService(api_key=None)
     return svc
 
@@ -26,7 +29,7 @@ def service_no_key():
 @pytest.fixture
 def service_with_key():
     """带API密钥的服务（mock ZhipuAI）"""
-    with patch('app.services.ai_planning.glm_service.ZhipuAI') as MockZhipu:
+    with patch("app.services.ai_planning.glm_service.ZhipuAI") as MockZhipu:
         mock_client = MagicMock()
         MockZhipu.return_value = mock_client
         svc = GLMService(api_key="fake-key-123")
@@ -41,7 +44,7 @@ class TestGLMServiceAvailability:
 
     def test_with_api_key_client_created(self):
         """有密钥时客户端被创建"""
-        with patch('app.services.ai_planning.glm_service.ZhipuAI') as MockZhipu:
+        with patch("app.services.ai_planning.glm_service.ZhipuAI") as MockZhipu:
             mock_client = MagicMock()
             MockZhipu.return_value = mock_client
             svc = GLMService(api_key="test-key")
@@ -49,7 +52,7 @@ class TestGLMServiceAvailability:
 
     def test_zhipuai_none_not_available(self):
         """zhipuai包未安装时不可用"""
-        with patch('app.services.ai_planning.glm_service.ZhipuAI', None):
+        with patch("app.services.ai_planning.glm_service.ZhipuAI", None):
             svc = GLMService(api_key="some-key")
             assert svc.is_available() is False
 
@@ -62,7 +65,7 @@ class TestGLMServiceChat:
 
     def test_chat_success(self):
         """chat成功调用返回内容"""
-        with patch('app.services.ai_planning.glm_service.ZhipuAI') as MockZhipu:
+        with patch("app.services.ai_planning.glm_service.ZhipuAI") as MockZhipu:
             mock_client = MagicMock()
             mock_choice = MagicMock()
             mock_choice.message.content = "AI回复内容"
@@ -75,14 +78,14 @@ class TestGLMServiceChat:
 
     def test_chat_retry_on_exception(self):
         """chat失败时重试"""
-        with patch('app.services.ai_planning.glm_service.ZhipuAI') as MockZhipu:
+        with patch("app.services.ai_planning.glm_service.ZhipuAI") as MockZhipu:
             mock_client = MagicMock()
             mock_client.chat.completions.create.side_effect = Exception("网络错误")
             MockZhipu.return_value = mock_client
 
             svc = GLMService(api_key="test-key")
             svc.max_retries = 1
-            with patch('time.sleep'):
+            with patch("time.sleep"):
                 result = svc.chat([{"role": "user", "content": "测试"}])
             assert result is None
 
@@ -90,7 +93,7 @@ class TestGLMServiceChat:
 class TestGLMServiceInit:
     def test_model_default(self):
         """默认使用glm-4模型"""
-        with patch('app.services.ai_planning.glm_service.ZhipuAI') as MockZhipu:
+        with patch("app.services.ai_planning.glm_service.ZhipuAI") as MockZhipu:
             MockZhipu.return_value = MagicMock()
             svc = GLMService(api_key="test")
             assert svc.model == "glm-4"

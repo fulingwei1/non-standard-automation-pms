@@ -16,7 +16,7 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 from docx.shared import Cm, Pt, RGBColor
 
-from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
+from app.services.report_framework.renderers.base import Renderer, RenderError, ReportResult
 
 
 class WordRenderer(Renderer):
@@ -227,7 +227,5 @@ class WordRenderer(Renderer):
 
     def _set_cell_shading(self, cell, color: str) -> None:
         """设置单元格背景色"""
-        shading_elm = parse_xml(
-            f'<w:shd {nsdecls("w")} w:fill="{color}" w:val="clear"/>'
-        )
+        shading_elm = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color}" w:val="clear"/>')
         cell._tc.get_or_add_tcPr().append(shading_elm)

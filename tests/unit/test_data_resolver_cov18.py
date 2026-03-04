@@ -8,6 +8,7 @@ try:
     from app.services.report_framework.data_resolver import DataResolver
     from app.services.report_framework.data_sources.base import DataSourceError
     from app.services.report_framework.models import DataSourceConfig, DataSourceType
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

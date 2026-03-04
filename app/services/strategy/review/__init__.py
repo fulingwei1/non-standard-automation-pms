@@ -11,21 +11,6 @@
  └── routine_management.py  # 例行管理周期
 """
 
-# 战略审视管理
-from .strategy_reviews import (
-    create_strategy_review,
-    delete_strategy_review,
-    get_latest_review,
-    get_strategy_review,
-    list_strategy_reviews,
-    update_strategy_review,
-)
-
-# 健康度汇总
-from .health_summary import (
-    get_health_score_summary,
-)
-
 # 战略日历管理
 from .calendar_events import (
     create_calendar_event,
@@ -37,10 +22,25 @@ from .calendar_events import (
     update_calendar_event,
 )
 
+# 健康度汇总
+from .health_summary import (
+    get_health_score_summary,
+)
+
 # 例行管理周期
 from .routine_management import (
     generate_routine_events,
     get_routine_management_cycle,
+)
+
+# 战略审视管理
+from .strategy_reviews import (
+    create_strategy_review,
+    delete_strategy_review,
+    get_latest_review,
+    get_strategy_review,
+    list_strategy_reviews,
+    update_strategy_review,
 )
 
 __all__ = [

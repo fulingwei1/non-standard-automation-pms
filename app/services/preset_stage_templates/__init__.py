@@ -50,9 +50,11 @@ def init_preset_templates(template_service) -> List:
     for template_data in PRESET_TEMPLATES:
         try:
             # 检查是否已存在
-            existing = template_service.db.query(StageTemplate).filter(
-                StageTemplate.template_code == template_data["template_code"]
-            ).first()
+            existing = (
+                template_service.db.query(StageTemplate)
+                .filter(StageTemplate.template_code == template_data["template_code"])
+                .first()
+            )
 
             if not existing:
                 template = template_service.import_template(template_data)

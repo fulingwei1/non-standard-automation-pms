@@ -9,24 +9,24 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.models.production import (
     Equipment,
-    ProductionSchedule,
     ProductionResourceConflict,
+    ProductionSchedule,
     ScheduleAdjustmentLog,
     Worker,
     WorkerSkill,
     WorkOrder,
 )
 from app.schemas.production_schedule import (
+    ConflictResponse,
     GanttTask,
     ScheduleAdjustRequest,
     ScheduleGenerateRequest,
     ScheduleResponse,
     ScheduleScoreMetrics,
-    ConflictResponse,
 )
-from app.common.query_filters import apply_pagination
 
 logger = logging.getLogger(__name__)
 
@@ -38,16 +38,16 @@ class ProductionScheduleService:
 
     # 工作时间配置
     WORK_START_HOUR = 8  # 08:00
-    WORK_END_HOUR = 18   # 18:00
+    WORK_END_HOUR = 18  # 18:00
     WORK_HOURS_PER_DAY = 8
 
     # 甘特图状态颜色映射
     GANTT_COLOR_MAP = {
-        'PENDING': '#9E9E9E',
-        'CONFIRMED': '#2196F3',
-        'IN_PROGRESS': '#FF9800',
-        'COMPLETED': '#4CAF50',
-        'CANCELLED': '#F44336',
+        "PENDING": "#9E9E9E",
+        "CONFIRMED": "#2196F3",
+        "IN_PROGRESS": "#FF9800",
+        "COMPLETED": "#4CAF50",
+        "CANCELLED": "#F44336",
     }
 
     def __init__(self, db: Session):
@@ -56,9 +56,7 @@ class ProductionScheduleService:
     # ==================== 智能排程算法 ====================
 
     def generate_schedule(
-        self,
-        request: ScheduleGenerateRequest,
-        user_id: int
+        self, request: ScheduleGenerateRequest, user_id: int
     ) -> Tuple[int, List[ProductionSchedule], List[ProductionResourceConflict]]:
         """
         生成智能排程
@@ -87,31 +85,16 @@ class ProductionScheduleService:
         # 4. 执行排程算法
         if request.algorithm == "GREEDY":
             schedules = self._greedy_scheduling(
-                work_orders,
-                available_equipment,
-                available_workers,
-                request,
-                plan_id,
-                user_id
+                work_orders, available_equipment, available_workers, request, plan_id, user_id
             )
         elif request.algorithm == "HEURISTIC":
             schedules = self._heuristic_scheduling(
-                work_orders,
-                available_equipment,
-                available_workers,
-                request,
-                plan_id,
-                user_id
+                work_orders, available_equipment, available_workers, request, plan_id, user_id
             )
         else:
             # 默认使用贪心算法
             schedules = self._greedy_scheduling(
-                work_orders,
-                available_equipment,
-                available_workers,
-                request,
-                plan_id,
-                user_id
+                work_orders, available_equipment, available_workers, request, plan_id, user_id
             )
 
         # 5. 检测资源冲突
@@ -132,9 +115,7 @@ class ProductionScheduleService:
         return plan_id, schedules, conflicts
 
     def generate_and_evaluate_schedule(
-        self,
-        request: ScheduleGenerateRequest,
-        user_id: int
+        self, request: ScheduleGenerateRequest, user_id: int
     ) -> Dict[str, Any]:
         """
         生成排程并执行评估，返回完整的响应数据
@@ -203,7 +184,7 @@ class ProductionScheduleService:
         workers: List[Worker],
         request: ScheduleGenerateRequest,
         plan_id: int,
-        user_id: int
+        user_id: int,
     ) -> List[ProductionSchedule]:
         """
         贪心排程算法
@@ -221,8 +202,8 @@ class ProductionScheduleService:
             key=lambda x: (
                 self._get_priority_weight(x.priority),
                 x.plan_end_date or datetime.max.date(),
-                x.work_order_no
-            )
+                x.work_order_no,
+            ),
         )
 
         # 2. 资源时间表 (记录每个资源的占用情况)
@@ -240,9 +221,7 @@ class ProductionScheduleService:
             best_equipment = self._select_best_equipment(
                 order, equipment, equipment_timeline, request
             )
-            best_worker = self._select_best_worker(
-                order, workers, worker_timeline, request
-            )
+            best_worker = self._select_best_worker(order, workers, worker_timeline, request)
 
             # 计算最早开始时间
             earliest_start = self._find_earliest_available_slot(
@@ -250,7 +229,7 @@ class ProductionScheduleService:
                 worker_timeline.get(best_worker.id if best_worker else None, []),
                 current_time,
                 duration_hours,
-                request
+                request,
             )
 
             # 计算结束时间(考虑工作时间)
@@ -268,10 +247,10 @@ class ProductionScheduleService:
                 scheduled_end_time=end_time,
                 duration_hours=duration_hours,
                 priority_score=self._calculate_priority_score(order),
-                status='PENDING',
+                status="PENDING",
                 algorithm_version=self.ALGORITHM_VERSION,
                 created_by=user_id,
-                sequence_no=len(schedules) + 1
+                sequence_no=len(schedules) + 1,
             )
 
             schedules.append(schedule)
@@ -291,7 +270,7 @@ class ProductionScheduleService:
         workers: List[Worker],
         request: ScheduleGenerateRequest,
         plan_id: int,
-        user_id: int
+        user_id: int,
     ) -> List[ProductionSchedule]:
         """
         启发式排程算法
@@ -312,9 +291,7 @@ class ProductionScheduleService:
         return schedules
 
     def _optimize_schedules(
-        self,
-        schedules: List[ProductionSchedule],
-        request: ScheduleGenerateRequest
+        self, schedules: List[ProductionSchedule], request: ScheduleGenerateRequest
     ) -> List[ProductionSchedule]:
         """优化排程"""
         # 简单的交换优化
@@ -331,18 +308,20 @@ class ProductionScheduleService:
                     # 尝试交换时间
                     if self._should_swap_schedules(schedules[i], schedules[j]):
                         # 交换
-                        schedules[i].scheduled_start_time, schedules[j].scheduled_start_time = \
-                            schedules[j].scheduled_start_time, schedules[i].scheduled_start_time
-                        schedules[i].scheduled_end_time, schedules[j].scheduled_end_time = \
-                            schedules[j].scheduled_end_time, schedules[i].scheduled_end_time
+                        schedules[i].scheduled_start_time, schedules[j].scheduled_start_time = (
+                            schedules[j].scheduled_start_time,
+                            schedules[i].scheduled_start_time,
+                        )
+                        schedules[i].scheduled_end_time, schedules[j].scheduled_end_time = (
+                            schedules[j].scheduled_end_time,
+                            schedules[i].scheduled_end_time,
+                        )
                         improved = True
 
         return schedules
 
     def _should_swap_schedules(
-        self,
-        schedule1: ProductionSchedule,
-        schedule2: ProductionSchedule
+        self, schedule1: ProductionSchedule, schedule2: ProductionSchedule
     ) -> bool:
         """判断是否应该交换两个排程"""
         # 如果高优先级的工单被排在后面，应该交换
@@ -358,7 +337,7 @@ class ProductionScheduleService:
         order: WorkOrder,
         equipment: List[Equipment],
         timeline: Dict[int, List],
-        request: ScheduleGenerateRequest
+        request: ScheduleGenerateRequest,
     ) -> Optional[Equipment]:
         """选择最优设备"""
         if not equipment:
@@ -382,7 +361,7 @@ class ProductionScheduleService:
         order: WorkOrder,
         workers: List[Worker],
         timeline: Dict[int, List],
-        request: ScheduleGenerateRequest
+        request: ScheduleGenerateRequest,
     ) -> Optional[Worker]:
         """选择最优工人"""
         if not workers:
@@ -397,11 +376,15 @@ class ProductionScheduleService:
 
         if request.consider_worker_skills and order.process_id:
             # 查询具有该工序技能的工人
-            skilled_worker_ids = self.db.query(WorkerSkill.worker_id).filter(
-                WorkerSkill.process_id == order.process_id
-            ).all()
+            skilled_worker_ids = (
+                self.db.query(WorkerSkill.worker_id)
+                .filter(WorkerSkill.process_id == order.process_id)
+                .all()
+            )
             skilled_ids = [w[0] for w in skilled_worker_ids]
-            candidates = [w for w in workers if w.id in skilled_ids and w.workshop_id == order.workshop_id]
+            candidates = [
+                w for w in workers if w.id in skilled_ids and w.workshop_id == order.workshop_id
+            ]
 
         if not candidates:
             candidates = [w for w in workers if w.workshop_id == order.workshop_id]
@@ -421,7 +404,7 @@ class ProductionScheduleService:
         worker_slots: List[Tuple[datetime, datetime]],
         start_from: datetime,
         duration_hours: float,
-        request: ScheduleGenerateRequest
+        request: ScheduleGenerateRequest,
     ) -> datetime:
         """找到最早可用时间槽"""
         current = start_from
@@ -460,10 +443,7 @@ class ProductionScheduleService:
         return current
 
     def _calculate_end_time(
-        self,
-        start_time: datetime,
-        duration_hours: float,
-        request: ScheduleGenerateRequest
+        self, start_time: datetime, duration_hours: float, request: ScheduleGenerateRequest
     ) -> datetime:
         """计算结束时间(考虑工作时间和非工作时段)"""
         remaining_hours = duration_hours
@@ -504,11 +484,7 @@ class ProductionScheduleService:
         return dt
 
     def _time_overlap(
-        self,
-        start1: datetime,
-        end1: datetime,
-        start2: datetime,
-        end2: datetime
+        self, start1: datetime, end1: datetime, start2: datetime, end2: datetime
     ) -> bool:
         """检查时间段是否重叠"""
         return start1 < end2 and end1 > start2
@@ -516,8 +492,7 @@ class ProductionScheduleService:
     # ==================== 冲突检测 ====================
 
     def _detect_conflicts(
-        self,
-        schedules: List[ProductionSchedule]
+        self, schedules: List[ProductionSchedule]
     ) -> List[ProductionResourceConflict]:
         """检测资源冲突"""
         conflicts = []
@@ -525,54 +500,66 @@ class ProductionScheduleService:
 
         # 检查设备冲突
         for i, schedule1 in enumerate(schedules):
-            for schedule2 in schedules[i+1:]:
+            for schedule2 in schedules[i + 1 :]:
                 # 设备冲突
-                if (schedule1.equipment_id and
-                    schedule1.equipment_id == schedule2.equipment_id and
-                    self._time_overlap(
+                if (
+                    schedule1.equipment_id
+                    and schedule1.equipment_id == schedule2.equipment_id
+                    and self._time_overlap(
                         schedule1.scheduled_start_time,
                         schedule1.scheduled_end_time,
                         schedule2.scheduled_start_time,
-                        schedule2.scheduled_end_time
-                    )):
+                        schedule2.scheduled_end_time,
+                    )
+                ):
                     conflict = ProductionResourceConflict(
                         schedule_id=schedule1.id,
                         conflicting_schedule_id=schedule2.id,
-                        conflict_type='EQUIPMENT',
-                        resource_type='equipment',
+                        conflict_type="EQUIPMENT",
+                        resource_type="equipment",
                         resource_id=schedule1.equipment_id,
-                        conflict_description=f'设备 {schedule1.equipment_id} 时间冲突',
-                        severity='HIGH',
-                        conflict_start_time=max(schedule1.scheduled_start_time, schedule2.scheduled_start_time),
-                        conflict_end_time=min(schedule1.scheduled_end_time, schedule2.scheduled_end_time),
-                        status='UNRESOLVED',
+                        conflict_description=f"设备 {schedule1.equipment_id} 时间冲突",
+                        severity="HIGH",
+                        conflict_start_time=max(
+                            schedule1.scheduled_start_time, schedule2.scheduled_start_time
+                        ),
+                        conflict_end_time=min(
+                            schedule1.scheduled_end_time, schedule2.scheduled_end_time
+                        ),
+                        status="UNRESOLVED",
                         detected_at=detected_at,
-                        detected_by='AUTO'
+                        detected_by="AUTO",
                     )
                     conflicts.append(conflict)
 
                 # 工人冲突
-                if (schedule1.worker_id and
-                    schedule1.worker_id == schedule2.worker_id and
-                    self._time_overlap(
+                if (
+                    schedule1.worker_id
+                    and schedule1.worker_id == schedule2.worker_id
+                    and self._time_overlap(
                         schedule1.scheduled_start_time,
                         schedule1.scheduled_end_time,
                         schedule2.scheduled_start_time,
-                        schedule2.scheduled_end_time
-                    )):
+                        schedule2.scheduled_end_time,
+                    )
+                ):
                     conflict = ProductionResourceConflict(
                         schedule_id=schedule1.id,
                         conflicting_schedule_id=schedule2.id,
-                        conflict_type='WORKER',
-                        resource_type='worker',
+                        conflict_type="WORKER",
+                        resource_type="worker",
                         resource_id=schedule1.worker_id,
-                        conflict_description=f'工人 {schedule1.worker_id} 时间冲突',
-                        severity='MEDIUM',
-                        conflict_start_time=max(schedule1.scheduled_start_time, schedule2.scheduled_start_time),
-                        conflict_end_time=min(schedule1.scheduled_end_time, schedule2.scheduled_end_time),
-                        status='UNRESOLVED',
+                        conflict_description=f"工人 {schedule1.worker_id} 时间冲突",
+                        severity="MEDIUM",
+                        conflict_start_time=max(
+                            schedule1.scheduled_start_time, schedule2.scheduled_start_time
+                        ),
+                        conflict_end_time=min(
+                            schedule1.scheduled_end_time, schedule2.scheduled_end_time
+                        ),
+                        status="UNRESOLVED",
                         detected_at=detected_at,
-                        detected_by='AUTO'
+                        detected_by="AUTO",
                     )
                     conflicts.append(conflict)
 
@@ -582,28 +569,16 @@ class ProductionScheduleService:
 
     def _calculate_priority_score(self, order: WorkOrder) -> float:
         """计算优先级评分"""
-        priority_map = {
-            'LOW': 1.0,
-            'NORMAL': 2.0,
-            'HIGH': 3.0,
-            'URGENT': 5.0
-        }
+        priority_map = {"LOW": 1.0, "NORMAL": 2.0, "HIGH": 3.0, "URGENT": 5.0}
         return priority_map.get(order.priority, 2.0)
 
     def _get_priority_weight(self, priority: str) -> int:
         """获取优先级权重(用于排序)"""
-        priority_map = {
-            'URGENT': 1,
-            'HIGH': 2,
-            'NORMAL': 3,
-            'LOW': 4
-        }
+        priority_map = {"URGENT": 1, "HIGH": 2, "NORMAL": 3, "LOW": 4}
         return priority_map.get(priority, 3)
 
     def _calculate_schedule_score(
-        self,
-        schedule: ProductionSchedule,
-        work_orders: List[WorkOrder]
+        self, schedule: ProductionSchedule, work_orders: List[WorkOrder]
     ) -> float:
         """计算单个排程的评分"""
         # 简化评分:考虑优先级满足度和时间延迟
@@ -620,9 +595,7 @@ class ProductionScheduleService:
         return min(score, 100)
 
     def calculate_overall_metrics(
-        self,
-        schedules: List[ProductionSchedule],
-        work_orders: List[WorkOrder]
+        self, schedules: List[ProductionSchedule], work_orders: List[WorkOrder]
     ) -> ScheduleScoreMetrics:
         """计算排程方案的整体评估指标"""
         if not schedules:
@@ -634,7 +607,7 @@ class ProductionScheduleService:
                 average_waiting_time=0,
                 skill_match_rate=0,
                 priority_satisfaction=0,
-                conflict_count=0
+                conflict_count=0,
             )
 
         # 交期达成率
@@ -650,11 +623,17 @@ class ProductionScheduleService:
         equipment_ids = set(s.equipment_id for s in schedules if s.equipment_id)
         total_work_hours = sum(s.duration_hours for s in schedules)
         total_available_hours = len(equipment_ids) * self.WORK_HOURS_PER_DAY * 10  # 假设10天
-        equipment_utilization = min(total_work_hours / total_available_hours, 1.0) if total_available_hours > 0 else 0
+        equipment_utilization = (
+            min(total_work_hours / total_available_hours, 1.0) if total_available_hours > 0 else 0
+        )
 
         # 工人利用率
         worker_ids = set(s.worker_id for s in schedules if s.worker_id)
-        worker_utilization = min(total_work_hours / (len(worker_ids) * self.WORK_HOURS_PER_DAY * 10), 1.0) if worker_ids else 0
+        worker_utilization = (
+            min(total_work_hours / (len(worker_ids) * self.WORK_HOURS_PER_DAY * 10), 1.0)
+            if worker_ids
+            else 0
+        )
 
         # 总时长
         if schedules:
@@ -682,7 +661,7 @@ class ProductionScheduleService:
             average_waiting_time=0,
             skill_match_rate=skill_match_rate,
             priority_satisfaction=priority_satisfaction,
-            conflict_count=conflict_count
+            conflict_count=conflict_count,
         )
 
     # ==================== 辅助方法 ====================
@@ -693,17 +672,17 @@ class ProductionScheduleService:
 
     def _get_available_equipment(self) -> List[Equipment]:
         """获取可用设备"""
-        return self.db.query(Equipment).filter(
-            Equipment.is_active == True,
-            Equipment.status.in_(['IDLE', 'RUNNING'])
-        ).all()
+        return (
+            self.db.query(Equipment)
+            .filter(Equipment.is_active == True, Equipment.status.in_(["IDLE", "RUNNING"]))
+            .all()
+        )
 
     def _get_available_workers(self) -> List[Worker]:
         """获取可用工人"""
-        return self.db.query(Worker).filter(
-            Worker.is_active == True,
-            Worker.status == 'ACTIVE'
-        ).all()
+        return (
+            self.db.query(Worker).filter(Worker.is_active == True, Worker.status == "ACTIVE").all()
+        )
 
     def _generate_plan_id(self) -> int:
         """生成排程方案ID"""
@@ -718,8 +697,10 @@ class ProductionScheduleService:
         insert_time: datetime,
         max_delay_hours: float,
         auto_adjust: bool,
-        user_id: int
-    ) -> Tuple[Optional[ProductionSchedule], List[ProductionSchedule], List[ProductionResourceConflict]]:
+        user_id: int,
+    ) -> Tuple[
+        Optional[ProductionSchedule], List[ProductionSchedule], List[ProductionResourceConflict]
+    ]:
         """
         紧急插单
 
@@ -738,26 +719,40 @@ class ProductionScheduleService:
         workers = self._get_available_workers()
 
         # 选择资源
-        best_equipment = self._select_best_equipment(order, equipment, {}, ScheduleGenerateRequest(
-            work_orders=[work_order_id],
-            start_date=insert_time,
-            end_date=insert_time + timedelta(days=7),
-            consider_worker_skills=True,
-            consider_equipment_capacity=True
-        ))
-        best_worker = self._select_best_worker(order, workers, {}, ScheduleGenerateRequest(
-            work_orders=[work_order_id],
-            start_date=insert_time,
-            end_date=insert_time + timedelta(days=7),
-            consider_worker_skills=True,
-            consider_equipment_capacity=True
-        ))
+        best_equipment = self._select_best_equipment(
+            order,
+            equipment,
+            {},
+            ScheduleGenerateRequest(
+                work_orders=[work_order_id],
+                start_date=insert_time,
+                end_date=insert_time + timedelta(days=7),
+                consider_worker_skills=True,
+                consider_equipment_capacity=True,
+            ),
+        )
+        best_worker = self._select_best_worker(
+            order,
+            workers,
+            {},
+            ScheduleGenerateRequest(
+                work_orders=[work_order_id],
+                start_date=insert_time,
+                end_date=insert_time + timedelta(days=7),
+                consider_worker_skills=True,
+                consider_equipment_capacity=True,
+            ),
+        )
 
-        end_time = self._calculate_end_time(insert_time, duration_hours, ScheduleGenerateRequest(
-            work_orders=[work_order_id],
-            start_date=insert_time,
-            end_date=insert_time + timedelta(days=7)
-        ))
+        end_time = self._calculate_end_time(
+            insert_time,
+            duration_hours,
+            ScheduleGenerateRequest(
+                work_orders=[work_order_id],
+                start_date=insert_time,
+                end_date=insert_time + timedelta(days=7),
+            ),
+        )
 
         # 创建新排程
         new_schedule = ProductionSchedule(
@@ -770,10 +765,10 @@ class ProductionScheduleService:
             scheduled_end_time=end_time,
             duration_hours=duration_hours,
             priority_score=5.0,  # 紧急优先级最高
-            status='PENDING',
+            status="PENDING",
             is_urgent=True,
             algorithm_version=self.ALGORITHM_VERSION,
-            created_by=user_id
+            created_by=user_id,
         )
 
         adjusted_schedules = []
@@ -781,17 +776,21 @@ class ProductionScheduleService:
 
         if auto_adjust:
             # 查找冲突的排程
-            conflicting = self.db.query(ProductionSchedule).filter(
-                and_(
-                    or_(
-                        ProductionSchedule.equipment_id == new_schedule.equipment_id,
-                        ProductionSchedule.worker_id == new_schedule.worker_id
-                    ),
-                    ProductionSchedule.scheduled_start_time < end_time,
-                    ProductionSchedule.scheduled_end_time > insert_time,
-                    ProductionSchedule.status.in_(['PENDING', 'CONFIRMED'])
+            conflicting = (
+                self.db.query(ProductionSchedule)
+                .filter(
+                    and_(
+                        or_(
+                            ProductionSchedule.equipment_id == new_schedule.equipment_id,
+                            ProductionSchedule.worker_id == new_schedule.worker_id,
+                        ),
+                        ProductionSchedule.scheduled_start_time < end_time,
+                        ProductionSchedule.scheduled_end_time > insert_time,
+                        ProductionSchedule.status.in_(["PENDING", "CONFIRMED"]),
+                    )
                 )
-            ).all()
+                .all()
+            )
 
             # 延后冲突的排程
             for conf_schedule in conflicting:
@@ -804,8 +803,8 @@ class ProductionScheduleService:
                         ScheduleGenerateRequest(
                             work_orders=[],
                             start_date=end_time,
-                            end_date=end_time + timedelta(days=7)
-                        )
+                            end_date=end_time + timedelta(days=7),
+                        ),
                     )
                     adjusted_schedules.append(conf_schedule)
 
@@ -817,7 +816,7 @@ class ProductionScheduleService:
         insert_time: datetime,
         max_delay_hours: float,
         auto_adjust: bool,
-        user_id: int
+        user_id: int,
     ) -> Dict[str, Any]:
         """
         紧急插单并创建调整日志，返回完整的响应数据
@@ -837,7 +836,7 @@ class ProductionScheduleService:
             insert_time=insert_time,
             max_delay_hours=max_delay_hours,
             auto_adjust=auto_adjust,
-            user_id=user_id
+            user_id=user_id,
         )
 
         # 保存
@@ -851,11 +850,11 @@ class ProductionScheduleService:
         for adj_schedule in adjusted_schedules:
             log = ScheduleAdjustmentLog(
                 schedule_id=adj_schedule.id,
-                adjustment_type='TIME_CHANGE',
-                trigger_source='URGENT_ORDER',
+                adjustment_type="TIME_CHANGE",
+                trigger_source="URGENT_ORDER",
                 reason=f"紧急插单导致延后: 工单 {work_order_id}",
                 adjusted_by=user_id,
-                adjusted_at=datetime.now()
+                adjusted_at=datetime.now(),
             )
             self.db.add(log)
 
@@ -889,19 +888,25 @@ class ProductionScheduleService:
             ValueError: 排程方案不存在时
         """
         # 获取排程列表
-        schedules = self.db.query(ProductionSchedule).filter(
-            ProductionSchedule.schedule_plan_id == plan_id
-        ).all()
+        schedules = (
+            self.db.query(ProductionSchedule)
+            .filter(ProductionSchedule.schedule_plan_id == plan_id)
+            .all()
+        )
 
         if not schedules:
             raise ValueError("排程方案不存在")
 
         # 获取冲突
         schedule_ids = [s.id for s in schedules]
-        conflicts = self.db.query(ProductionResourceConflict).filter(
-            ProductionResourceConflict.schedule_id.in_(schedule_ids),
-            ProductionResourceConflict.status == 'UNRESOLVED'
-        ).all()
+        conflicts = (
+            self.db.query(ProductionResourceConflict)
+            .filter(
+                ProductionResourceConflict.schedule_id.in_(schedule_ids),
+                ProductionResourceConflict.status == "UNRESOLVED",
+            )
+            .all()
+        )
 
         # 统计信息
         work_order_ids = [s.work_order_id for s in schedules]
@@ -910,10 +915,10 @@ class ProductionScheduleService:
 
         statistics = {
             "total_schedules": len(schedules),
-            "pending": sum(1 for s in schedules if s.status == 'PENDING'),
-            "confirmed": sum(1 for s in schedules if s.status == 'CONFIRMED'),
-            "in_progress": sum(1 for s in schedules if s.status == 'IN_PROGRESS'),
-            "completed": sum(1 for s in schedules if s.status == 'COMPLETED'),
+            "pending": sum(1 for s in schedules if s.status == "PENDING"),
+            "confirmed": sum(1 for s in schedules if s.status == "CONFIRMED"),
+            "in_progress": sum(1 for s in schedules if s.status == "IN_PROGRESS"),
+            "completed": sum(1 for s in schedules if s.status == "COMPLETED"),
             "total_duration_hours": metrics.total_duration_hours,
             "completion_rate": metrics.completion_rate,
             "equipment_utilization": metrics.equipment_utilization,
@@ -963,31 +968,37 @@ class ProductionScheduleService:
             RuntimeError: 存在高优先级未解决冲突
         """
         # 获取排程
-        schedules = self.db.query(ProductionSchedule).filter(
-            ProductionSchedule.schedule_plan_id == plan_id,
-            ProductionSchedule.status == 'PENDING'
-        ).all()
+        schedules = (
+            self.db.query(ProductionSchedule)
+            .filter(
+                ProductionSchedule.schedule_plan_id == plan_id,
+                ProductionSchedule.status == "PENDING",
+            )
+            .all()
+        )
 
         if not schedules:
             raise ValueError("没有待确认的排程")
 
         # 检查是否有未解决的冲突
         schedule_ids = [s.id for s in schedules]
-        unresolved_conflicts = self.db.query(ProductionResourceConflict).filter(
-            ProductionResourceConflict.schedule_id.in_(schedule_ids),
-            ProductionResourceConflict.status == 'UNRESOLVED',
-            ProductionResourceConflict.severity.in_(['HIGH', 'CRITICAL'])
-        ).count()
+        unresolved_conflicts = (
+            self.db.query(ProductionResourceConflict)
+            .filter(
+                ProductionResourceConflict.schedule_id.in_(schedule_ids),
+                ProductionResourceConflict.status == "UNRESOLVED",
+                ProductionResourceConflict.severity.in_(["HIGH", "CRITICAL"]),
+            )
+            .count()
+        )
 
         if unresolved_conflicts > 0:
-            raise RuntimeError(
-                f"存在 {unresolved_conflicts} 个高优先级冲突，请先解决后再确认"
-            )
+            raise RuntimeError(f"存在 {unresolved_conflicts} 个高优先级冲突，请先解决后再确认")
 
         # 更新状态
         confirmed_at = datetime.now()
         for schedule in schedules:
-            schedule.status = 'CONFIRMED'
+            schedule.status = "CONFIRMED"
             schedule.confirmed_by = user_id
             schedule.confirmed_at = confirmed_at
 
@@ -1025,9 +1036,11 @@ class ProductionScheduleService:
 
         if plan_id:
             # 获取该方案的所有排程ID
-            schedule_ids = self.db.query(ProductionSchedule.id).filter(
-                ProductionSchedule.schedule_plan_id == plan_id
-            ).all()
+            schedule_ids = (
+                self.db.query(ProductionSchedule.id)
+                .filter(ProductionSchedule.schedule_plan_id == plan_id)
+                .all()
+            )
             schedule_ids = [sid[0] for sid in schedule_ids]
             query = query.filter(ProductionResourceConflict.schedule_id.in_(schedule_ids))
 
@@ -1063,11 +1076,7 @@ class ProductionScheduleService:
 
     # ==================== 排程调整 ====================
 
-    def adjust_schedule(
-        self,
-        request: ScheduleAdjustRequest,
-        user_id: int
-    ) -> Dict[str, Any]:
+    def adjust_schedule(self, request: ScheduleAdjustRequest, user_id: int) -> Dict[str, Any]:
         """
         手动调整排程，包含变更追踪和日志
 
@@ -1082,16 +1091,22 @@ class ProductionScheduleService:
             ValueError: 排程不存在
         """
         # 获取排程
-        schedule = self.db.query(ProductionSchedule).filter(
-            ProductionSchedule.id == request.schedule_id
-        ).first()
+        schedule = (
+            self.db.query(ProductionSchedule)
+            .filter(ProductionSchedule.id == request.schedule_id)
+            .first()
+        )
         if not schedule:
             raise ValueError("排程不存在")
 
         # 记录调整前的数据
         before_data = {
-            "scheduled_start_time": schedule.scheduled_start_time.isoformat() if schedule.scheduled_start_time else None,
-            "scheduled_end_time": schedule.scheduled_end_time.isoformat() if schedule.scheduled_end_time else None,
+            "scheduled_start_time": (
+                schedule.scheduled_start_time.isoformat() if schedule.scheduled_start_time else None
+            ),
+            "scheduled_end_time": (
+                schedule.scheduled_end_time.isoformat() if schedule.scheduled_end_time else None
+            ),
             "equipment_id": schedule.equipment_id,
             "worker_id": schedule.worker_id,
         }
@@ -1118,8 +1133,12 @@ class ProductionScheduleService:
 
         # 记录调整后的数据
         after_data = {
-            "scheduled_start_time": schedule.scheduled_start_time.isoformat() if schedule.scheduled_start_time else None,
-            "scheduled_end_time": schedule.scheduled_end_time.isoformat() if schedule.scheduled_end_time else None,
+            "scheduled_start_time": (
+                schedule.scheduled_start_time.isoformat() if schedule.scheduled_start_time else None
+            ),
+            "scheduled_end_time": (
+                schedule.scheduled_end_time.isoformat() if schedule.scheduled_end_time else None
+            ),
             "equipment_id": schedule.equipment_id,
             "worker_id": schedule.worker_id,
         }
@@ -1129,13 +1148,13 @@ class ProductionScheduleService:
             schedule_id=schedule.id,
             schedule_plan_id=schedule.schedule_plan_id,
             adjustment_type=request.adjustment_type,
-            trigger_source='MANUAL',
+            trigger_source="MANUAL",
             before_data=before_data,
             after_data=after_data,
             changes_summary=f"调整了: {', '.join(changes)}",
             reason=request.reason,
             adjusted_by=user_id,
-            adjusted_at=datetime.now()
+            adjusted_at=datetime.now(),
         )
 
         self.db.add(adjustment_log)
@@ -1180,9 +1199,11 @@ class ProductionScheduleService:
         results = []
 
         for plan_id in plan_ids:
-            schedules = self.db.query(ProductionSchedule).filter(
-                ProductionSchedule.schedule_plan_id == plan_id
-            ).all()
+            schedules = (
+                self.db.query(ProductionSchedule)
+                .filter(ProductionSchedule.schedule_plan_id == plan_id)
+                .all()
+            )
 
             if not schedules:
                 continue
@@ -1195,20 +1216,22 @@ class ProductionScheduleService:
             metrics = self.calculate_overall_metrics(schedules, work_orders)
             overall_score = metrics.calculate_overall_score()
 
-            results.append({
-                "plan_id": plan_id,
-                "plan_name": f"方案 {plan_id}",
-                "metrics": {
-                    "overall_score": overall_score,
-                    "completion_rate": metrics.completion_rate,
-                    "equipment_utilization": metrics.equipment_utilization,
-                    "worker_utilization": metrics.worker_utilization,
-                    "total_duration_hours": metrics.total_duration_hours,
-                    "conflict_count": metrics.conflict_count,
-                },
-                "rank": 0,
-                "recommendation": None,
-            })
+            results.append(
+                {
+                    "plan_id": plan_id,
+                    "plan_name": f"方案 {plan_id}",
+                    "metrics": {
+                        "overall_score": overall_score,
+                        "completion_rate": metrics.completion_rate,
+                        "equipment_utilization": metrics.equipment_utilization,
+                        "worker_utilization": metrics.worker_utilization,
+                        "total_duration_hours": metrics.total_duration_hours,
+                        "conflict_count": metrics.conflict_count,
+                    },
+                    "rank": 0,
+                    "recommendation": None,
+                }
+            )
 
         # 排序
         results.sort(key=lambda x: x["metrics"]["overall_score"], reverse=True)
@@ -1250,9 +1273,11 @@ class ProductionScheduleService:
         Raises:
             ValueError: 排程方案不存在
         """
-        schedules = self.db.query(ProductionSchedule).filter(
-            ProductionSchedule.schedule_plan_id == plan_id
-        ).all()
+        schedules = (
+            self.db.query(ProductionSchedule)
+            .filter(ProductionSchedule.schedule_plan_id == plan_id)
+            .all()
+        )
 
         if not schedules:
             raise ValueError("排程方案不存在")
@@ -1260,9 +1285,8 @@ class ProductionScheduleService:
         # 获取关联的工单
         work_order_ids = [s.work_order_id for s in schedules]
         work_orders_dict = {
-            wo.id: wo for wo in self.db.query(WorkOrder).filter(
-                WorkOrder.id.in_(work_order_ids)
-            ).all()
+            wo.id: wo
+            for wo in self.db.query(WorkOrder).filter(WorkOrder.id.in_(work_order_ids)).all()
         }
 
         # 构建甘特图任务
@@ -1286,7 +1310,7 @@ class ProductionScheduleService:
                 status=schedule.status,
                 priority=work_order.priority,
                 dependencies=[],
-                color=self.GANTT_COLOR_MAP.get(schedule.status, '#9E9E9E')
+                color=self.GANTT_COLOR_MAP.get(schedule.status, "#9E9E9E"),
             )
             tasks.append(task)
 
@@ -1326,9 +1350,11 @@ class ProductionScheduleService:
             包含 success, message, deleted_count 的字典
         """
         # 获取排程ID列表（在删除前获取，用于删除冲突）
-        schedule_ids = self.db.query(ProductionSchedule.id).filter(
-            ProductionSchedule.schedule_plan_id == plan_id
-        ).all()
+        schedule_ids = (
+            self.db.query(ProductionSchedule.id)
+            .filter(ProductionSchedule.schedule_plan_id == plan_id)
+            .all()
+        )
         schedule_id_list = [sid[0] for sid in schedule_ids]
 
         # 删除相关冲突记录
@@ -1343,9 +1369,11 @@ class ProductionScheduleService:
         ).delete()
 
         # 删除排程
-        deleted_count = self.db.query(ProductionSchedule).filter(
-            ProductionSchedule.schedule_plan_id == plan_id
-        ).delete()
+        deleted_count = (
+            self.db.query(ProductionSchedule)
+            .filter(ProductionSchedule.schedule_plan_id == plan_id)
+            .delete()
+        )
 
         self.db.commit()
 
@@ -1400,9 +1428,11 @@ class ProductionScheduleService:
         related_schedule_ids = list(set(a.schedule_id for a in adjustments))
         schedules = []
         if related_schedule_ids:
-            schedules = self.db.query(ProductionSchedule).filter(
-                ProductionSchedule.id.in_(related_schedule_ids)
-            ).all()
+            schedules = (
+                self.db.query(ProductionSchedule)
+                .filter(ProductionSchedule.id.in_(related_schedule_ids))
+                .all()
+            )
 
         return {
             "schedules": schedules,

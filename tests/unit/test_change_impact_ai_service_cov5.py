@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第五批：change_impact_ai_service.py 单元测试"""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 try:
     from app.services.change_impact_ai_service import ChangeImpactAIService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -96,6 +98,7 @@ class TestCalculateOverallRisk:
 class TestParseAiResponse:
     def test_parses_json_response(self):
         import json
+
         svc = make_service()
         data = {"delay_days": 5, "affected_tasks": ["T1", "T2"]}
         response = json.dumps(data)
@@ -118,7 +121,6 @@ class TestAnalyzeChangeImpact:
         db.query.return_value.filter.return_value.first.return_value = None
         svc = make_service(db)
         import asyncio
+
         with pytest.raises(ValueError, match="不存在"):
-            asyncio.get_event_loop().run_until_complete(
-                svc.analyze_change_impact(999, 1)
-            )
+            asyncio.get_event_loop().run_until_complete(svc.analyze_change_impact(999, 1))

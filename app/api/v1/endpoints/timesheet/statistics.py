@@ -325,12 +325,9 @@ def get_department_timesheet_summary(
             "department_name": department.dept_name,
             "total_hours": float(total_hours),
             "total_participants": len(participants),
-            "by_user": [
-                {**v, "total_hours": float(v["total_hours"])} for v in by_user.values()
-            ],
+            "by_user": [{**v, "total_hours": float(v["total_hours"])} for v in by_user.values()],
             "by_project": {
-                k: {**v, "total_hours": float(v["total_hours"])}
-                for k, v in by_project.items()
+                k: {**v, "total_hours": float(v["total_hours"])} for k, v in by_project.items()
             },
             "by_date": {k: float(v) for k, v in by_date.items()},
             "start_date": start_date.isoformat() if start_date else None,

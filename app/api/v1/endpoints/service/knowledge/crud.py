@@ -27,7 +27,9 @@ from ..number_utils import generate_article_no
 router = APIRouter()
 
 
-@router.get("", response_model=PaginatedResponse[KnowledgeBaseResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "", response_model=PaginatedResponse[KnowledgeBaseResponse], status_code=status.HTTP_200_OK
+)
 def read_knowledge_base(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -54,10 +56,11 @@ def read_knowledge_base(
 
     # 精选优先，然后按浏览量排序
     total = query.count()
-    items = apply_pagination(query.order_by(
-        desc(KnowledgeBase.is_featured),
-        desc(KnowledgeBase.view_count)
-    ), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(KnowledgeBase.is_featured), desc(KnowledgeBase.view_count)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 获取作者姓名
     for item in items:
@@ -206,6 +209,6 @@ def add_knowledge_entry(
             "title": article.title,
             "category": article.category,
             "entry_type": entry_type,
-            "created_at": article.created_at.isoformat() if article.created_at else None
-        }
+            "created_at": article.created_at.isoformat() if article.created_at else None,
+        },
     )

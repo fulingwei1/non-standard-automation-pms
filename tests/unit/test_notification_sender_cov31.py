@@ -46,6 +46,7 @@ def _make_user(user_id=1, email="test@example.com"):
 # send_reminder_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendReminderNotification:
     def test_returns_empty_when_user_not_found(self, sender, mock_db):
         reminder = _make_reminder()
@@ -118,8 +119,10 @@ class TestSendReminderNotification:
         chain.filter.return_value = chain
         chain.first.return_value = user
 
-        with patch.object(sender, "_send_system_notification", return_value=True), \
-             patch.object(sender, "_send_email_notification", return_value=True):
+        with (
+            patch.object(sender, "_send_system_notification", return_value=True),
+            patch.object(sender, "_send_email_notification", return_value=True),
+        ):
             result = sender.send_reminder_notification(reminder)
 
         assert result.get("SYSTEM") is True
@@ -129,6 +132,7 @@ class TestSendReminderNotification:
 # ---------------------------------------------------------------------------
 # _send_system_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendSystemNotification:
     def test_adds_notification_and_commits(self, sender, mock_db):
@@ -163,14 +167,13 @@ class TestSendSystemNotification:
 # _send_email_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendEmailNotification:
     def test_returns_false_when_smtp_not_configured(self, sender, mock_db):
         reminder = _make_reminder()
         user = _make_user()
 
-        with patch(
-            "app.services.timesheet_reminder.notification_sender.settings"
-        ) as mock_settings:
+        with patch("app.services.timesheet_reminder.notification_sender.settings") as mock_settings:
             mock_settings.SMTP_HOST = ""
 
             result = sender._send_email_notification(reminder, user)
@@ -181,9 +184,7 @@ class TestSendEmailNotification:
         reminder = _make_reminder()
         user = _make_user(email="")
 
-        with patch(
-            "app.services.timesheet_reminder.notification_sender.settings"
-        ) as mock_settings:
+        with patch("app.services.timesheet_reminder.notification_sender.settings") as mock_settings:
             mock_settings.SMTP_HOST = "smtp.example.com"
 
             result = sender._send_email_notification(reminder, user)

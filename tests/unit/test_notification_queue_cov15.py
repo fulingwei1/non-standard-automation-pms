@@ -6,10 +6,11 @@ pytest.importorskip("app.services.notification_queue")
 
 import json
 from unittest.mock import MagicMock, patch
+
 from app.services.notification_queue import (
-    enqueue_notification,
-    dequeue_notification,
     QUEUE_KEY,
+    dequeue_notification,
+    enqueue_notification,
 )
 
 

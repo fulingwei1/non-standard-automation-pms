@@ -21,9 +21,7 @@ class TestOptimizeEstimatedReadyDate:
         readiness.id = 1
         readiness.estimated_ready_date = date.today() + timedelta(days=10)
 
-        result = AssemblyKitOptimizer.optimize_estimated_ready_date(
-        db_session, readiness
-        )
+        result = AssemblyKitOptimizer.optimize_estimated_ready_date(db_session, readiness)
 
         assert result == readiness.estimated_ready_date
 
@@ -38,9 +36,7 @@ class TestOptimizeByPurchaseOrder:
         shortage = MagicMock()
         shortage.material_id = None
 
-        result = AssemblyKitOptimizer._optimize_by_purchase_order(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._optimize_by_purchase_order(db_session, shortage)
 
         assert result is None
 
@@ -51,9 +47,7 @@ class TestOptimizeByPurchaseOrder:
         shortage = MagicMock()
         shortage.material_id = 99999
 
-        result = AssemblyKitOptimizer._optimize_by_purchase_order(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._optimize_by_purchase_order(db_session, shortage)
 
         assert result is None
 
@@ -68,9 +62,7 @@ class TestOptimizeBySubstitute:
         shortage = MagicMock()
         shortage.material_id = None
 
-        result = AssemblyKitOptimizer._optimize_by_substitute(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._optimize_by_substitute(db_session, shortage)
 
         assert result is None
 
@@ -82,9 +74,7 @@ class TestOptimizeBySubstitute:
         shortage.material_id = 1
         shortage.bom_item_id = 99999
 
-        result = AssemblyKitOptimizer._optimize_by_substitute(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._optimize_by_substitute(db_session, shortage)
 
         assert result is None
 
@@ -99,9 +89,7 @@ class TestGenerateOptimizationSuggestions:
         readiness = MagicMock()
         readiness.id = 99999
 
-        suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(
-        db_session, readiness
-        )
+        suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db_session, readiness)
 
         assert isinstance(suggestions, list)
 
@@ -116,9 +104,7 @@ class TestSuggestExpeditePurchase:
         shortage = MagicMock()
         shortage.material_id = None
 
-        result = AssemblyKitOptimizer._suggest_expedite_purchase(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._suggest_expedite_purchase(db_session, shortage)
 
         assert result is None
 
@@ -133,9 +119,7 @@ class TestSuggestSubstitute:
         shortage = MagicMock()
         shortage.bom_item_id = 99999
 
-        result = AssemblyKitOptimizer._suggest_substitute(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._suggest_substitute(db_session, shortage)
 
         assert result is None
 
@@ -151,9 +135,7 @@ class TestSuggestPriorityAdjustment:
         shortage.material_id = None
         shortage.purchase_order_id = None
 
-        result = AssemblyKitOptimizer._suggest_priority_adjustment(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._suggest_priority_adjustment(db_session, shortage)
 
         assert result is None
 
@@ -165,9 +147,7 @@ class TestSuggestPriorityAdjustment:
         shortage.material_id = 1
         shortage.purchase_order_id = 99999
 
-        result = AssemblyKitOptimizer._suggest_priority_adjustment(
-        db_session, shortage
-        )
+        result = AssemblyKitOptimizer._suggest_priority_adjustment(db_session, shortage)
 
         assert result is None
 
@@ -178,52 +158,52 @@ class TestSuggestionStructure:
     def test_expedite_purchase_structure(self):
         """测试加急采购建议结构"""
         suggestion = {
-        'type': 'EXPEDITE_PURCHASE',
-        'material_code': 'MAT001',
-        'material_name': '测试物料',
-        'purchase_order_no': 'PO001',
-        'current_promised_date': '2025-02-15',
-        'required_date': '2025-02-01',
-        'delay_days': 14,
-        'suggestion': '建议将采购订单提前',
-        'priority': 'HIGH'
+            "type": "EXPEDITE_PURCHASE",
+            "material_code": "MAT001",
+            "material_name": "测试物料",
+            "purchase_order_no": "PO001",
+            "current_promised_date": "2025-02-15",
+            "required_date": "2025-02-01",
+            "delay_days": 14,
+            "suggestion": "建议将采购订单提前",
+            "priority": "HIGH",
         }
 
-        assert suggestion['type'] == 'EXPEDITE_PURCHASE'
-        assert suggestion['delay_days'] == 14
-        assert suggestion['priority'] == 'HIGH'
+        assert suggestion["type"] == "EXPEDITE_PURCHASE"
+        assert suggestion["delay_days"] == 14
+        assert suggestion["priority"] == "HIGH"
 
     def test_substitute_structure(self):
         """测试替代物料建议结构"""
         suggestion = {
-        'type': 'USE_SUBSTITUTE',
-        'material_code': 'MAT001',
-        'material_name': '测试物料',
-        'shortage_qty': 10.0,
-        'substitutes': [
-        {'material_code': 'MAT002', 'material_name': '替代物料', 'available_qty': 15.0}
-        ],
-        'suggestion': '建议使用替代物料',
-        'priority': 'HIGH'
+            "type": "USE_SUBSTITUTE",
+            "material_code": "MAT001",
+            "material_name": "测试物料",
+            "shortage_qty": 10.0,
+            "substitutes": [
+                {"material_code": "MAT002", "material_name": "替代物料", "available_qty": 15.0}
+            ],
+            "suggestion": "建议使用替代物料",
+            "priority": "HIGH",
         }
 
-        assert suggestion['type'] == 'USE_SUBSTITUTE'
-        assert len(suggestion['substitutes']) == 1
+        assert suggestion["type"] == "USE_SUBSTITUTE"
+        assert len(suggestion["substitutes"]) == 1
 
     def test_priority_adjustment_structure(self):
         """测试优先级调整建议结构"""
         suggestion = {
-        'type': 'ADJUST_PRIORITY',
-        'material_code': 'MAT001',
-        'material_name': '测试物料',
-        'purchase_order_no': 'PO001',
-        'days_until_required': 5,
-        'suggestion': '建议提高采购优先级',
-        'priority': 'MEDIUM'
+            "type": "ADJUST_PRIORITY",
+            "material_code": "MAT001",
+            "material_name": "测试物料",
+            "purchase_order_no": "PO001",
+            "days_until_required": 5,
+            "suggestion": "建议提高采购优先级",
+            "priority": "MEDIUM",
         }
 
-        assert suggestion['type'] == 'ADJUST_PRIORITY'
-        assert suggestion['days_until_required'] == 5
+        assert suggestion["type"] == "ADJUST_PRIORITY"
+        assert suggestion["days_until_required"] == 5
 
 
 class TestPriorityCalculation:
@@ -232,20 +212,20 @@ class TestPriorityCalculation:
     def test_high_priority_for_long_delay(self):
         """测试长延迟为高优先级"""
         delay_days = 10
-        priority = 'HIGH' if delay_days > 7 else 'MEDIUM'
-        assert priority == 'HIGH'
+        priority = "HIGH" if delay_days > 7 else "MEDIUM"
+        assert priority == "HIGH"
 
     def test_medium_priority_for_short_delay(self):
         """测试短延迟为中优先级"""
         delay_days = 5
-        priority = 'HIGH' if delay_days > 7 else 'MEDIUM'
-        assert priority == 'MEDIUM'
+        priority = "HIGH" if delay_days > 7 else "MEDIUM"
+        assert priority == "MEDIUM"
 
     def test_urgent_days_threshold(self):
         """测试紧急天数阈值"""
         days_until_required = 2
-        priority = 'HIGH' if days_until_required < 3 else 'MEDIUM'
-        assert priority == 'HIGH'
+        priority = "HIGH" if days_until_required < 3 else "MEDIUM"
+        assert priority == "HIGH"
 
 
 class TestDateCalculations:
@@ -268,14 +248,16 @@ class TestDateCalculations:
 
             assert optimized is None
 
-
             # pytest fixtures
+
+
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

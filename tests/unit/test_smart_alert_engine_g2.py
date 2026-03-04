@@ -11,9 +11,9 @@ SmartAlertEngine 单元测试 - G2组覆盖率提升
 - SmartAlertEngine._calculate_risk_score
 """
 
-from decimal import Decimal
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -23,6 +23,7 @@ class TestSmartAlertEngineInit:
 
     def test_init_stores_db(self):
         from app.services.shortage.smart_alert_engine import SmartAlertEngine
+
         db = MagicMock()
         engine = SmartAlertEngine(db)
         assert engine.db is db
@@ -33,6 +34,7 @@ class TestCalculateAlertLevel:
 
     def setup_method(self):
         from app.services.shortage.smart_alert_engine import SmartAlertEngine
+
         self.engine = SmartAlertEngine(MagicMock())
 
     def test_level_urgent_when_days_zero(self):
@@ -139,6 +141,7 @@ class TestPredictImpact:
 
     def setup_method(self):
         from app.services.shortage.smart_alert_engine import SmartAlertEngine
+
         self.db = MagicMock()
         self.engine = SmartAlertEngine(self.db)
 
@@ -226,6 +229,7 @@ class TestScanAndAlert:
 
     def setup_method(self):
         from app.services.shortage.smart_alert_engine import SmartAlertEngine
+
         self.db = MagicMock()
         self.engine = SmartAlertEngine(self.db)
 
@@ -237,16 +241,20 @@ class TestScanAndAlert:
 
     def test_no_shortage_skipped(self):
         """供应充足（无缺口）时不生成预警"""
-        self.engine._collect_material_demands = MagicMock(return_value=[{
-            "material_id": 1,
-            "material_code": "MAT001",
-            "material_name": "测试物料",
-            "required_qty": Decimal("100"),
-            "days_to_required": 10,
-            "required_date": date.today() + timedelta(days=10),
-            "project_id": 1,
-            "is_critical_path": False,
-        }])
+        self.engine._collect_material_demands = MagicMock(
+            return_value=[
+                {
+                    "material_id": 1,
+                    "material_code": "MAT001",
+                    "material_name": "测试物料",
+                    "required_qty": Decimal("100"),
+                    "days_to_required": 10,
+                    "required_date": date.today() + timedelta(days=10),
+                    "project_id": 1,
+                    "is_critical_path": False,
+                }
+            ]
+        )
         self.engine._get_available_qty = MagicMock(return_value=Decimal("200"))
         self.engine._get_in_transit_qty = MagicMock(return_value=Decimal("0"))
         result = self.engine.scan_and_alert()
@@ -273,12 +281,14 @@ class TestScanAndAlert:
         mock_alert.alert_no = "ALT-001"
         self.engine._create_alert = MagicMock(return_value=mock_alert)
         self.engine.calculate_alert_level = MagicMock(return_value="WARNING")
-        self.engine.predict_impact = MagicMock(return_value={
-            "estimated_delay_days": 2,
-            "estimated_cost_impact": Decimal("500"),
-            "affected_projects": [],
-            "risk_score": 40,
-        })
+        self.engine.predict_impact = MagicMock(
+            return_value={
+                "estimated_delay_days": 2,
+                "estimated_cost_impact": Decimal("500"),
+                "affected_projects": [],
+                "risk_score": 40,
+            }
+        )
         self.engine.generate_solutions = MagicMock(return_value=[])
 
         result = self.engine.scan_and_alert()
@@ -306,12 +316,14 @@ class TestScanAndAlert:
         mock_alert.alert_no = "ALT-002"
         self.engine._create_alert = MagicMock(return_value=mock_alert)
         self.engine.calculate_alert_level = MagicMock(return_value="URGENT")
-        self.engine.predict_impact = MagicMock(return_value={
-            "estimated_delay_days": 5,
-            "estimated_cost_impact": Decimal("5000"),
-            "affected_projects": [],
-            "risk_score": 90,
-        })
+        self.engine.predict_impact = MagicMock(
+            return_value={
+                "estimated_delay_days": 5,
+                "estimated_cost_impact": Decimal("5000"),
+                "affected_projects": [],
+                "risk_score": 90,
+            }
+        )
         generate_solutions = MagicMock(return_value=[MagicMock()])
         self.engine.generate_solutions = generate_solutions
 

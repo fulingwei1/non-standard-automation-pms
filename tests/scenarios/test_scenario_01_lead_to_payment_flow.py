@@ -3,15 +3,18 @@
 
 测试完整的销售业务闭环，验证各阶段状态流转和数据传递
 """
-import pytest
+
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
-from app.models.sales.leads import Lead
-from app.models.sales.quotes import Quote
+
+from app.models.project import Customer
 from app.models.sales.contracts import Contract
 from app.models.sales.invoices import Invoice
-from app.models.project import Customer
+from app.models.sales.leads import Lead
+from app.models.sales.quotes import Quote
 
 
 class TestLeadToPaymentFlow:
@@ -48,7 +51,7 @@ class TestLeadToPaymentFlow:
         )
         db_session.add(lead)
         db_session.commit()
-        
+
         assert lead.id is not None
         assert lead.status == "NEW"
         assert lead.probability == 30
@@ -297,7 +300,9 @@ class TestLeadToPaymentFlow:
         expected_total = Decimal("1000000.00") * Decimal("1.13")
         assert total_paid == expected_total
 
-    def test_10_verify_sales_funnel_conversion_rate(self, db_session: Session, sales_customer: Customer):
+    def test_10_verify_sales_funnel_conversion_rate(
+        self, db_session: Session, sales_customer: Customer
+    ):
         """测试10：验证销售漏斗转化率"""
         # 创建5个线索
         leads = []
@@ -311,7 +316,7 @@ class TestLeadToPaymentFlow:
             )
             db_session.add(lead)
             leads.append(lead)
-        
+
         db_session.commit()
 
         # 2个转化为商机（40%转化率）
@@ -347,7 +352,9 @@ class TestLeadToPaymentFlow:
         assert quote.status == "APPROVED"
         assert contract.status == "SIGNED"
 
-    def test_11_handle_quote_rejection_and_revision(self, db_session: Session, sales_customer: Customer):
+    def test_11_handle_quote_rejection_and_revision(
+        self, db_session: Session, sales_customer: Customer
+    ):
         """测试11：处理报价被拒和修订"""
         # 创建初始报价
         quote_v1 = Quote(

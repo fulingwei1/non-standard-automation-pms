@@ -77,9 +77,7 @@ class TestPurchaseOrdersCRUDAPI:
             "remark": "测试采购订单",
         }
 
-        response = self.helper.post(
-            "/purchase-orders/", order_data, resource_type="purchase_order"
-        )
+        response = self.helper.post("/purchase-orders/", order_data, resource_type="purchase_order")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

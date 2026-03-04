@@ -4,8 +4,9 @@
 生成用户导入模板文件
 """
 
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 # 项目根目录
 ROOT_DIR = Path(__file__).parent.parent

@@ -46,8 +46,10 @@ def test_sql_query():
     except Exception as e:
         print(f"❌ SQL查询失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_serialization():
     """测试序列化"""
@@ -79,16 +81,16 @@ def test_serialization():
             permissions = []
             for row in rows:
                 perm_dict = {
-                    'id': row[0],
-                    'permission_code': row[1] if row[1] else '',
-                    'permission_name': row[2] if row[2] else '',
-                    'module': row[3],
-                    'resource': row[4],
-                    'action': row[5],
-                    'description': row[6],
-                    'is_active': bool(row[7]) if row[7] is not None else True,
-                    'created_at': row[8],
-                    'updated_at': row[9],
+                    "id": row[0],
+                    "permission_code": row[1] if row[1] else "",
+                    "permission_name": row[2] if row[2] else "",
+                    "module": row[3],
+                    "resource": row[4],
+                    "action": row[5],
+                    "description": row[6],
+                    "is_active": bool(row[7]) if row[7] is not None else True,
+                    "created_at": row[8],
+                    "updated_at": row[9],
                 }
                 perm_response = PermissionResponse(**perm_dict)
                 permissions.append(perm_response)
@@ -98,8 +100,10 @@ def test_serialization():
     except Exception as e:
         print(f"❌ 序列化失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_user_model():
     """测试User模型"""
@@ -110,6 +114,7 @@ def test_user_model():
         with get_db_session() as db:
             # 尝试查询一个用户（不加载关系）
             from sqlalchemy import text as sql_text
+
             result = db.execute(sql_text("SELECT id, username FROM users LIMIT 1"))
             user_row = result.fetchone()
             if user_row:
@@ -121,8 +126,10 @@ def test_user_model():
     except Exception as e:
         print(f"❌ User查询失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_permission_model():
     """测试Permission模型（可能失败因为其他模型关系错误）"""
@@ -131,6 +138,7 @@ def test_permission_model():
     print("=" * 60)
     try:
         from app.models.user import Permission
+
         with get_db_session() as db:
             # 尝试使用ORM查询
             perms = db.query(Permission).limit(1).all()
@@ -140,6 +148,7 @@ def test_permission_model():
         print(f"⚠️  ORM查询失败（预期）: {e}")
         print("   这是因为其他模型的关系定义错误，但不影响SQL查询")
         return False
+
 
 def main():
     """主函数"""
@@ -176,6 +185,7 @@ def main():
         print("   - 检查后端服务是否正常启动")
     else:
         print("❌ 基础功能测试失败，需要修复")
+
 
 if __name__ == "__main__":
     main()

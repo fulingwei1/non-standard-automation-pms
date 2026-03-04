@@ -7,7 +7,7 @@ PaymentAdjustmentService 单元测试 - N5组
 import json
 import unittest
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.services.payment_adjustment_service import PaymentAdjustmentService
 
@@ -57,7 +57,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
             status="DELAYED",
             actual_date=date(2025, 9, 1),
             project=MagicMock(project_code="P-001", pm_id=None, contract_id=None, is_active=True),
-            milestone_name="测试里程碑"
+            milestone_name="测试里程碑",
         )
 
         plan = MagicMock(
@@ -71,6 +71,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
         )
 
         call_count = [0]
+
         def query_side_effect(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -87,7 +88,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
 
         self.db.query.side_effect = query_side_effect
 
-        with patch.object(self.svc, '_send_adjustment_notifications'):
+        with patch.object(self.svc, "_send_adjustment_notifications"):
             result = self.svc.adjust_payment_plan_by_milestone(1)
 
         self.assertTrue(result["success"])
@@ -110,6 +111,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
         )
 
         call_count = [0]
+
         def query_side_effect(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -147,6 +149,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
         )
 
         call_count = [0]
+
         def query_side_effect(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -163,7 +166,7 @@ class TestAdjustPaymentPlanByMilestone(unittest.TestCase):
 
         self.db.query.side_effect = query_side_effect
 
-        with patch.object(self.svc, '_send_adjustment_notifications'):
+        with patch.object(self.svc, "_send_adjustment_notifications"):
             result = self.svc.adjust_payment_plan_by_milestone(1)
 
         self.assertTrue(result["success"])
@@ -221,14 +224,16 @@ class TestManualAdjustPaymentPlan(unittest.TestCase):
             remark=None,
             milestone=MagicMock(
                 milestone_name="交付",
-                project=MagicMock(project_code="P-999", is_active=True, pm_id=None, contract_id=None)
+                project=MagicMock(
+                    project_code="P-999", is_active=True, pm_id=None, contract_id=None
+                ),
             ),
         )
 
         q = _make_mock_query(self.db)
         q.first.return_value = plan
 
-        with patch.object(self.svc, '_send_adjustment_notifications') as mock_notify:
+        with patch.object(self.svc, "_send_adjustment_notifications") as mock_notify:
             result = self.svc.manual_adjust_payment_plan(
                 plan_id=1, new_date=date(2025, 8, 1), reason="调整", adjusted_by=2
             )
@@ -264,8 +269,14 @@ class TestGetAdjustmentHistory(unittest.TestCase):
     def test_plan_with_json_history(self):
         """有 JSON 格式历史记录时正确返回"""
         history = [
-            {"field": "planned_date", "old_value": "2025-05-01", "new_value": "2025-08-01",
-             "reason": "延期", "adjusted_by": 1, "adjusted_at": "2025-04-10T10:00:00"}
+            {
+                "field": "planned_date",
+                "old_value": "2025-05-01",
+                "new_value": "2025-08-01",
+                "reason": "延期",
+                "adjusted_by": 1,
+                "adjusted_at": "2025-04-10T10:00:00",
+            }
         ]
         plan = MagicMock(id=1, remark=json.dumps(history))
         q = _make_mock_query(self.db)
@@ -298,7 +309,9 @@ class TestRecordAdjustmentHistory(unittest.TestCase):
         q = _make_mock_query(self.db)
         q.first.return_value = plan
 
-        self.svc._record_adjustment_history(1, "planned_date", "2025-05-01", "2025-08-01", "延期", 1)
+        self.svc._record_adjustment_history(
+            1, "planned_date", "2025-05-01", "2025-08-01", "延期", 1
+        )
 
         history = json.loads(plan.remark)
         self.assertEqual(len(history), 1)
@@ -306,14 +319,23 @@ class TestRecordAdjustmentHistory(unittest.TestCase):
 
     def test_record_appends_to_existing_history(self):
         """已有历史时追加新记录"""
-        existing_history = [{"field": "planned_date", "old_value": "2025-03-01",
-                             "new_value": "2025-05-01", "reason": "首次调整",
-                             "adjusted_by": 1, "adjusted_at": "2025-02-01T10:00:00"}]
+        existing_history = [
+            {
+                "field": "planned_date",
+                "old_value": "2025-03-01",
+                "new_value": "2025-05-01",
+                "reason": "首次调整",
+                "adjusted_by": 1,
+                "adjusted_at": "2025-02-01T10:00:00",
+            }
+        ]
         plan = MagicMock(id=1, remark=json.dumps(existing_history))
         q = _make_mock_query(self.db)
         q.first.return_value = plan
 
-        self.svc._record_adjustment_history(1, "planned_date", "2025-05-01", "2025-08-01", "二次调整", 2)
+        self.svc._record_adjustment_history(
+            1, "planned_date", "2025-05-01", "2025-08-01", "二次调整", 2
+        )
 
         history = json.loads(plan.remark)
         self.assertEqual(len(history), 2)
@@ -355,7 +377,7 @@ class TestCheckAndAdjustAll(unittest.TestCase):
         q.join.return_value = q
         q.all.return_value = [milestone1, milestone2]
 
-        with patch.object(self.svc, 'adjust_payment_plan_by_milestone') as mock_adjust:
+        with patch.object(self.svc, "adjust_payment_plan_by_milestone") as mock_adjust:
             mock_adjust.return_value = {"success": True, "adjusted_plans": [], "adjusted_count": 0}
             result = self.svc.check_and_adjust_all()
 

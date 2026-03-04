@@ -7,7 +7,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
-from app.models.strategy import AnnualKeyWork, CSF
+from app.models.strategy import CSF, AnnualKeyWork
 from app.schemas.strategy import (
     AnnualKeyWorkCreate,
     AnnualKeyWorkUpdate,
@@ -57,10 +57,9 @@ def get_annual_work(db: Session, work_id: int) -> Optional[AnnualKeyWork]:
     Returns:
         Optional[AnnualKeyWork]: 年度重点工作
     """
-    return db.query(AnnualKeyWork).filter(
-        AnnualKeyWork.id == work_id,
-        AnnualKeyWork.is_active
-    ).first()
+    return (
+        db.query(AnnualKeyWork).filter(AnnualKeyWork.id == work_id, AnnualKeyWork.is_active).first()
+    )
 
 
 def list_annual_works(
@@ -70,7 +69,7 @@ def list_annual_works(
     year: Optional[int] = None,
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> tuple[List[AnnualKeyWork], int]:
     """
     获取年度重点工作列表
@@ -93,10 +92,7 @@ def list_annual_works(
         query = query.filter(AnnualKeyWork.csf_id == csf_id)
 
     if strategy_id:
-        query = query.join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.is_active
-        )
+        query = query.join(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active)
 
     if year:
         query = query.filter(AnnualKeyWork.year == year)
@@ -105,18 +101,15 @@ def list_annual_works(
         query = query.filter(AnnualKeyWork.status == status)
 
     total = query.count()
-    items = apply_pagination(query.order_by(
-        AnnualKeyWork.priority,
-        AnnualKeyWork.code
-    ), skip, limit).all()
+    items = apply_pagination(
+        query.order_by(AnnualKeyWork.priority, AnnualKeyWork.code), skip, limit
+    ).all()
 
     return items, total
 
 
 def update_annual_work(
-    db: Session,
-    work_id: int,
-    data: AnnualKeyWorkUpdate
+    db: Session, work_id: int, data: AnnualKeyWorkUpdate
 ) -> Optional[AnnualKeyWork]:
     """
     更新年度重点工作

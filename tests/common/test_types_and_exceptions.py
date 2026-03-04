@@ -4,11 +4,15 @@
 import pytest
 from fastapi import HTTPException
 
-from app.common.crud.types import QueryParams, PaginatedResult, SortOrder
 from app.common.crud.exceptions import (
-    CRUDException, NotFoundError, AlreadyExistsError, ValidationError,
-    raise_not_found, raise_already_exists,
+    AlreadyExistsError,
+    CRUDException,
+    NotFoundError,
+    ValidationError,
+    raise_already_exists,
+    raise_not_found,
 )
+from app.common.crud.types import PaginatedResult, QueryParams, SortOrder
 
 
 # ---------------------------------------------------------------------------
@@ -126,12 +130,15 @@ class TestExceptions:
 class TestQueryFilters:
     def test_build_keyword_conditions_empty(self):
         from app.common.query_filters import build_keyword_conditions
+
         assert build_keyword_conditions(object, None, "name") == []
         assert build_keyword_conditions(object, "", "name") == []
 
     def test_apply_pagination(self):
-        from app.common.query_filters import apply_pagination
         from unittest.mock import MagicMock
+
+        from app.common.query_filters import apply_pagination
+
         q = MagicMock()
         q.offset.return_value = q
         q.limit.return_value = q
@@ -140,8 +147,10 @@ class TestQueryFilters:
         q.limit.assert_called_with(20)
 
     def test_apply_pagination_zero_offset(self):
-        from app.common.query_filters import apply_pagination
         from unittest.mock import MagicMock
+
+        from app.common.query_filters import apply_pagination
+
         q = MagicMock()
         q.limit.return_value = q
         apply_pagination(q, 0, 10)
@@ -149,6 +158,7 @@ class TestQueryFilters:
 
     def test_normalize_keywords(self):
         from app.common.query_filters import _normalize_keywords
+
         assert _normalize_keywords(None) == []
         assert _normalize_keywords("") == []
         assert _normalize_keywords("test") == ["test"]

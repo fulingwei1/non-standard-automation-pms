@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - kit_rate_service"""
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.kit_rate.kit_rate_service")
 
@@ -15,8 +16,7 @@ def make_db():
 
 
 def make_bom_item(
-    material_id=1, required_qty=10, stock_qty=8, in_transit_qty=0,
-    is_critical=False, unit_price=100
+    material_id=1, required_qty=10, stock_qty=8, in_transit_qty=0, is_critical=False, unit_price=100
 ):
     item = MagicMock()
     item.material_id = material_id
@@ -58,7 +58,9 @@ class TestCalculateKitRate:
         svc = KitRateService(db)
         items = [
             make_bom_item(material_id=1, required_qty=10, stock_qty=10),
-            make_bom_item(material_id=2, required_qty=10, stock_qty=0),  # no stock at all = shortage
+            make_bom_item(
+                material_id=2, required_qty=10, stock_qty=0
+            ),  # no stock at all = shortage
         ]
         with patch.object(svc, "_get_in_transit_qty", return_value=Decimal("0")):
             result = svc.calculate_kit_rate(items, calculate_by="quantity")
@@ -71,7 +73,10 @@ class TestGetMachineKitRate:
         db = make_db()
         svc = KitRateService(db)
         from fastapi import HTTPException
-        with patch.object(svc, "_get_machine", side_effect=HTTPException(status_code=404, detail="机台不存在")):
+
+        with patch.object(
+            svc, "_get_machine", side_effect=HTTPException(status_code=404, detail="机台不存在")
+        ):
             with pytest.raises(HTTPException):
                 svc.get_machine_kit_rate(999, "quantity")
 
@@ -79,8 +84,11 @@ class TestGetMachineKitRate:
         db = make_db()
         svc = KitRateService(db)
         from fastapi import HTTPException
-        with patch.object(svc, "_get_machine", return_value=MagicMock(id=1, machine_code="M001")), \
-             patch.object(svc, "_get_latest_bom", return_value=None):
+
+        with (
+            patch.object(svc, "_get_machine", return_value=MagicMock(id=1, machine_code="M001")),
+            patch.object(svc, "_get_latest_bom", return_value=None),
+        ):
             with pytest.raises(HTTPException):
                 svc.get_machine_kit_rate(1, "quantity")
 
@@ -96,9 +104,15 @@ class TestGetMachineKitRate:
         items = [make_bom_item(required_qty=5, stock_qty=5)]
         bom.items.all.return_value = items
 
-        with patch.object(svc, "_get_machine", return_value=machine), \
-             patch.object(svc, "_get_latest_bom", return_value=bom), \
-             patch.object(svc, "calculate_kit_rate", return_value={"kit_rate": 100.0, "kit_status": "complete"}):
+        with (
+            patch.object(svc, "_get_machine", return_value=machine),
+            patch.object(svc, "_get_latest_bom", return_value=bom),
+            patch.object(
+                svc,
+                "calculate_kit_rate",
+                return_value={"kit_rate": 100.0, "kit_status": "complete"},
+            ),
+        ):
             result = svc.get_machine_kit_rate(1, "quantity")
         assert result["kit_rate"] == 100.0
 
@@ -108,6 +122,7 @@ class TestGetProjectKitRate:
         db = make_db()
         svc = KitRateService(db)
         from fastapi import HTTPException
+
         with patch.object(svc, "_get_project", side_effect=HTTPException(status_code=404)):
             with pytest.raises(HTTPException):
                 svc.get_project_kit_rate(999, "quantity")

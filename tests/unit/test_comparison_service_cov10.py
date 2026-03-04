@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第十批：strategy comparison_service 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.strategy.comparison_service import (
@@ -9,6 +10,7 @@ try:
         get_strategy_comparison,
         list_strategy_comparisons,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -34,6 +36,7 @@ def _make_comparison(**kwargs):
 def test_create_strategy_comparison(db):
     """创建战略对比记录"""
     from app.schemas.strategy import StrategyComparisonCreate
+
     mock_data = MagicMock(spec=StrategyComparisonCreate)
     mock_data.base_strategy_id = 1
     mock_data.compare_strategy_id = 2
@@ -47,8 +50,9 @@ def test_create_strategy_comparison(db):
     db.commit.return_value = None
     db.refresh.return_value = mock_comparison
 
-    with patch("app.services.strategy.comparison_service.StrategyComparison",
-               return_value=mock_comparison):
+    with patch(
+        "app.services.strategy.comparison_service.StrategyComparison", return_value=mock_comparison
+    ):
         result = create_strategy_comparison(db, mock_data, created_by=1)
         assert result is not None
         db.add.assert_called_once()
@@ -126,6 +130,7 @@ def test_list_strategy_comparisons_pagination(db):
 def test_create_strategy_comparison_calls_db(db):
     """创建时调用数据库操作"""
     from app.schemas.strategy import StrategyComparisonCreate
+
     mock_data = MagicMock(spec=StrategyComparisonCreate)
     mock_data.base_strategy_id = 1
     mock_data.compare_strategy_id = 2
@@ -135,7 +140,8 @@ def test_create_strategy_comparison_calls_db(db):
     mock_data.summary = ""
 
     mock_comparison = _make_comparison()
-    with patch("app.services.strategy.comparison_service.StrategyComparison",
-               return_value=mock_comparison):
+    with patch(
+        "app.services.strategy.comparison_service.StrategyComparison", return_value=mock_comparison
+    ):
         create_strategy_comparison(db, mock_data, created_by=99)
         assert db.commit.called

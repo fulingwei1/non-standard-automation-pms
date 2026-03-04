@@ -6,12 +6,13 @@
 
 import logging
 from typing import Any, Dict, Optional
-from sqlalchemy.orm import Session
+
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
 from app.models.user import Role
-from app.schemas.role import RoleCreate, RoleUpdate, RoleResponse
+from app.schemas.role import RoleCreate, RoleResponse, RoleUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, RoleResponse]):
         permissions_map = {}
         if role_ids:
             # SQLAlchemy IN clause needs proper formatting
-            placeholders = ','.join([str(rid) for rid in role_ids])
+            placeholders = ",".join([str(rid) for rid in role_ids])
             perm_sql_formatted = f"""
                 SELECT rap.role_id, ap.perm_name
                 FROM role_api_permissions rap
@@ -127,22 +128,24 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, RoleResponse]):
             permissions = permissions_map.get(role.id, [])
             parent_name = parents_map.get(role.parent_id) if role.parent_id else None
 
-            items.append(RoleResponse(
-                id=role.id,
-                role_code=role.role_code or "",
-                role_name=role.role_name or "",
-                description=role.description,
-                data_scope=role.data_scope or "OWN",
-                parent_id=role.parent_id,
-                parent_name=parent_name,
-                is_system=bool(role.is_system),
-                is_active=bool(role.is_active if role.is_active is not None else True),
-                sort_order=getattr(role, "sort_order", 0),
-                permissions=permissions,
-                permission_count=len(permissions),
-                created_at=role.created_at,
-                updated_at=role.updated_at,
-            ))
+            items.append(
+                RoleResponse(
+                    id=role.id,
+                    role_code=role.role_code or "",
+                    role_name=role.role_name or "",
+                    description=role.description,
+                    data_scope=role.data_scope or "OWN",
+                    parent_id=role.parent_id,
+                    parent_name=parent_name,
+                    is_system=bool(role.is_system),
+                    is_active=bool(role.is_active if role.is_active is not None else True),
+                    sort_order=getattr(role, "sort_order", 0),
+                    permissions=permissions,
+                    permission_count=len(permissions),
+                    created_at=role.created_at,
+                    updated_at=role.updated_at,
+                )
+            )
 
         return {
             "items": items,

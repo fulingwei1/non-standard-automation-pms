@@ -8,17 +8,16 @@ File Size: 57 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 # Skip this module if the service doesn't exist yet
 pytest.importorskip("app.services.sales_monthly_report_service")
 import app.services.sales_monthly_report_service
-
-
 
 
 class TestSalesMonthlyReportService:
@@ -28,50 +27,50 @@ class TestSalesMonthlyReportService:
         """测试 parse_month_string 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import parse_month_string
-        pass
 
+        pass
 
     def test_calculate_month_range(self):
         """测试 calculate_month_range 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_month_range
-        pass
 
+        pass
 
     def test_calculate_contract_statistics(self):
         """测试 calculate_contract_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_contract_statistics
-        pass
 
+        pass
 
     def test_calculate_order_statistics(self):
         """测试 calculate_order_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_order_statistics
-        pass
 
+        pass
 
     def test_calculate_receipt_statistics(self):
         """测试 calculate_receipt_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_receipt_statistics
-        pass
 
+        pass
 
     def test_calculate_invoice_statistics(self):
         """测试 calculate_invoice_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_invoice_statistics
-        pass
 
+        pass
 
     def test_calculate_bidding_statistics(self):
         """测试 calculate_bidding_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.sales_monthly_report_service import calculate_bidding_statistics
-        pass
 
+        pass
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

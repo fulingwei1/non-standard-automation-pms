@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests for SyncBaseService (app.common.crud.sync_service)"""
 
-import pytest
 from unittest.mock import MagicMock
-from pydantic import BaseModel
+
+import pytest
 from fastapi import HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 
@@ -139,6 +140,7 @@ class TestSyncServiceCount:
 class TestSyncServiceHooks:
     def test_to_response_not_implemented(self):
         from app.common.crud.sync_service import SyncBaseService
+
         db = MagicMock(spec=Session)
         svc = SyncBaseService(FakeModel, db)
         with pytest.raises(NotImplementedError):

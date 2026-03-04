@@ -3,12 +3,14 @@
 第四十批覆盖测试 - 工作日志规则引擎
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.work_log_ai.rule_engine import RuleEngineMixin
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -20,6 +22,7 @@ pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="模块导入失败，跳�
 def engine():
     class ConcreteEngine(RuleEngineMixin):
         pass
+
     return ConcreteEngine()
 
 
@@ -89,6 +92,8 @@ class TestRuleEngineMixin:
     @patch("app.services.work_log_ai.rule_engine.get_work_type", side_effect=_fake_work_type)
     def test_suggested_projects_at_most_5(self, mock_get_type, engine):
         content = "普通日志"
-        projects = [{"id": i, "code": f"P{i}", "name": f"项目{i}", "keywords": []} for i in range(10)]
+        projects = [
+            {"id": i, "code": f"P{i}", "name": f"项目{i}", "keywords": []} for i in range(10)
+        ]
         result = engine._analyze_with_rules(content, projects, date(2024, 1, 15))
         assert len(result["suggested_projects"]) <= 5

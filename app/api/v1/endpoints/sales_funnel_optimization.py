@@ -4,8 +4,9 @@
 提供转化率分析、瓶颈识别、预测准确性分析
 """
 
-from typing import Any, Optional
 from datetime import date, timedelta
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 销售漏斗转化率分析 ==========
 
+
 @router.get("/funnel/conversion-rates", summary="销售漏斗转化率分析")
 def get_funnel_conversion_rates(
     start_date: Optional[str] = Query(None, description="开始日期 YYYY-MM-DD"),
@@ -28,14 +30,14 @@ def get_funnel_conversion_rates(
 ) -> Any:
     """
     分析销售漏斗各环节转化率
-    
+
     返回：
     - 各阶段商机数量
     - 阶段间转化率
     - 平均停留时间
     - 与历史对比
     """
-    
+
     # 模拟销售漏斗数据
     funnel_data = {
         "period": {
@@ -101,11 +103,12 @@ def get_funnel_conversion_rates(
             "weighted_pipeline_value": 6320000,
         },
     }
-    
+
     return funnel_data
 
 
 # ========== 2. 瓶颈识别 ==========
+
 
 @router.get("/funnel/bottlenecks", summary="瓶颈识别")
 def get_funnel_bottlenecks(
@@ -115,13 +118,13 @@ def get_funnel_bottlenecks(
 ) -> Any:
     """
     识别销售漏斗中的瓶颈环节
-    
+
     返回：
     - 转化率低于阈值的阶段
     - 停留时间超长的阶段
     - 改进建议
     """
-    
+
     bottlenecks = [
         {
             "stage": "STAGE4",
@@ -165,7 +168,7 @@ def get_funnel_bottlenecks(
             ],
         },
     ]
-    
+
     return {
         "analysis_date": date.today().isoformat(),
         "threshold": threshold,
@@ -179,6 +182,7 @@ def get_funnel_bottlenecks(
 
 # ========== 3. 预测准确性分析 ==========
 
+
 @router.get("/funnel/prediction-accuracy", summary="预测准确性分析")
 def get_prediction_accuracy(
     months: int = Query(3, description="分析月数"),
@@ -187,14 +191,14 @@ def get_prediction_accuracy(
 ) -> Any:
     """
     分析赢单率预测的准确性
-    
+
     对比：预测赢单率 vs 实际赢单率
     返回：
     - 预测准确性统计
     - 过度乐观/悲观的商机
     - 改进建议
     """
-    
+
     accuracy_data = {
         "period": {
             "months": months,
@@ -268,11 +272,12 @@ def get_prediction_accuracy(
             "建立预测复盘机制，每月分析偏差原因",
         ],
     }
-    
+
     return accuracy_data
 
 
 # ========== 4. 漏斗健康度仪表盘 ==========
+
 
 @router.get("/funnel/health-dashboard", summary="漏斗健康度仪表盘")
 def get_funnel_health_dashboard(
@@ -281,14 +286,14 @@ def get_funnel_health_dashboard(
 ) -> Any:
     """
     销售漏斗整体健康度评估
-    
+
     返回：
     - 健康度评分
     - 关键指标
     - 风险预警
     - 行动建议
     """
-    
+
     return {
         "dashboard_date": date.today().isoformat(),
         "overall_health": {
@@ -346,6 +351,7 @@ def get_funnel_health_dashboard(
 
 # ========== 5. 销售趋势分析 ==========
 
+
 @router.get("/funnel/trends", summary="销售趋势分析")
 def get_funnel_trends(
     period: str = Query("monthly", description="周期：daily/weekly/monthly"),
@@ -355,13 +361,13 @@ def get_funnel_trends(
 ) -> Any:
     """
     销售漏斗趋势分析
-    
+
     返回：
     - 各阶段数量趋势
     - 转化率趋势
     - 赢单率趋势
     """
-    
+
     trends = {
         "period": period,
         "months": months,
@@ -413,5 +419,5 @@ def get_funnel_trends(
             "Q4 整体表现优于 Q3",
         ],
     }
-    
+
     return trends

@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """ContractService 单元测试"""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 # Import will fail due to duplicate table definition; skip if so
 try:
     from app.services.sales.contract_service import ContractService
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False
 
-pytestmark = pytest.mark.skipif(not _IMPORT_OK, reason="ContractService import fails due to duplicate table")
+pytestmark = pytest.mark.skipif(
+    not _IMPORT_OK, reason="ContractService import fails due to duplicate table"
+)
 
 
 class TestContractService:

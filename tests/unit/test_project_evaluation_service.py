@@ -9,6 +9,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+
 pytestmark = pytest.mark.skip(reason="Import errors - needs review")
 # from sqlalchemy.orm import Session
 # from unittest.mock import Mock, MagicMock, patch
@@ -145,19 +146,19 @@ class TestCalculateTotalScore(TestProjectEvaluationService):
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("80"),
-        new_tech_score=Decimal("90"),
-        difficulty_score=Decimal("85"),
-        workload_score=Decimal("75"),
-        amount_score=Decimal("70")
+            novelty_score=Decimal("80"),
+            new_tech_score=Decimal("90"),
+            difficulty_score=Decimal("85"),
+            workload_score=Decimal("75"),
+            amount_score=Decimal("70"),
         )
 
         expected = (
-        Decimal("80") * Decimal("0.15") +
-        Decimal("90") * Decimal("0.20") +
-        Decimal("85") * Decimal("0.30") +
-        Decimal("75") * Decimal("0.20") +
-        Decimal("70") * Decimal("0.15")
+            Decimal("80") * Decimal("0.15")
+            + Decimal("90") * Decimal("0.20")
+            + Decimal("85") * Decimal("0.30")
+            + Decimal("75") * Decimal("0.20")
+            + Decimal("70") * Decimal("0.15")
         )
         assert total == expected
         assert float(total) == pytest.approx(80.25, rel=1e-3)
@@ -169,22 +170,22 @@ class TestCalculateTotalScore(TestProjectEvaluationService):
         Then: 返回正确的加权平均分
         """
         custom_weights = {
-        'novelty': Decimal("0.10"),
-        'new_tech': Decimal("0.20"),
-        'difficulty': Decimal("0.40"),
-        'workload': Decimal("0.15"),
-        'amount': Decimal("0.15")
+            "novelty": Decimal("0.10"),
+            "new_tech": Decimal("0.20"),
+            "difficulty": Decimal("0.40"),
+            "workload": Decimal("0.15"),
+            "amount": Decimal("0.15"),
         }
 
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("90"),
-        new_tech_score=Decimal("90"),
-        difficulty_score=Decimal("90"),
-        workload_score=Decimal("90"),
-        amount_score=Decimal("90"),
-        weights=custom_weights
+            novelty_score=Decimal("90"),
+            new_tech_score=Decimal("90"),
+            difficulty_score=Decimal("90"),
+            workload_score=Decimal("90"),
+            amount_score=Decimal("90"),
+            weights=custom_weights,
         )
 
         assert total == Decimal("90")
@@ -198,11 +199,11 @@ class TestCalculateTotalScore(TestProjectEvaluationService):
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("100"),
-        new_tech_score=Decimal("100"),
-        difficulty_score=Decimal("100"),
-        workload_score=Decimal("100"),
-        amount_score=Decimal("100")
+            novelty_score=Decimal("100"),
+            new_tech_score=Decimal("100"),
+            difficulty_score=Decimal("100"),
+            workload_score=Decimal("100"),
+            amount_score=Decimal("100"),
         )
 
         assert total == Decimal("100")
@@ -216,11 +217,11 @@ class TestCalculateTotalScore(TestProjectEvaluationService):
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("0"),
-        new_tech_score=Decimal("0"),
-        difficulty_score=Decimal("0"),
-        workload_score=Decimal("0"),
-        amount_score=Decimal("0")
+            novelty_score=Decimal("0"),
+            new_tech_score=Decimal("0"),
+            difficulty_score=Decimal("0"),
+            workload_score=Decimal("0"),
+            amount_score=Decimal("0"),
         )
 
         assert total == Decimal("0")
@@ -312,7 +313,11 @@ class TestAutoCalculateNoveltyScore(TestProjectEvaluationService):
         project3 = Mock()
         project3.stage = "S9"
 
-        db_session.query.return_value.filter.return_value.all.return_value = [project1, project2, project3]
+        db_session.query.return_value.filter.return_value.all.return_value = [
+            project1,
+            project2,
+            project3,
+        ]
 
         score = service.auto_calculate_novelty_score(mock_project)
         assert score == Decimal("9.0")
@@ -331,7 +336,9 @@ class TestAutoCalculateNoveltyScore(TestProjectEvaluationService):
         score = service.auto_calculate_novelty_score(mock_project)
         assert score == Decimal("6.0")
 
-    def test_auto_calculate_novelty_score_similar_not_completed(self, service, db_session, mock_project):
+    def test_auto_calculate_novelty_score_similar_not_completed(
+        self, service, db_session, mock_project
+    ):
         """有类似项目但未完成
         Given: 找到未完成的类似项目
         When: 自动计算项目新旧得分
@@ -482,7 +489,7 @@ class TestGenerateEvaluationCode(TestProjectEvaluationService):
 
             assert code.startswith("PE")
             assert len(code) == len("PE20260120123456")
-            assert re.match(r'^PE\d{14}$', code)
+            assert re.match(r"^PE\d{14}$", code)
 
 
 class TestCreateEvaluation(TestProjectEvaluationService):
@@ -497,16 +504,16 @@ class TestCreateEvaluation(TestProjectEvaluationService):
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         evaluation = service.create_evaluation(
-        project_id=1,
-        novelty_score=Decimal("80"),
-        new_tech_score=Decimal("90"),
-        difficulty_score=Decimal("85"),
-        workload_score=Decimal("75"),
-        amount_score=Decimal("70"),
-        evaluator_id=mock_evaluator.id,
-        evaluator_name=mock_evaluator.real_name,
-        evaluation_detail={"备注": "测试评价"},
-        evaluation_note="整体表现优秀"
+            project_id=1,
+            novelty_score=Decimal("80"),
+            new_tech_score=Decimal("90"),
+            difficulty_score=Decimal("85"),
+            workload_score=Decimal("75"),
+            amount_score=Decimal("70"),
+            evaluator_id=mock_evaluator.id,
+            evaluator_name=mock_evaluator.real_name,
+            evaluation_detail={"备注": "测试评价"},
+            evaluation_note="整体表现优秀",
         )
 
         assert evaluation.project_id == 1
@@ -533,7 +540,9 @@ class TestGetLatestEvaluation(TestProjectEvaluationService):
         evaluation.id = 1
         evaluation.evaluation_level = "A"
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         result = service.get_latest_evaluation(1)
 
@@ -546,7 +555,9 @@ class TestGetLatestEvaluation(TestProjectEvaluationService):
         When: 获取最新评价
         Then: 返回 None
         """
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = service.get_latest_evaluation(1)
 
@@ -565,7 +576,9 @@ class TestGetBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.evaluation_level = ProjectEvaluationLevelEnum.S.value
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_bonus_coefficient(Mock(id=1))
 
@@ -580,7 +593,9 @@ class TestGetBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.evaluation_level = ProjectEvaluationLevelEnum.D.value
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_bonus_coefficient(Mock(id=1))
 
@@ -592,7 +607,9 @@ class TestGetBonusCoefficient(TestProjectEvaluationService):
         When: 获取奖金系数
         Then: 返回默认值 1.0
         """
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         coefficient = service.get_bonus_coefficient(Mock(id=1))
 
@@ -611,7 +628,9 @@ class TestGetDifficultyBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.difficulty_score = Decimal("2")
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_difficulty_bonus_coefficient(Mock(id=1))
 
@@ -626,7 +645,9 @@ class TestGetDifficultyBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.difficulty_score = Decimal("4")
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_difficulty_bonus_coefficient(Mock(id=1))
 
@@ -641,7 +662,9 @@ class TestGetDifficultyBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.difficulty_score = Decimal("9")
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_difficulty_bonus_coefficient(Mock(id=1))
 
@@ -660,7 +683,9 @@ class TestGetNewTechBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.new_tech_score = Decimal("2")
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_new_tech_bonus_coefficient(Mock(id=1))
 
@@ -675,7 +700,9 @@ class TestGetNewTechBonusCoefficient(TestProjectEvaluationService):
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.new_tech_score = Decimal("8")
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_new_tech_bonus_coefficient(Mock(id=1))
 

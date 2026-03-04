@@ -4,16 +4,18 @@
 目标覆盖率: 60%+
 覆盖: 数据转换、验证、审批回调、通知
 """
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
-    from app.models.approval import ApprovalInstance
     from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem, AcceptanceTemplate
-    from app.models.project import Project, Machine
+    from app.models.approval import ApprovalInstance
+    from app.models.project import Machine, Project
+    from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -109,35 +111,32 @@ class TestAcceptanceOrderApprovalAdapter:
         db = make_db()
         order = make_acceptance_order(id=1)
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         result = adapter.get_entity(1)
-        
+
         assert result == order
 
     def test_get_entity_not_found(self):
         """测试获取验收单实体 - 未找到"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         result = adapter.get_entity(999)
-        
+
         assert result is None
 
     def test_get_entity_data_complete(self):
         """测试获取实体数据 - 完整数据"""
         db = make_db()
         order = make_acceptance_order(
-            id=1,
-            acceptance_type="FAT",
-            overall_result="PASSED",
-            pass_rate=Decimal("95.5")
+            id=1, acceptance_type="FAT", overall_result="PASSED", pass_rate=Decimal("95.5")
         )
         project = make_project()
         machine = make_machine()
         template = make_template()
-        
+
         # 配置查询返回
         def query_side_effect(model):
             query_mock = MagicMock()
@@ -152,12 +151,12 @@ class TestAcceptanceOrderApprovalAdapter:
             elif model == AcceptanceOrderItem:
                 query_mock.filter.return_value.count.return_value = 0  # 无关键项不合格
             return query_mock
-        
+
         db.query.side_effect = query_side_effect
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         data = adapter.get_entity_data(1)
-        
+
         assert data["order_no"] == "ACC-2025-001"
         assert data["acceptance_type"] == "FAT"
         assert data["overall_result"] == "PASSED"
@@ -174,7 +173,7 @@ class TestAcceptanceOrderApprovalAdapter:
         """测试获取实体数据 - 有关键项不合格"""
         db = make_db()
         order = make_acceptance_order(failed_items=2)
-        
+
         def query_side_effect(model):
             query_mock = MagicMock()
             if model == AcceptanceOrder:
@@ -184,22 +183,22 @@ class TestAcceptanceOrderApprovalAdapter:
             else:
                 query_mock.filter.return_value.first.return_value = None
             return query_mock
-        
+
         db.query.side_effect = query_side_effect
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         data = adapter.get_entity_data(1)
-        
+
         assert data["has_critical_failure"] is True
 
     def test_get_entity_data_not_found(self):
         """测试获取实体数据 - 实体不存在"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         data = adapter.get_entity_data(999)
-        
+
         assert data == {}
 
     def test_on_submit(self):
@@ -208,58 +207,49 @@ class TestAcceptanceOrderApprovalAdapter:
         order = make_acceptance_order(status="DRAFT")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_submit(1, instance)
-        
+
         assert order.status == "PENDING_APPROVAL"
         db.flush.assert_called_once()
 
     def test_on_approved_fat_passed(self):
         """测试审批通过 - FAT合格"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="FAT",
-            overall_result="PASSED"
-        )
+        order = make_acceptance_order(acceptance_type="FAT", overall_result="PASSED")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_approved(1, instance)
-        
+
         assert order.status == "COMPLETED"
         db.flush.assert_called_once()
 
     def test_on_approved_fat_conditional(self):
         """测试审批通过 - FAT有条件通过"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="FAT",
-            overall_result="CONDITIONAL"
-        )
+        order = make_acceptance_order(acceptance_type="FAT", overall_result="CONDITIONAL")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_approved(1, instance)
-        
+
         assert order.status == "CONDITIONAL_APPROVED"
         db.flush.assert_called_once()
 
     def test_on_approved_sat_passed(self):
         """测试审批通过 - SAT合格"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="SAT",
-            overall_result="PASSED"
-        )
+        order = make_acceptance_order(acceptance_type="SAT", overall_result="PASSED")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_approved(1, instance)
-        
+
         assert order.status == "COMPLETED"
         db.flush.assert_called_once()
 
@@ -267,16 +257,14 @@ class TestAcceptanceOrderApprovalAdapter:
         """测试审批通过 - 终验收合格"""
         db = make_db()
         order = make_acceptance_order(
-            acceptance_type="FINAL",
-            overall_result="PASSED",
-            is_officially_completed=False
+            acceptance_type="FINAL", overall_result="PASSED", is_officially_completed=False
         )
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_approved(1, instance)
-        
+
         assert order.status == "COMPLETED"
         assert order.is_officially_completed is True
         assert order.officially_completed_at is not None
@@ -288,10 +276,10 @@ class TestAcceptanceOrderApprovalAdapter:
         order = make_acceptance_order(status="PENDING_APPROVAL")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_rejected(1, instance)
-        
+
         assert order.status == "REJECTED"
         db.flush.assert_called_once()
 
@@ -301,54 +289,45 @@ class TestAcceptanceOrderApprovalAdapter:
         order = make_acceptance_order(status="PENDING_APPROVAL")
         db.query.return_value.filter.return_value.first.return_value = order
         instance = make_approval_instance()
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         adapter.on_withdrawn(1, instance)
-        
+
         assert order.status == "DRAFT"
         db.flush.assert_called_once()
 
     def test_generate_title_fat(self):
         """测试生成标题 - FAT"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="FAT",
-            order_no="ACC-FAT-001"
-        )
+        order = make_acceptance_order(acceptance_type="FAT", order_no="ACC-FAT-001")
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         title = adapter.generate_title(1)
-        
+
         assert "出厂验收审批" in title
         assert "ACC-FAT-001" in title
 
     def test_generate_title_conditional(self):
         """测试生成标题 - 有条件通过"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="SAT",
-            overall_result="CONDITIONAL"
-        )
+        order = make_acceptance_order(acceptance_type="SAT", overall_result="CONDITIONAL")
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         title = adapter.generate_title(1)
-        
+
         assert "有条件通过" in title
 
     def test_generate_title_failed(self):
         """测试生成标题 - 不合格"""
         db = make_db()
-        order = make_acceptance_order(
-            acceptance_type="FINAL",
-            overall_result="FAILED"
-        )
+        order = make_acceptance_order(acceptance_type="FINAL", overall_result="FAILED")
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         title = adapter.generate_title(1)
-        
+
         assert "不合格" in title
 
     def test_generate_summary_complete(self):
@@ -361,11 +340,11 @@ class TestAcceptanceOrderApprovalAdapter:
             pass_rate=Decimal("95.5"),
             location="工厂A",
             project_id=100,
-            machine_id=200
+            machine_id=200,
         )
         project = make_project(project_name="测试项目")
         machine = make_machine(machine_code="MACH-001")
-        
+
         def query_side_effect(model):
             query_mock = MagicMock()
             if model == AcceptanceOrder:
@@ -375,12 +354,12 @@ class TestAcceptanceOrderApprovalAdapter:
             elif model == Machine:
                 query_mock.filter.return_value.first.return_value = machine
             return query_mock
-        
+
         db.query.side_effect = query_side_effect
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         summary = adapter.generate_summary(1)
-        
+
         assert "ACC-001" in summary
         assert "FAT" in summary
         assert "合格" in summary
@@ -401,13 +380,13 @@ class TestAcceptanceOrderApprovalAdapter:
             passed_items=19,
             failed_items=1,
             na_items=0,
-            overall_result="PASSED"
+            overall_result="PASSED",
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is True
         assert error is None
 
@@ -415,10 +394,10 @@ class TestAcceptanceOrderApprovalAdapter:
         """测试提交验证 - 实体不存在"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(999)
-        
+
         assert valid is False
         assert "不存在" in error
 
@@ -427,10 +406,10 @@ class TestAcceptanceOrderApprovalAdapter:
         db = make_db()
         order = make_acceptance_order(status="APPROVED")
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "不允许提交审批" in error
 
@@ -439,26 +418,22 @@ class TestAcceptanceOrderApprovalAdapter:
         db = make_db()
         order = make_acceptance_order(status="DRAFT", project_id=None)
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "关联项目" in error
 
     def test_validate_submit_no_type(self):
         """测试提交验证 - 缺少类型"""
         db = make_db()
-        order = make_acceptance_order(
-            status="DRAFT",
-            project_id=100,
-            acceptance_type=None
-        )
+        order = make_acceptance_order(status="DRAFT", project_id=100, acceptance_type=None)
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "验收类型" in error
 
@@ -466,16 +441,13 @@ class TestAcceptanceOrderApprovalAdapter:
         """测试提交验证 - 无检查项"""
         db = make_db()
         order = make_acceptance_order(
-            status="DRAFT",
-            project_id=100,
-            acceptance_type="FAT",
-            total_items=0
+            status="DRAFT", project_id=100, acceptance_type="FAT", total_items=0
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "至少需要一项" in error
 
@@ -489,13 +461,13 @@ class TestAcceptanceOrderApprovalAdapter:
             total_items=20,
             passed_items=10,
             failed_items=5,
-            na_items=2  # 只检查了17项，还有3项未检查
+            na_items=2,  # 只检查了17项，还有3项未检查
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "未检查" in error
 
@@ -510,13 +482,13 @@ class TestAcceptanceOrderApprovalAdapter:
             passed_items=20,
             failed_items=0,
             na_items=0,
-            overall_result=None
+            overall_result=None,
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "验收结论" in error
 
@@ -532,13 +504,13 @@ class TestAcceptanceOrderApprovalAdapter:
             failed_items=1,
             na_items=0,
             overall_result="CONDITIONAL",
-            conditions=None
+            conditions=None,
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "必须说明具体条件" in error
 
@@ -553,12 +525,12 @@ class TestAcceptanceOrderApprovalAdapter:
             passed_items=15,
             failed_items=5,
             na_items=0,
-            overall_result="PASSED"  # 有不合格项但判定合格
+            overall_result="PASSED",  # 有不合格项但判定合格
         )
         db.query.return_value.filter.return_value.first.return_value = order
-        
+
         adapter = AcceptanceOrderApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "不能判定为合格" in error

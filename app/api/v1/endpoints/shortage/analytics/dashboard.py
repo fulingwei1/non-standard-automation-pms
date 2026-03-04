@@ -31,27 +31,27 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.shortage_analytics import ShortageAnalyticsService
 
-
 # ============================================================
 # 缺料看板
 # ============================================================
 
+
 class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
     """缺料分析Dashboard端点"""
-    
+
     module_name = "shortage_analytics"
     permission_required = None  # 使用默认权限
-    
+
     def __init__(self):
         """初始化路由，添加额外端点"""
         # 先创建router，不调用super().__init__()
         self.router = APIRouter()
         self._register_custom_routes()
-    
+
     def _register_custom_routes(self):
         """注册自定义路由"""
         user_dependency = self._get_user_dependency()
-        
+
         # 主dashboard端点
         async def dashboard_endpoint(
             db: Session = Depends(deps.get_db),
@@ -59,35 +59,32 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
             current_user: User = Depends(user_dependency),
         ):
             return self._get_dashboard_handler(db, current_user, project_id)
-        
+
         self.router.add_api_route(
             "/dashboard",
             dashboard_endpoint,
             methods=["GET"],
             summary="缺料看板",
-            response_model=ResponseModel
+            response_model=ResponseModel,
         )
-    
+
     def get_dashboard_data(
-        self,
-        db: Session,
-        current_user: User,
-        project_id: Optional[int] = None
+        self, db: Session, current_user: User, project_id: Optional[int] = None
     ) -> dict[str, Any]:
         """
         获取缺料看板数据（通过服务层）
-        
+
         Args:
             db: 数据库会话
             current_user: 当前用户
             project_id: 项目ID筛选
-            
+
         Returns:
             缺料看板数据
         """
         service = ShortageAnalyticsService(db)
         data = service.get_dashboard_data(project_id)
-        
+
         # 为基类 dashboard 格式添加统计卡片
         stats = [
             self.create_stat_card(
@@ -95,7 +92,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 label="缺料上报总数",
                 value=data["reports"]["total"],
                 unit="个",
-                icon="report"
+                icon="report",
             ),
             self.create_stat_card(
                 key="urgent_reports",
@@ -103,7 +100,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 value=data["reports"]["urgent"],
                 unit="个",
                 icon="urgent",
-                color="danger"
+                color="danger",
             ),
             self.create_stat_card(
                 key="unresolved_alerts",
@@ -111,7 +108,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 value=data["alerts"]["unresolved"],
                 unit="个",
                 icon="alert",
-                color="warning"
+                color="warning",
             ),
             self.create_stat_card(
                 key="critical_alerts",
@@ -119,7 +116,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 value=data["alerts"]["critical"],
                 unit="个",
                 icon="critical",
-                color="danger"
+                color="danger",
             ),
             self.create_stat_card(
                 key="pending_arrivals",
@@ -127,7 +124,7 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 value=data["arrivals"]["pending"],
                 unit="个",
                 icon="arrival",
-                color="warning"
+                color="warning",
             ),
             self.create_stat_card(
                 key="delayed_arrivals",
@@ -135,10 +132,10 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                 value=data["arrivals"]["delayed"],
                 unit="个",
                 icon="delayed",
-                color="danger"
+                color="danger",
             ),
         ]
-        
+
         # 转换 recent_reports 为列表项格式
         recent_reports_list = []
         for report in data["recent_reports"]:
@@ -149,35 +146,21 @@ class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
                     subtitle=f"项目: {report['project_name'] or '未知'} | 状态: {report['status']}",
                     status=report["status"].lower(),
                     priority=report["urgent_level"].lower() if report["urgent_level"] else None,
-                    extra=report
+                    extra=report,
                 )
             )
-        
-        return {
-            "stats": stats,
-            **data,
-            "recent_reports": recent_reports_list
-        }
-    
+
+        return {"stats": stats, **data, "recent_reports": recent_reports_list}
+
     def _get_dashboard_handler(
-        self,
-        db: Session,
-        current_user: User,
-        project_id: Optional[int] = None
+        self, db: Session, current_user: User, project_id: Optional[int] = None
     ) -> ResponseModel:
         """Dashboard处理器，支持project_id参数"""
         try:
             data = self.get_dashboard_data(db, current_user, project_id)
-            return ResponseModel(
-                code=200,
-                message="success",
-                data=data
-            )
+            return ResponseModel(code=200, message="success", data=data)
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"获取仪表板数据失败: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"获取仪表板数据失败: {str(e)}")
 
 
 # 创建端点实例并获取路由
@@ -188,6 +171,7 @@ router = dashboard_endpoint.router
 # ============================================================
 # 缺料日报
 # ============================================================
+
 
 @router.get("/daily-report", response_model=ResponseModel)
 def get_daily_report(
@@ -202,12 +186,8 @@ def get_daily_report(
     """
     service = ShortageAnalyticsService(db)
     data = service.get_daily_report(report_date, project_id)
-    
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+
+    return ResponseModel(code=200, message="success", data=data)
 
 
 @router.get("/daily-report/latest", response_model=ResponseModel)
@@ -220,10 +200,10 @@ def get_latest_daily_report(
     """
     service = ShortageAnalyticsService(db)
     data = service.get_latest_daily_report()
-    
+
     if not data:
         return ResponseModel(code=200, message="暂无日报数据", data=None)
-    
+
     return ResponseModel(code=200, message="success", data=data)
 
 
@@ -238,16 +218,17 @@ def get_daily_report_by_date(
     """
     service = ShortageAnalyticsService(db)
     data = service.get_daily_report_by_date(report_date)
-    
+
     if not data:
         raise HTTPException(status_code=404, detail="指定日期不存在缺料日报")
-    
+
     return ResponseModel(code=200, message="success", data=data)
 
 
 # ============================================================
 # 趋势分析
 # ============================================================
+
 
 @router.get("/trends", response_model=ResponseModel)
 def get_shortage_trends(
@@ -262,9 +243,5 @@ def get_shortage_trends(
     """
     service = ShortageAnalyticsService(db)
     data = service.get_shortage_trends(days, project_id)
-    
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+
+    return ResponseModel(code=200, message="success", data=data)

@@ -42,7 +42,9 @@ def get_department_projects(
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
 
-    data = service.list_department_projects(dept_id, current_user, page=pagination.page, page_size=pagination.page_size)
+    data = service.list_department_projects(
+        dept_id, current_user, page=pagination.page, page_size=pagination.page_size
+    )
     return ResponseModel(
         data=data,
         message=f"{department.dept_name} 项目列表",

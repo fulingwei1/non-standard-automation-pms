@@ -37,20 +37,40 @@ class TestValidateMetrics(unittest.TestCase):
 
     def setUp(self):
         self.db = MagicMock()
-        with patch('app.services.sales_ranking_service.SalesTeamService'):
+        with patch("app.services.sales_ranking_service.SalesTeamService"):
             self.svc = SalesRankingService(self.db)
 
     def _valid_metrics(self):
         """返回一组合法指标（权重和=1.0，primary=0.8）"""
         return [
-            {"key": "contract_amount", "label": "合同金额", "weight": 0.4,
-             "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "label": "验收金额", "weight": 0.2,
-             "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "label": "回款金额", "weight": 0.2,
-             "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "label": "商机数量", "weight": 0.2,
-             "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 0.4,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "label": "验收金额",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "label": "回款金额",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "label": "商机数量",
+                "weight": 0.2,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
 
     def test_valid_metrics_pass(self):
@@ -67,8 +87,14 @@ class TestValidateMetrics(unittest.TestCase):
     def test_duplicate_key_raises(self):
         """重复的 key 应抛出 ValueError"""
         metrics = self._valid_metrics()
-        metrics.append({"key": "contract_amount", "label": "重复",
-                        "weight": 0.01, "data_source": "contract_amount"})
+        metrics.append(
+            {
+                "key": "contract_amount",
+                "label": "重复",
+                "weight": 0.01,
+                "data_source": "contract_amount",
+            }
+        )
         with self.assertRaises(ValueError):
             self.svc._validate_metrics(metrics)
 
@@ -100,14 +126,34 @@ class TestValidateMetrics(unittest.TestCase):
         """主要指标权重之和不等于0.8应抛出 ValueError"""
         # primary=0.3+0.2+0.2=0.7, total=1.0
         metrics = [
-            {"key": "contract_amount", "label": "合同金额", "weight": 0.3,
-             "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "label": "验收金额", "weight": 0.2,
-             "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "label": "回款金额", "weight": 0.2,
-             "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "label": "商机数量", "weight": 0.3,
-             "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 0.3,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "label": "验收金额",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "label": "回款金额",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "label": "商机数量",
+                "weight": 0.3,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
         with self.assertRaises(ValueError) as ctx:
             self.svc._validate_metrics(metrics)
@@ -132,7 +178,7 @@ class TestGetActiveConfig(unittest.TestCase):
 
     def setUp(self):
         self.db = MagicMock()
-        with patch('app.services.sales_ranking_service.SalesTeamService'):
+        with patch("app.services.sales_ranking_service.SalesTeamService"):
             self.svc = SalesRankingService(self.db)
 
     def test_returns_existing_config(self):
@@ -150,7 +196,7 @@ class TestGetActiveConfig(unittest.TestCase):
         q.first.return_value = None
         self.db.query.return_value = q
 
-        with patch('app.services.sales_ranking_service.save_obj') as mock_save:
+        with patch("app.services.sales_ranking_service.save_obj") as mock_save:
             result = self.svc.get_active_config()
             mock_save.assert_called_once()
             self.assertIsNotNone(result)
@@ -162,24 +208,44 @@ class TestSaveConfig(unittest.TestCase):
 
     def setUp(self):
         self.db = MagicMock()
-        with patch('app.services.sales_ranking_service.SalesTeamService'):
+        with patch("app.services.sales_ranking_service.SalesTeamService"):
             self.svc = SalesRankingService(self.db)
 
     def _valid_metrics(self):
         return [
-            {"key": "contract_amount", "label": "合同金额", "weight": 0.4,
-             "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "label": "验收金额", "weight": 0.2,
-             "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "label": "回款金额", "weight": 0.2,
-             "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "label": "商机", "weight": 0.2,
-             "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 0.4,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "label": "验收金额",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "label": "回款金额",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "label": "商机",
+                "weight": 0.2,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
 
     def test_save_config_success(self):
         """合法配置应能保存"""
-        with patch('app.services.sales_ranking_service.save_obj') as mock_save:
+        with patch("app.services.sales_ranking_service.save_obj") as mock_save:
             result = self.svc.save_config(self._valid_metrics(), operator_id=1)
             mock_save.assert_called_once()
             self.assertIsNotNone(result)
@@ -195,7 +261,7 @@ class TestCalculateRankings(unittest.TestCase):
 
     def setUp(self):
         self.db = MagicMock()
-        with patch('app.services.sales_ranking_service.SalesTeamService') as MockTeam:
+        with patch("app.services.sales_ranking_service.SalesTeamService") as MockTeam:
             self.mock_team = MockTeam.return_value
             self.svc = SalesRankingService(self.db)
 
@@ -303,7 +369,7 @@ class TestGetAcceptanceAmountMap(unittest.TestCase):
 
     def setUp(self):
         self.db = MagicMock()
-        with patch('app.services.sales_ranking_service.SalesTeamService'):
+        with patch("app.services.sales_ranking_service.SalesTeamService"):
             self.svc = SalesRankingService(self.db)
 
     def test_empty_user_ids_returns_empty(self):

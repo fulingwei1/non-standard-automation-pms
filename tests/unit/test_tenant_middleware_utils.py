@@ -3,8 +3,9 @@
 app/core/middleware/tenant_middleware.py 覆盖率测试（当前 29%）
 专注于 TenantAwareQuery 和工具函数（不依赖 HTTP）
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import DeclarativeBase
 
@@ -39,12 +40,14 @@ class TestTenantAwareQuery:
 
     def test_init_with_tenant_id(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, _ = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
         assert taq.tenant_id == 5
 
     def test_init_without_tenant_id_uses_context(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, _ = mock_db
 
         # patch tenant_middleware 模块里的 get_current_tenant_id
@@ -54,6 +57,7 @@ class TestTenantAwareQuery:
 
     def test_query_with_tenant_model_auto_filter(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
 
@@ -63,6 +67,7 @@ class TestTenantAwareQuery:
 
     def test_query_without_auto_filter(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
 
@@ -72,6 +77,7 @@ class TestTenantAwareQuery:
 
     def test_query_model_without_tenant_no_filter(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
 
@@ -79,8 +85,9 @@ class TestTenantAwareQuery:
         mock_query.filter.assert_not_called()  # 没有 tenant_id 字段，不过滤
 
     def test_query_no_tenant_id_no_filter(self, mock_db):
-        from app.core.middleware.tenant_middleware import TenantAwareQuery
         from app.common.context import set_current_tenant_id
+        from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         set_current_tenant_id(None)
         taq = TenantAwareQuery(db, tenant_id=None)
@@ -90,6 +97,7 @@ class TestTenantAwareQuery:
 
     def test_filter_by_tenant_with_tenant_model(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
 
@@ -98,6 +106,7 @@ class TestTenantAwareQuery:
 
     def test_filter_by_tenant_without_tenant_model(self, mock_db):
         from app.core.middleware.tenant_middleware import TenantAwareQuery
+
         db, mock_query = mock_db
         taq = TenantAwareQuery(db, tenant_id=5)
 
@@ -111,24 +120,29 @@ class TestRequireSameTenant:
 
     def test_same_tenant_returns_true(self):
         from app.core.middleware.tenant_middleware import require_same_tenant
+
         assert require_same_tenant(1, 1) is True
 
     def test_different_tenant_returns_false(self):
         from app.core.middleware.tenant_middleware import require_same_tenant
+
         assert require_same_tenant(1, 2) is False
 
     def test_none_user_tenant(self):
         from app.core.middleware.tenant_middleware import require_same_tenant
+
         # None tenant_id (superuser) might be True or True
         result = require_same_tenant(None, 1)
         assert isinstance(result, bool)
 
     def test_none_resource_tenant(self):
         from app.core.middleware.tenant_middleware import require_same_tenant
+
         result = require_same_tenant(1, None)
         assert isinstance(result, bool)
 
     def test_both_none(self):
         from app.core.middleware.tenant_middleware import require_same_tenant
+
         result = require_same_tenant(None, None)
         assert isinstance(result, bool)

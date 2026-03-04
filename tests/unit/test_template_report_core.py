@@ -4,9 +4,10 @@ Tests coverage for:
 - app.services.template_report.core.TemplateReportCore
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.report_center import ReportTemplate
@@ -33,19 +34,17 @@ class TestGenerateFromTemplate:
         template.metrics_config = {}
         return template
 
-    def test_generate_with_project_weekly_template(
-        self, service: TemplateReportCore, template
-    ):
+    def test_generate_with_project_weekly_template(self, service: TemplateReportCore, template):
         """Test generation with PROJECT_WEEKLY type"""
         with patch.object(service, "ProjectReportMixin") as mock_mixin:
             mock_mixin._generate_project_weekly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
-            db=service.db,
-            template=template,
-            project_id=10,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 7),
+                db=service.db,
+                template=template,
+                project_id=10,
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 1, 7),
             )
 
             assert result is not None
@@ -53,19 +52,17 @@ class TestGenerateFromTemplate:
             assert result["report_type"] == "PROJECT_WEEKLY"
             mock_mixin._generate_project_weekly.assert_called_once()
 
-    def test_generate_with_project_monthly_template(
-        self, service: TemplateReportCore, template
-    ):
+    def test_generate_with_project_monthly_template(self, service: TemplateReportCore, template):
         """Test generation with PROJECT_MONTHLY type"""
         with patch.object(service, "ProjectReportMixin") as mock_mixin:
             mock_mixin._generate_project_monthly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
-            db=service.db,
-            template=template,
-            project_id=10,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31),
+                db=service.db,
+                template=template,
+                project_id=10,
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 1, 31),
             )
 
             assert result is not None
@@ -80,9 +77,7 @@ class TestGenerateFromTemplate:
             today = date.today()
             expected_start = today - timedelta(days=30)
 
-            result = service.generate_from_template(
-            db=service.db, template=template, project_id=10
-            )
+            result = service.generate_from_template(db=service.db, template=template, project_id=10)
 
             assert result is not None
             assert result["period"]["start_date"] == expected_start.isoformat()
@@ -96,14 +91,14 @@ class TestGenerateFromTemplate:
             filters = {"custom_field": "test_value"}
 
             result = service.generate_from_template(
-            db=service.db, template=template, project_id=10, filters=filters
+                db=service.db, template=template, project_id=10, filters=filters
             )
 
             assert result is not None
             mock_mixin._generate_project_weekly.assert_called_once_with(
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 7),
-            sections_config={},
-            metrics_config={},
-            filters=filters,
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 1, 7),
+                sections_config={},
+                metrics_config={},
+                filters=filters,
             )

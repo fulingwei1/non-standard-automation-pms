@@ -2,11 +2,13 @@
 """
 第三十五批 - data_scope_service.py 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.data_scope_service import DataScopeService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -76,9 +78,7 @@ class TestDataScopeServiceApplyDataScope:
         db = MagicMock()
         user = self._make_superuser()
         query = MagicMock()
-        result = DataScopeService.apply_data_scope(
-            query, db, user, "PROJECT"
-        )
+        result = DataScopeService.apply_data_scope(query, db, user, "PROJECT")
         # 超级用户直接返回原查询
         assert result is query
 
@@ -91,10 +91,9 @@ class TestDataScopeServiceApplyDataScope:
 
         with patch("app.services.data_scope_service.PermissionService") as MockPS:
             from app.models.permission import ScopeType
+
             MockPS.get_user_data_scopes.return_value = {"PROJECT": ScopeType.ALL.value}
-            result = DataScopeService.apply_data_scope(
-                query, db, user, "PROJECT"
-            )
+            result = DataScopeService.apply_data_scope(query, db, user, "PROJECT")
         assert result is query
 
     def test_own_scope_with_no_owner_field(self):
@@ -111,10 +110,9 @@ class TestDataScopeServiceApplyDataScope:
 
         with patch("app.services.data_scope_service.PermissionService") as MockPS:
             from app.models.permission import ScopeType
+
             MockPS.get_user_data_scopes.return_value = {"TASK": ScopeType.OWN.value}
-            result = DataScopeService.apply_data_scope(
-                query, db, user, "TASK"
-            )
+            result = DataScopeService.apply_data_scope(query, db, user, "TASK")
         # filter(False) 应被调用
         query.filter.assert_called()
 
@@ -141,6 +139,7 @@ class TestDataScopeServiceCanAccessData:
 
         with patch("app.services.data_scope_service.PermissionService") as MockPS:
             from app.models.permission import ScopeType
+
             MockPS.get_user_data_scopes.return_value = {"PROJECT": ScopeType.ALL.value}
             result = DataScopeService.can_access_data(db, user, "PROJECT", data)
         assert result is True
@@ -158,6 +157,7 @@ class TestDataScopeServiceCanAccessData:
 
         with patch("app.services.data_scope_service.PermissionService") as MockPS:
             from app.models.permission import ScopeType
+
             MockPS.get_user_data_scopes.return_value = {"TASK": ScopeType.OWN.value}
             result = DataScopeService.can_access_data(
                 db, user, "TASK", data, owner_field="created_by"

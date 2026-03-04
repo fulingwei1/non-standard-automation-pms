@@ -8,6 +8,7 @@ import pytest
 
 try:
     from pptx import Presentation
+
     from app.services.ppt_generator.base_builder import BaseSlideBuilder
 except ImportError:
     pytest.skip("python-pptx not available", allow_module_level=True)

@@ -15,11 +15,7 @@ from .snapshot import create_kpi_snapshot
 
 
 def update_kpi_value(
-    db: Session,
-    kpi_id: int,
-    value: Decimal,
-    recorded_by: int,
-    remark: Optional[str] = None
+    db: Session, kpi_id: int, value: Decimal, recorded_by: int, remark: Optional[str] = None
 ) -> Optional[KPI]:
     """
     更新 KPI 当前值

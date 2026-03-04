@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - user_workload_service.py 单元测试（用户负荷统计服务）"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.user_workload_service")
 
 from app.services.user_workload_service import (
-    calculate_workdays,
-    get_user_tasks,
-    get_user_allocations,
-    calculate_task_hours,
-    calculate_total_assigned_hours,
-    calculate_total_actual_hours,
+    build_daily_load,
     build_project_workload,
     build_task_list,
-    build_daily_load,
+    calculate_task_hours,
+    calculate_total_actual_hours,
+    calculate_total_assigned_hours,
+    calculate_workdays,
+    get_user_allocations,
+    get_user_tasks,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -79,6 +80,7 @@ def _make_allocation(
 
 # ─── 测试：calculate_workdays ─────────────────────────────────────────────────
 
+
 class TestCalculateWorkdays:
     """测试工作日计算"""
 
@@ -102,6 +104,7 @@ class TestCalculateWorkdays:
 
 
 # ─── 测试：calculate_task_hours ───────────────────────────────────────────────
+
 
 class TestCalculateTaskHours:
     """测试任务工时计算"""
@@ -130,12 +133,13 @@ class TestCalculateTaskHours:
 
 # ─── 测试：calculate_total_assigned_hours ────────────────────────────────────
 
+
 class TestCalculateTotalAssignedHours:
     """测试总分配工时计算"""
 
     def test_sum_from_tasks_and_allocations(self):
-        task1 = _make_task(plan_start=date(2025, 1, 1), plan_end=date(2025, 1, 5))   # 40h
-        task2 = _make_task(plan_start=date(2025, 1, 6), plan_end=date(2025, 1, 6))   # 8h
+        task1 = _make_task(plan_start=date(2025, 1, 1), plan_end=date(2025, 1, 5))  # 40h
+        task2 = _make_task(plan_start=date(2025, 1, 6), plan_end=date(2025, 1, 6))  # 8h
         alloc = _make_allocation(planned_hours=20.0)
         result = calculate_total_assigned_hours([task1, task2], [alloc])
         assert result == 68.0  # 40 + 8 + 20
@@ -151,6 +155,7 @@ class TestCalculateTotalAssignedHours:
 
 
 # ─── 测试：calculate_total_actual_hours ──────────────────────────────────────
+
 
 class TestCalculateTotalActualHours:
     """测试总实际工时计算"""
@@ -173,13 +178,20 @@ class TestCalculateTotalActualHours:
 
 # ─── 测试：build_project_workload ────────────────────────────────────────────
 
+
 class TestBuildProjectWorkload:
     """测试项目负荷构建"""
 
     def test_groups_tasks_by_project(self):
-        task1 = _make_task(task_id=1, project_id=10, plan_start=date(2025,1,1), plan_end=date(2025,1,5))
-        task2 = _make_task(task_id=2, project_id=10, plan_start=date(2025,1,6), plan_end=date(2025,1,6))
-        task3 = _make_task(task_id=3, project_id=20, plan_start=date(2025,1,1), plan_end=date(2025,1,1))
+        task1 = _make_task(
+            task_id=1, project_id=10, plan_start=date(2025, 1, 1), plan_end=date(2025, 1, 5)
+        )
+        task2 = _make_task(
+            task_id=2, project_id=10, plan_start=date(2025, 1, 6), plan_end=date(2025, 1, 6)
+        )
+        task3 = _make_task(
+            task_id=3, project_id=20, plan_start=date(2025, 1, 1), plan_end=date(2025, 1, 1)
+        )
         result = build_project_workload([task1, task2, task3])
         assert len(result) == 2
 
@@ -194,6 +206,7 @@ class TestBuildProjectWorkload:
 
 
 # ─── 测试：build_daily_load ──────────────────────────────────────────────────
+
 
 class TestBuildDailyLoad:
     """测试每日负荷构建"""

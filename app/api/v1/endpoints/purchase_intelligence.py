@@ -140,9 +140,7 @@ def get_supplier_performance(
 # ==================== 4. 触发评估 ====================
 
 
-@router.post(
-    "/suppliers/{supplier_id}/evaluate", response_model=SupplierPerformanceResponse
-)
+@router.post("/suppliers/{supplier_id}/evaluate", response_model=SupplierPerformanceResponse)
 def evaluate_supplier_performance(
     supplier_id: int,
     evaluate_data: SupplierPerformanceCalculate,
@@ -250,7 +248,7 @@ def compare_quotations(
     # 解析供应商ID列表
     supplier_id_list = None
     if supplier_ids:
-        supplier_id_list = [int(s) for s in supplier_ids.split(',')]
+        supplier_id_list = [int(s) for s in supplier_ids.split(",")]
 
     try:
         (

@@ -12,8 +12,8 @@ import pytest
 from app.services.itr_analytics_service import (
     analyze_resolution_time,
     analyze_satisfaction_trend,
-    identify_bottlenecks,
     analyze_sla_performance,
+    identify_bottlenecks,
 )
 
 
@@ -25,6 +25,7 @@ def db():
 # ============================================================
 # analyze_resolution_time 测试
 # ============================================================
+
 
 class TestAnalyzeResolutionTimeMocked:
 
@@ -45,10 +46,13 @@ class TestAnalyzeResolutionTimeMocked:
         now = datetime(2025, 1, 15, 12, 0)
         reported = datetime(2025, 1, 15, 8, 0)  # 4 hours
         ticket = MagicMock(
-            id=1, ticket_no="TK-001",
-            problem_type="BUG", urgency="HIGH",
-            reported_time=reported, resolved_time=now,
-            status="CLOSED"
+            id=1,
+            ticket_no="TK-001",
+            problem_type="BUG",
+            urgency="HIGH",
+            reported_time=reported,
+            resolved_time=now,
+            status="CLOSED",
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -64,12 +68,30 @@ class TestAnalyzeResolutionTimeMocked:
     def test_multiple_tickets_stats(self, db):
         """测试多个工单的统计"""
         base = datetime(2025, 1, 15, 0, 0)
-        t1 = MagicMock(id=1, ticket_no="TK-001", problem_type="BUG", urgency="HIGH",
-                       reported_time=base, resolved_time=base + timedelta(hours=4))
-        t2 = MagicMock(id=2, ticket_no="TK-002", problem_type="BUG", urgency="LOW",
-                       reported_time=base, resolved_time=base + timedelta(hours=8))
-        t3 = MagicMock(id=3, ticket_no="TK-003", problem_type="FEATURE", urgency="HIGH",
-                       reported_time=base, resolved_time=base + timedelta(hours=12))
+        t1 = MagicMock(
+            id=1,
+            ticket_no="TK-001",
+            problem_type="BUG",
+            urgency="HIGH",
+            reported_time=base,
+            resolved_time=base + timedelta(hours=4),
+        )
+        t2 = MagicMock(
+            id=2,
+            ticket_no="TK-002",
+            problem_type="BUG",
+            urgency="LOW",
+            reported_time=base,
+            resolved_time=base + timedelta(hours=8),
+        )
+        t3 = MagicMock(
+            id=3,
+            ticket_no="TK-003",
+            problem_type="FEATURE",
+            urgency="HIGH",
+            reported_time=base,
+            resolved_time=base + timedelta(hours=12),
+        )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
         mock_q.all.return_value = [t1, t2, t3]
@@ -110,9 +132,12 @@ class TestAnalyzeResolutionTimeMocked:
     def test_ticket_without_reported_time(self, db):
         """测试缺少报告时间的工单（不应计入统计）"""
         ticket = MagicMock(
-            id=1, ticket_no="TK-001",
-            problem_type="BUG", urgency="HIGH",
-            reported_time=None, resolved_time=datetime(2025, 1, 15, 12, 0)
+            id=1,
+            ticket_no="TK-001",
+            problem_type="BUG",
+            urgency="HIGH",
+            reported_time=None,
+            resolved_time=datetime(2025, 1, 15, 12, 0),
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -126,6 +151,7 @@ class TestAnalyzeResolutionTimeMocked:
 # ============================================================
 # analyze_satisfaction_trend 测试
 # ============================================================
+
 
 class TestAnalyzeSatisfactionTrendMocked:
 
@@ -146,7 +172,7 @@ class TestAnalyzeSatisfactionTrendMocked:
             overall_score=85.0,
             survey_date=datetime(2025, 1, 15),
             survey_type="MONTHLY",
-            status="COMPLETED"
+            status="COMPLETED",
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -159,8 +185,12 @@ class TestAnalyzeSatisfactionTrendMocked:
 
     def test_multiple_surveys_monthly_trend(self, db):
         """测试多个调查的月度趋势"""
-        s1 = MagicMock(overall_score=80.0, survey_date=datetime(2025, 1, 10), survey_type="QUARTERLY")
-        s2 = MagicMock(overall_score=90.0, survey_date=datetime(2025, 1, 20), survey_type="QUARTERLY")
+        s1 = MagicMock(
+            overall_score=80.0, survey_date=datetime(2025, 1, 10), survey_type="QUARTERLY"
+        )
+        s2 = MagicMock(
+            overall_score=90.0, survey_date=datetime(2025, 1, 20), survey_type="QUARTERLY"
+        )
         s3 = MagicMock(overall_score=70.0, survey_date=datetime(2025, 2, 15), survey_type="MONTHLY")
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -181,9 +211,7 @@ class TestAnalyzeSatisfactionTrendMocked:
         db.query.return_value = mock_q
 
         result = analyze_satisfaction_trend(
-            db,
-            start_date=datetime(2025, 1, 1),
-            end_date=datetime(2025, 12, 31)
+            db, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         assert result["total_surveys"] == 0
 
@@ -191,6 +219,7 @@ class TestAnalyzeSatisfactionTrendMocked:
 # ============================================================
 # identify_bottlenecks 测试
 # ============================================================
+
 
 class TestIdentifyBottlenecksMocked:
 
@@ -210,12 +239,13 @@ class TestIdentifyBottlenecksMocked:
         """测试快速响应（低严重度）"""
         now = datetime(2025, 1, 15, 12, 0)
         ticket = MagicMock(
-            id=1, problem_type="BUG",
+            id=1,
+            problem_type="BUG",
             reported_time=now - timedelta(hours=2),
             assigned_time=now - timedelta(hours=1),  # 1 hour to assign
             resolved_time=now,
             status="CLOSED",
-            timeline=None
+            timeline=None,
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -233,12 +263,13 @@ class TestIdentifyBottlenecksMocked:
         """测试慢响应（高严重度）"""
         now = datetime(2025, 1, 15, 12, 0)
         ticket = MagicMock(
-            id=1, problem_type="BUG",
+            id=1,
+            problem_type="BUG",
             reported_time=now - timedelta(hours=30),
             assigned_time=now,  # 30 hours to assign -> HIGH
             resolved_time=now + timedelta(hours=1),
             status="IN_PROGRESS",
-            timeline=None
+            timeline=None,
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -247,7 +278,9 @@ class TestIdentifyBottlenecksMocked:
 
         result = identify_bottlenecks(db)
         assert result["total_analyzed"] == 1
-        pending_bottleneck = next((b for b in result["bottlenecks"] if "PENDING" in b["stage"]), None)
+        pending_bottleneck = next(
+            (b for b in result["bottlenecks"] if "PENDING" in b["stage"]), None
+        )
         assert pending_bottleneck is not None
         assert pending_bottleneck["severity"] == "HIGH"
         assert len(result["critical_bottlenecks"]) > 0
@@ -260,9 +293,7 @@ class TestIdentifyBottlenecksMocked:
         db.query.return_value = mock_q
 
         result = identify_bottlenecks(
-            db,
-            start_date=datetime(2025, 1, 1),
-            end_date=datetime(2025, 12, 31)
+            db, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         assert result["total_analyzed"] == 0
 
@@ -270,6 +301,7 @@ class TestIdentifyBottlenecksMocked:
 # ============================================================
 # analyze_sla_performance 测试
 # ============================================================
+
 
 class TestAnalyzeSlaPerformanceMocked:
 

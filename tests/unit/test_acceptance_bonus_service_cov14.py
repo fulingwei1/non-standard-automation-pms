@@ -2,12 +2,14 @@
 """
 第十四批：验收奖金计算服务 单元测试
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services import acceptance_bonus_service as abs_svc
+
     SKIP = False
 except Exception:
     SKIP = True

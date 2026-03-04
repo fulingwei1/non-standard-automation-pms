@@ -40,9 +40,9 @@ class TestOrgAPI:
             "emp_name": "测试员工",
             "dept_id": 1,
             "position": "工程师",
-            "status": "ACTIVE"
+            "status": "ACTIVE",
         }
-        
+
         response = api_client.post("/api/v1/org/employees", json=employee_data)
         assert response.status_code in [200, 201]
         data = response.json()
@@ -51,7 +51,7 @@ class TestOrgAPI:
     def test_get_org_employees_emp_id(self, api_client, db_session):
         """测试 GET /api/v1/org/employees/{emp_id} - 获取员工"""
         employee = EmployeeFactory()
-        
+
         response = api_client.get(f"/api/v1/org/employees/{employee.id}")
         assert response.status_code == 200
         data = response.json()
@@ -60,18 +60,11 @@ class TestOrgAPI:
     def test_put_org_employees_emp_id(self, api_client, db_session):
         """测试 PUT /api/v1/org/employees/{emp_id} - 更新员工"""
         employee = EmployeeFactory()
-        
-        update_data = {
-            "emp_name": "更新后的姓名",
-            "position": "高级工程师"
-        }
-        
-        response = api_client.put(
-            f"/api/v1/org/employees/{employee.id}",
-            json=update_data
-        )
-        assert response.status_code in [200, 400, 404]
 
+        update_data = {"emp_name": "更新后的姓名", "position": "高级工程师"}
+
+        response = api_client.put(f"/api/v1/org/employees/{employee.id}", json=update_data)
+        assert response.status_code in [200, 400, 404]
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

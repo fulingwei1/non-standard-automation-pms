@@ -2,9 +2,10 @@
 """
 app/common/reports/base.py 覆盖率测试（当前 0%）
 """
-import pytest
 import json
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.common.reports.base import BaseReportGenerator
 

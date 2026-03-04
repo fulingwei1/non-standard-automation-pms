@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
-from app.models.sales import Quote, QuoteVersion, QuoteItem
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
@@ -40,38 +40,48 @@ def get_cost_analysis(
     """
     get_or_404(db, Quote, quote_id, detail="报价不存在")
 
-    versions = db.query(QuoteVersion).filter(
-        QuoteVersion.quote_id == quote_id
-    ).order_by(QuoteVersion.created_at).all()
+    versions = (
+        db.query(QuoteVersion)
+        .filter(QuoteVersion.quote_id == quote_id)
+        .order_by(QuoteVersion.created_at)
+        .all()
+    )
 
     if not versions:
         return ResponseModel(code=200, message="暂无版本数据", data={})
 
     # 版本趋势
-    version_trend = [{
-        "version_no": v.version_no,
-        "total_price": float(v.total_price) if v.total_price else 0,
-        "cost_total": float(v.cost_total) if v.cost_total else 0,
-        "gross_margin": float(v.gross_margin) if v.gross_margin else 0,
-        "created_at": v.created_at.isoformat() if v.created_at else None,
-    } for v in versions]
+    version_trend = [
+        {
+            "version_no": v.version_no,
+            "total_price": float(v.total_price) if v.total_price else 0,
+            "cost_total": float(v.cost_total) if v.cost_total else 0,
+            "gross_margin": float(v.gross_margin) if v.gross_margin else 0,
+            "created_at": v.created_at.isoformat() if v.created_at else None,
+        }
+        for v in versions
+    ]
 
     # 当前版本的成本结构
     current = versions[-1]
-    items = db.query(QuoteItem).filter(
-        QuoteItem.quote_version_id == current.id
-    ).all()
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == current.id).all()
 
     # 按类型汇总
     cost_by_type = {}
     for item in items:
         t = item.item_type or "其他"
         if t not in cost_by_type:
-            cost_by_type[t] = Decimal('0')
-        cost_by_type[t] += item.cost or Decimal('0')
+            cost_by_type[t] = Decimal("0")
+        cost_by_type[t] += item.cost or Decimal("0")
 
     cost_structure = [
-        {"type": k, "cost": float(v), "ratio": round(float(v) / float(current.cost_total) * 100, 2) if current.cost_total else 0}
+        {
+            "type": k,
+            "cost": float(v),
+            "ratio": (
+                round(float(v) / float(current.cost_total) * 100, 2) if current.cost_total else 0
+            ),
+        }
         for k, v in cost_by_type.items()
     ]
 
@@ -84,13 +94,15 @@ def get_cost_analysis(
         cost_change = float(curr.cost_total or 0) - float(prev.cost_total or 0)
         margin_change = float(curr.gross_margin or 0) - float(prev.gross_margin or 0)
 
-        changes.append({
-            "from_version": prev.version_no,
-            "to_version": curr.version_no,
-            "price_change": price_change,
-            "cost_change": cost_change,
-            "margin_change": round(margin_change, 2),
-        })
+        changes.append(
+            {
+                "from_version": prev.version_no,
+                "to_version": curr.version_no,
+                "price_change": price_change,
+                "cost_change": cost_change,
+                "margin_change": round(margin_change, 2),
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -107,7 +119,7 @@ def get_cost_analysis(
             "cost_structure": cost_structure,
             "version_trend": version_trend,
             "version_changes": changes,
-        }
+        },
     )
 
 
@@ -129,33 +141,34 @@ def get_cost_benchmark(
     # 基础查询：近90天的报价
     ninety_days_ago = date.today() - timedelta(days=90)
 
-    result = db.query(
-        func.count(Quote.id).label("quote_count"),
-        func.avg(QuoteVersion.gross_margin).label("avg_margin"),
-        func.min(QuoteVersion.gross_margin).label("min_margin"),
-        func.max(QuoteVersion.gross_margin).label("max_margin"),
-    ).join(
-        QuoteVersion, Quote.current_version_id == QuoteVersion.id
-    ).filter(
-        Quote.created_at >= ninety_days_ago
-    ).first()
+    result = (
+        db.query(
+            func.count(Quote.id).label("quote_count"),
+            func.avg(QuoteVersion.gross_margin).label("avg_margin"),
+            func.min(QuoteVersion.gross_margin).label("min_margin"),
+            func.max(QuoteVersion.gross_margin).label("max_margin"),
+        )
+        .join(QuoteVersion, Quote.current_version_id == QuoteVersion.id)
+        .filter(Quote.created_at >= ninety_days_ago)
+        .first()
+    )
 
     # 毛利率分布
     from sqlalchemy import case as sa_case
+
     margin_range = sa_case(
         (QuoteVersion.gross_margin < 10, "0-10%"),
         (QuoteVersion.gross_margin < 20, "10-20%"),
         (QuoteVersion.gross_margin < 30, "20-30%"),
-        else_="30%+"
+        else_="30%+",
     ).label("range")
-    distribution = db.query(
-        margin_range,
-        func.count(Quote.id).label("count")
-    ).join(
-        QuoteVersion, Quote.current_version_id == QuoteVersion.id
-    ).filter(
-        Quote.created_at >= ninety_days_ago
-    ).group_by(margin_range).all()
+    distribution = (
+        db.query(margin_range, func.count(Quote.id).label("count"))
+        .join(QuoteVersion, Quote.current_version_id == QuoteVersion.id)
+        .filter(Quote.created_at >= ninety_days_ago)
+        .group_by(margin_range)
+        .all()
+    )
 
     return ResponseModel(
         code=200,
@@ -166,6 +179,6 @@ def get_cost_benchmark(
             "avg_margin": round(float(result.avg_margin), 2) if result and result.avg_margin else 0,
             "min_margin": round(float(result.min_margin), 2) if result and result.min_margin else 0,
             "max_margin": round(float(result.max_margin), 2) if result and result.max_margin else 0,
-            "margin_distribution": [{"range": d.range, "count": d.count} for d in distribution]
-        }
+            "margin_distribution": [{"range": d.range, "count": d.count} for d in distribution],
+        },
     )

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：部门报表数据生成器单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.generators.department import DeptReportGenerator
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -58,7 +60,7 @@ class TestDeptReportGeneratorWeekly:
     def test_returns_dict_when_department_found(self):
         dept = _mock_department()
         db = _make_chainable_db(dept=dept, members=[])
-        with patch.object(DeptReportGenerator, '_get_department_members', return_value=[]):
+        with patch.object(DeptReportGenerator, "_get_department_members", return_value=[]):
             result = DeptReportGenerator.generate_weekly(
                 db=db,
                 department_id=1,
@@ -71,7 +73,7 @@ class TestDeptReportGeneratorWeekly:
     def test_result_has_summary(self):
         dept = _mock_department(id=5, name="销售部")
         db = _make_chainable_db(dept=dept, members=[])
-        with patch.object(DeptReportGenerator, '_get_department_members', return_value=[]):
+        with patch.object(DeptReportGenerator, "_get_department_members", return_value=[]):
             result = DeptReportGenerator.generate_weekly(
                 db=db,
                 department_id=5,
@@ -83,7 +85,7 @@ class TestDeptReportGeneratorWeekly:
     def test_result_has_members_section(self):
         dept = _mock_department()
         db = _make_chainable_db(dept=dept, members=[])
-        with patch.object(DeptReportGenerator, '_get_department_members', return_value=[]):
+        with patch.object(DeptReportGenerator, "_get_department_members", return_value=[]):
             result = DeptReportGenerator.generate_weekly(
                 db=db,
                 department_id=1,
@@ -109,7 +111,7 @@ class TestDeptReportGeneratorMonthly:
     def test_returns_dict_when_department_found(self):
         dept = _mock_department()
         db = _make_chainable_db(dept=dept, members=[])
-        with patch.object(DeptReportGenerator, '_get_department_members', return_value=[]):
+        with patch.object(DeptReportGenerator, "_get_department_members", return_value=[]):
             result = DeptReportGenerator.generate_monthly(
                 db=db,
                 department_id=1,
@@ -121,7 +123,7 @@ class TestDeptReportGeneratorMonthly:
     def test_monthly_report_type(self):
         dept = _mock_department()
         db = _make_chainable_db(dept=dept, members=[])
-        with patch.object(DeptReportGenerator, '_get_department_members', return_value=[]):
+        with patch.object(DeptReportGenerator, "_get_department_members", return_value=[]):
             result = DeptReportGenerator.generate_monthly(
                 db=db,
                 department_id=1,
@@ -137,7 +139,7 @@ class TestDeptReportGeneratorHelpers:
     """辅助静态方法测试"""
 
     def test_get_department_members_callable(self):
-        assert hasattr(DeptReportGenerator, '_get_department_members') or True
+        assert hasattr(DeptReportGenerator, "_get_department_members") or True
 
     def test_error_department_id_preserved(self):
         db = _make_chainable_db(dept=None)

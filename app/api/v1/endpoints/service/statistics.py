@@ -32,24 +32,24 @@ def get_service_dashboard_statistics(
     today_start = datetime.combine(today, datetime.min.time())
 
     # 服务案例统计
-    active_cases = db.query(ServiceTicket).filter(
-        ServiceTicket.status.in_(["PENDING", "IN_PROGRESS"])
-    ).count()
+    active_cases = (
+        db.query(ServiceTicket).filter(ServiceTicket.status.in_(["PENDING", "IN_PROGRESS"])).count()
+    )
 
-    resolved_today = db.query(ServiceTicket).filter(
-        ServiceTicket.status == "RESOLVED",
-        ServiceTicket.resolved_time >= today_start
-    ).count()
+    resolved_today = (
+        db.query(ServiceTicket)
+        .filter(ServiceTicket.status == "RESOLVED", ServiceTicket.resolved_time >= today_start)
+        .count()
+    )
 
-    pending_cases = db.query(ServiceTicket).filter(
-        ServiceTicket.status == "PENDING"
-    ).count()
+    pending_cases = db.query(ServiceTicket).filter(ServiceTicket.status == "PENDING").count()
 
     # 平均响应时间（从服务工单中计算：响应时间 - 报告时间）
-    tickets_with_response = db.query(ServiceTicket).filter(
-        ServiceTicket.response_time.isnot(None),
-        ServiceTicket.reported_time.isnot(None)
-    ).all()
+    tickets_with_response = (
+        db.query(ServiceTicket)
+        .filter(ServiceTicket.response_time.isnot(None), ServiceTicket.reported_time.isnot(None))
+        .all()
+    )
 
     avg_response_time = 0.0
     if tickets_with_response:
@@ -58,13 +58,19 @@ def get_service_dashboard_statistics(
             if ticket.response_time and ticket.reported_time:
                 delta = ticket.response_time - ticket.reported_time
                 total_hours += delta.total_seconds() / 3600.0
-        avg_response_time = total_hours / len(tickets_with_response) if tickets_with_response else 0.0
+        avg_response_time = (
+            total_hours / len(tickets_with_response) if tickets_with_response else 0.0
+        )
 
     # 客户满意度（转换为百分制）
-    completed_surveys = db.query(CustomerSatisfaction).filter(
-        CustomerSatisfaction.status == "COMPLETED",
-        CustomerSatisfaction.overall_score.isnot(None)
-    ).all()
+    completed_surveys = (
+        db.query(CustomerSatisfaction)
+        .filter(
+            CustomerSatisfaction.status == "COMPLETED",
+            CustomerSatisfaction.overall_score.isnot(None),
+        )
+        .all()
+    )
 
     customer_satisfaction = 0.0
     if completed_surveys:
@@ -72,10 +78,14 @@ def get_service_dashboard_statistics(
         customer_satisfaction = (total_score / len(completed_surveys)) * 20  # 5分制转百分制
 
     # 现场服务（从服务记录中统计，使用INSTALLATION类型作为现场服务）
-    on_site_services = db.query(ServiceRecord).filter(
-        ServiceRecord.service_type.in_(["INSTALLATION", "REPAIR", "MAINTENANCE"]),
-        ServiceRecord.status.in_(["SCHEDULED", "IN_PROGRESS"])
-    ).count()
+    on_site_services = (
+        db.query(ServiceRecord)
+        .filter(
+            ServiceRecord.service_type.in_(["INSTALLATION", "REPAIR", "MAINTENANCE"]),
+            ServiceRecord.status.in_(["SCHEDULED", "IN_PROGRESS"]),
+        )
+        .count()
+    )
 
     # 在岗工程师（简化处理：查询有客服工程师角色的用户）
     role_name_query = apply_keyword_filter(
@@ -85,21 +95,27 @@ def get_service_dashboard_statistics(
         "role_name",
         use_ilike=False,
     )
-    engineer_role = db.query(Role).filter(
-        or_(
-            Role.role_code == "customer_service_engineer",
-            Role.role_code == "客服工程师",
-            Role.id.in_(role_name_query),
+    engineer_role = (
+        db.query(Role)
+        .filter(
+            or_(
+                Role.role_code == "customer_service_engineer",
+                Role.role_code == "客服工程师",
+                Role.id.in_(role_name_query),
+            )
         )
-    ).first()
+        .first()
+    )
 
     total_engineers = 0
     active_engineers = 0
     if engineer_role:
-        total_engineers = db.query(User).join(UserRole).filter(
-            UserRole.role_id == engineer_role.id,
-            User.is_active
-        ).count()
+        total_engineers = (
+            db.query(User)
+            .join(UserRole)
+            .filter(UserRole.role_id == engineer_role.id, User.is_active)
+            .count()
+        )
         # 简化处理：假设所有工程师都在岗
         active_engineers = total_engineers
     else:

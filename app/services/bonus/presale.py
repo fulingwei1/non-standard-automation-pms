@@ -26,7 +26,7 @@ class PresaleBonusCalculator(BonusCalculatorBase):
         self,
         ticket: PresaleSupportTicket,
         bonus_rule: BonusRule,
-        based_on: str = 'COMPLETION'  # COMPLETION: 工单完成, WON: 中标
+        based_on: str = "COMPLETION",  # COMPLETION: 工单完成, WON: 中标
     ) -> Optional[BonusCalculation]:
         """
         计算售前技术支持奖金
@@ -44,33 +44,33 @@ class PresaleBonusCalculator(BonusCalculatorBase):
             BonusCalculation: 计算记录
         """
         # 检查触发条件
-        context = {'ticket': ticket, 'based_on': based_on}
+        context = {"ticket": ticket, "based_on": based_on}
         if not self.check_trigger_condition(bonus_rule, context):
             return None
 
         if not ticket.assignee_id:
             return None
 
-        if based_on == 'COMPLETION':
+        if based_on == "COMPLETION":
             # 基于工单完成计算
-            base_amount = bonus_rule.base_amount or Decimal('0')
+            base_amount = bonus_rule.base_amount or Decimal("0")
 
             # 根据工单类型和紧急程度调整系数
-            urgency_coef = Decimal('1.0')
-            if ticket.urgency == 'VERY_URGENT':
-                urgency_coef = Decimal('1.3')
-            elif ticket.urgency == 'URGENT':
-                urgency_coef = Decimal('1.1')
+            urgency_coef = Decimal("1.0")
+            if ticket.urgency == "VERY_URGENT":
+                urgency_coef = Decimal("1.3")
+            elif ticket.urgency == "URGENT":
+                urgency_coef = Decimal("1.1")
 
             # 根据满意度调整系数
-            satisfaction_coef = Decimal('1.0')
+            satisfaction_coef = Decimal("1.0")
             if ticket.satisfaction_score:
                 if ticket.satisfaction_score >= 5:
-                    satisfaction_coef = Decimal('1.2')
+                    satisfaction_coef = Decimal("1.2")
                 elif ticket.satisfaction_score >= 4:
-                    satisfaction_coef = Decimal('1.0')
+                    satisfaction_coef = Decimal("1.0")
                 else:
-                    satisfaction_coef = Decimal('0.8')
+                    satisfaction_coef = Decimal("0.8")
 
             calculated_amount = base_amount * urgency_coef * satisfaction_coef
 
@@ -87,49 +87,52 @@ class PresaleBonusCalculator(BonusCalculatorBase):
                     "urgency_coefficient": float(urgency_coef),
                     "satisfaction_coefficient": float(satisfaction_coef),
                     "satisfaction_score": ticket.satisfaction_score,
-                    "based_on": "COMPLETION"
+                    "based_on": "COMPLETION",
                 },
                 calculation_basis={
                     "type": "presale",
                     "ticket_id": ticket.id,
-                    "based_on": "COMPLETION"
+                    "based_on": "COMPLETION",
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             return calculation
 
-        elif based_on == 'WON':
+        elif based_on == "WON":
             # 基于中标计算
             # 查找关联的商机或项目
             opportunity = None
             project = None
 
             if ticket.opportunity_id:
-                opportunity = self.db.query(Opportunity).filter(
-                    Opportunity.id == ticket.opportunity_id
-                ).first()
+                opportunity = (
+                    self.db.query(Opportunity)
+                    .filter(Opportunity.id == ticket.opportunity_id)
+                    .first()
+                )
 
             if ticket.project_id:
-                project = self.db.query(Project).filter(
-                    Project.id == ticket.project_id
-                ).first()
+                project = self.db.query(Project).filter(Project.id == ticket.project_id).first()
 
             # 检查是否中标
             is_won = False
-            won_amount = Decimal('0')
+            won_amount = Decimal("0")
 
-            if opportunity and opportunity.stage == 'WON':
+            if opportunity and opportunity.stage == "WON":
                 is_won = True
-                won_amount = opportunity.est_amount or Decimal('0')
-            elif project and project.status in ['ST01', 'ST02']:  # 假设这些状态表示项目已启动/进行中
+                won_amount = opportunity.est_amount or Decimal("0")
+            elif project and project.status in [
+                "ST01",
+                "ST02",
+            ]:  # 假设这些状态表示项目已启动/进行中
                 is_won = True
-                won_amount = project.contract_amount or Decimal('0')
+                won_amount = project.contract_amount or Decimal("0")
 
             if not is_won:
                 return None
 
             # 计算奖金（按中标金额的百分比）
-            bonus_ratio = (bonus_rule.coefficient or Decimal('0')) / Decimal('100')
+            bonus_ratio = (bonus_rule.coefficient or Decimal("0")) / Decimal("100")
             calculated_amount = won_amount * bonus_ratio
 
             calculation = BonusCalculation(
@@ -144,16 +147,16 @@ class PresaleBonusCalculator(BonusCalculatorBase):
                     "bonus_ratio": float(bonus_ratio),
                     "based_on": "WON",
                     "opportunity_id": ticket.opportunity_id,
-                    "project_id": ticket.project_id
+                    "project_id": ticket.project_id,
                 },
                 calculation_basis={
                     "type": "presale",
                     "ticket_id": ticket.id,
                     "based_on": "WON",
                     "opportunity_id": ticket.opportunity_id,
-                    "project_id": ticket.project_id
+                    "project_id": ticket.project_id,
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             return calculation
 

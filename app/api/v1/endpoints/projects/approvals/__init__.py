@@ -20,9 +20,10 @@
 """
 
 import warnings
+
 from fastapi import APIRouter
 
-from . import submit_new, action_new, cancel_new, status_new, history_new
+from . import action_new, cancel_new, history_new, status_new, submit_new
 from .submit_new import ENTITY_TYPE_PROJECT
 
 # 发出废弃警告（模块级）

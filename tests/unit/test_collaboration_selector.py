@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.collaboration_rating.selector import CollaboratorSelector
 
@@ -36,7 +37,9 @@ class TestCollaboratorSelector:
         project = MagicMock(id=10)
 
         self.db.query.return_value.filter.return_value.first.side_effect = [period, profile]
-        self.db.query.return_value.join.return_value.filter.return_value.all.return_value = [project]
+        self.db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            project
+        ]
 
         member1 = MagicMock(user_id=2)
         member2 = MagicMock(user_id=3)
@@ -44,7 +47,10 @@ class TestCollaboratorSelector:
         p2 = MagicMock(user_id=3, job_type="test")
 
         # members query, profiles query
-        self.db.query.return_value.filter.return_value.all.side_effect = [[member1, member2], [p1, p2]]
+        self.db.query.return_value.filter.return_value.all.side_effect = [
+            [member1, member2],
+            [p1, p2],
+        ]
 
         result = self.selector.auto_select_collaborators(1, 1, target_count=5)
         assert set(result) == {2, 3}
@@ -53,8 +59,16 @@ class TestCollaboratorSelector:
         assert self.selector._get_target_job_types("mechanical") == ["electrical", "test"]
         assert self.selector._get_target_job_types("electrical") == ["mechanical", "test"]
         assert self.selector._get_target_job_types("test") == ["mechanical", "electrical"]
-        assert self.selector._get_target_job_types("solution") == ["mechanical", "electrical", "test"]
-        assert self.selector._get_target_job_types("unknown") == ["mechanical", "electrical", "test"]
+        assert self.selector._get_target_job_types("solution") == [
+            "mechanical",
+            "electrical",
+            "test",
+        ]
+        assert self.selector._get_target_job_types("unknown") == [
+            "mechanical",
+            "electrical",
+            "test",
+        ]
 
     def test_get_collaborators_filters_by_job_type(self):
         member = MagicMock(user_id=5)

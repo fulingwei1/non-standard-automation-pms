@@ -249,9 +249,7 @@ def get_supplier_price_volatility(
     variance_expr = (
         f"(AVG(({amount_expr}) * ({amount_expr})) - AVG({amount_expr}) * AVG({amount_expr}))"
     )
-    stddev_expr = (
-        f"ROUND(SQRT(CASE WHEN {variance_expr} > 0 THEN {variance_expr} ELSE 0 END), 2)"
-    )
+    stddev_expr = f"ROUND(SQRT(CASE WHEN {variance_expr} > 0 THEN {variance_expr} ELSE 0 END), 2)"
 
     sql = text(
         f"""

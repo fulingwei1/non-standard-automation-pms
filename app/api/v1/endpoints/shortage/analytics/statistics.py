@@ -38,6 +38,7 @@ router = APIRouter()
 # 辅助函数
 # ============================================================
 
+
 def _calculate_default_date_range(today: date) -> tuple[date, date]:
     """计算默认日期范围（当前月）"""
     start_date, end_date = get_month_range(today)
@@ -47,6 +48,7 @@ def _calculate_default_date_range(today: date) -> tuple[date, date]:
 # ============================================================
 # 统计概览
 # ============================================================
+
 
 @router.get("/overview", response_model=ResponseModel)
 def get_statistics_overview(
@@ -60,7 +62,7 @@ def get_statistics_overview(
     """
     result = {
         "alerts": {},  # 系统检测的缺料预警 (MaterialShortage)
-        "reports": {}  # 人工上报的缺料 (ShortageReport)
+        "reports": {},  # 人工上报的缺料 (ShortageReport)
     }
 
     # === 系统检测的缺料预警 (MaterialShortage) ===
@@ -141,6 +143,7 @@ def get_statistics_overview(
 # 缺料原因分析
 # ============================================================
 
+
 @router.get("/cause-analysis", response_model=ResponseModel)
 def get_cause_analysis(
     db: Session = Depends(deps.get_db),
@@ -162,7 +165,7 @@ def get_cause_analysis(
     # 查询人工上报的缺料
     query = db.query(ShortageReport).filter(
         func.date(ShortageReport.report_time) >= start_date,
-        func.date(ShortageReport.report_time) <= end_date
+        func.date(ShortageReport.report_time) <= end_date,
     )
 
     if project_id:
@@ -173,14 +176,14 @@ def get_cause_analysis(
     # 按解决方案类型统计
     by_solution: Dict[str, Dict[str, Any]] = {}
     for report in reports:
-        solution = report.solution_type or 'UNKNOWN'
+        solution = report.solution_type or "UNKNOWN"
         if solution not in by_solution:
             by_solution[solution] = {
                 "solution_type": solution,
                 "count": 0,
                 "total_shortage_qty": 0.0,
                 "avg_resolve_time_hours": 0.0,
-                "_total_resolve_time": 0.0
+                "_total_resolve_time": 0.0,
             }
         by_solution[solution]["count"] += 1
         by_solution[solution]["total_shortage_qty"] += float(report.shortage_qty)
@@ -193,7 +196,9 @@ def get_cause_analysis(
     # 计算平均解决时间
     for stats in by_solution.values():
         if stats["count"] > 0:
-            stats["avg_resolve_time_hours"] = round(stats["_total_resolve_time"] / stats["count"], 2)
+            stats["avg_resolve_time_hours"] = round(
+                stats["_total_resolve_time"] / stats["count"], 2
+            )
         del stats["_total_resolve_time"]
 
     # 按紧急程度统计
@@ -201,11 +206,7 @@ def get_cause_analysis(
     for report in reports:
         level = report.urgent_level
         if level not in by_urgent:
-            by_urgent[level] = {
-                "urgent_level": level,
-                "count": 0,
-                "total_shortage_qty": 0.0
-            }
+            by_urgent[level] = {"urgent_level": level, "count": 0, "total_shortage_qty": 0.0}
         by_urgent[level]["count"] += 1
         by_urgent[level]["total_shortage_qty"] += float(report.shortage_qty)
 
@@ -219,7 +220,7 @@ def get_cause_analysis(
                 "project_id": report.project_id,
                 "project_name": project_name,
                 "count": 0,
-                "total_shortage_qty": 0.0
+                "total_shortage_qty": 0.0,
             }
         by_project[project_name]["count"] += 1
         by_project[project_name]["total_shortage_qty"] += float(report.shortage_qty)
@@ -232,14 +233,15 @@ def get_cause_analysis(
             "total_reports": len(reports),
             "by_solution": list(by_solution.values()),
             "by_urgent": list(by_urgent.values()),
-            "by_project": list(by_project.values())
-        }
+            "by_project": list(by_project.values()),
+        },
     )
 
 
 # ============================================================
 # 齐套率统计
 # ============================================================
+
 
 @router.get("/kit-rate", response_model=ResponseModel)
 def get_kit_rate_statistics(
@@ -264,11 +266,7 @@ def get_kit_rate_statistics(
             calculate_workshop_kit_statistics,
         )
     except ImportError:
-        return ResponseModel(
-            code=501,
-            message="齐套率统计服务未实现",
-            data=None
-        )
+        return ResponseModel(code=501, message="齐套率统计服务未实现", data=None)
 
     today = date.today()
     if not start_date or not end_date:
@@ -305,14 +303,15 @@ def get_kit_rate_statistics(
             "period": {"start": str(start_date), "end": str(end_date)},
             "group_by": group_by,
             "statistics": statistics,
-            "summary": summary
-        }
+            "summary": summary,
+        },
     )
 
 
 # ============================================================
 # 供应商交期分析
 # ============================================================
+
 
 @router.get("/supplier-delivery", response_model=ResponseModel)
 def get_supplier_delivery_analysis(
@@ -333,8 +332,7 @@ def get_supplier_delivery_analysis(
         end_date = end_date or default_end
 
     query = db.query(MaterialArrival).filter(
-        MaterialArrival.expected_date >= start_date,
-        MaterialArrival.expected_date <= end_date
+        MaterialArrival.expected_date >= start_date, MaterialArrival.expected_date <= end_date
     )
 
     if supplier_id:
@@ -355,7 +353,7 @@ def get_supplier_delivery_analysis(
                     "on_time": 0,
                     "delayed": 0,
                     "avg_delay_days": 0.0,
-                    "_total_delay_days": 0
+                    "_total_delay_days": 0,
                 }
 
             supplier_stats[supplier_key]["total_orders"] += 1
@@ -381,6 +379,6 @@ def get_supplier_delivery_analysis(
         data={
             "period": {"start": str(start_date), "end": str(end_date)},
             "total_suppliers": len(supplier_stats),
-            "supplier_stats": list(supplier_stats.values())
-        }
+            "supplier_stats": list(supplier_stats.values()),
+        },
     )

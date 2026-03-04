@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Excel渲染器单元测试 - 第三十六批"""
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-import tempfile
 import os
+import tempfile
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.renderers.excel_renderer")
 

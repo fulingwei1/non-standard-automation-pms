@@ -7,7 +7,7 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -16,11 +16,9 @@ from app.models.production import WorkOrder, Workstation
 from app.models.user import User
 from app.schemas.production import WorkOrderResponse
 from app.services.status_update_service import StatusUpdateService
-
-from fastapi import APIRouter
+from app.utils.db_helpers import get_or_404
 
 from .utils import get_work_order_response
-from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -48,11 +46,13 @@ def start_work_order(
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            related_entities.append({
-                "entity": workstation,
-                "field": "status",
-                "value": "WORKING",
-            })
+            related_entities.append(
+                {
+                    "entity": workstation,
+                    "field": "status",
+                    "value": "WORKING",
+                }
+            )
             # 工位还需要更新其他字段
             workstation.current_work_order_id = order.id
             workstation.current_worker_id = order.assigned_to
@@ -104,11 +104,13 @@ def complete_work_order(
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            related_entities.append({
-                "entity": workstation,
-                "field": "status",
-                "value": "IDLE",
-            })
+            related_entities.append(
+                {
+                    "entity": workstation,
+                    "field": "status",
+                    "value": "IDLE",
+                }
+            )
             # 工位还需要清空其他字段
             workstation.current_work_order_id = None
             workstation.current_worker_id = None
@@ -166,11 +168,13 @@ def pause_work_order(
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            related_entities.append({
-                "entity": workstation,
-                "field": "status",
-                "value": "IDLE",
-            })
+            related_entities.append(
+                {
+                    "entity": workstation,
+                    "field": "status",
+                    "value": "IDLE",
+                }
+            )
 
     # 更新前回调：记录暂停原因
     def before_update_callback(entity, old_status, new_status, operator):
@@ -221,11 +225,13 @@ def resume_work_order(
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            related_entities.append({
-                "entity": workstation,
-                "field": "status",
-                "value": "WORKING",
-            })
+            related_entities.append(
+                {
+                    "entity": workstation,
+                    "field": "status",
+                    "value": "WORKING",
+                }
+            )
             # 工位还需要更新其他字段
             workstation.current_work_order_id = order.id
             workstation.current_worker_id = order.assigned_to
@@ -274,11 +280,13 @@ def cancel_work_order(
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            related_entities.append({
-                "entity": workstation,
-                "field": "status",
-                "value": "IDLE",
-            })
+            related_entities.append(
+                {
+                    "entity": workstation,
+                    "field": "status",
+                    "value": "IDLE",
+                }
+            )
             # 工位还需要清空其他字段
             workstation.current_work_order_id = None
             workstation.current_worker_id = None

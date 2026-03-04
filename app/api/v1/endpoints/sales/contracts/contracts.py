@@ -5,18 +5,16 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models.sales.contracts import Contract
-from app.models.project import Project
-from app.common.query_filters import build_like_conditions
-from app.api.deps import get_db, get_current_active_user
-
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from app.models.project.financial import ProjectPaymentPlan as PaymentPlan
-from app.models.project.financial import ProjectMilestone
 
+from app.api.deps import get_current_active_user, get_db
+from app.common.query_filters import build_like_conditions
+from app.models.project import Project
+from app.models.project.financial import ProjectMilestone
+from app.models.project.financial import ProjectPaymentPlan as PaymentPlan
+from app.models.sales.contracts import Contract
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -41,9 +39,7 @@ async def create_project_from_contract(
 
     # 1. 查询合同
     result = await db.execute(
-        select(Contract)
-        .options(selectinload(Contract.customer))
-        .where(Contract.id == contract_id)
+        select(Contract).options(selectinload(Contract.customer)).where(Contract.id == contract_id)
     )
     contract = result.scalar_one_or_none()
 
@@ -97,9 +93,11 @@ async def create_project_from_contract(
                 contract_id=contract.id,
                 node_name=node.get("name", f"付款节点{milestone_seq}"),
                 percentage=node.get("percentage", 0),
-                amount=contract.contract_amount * node.get("percentage", 0) / 100
-                if node.get("percentage")
-                else 0,
+                amount=(
+                    contract.contract_amount * node.get("percentage", 0) / 100
+                    if node.get("percentage")
+                    else 0
+                ),
                 due_date=node.get("due_date"),
                 status="PENDING",
             )
@@ -152,10 +150,7 @@ async def _generate_project_code(db: AsyncSession) -> str:
 
     # 获取当月最后一个编码
     result = await db.execute(
-        select(Project.code)
-        .where(month_conditions[0])
-        .order_by(Project.code.desc())
-        .limit(1)
+        select(Project.code).where(month_conditions[0]).order_by(Project.code.desc()).limit(1)
     )
     last_project_code = result.scalar_one_or_none()
 

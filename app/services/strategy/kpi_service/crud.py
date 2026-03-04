@@ -59,10 +59,7 @@ def get_kpi(db: Session, kpi_id: int) -> Optional[KPI]:
     Returns:
         Optional[KPI]: KPI 对象
     """
-    return db.query(KPI).filter(
-        KPI.id == kpi_id,
-        KPI.is_active
-    ).first()
+    return db.query(KPI).filter(KPI.id == kpi_id, KPI.is_active).first()
 
 
 def list_kpis(
@@ -72,7 +69,7 @@ def list_kpis(
     ipooc_type: Optional[str] = None,
     data_source_type: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> tuple[List[KPI], int]:
     """
     获取 KPI 列表
@@ -95,10 +92,7 @@ def list_kpis(
         query = query.filter(KPI.csf_id == csf_id)
 
     if strategy_id:
-        query = query.join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.is_active
-        )
+        query = query.join(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active)
 
     if ipooc_type:
         query = query.filter(KPI.ipooc_type == ipooc_type)

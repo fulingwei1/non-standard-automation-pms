@@ -2,13 +2,15 @@
 """
 第十四批：人事管理 Dashboard 适配器 单元测试
 """
-import pytest
-from unittest.mock import MagicMock
 from datetime import date, timedelta
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
-    from app.services.dashboard_adapters.hr_management import HrDashboardAdapter
     from app.schemas.dashboard import DashboardStatCard
+    from app.services.dashboard_adapters.hr_management import HrDashboardAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -21,7 +23,9 @@ def make_db():
     db.query.return_value.filter.return_value.count.return_value = 0
     db.query.return_value.filter.return_value.filter.return_value.count.return_value = 0
     db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
-    db.query.return_value.join.return_value.filter.return_value.filter.return_value.count.return_value = 0
+    db.query.return_value.join.return_value.filter.return_value.filter.return_value.count.return_value = (
+        0
+    )
     return db
 
 
@@ -63,7 +67,9 @@ class TestHrDashboardAdapter:
     def test_get_widgets_callable(self):
         """验证 get_widgets 方法可被调用"""
         db = make_db()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         adapter = make_adapter(db)
         try:
             result = adapter.get_widgets()

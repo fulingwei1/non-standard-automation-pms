@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 外协商 ====================
 
+
 class VendorCreate(BaseModel):
     """创建外协商"""
+
     vendor_code: str = Field(max_length=50)
     vendor_name: str = Field(max_length=200)
     vendor_short_name: Optional[str] = None
@@ -34,6 +36,7 @@ class VendorCreate(BaseModel):
 
 class VendorUpdate(BaseModel):
     """更新外协商"""
+
     vendor_name: Optional[str] = None
     vendor_short_name: Optional[str] = None
     vendor_type: Optional[str] = None
@@ -50,6 +53,7 @@ class VendorUpdate(BaseModel):
 
 class VendorResponse(TimestampSchema):
     """外协商响应"""
+
     id: int
     vendor_code: str
     vendor_name: str
@@ -68,8 +72,10 @@ class VendorResponse(TimestampSchema):
 
 # ==================== 外协订单 ====================
 
+
 class OutsourcingOrderItemCreate(BaseModel):
     """外协订单明细创建"""
+
     material_id: Optional[int] = None
     material_code: str = Field(max_length=50)
     material_name: str = Field(max_length=200)
@@ -88,6 +94,7 @@ class OutsourcingOrderItemCreate(BaseModel):
 
 class OutsourcingOrderCreate(BaseModel):
     """创建外协订单"""
+
     vendor_id: int = Field(description="外协商ID")
     project_id: int = Field(description="项目ID")
     machine_id: Optional[int] = None
@@ -103,6 +110,7 @@ class OutsourcingOrderCreate(BaseModel):
 
 class OutsourcingOrderUpdate(BaseModel):
     """更新外协订单"""
+
     order_title: Optional[str] = None
     order_description: Optional[str] = None
     required_date: Optional[date] = None
@@ -113,6 +121,7 @@ class OutsourcingOrderUpdate(BaseModel):
 
 class OutsourcingOrderItemResponse(BaseSchema):
     """外协订单明细响应"""
+
     id: int
     item_no: int
     material_code: str
@@ -133,6 +142,7 @@ class OutsourcingOrderItemResponse(BaseSchema):
 
 class OutsourcingOrderResponse(TimestampSchema):
     """外协订单响应"""
+
     id: int
     order_no: str
     vendor_id: int
@@ -158,6 +168,7 @@ class OutsourcingOrderResponse(TimestampSchema):
 
 class OutsourcingOrderListResponse(BaseSchema):
     """外协订单列表响应"""
+
     id: int
     order_no: str
     vendor_name: str
@@ -173,8 +184,10 @@ class OutsourcingOrderListResponse(BaseSchema):
 
 # ==================== 外协交付 ====================
 
+
 class OutsourcingDeliveryItemCreate(BaseModel):
     """交付明细创建"""
+
     order_item_id: int
     delivery_quantity: Decimal = Field(gt=0)
     remark: Optional[str] = None
@@ -182,6 +195,7 @@ class OutsourcingDeliveryItemCreate(BaseModel):
 
 class OutsourcingDeliveryCreate(BaseModel):
     """创建交付单"""
+
     order_id: int
     delivery_date: date
     delivery_type: str = Field(default="NORMAL")
@@ -194,6 +208,7 @@ class OutsourcingDeliveryCreate(BaseModel):
 
 class OutsourcingDeliveryResponse(TimestampSchema):
     """交付单响应"""
+
     id: int
     delivery_no: str
     order_id: int
@@ -207,8 +222,10 @@ class OutsourcingDeliveryResponse(TimestampSchema):
 
 # ==================== 外协质检 ====================
 
+
 class OutsourcingInspectionCreate(BaseModel):
     """创建质检"""
+
     delivery_id: int
     delivery_item_id: int
     inspect_type: str = Field(default="INCOMING")
@@ -227,6 +244,7 @@ class OutsourcingInspectionCreate(BaseModel):
 
 class OutsourcingInspectionResponse(TimestampSchema):
     """质检响应"""
+
     id: int
     inspection_no: str
     delivery_id: int
@@ -243,8 +261,10 @@ class OutsourcingInspectionResponse(TimestampSchema):
 
 # ==================== 外协进度 ====================
 
+
 class OutsourcingProgressCreate(BaseModel):
     """创建进度报告"""
+
     order_id: int
     order_item_id: Optional[int] = None
     report_date: date
@@ -260,6 +280,7 @@ class OutsourcingProgressCreate(BaseModel):
 
 class OutsourcingProgressResponse(TimestampSchema):
     """进度报告响应"""
+
     id: int
     order_id: int
     report_date: date
@@ -273,8 +294,10 @@ class OutsourcingProgressResponse(TimestampSchema):
 
 # ==================== 外协付款 ====================
 
+
 class OutsourcingPaymentCreate(BaseModel):
     """创建外协付款"""
+
     vendor_id: int = Field(description="外协商ID")
     order_id: Optional[int] = Field(default=None, description="外协订单ID")
     payment_type: str = Field(description="ADVANCE/PROGRESS/FINAL/OTHER")
@@ -289,6 +312,7 @@ class OutsourcingPaymentCreate(BaseModel):
 
 class OutsourcingPaymentUpdate(BaseModel):
     """更新外协付款"""
+
     payment_amount: Optional[Decimal] = None
     payment_date: Optional[date] = None
     payment_method: Optional[str] = None
@@ -300,6 +324,7 @@ class OutsourcingPaymentUpdate(BaseModel):
 
 class OutsourcingPaymentResponse(TimestampSchema):
     """外协付款响应"""
+
     id: int
     payment_no: str
     vendor_id: int

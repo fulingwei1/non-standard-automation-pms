@@ -44,9 +44,11 @@ class TemplateCrudMixin:
             StageTemplate: 创建的模板对象
         """
         # 检查编码唯一性
-        existing = self.db.query(StageTemplate).filter(
-            StageTemplate.template_code == template_code
-        ).first()
+        existing = (
+            self.db.query(StageTemplate)
+            .filter(StageTemplate.template_code == template_code)
+            .first()
+        )
         if existing:
             raise ValueError(f"模板编码 {template_code} 已存在")
 
@@ -126,11 +128,7 @@ class TemplateCrudMixin:
 
         return query.order_by(StageTemplate.project_type, StageTemplate.template_name).all()
 
-    def update_template(
-        self,
-        template_id: int,
-        **kwargs
-    ) -> Optional[StageTemplate]:
+    def update_template(self, template_id: int, **kwargs) -> Optional[StageTemplate]:
         """
         更新模板信息
 
@@ -141,9 +139,7 @@ class TemplateCrudMixin:
         Returns:
             StageTemplate: 更新后的模板对象
         """
-        template = self.db.query(StageTemplate).filter(
-            StageTemplate.id == template_id
-        ).first()
+        template = self.db.query(StageTemplate).filter(StageTemplate.id == template_id).first()
 
         if not template:
             return None
@@ -171,17 +167,15 @@ class TemplateCrudMixin:
         Returns:
             bool: 是否删除成功
         """
-        template = self.db.query(StageTemplate).filter(
-            StageTemplate.id == template_id
-        ).first()
+        template = self.db.query(StageTemplate).filter(StageTemplate.id == template_id).first()
 
         if not template:
             return False
 
         # 检查是否有项目在使用此模板
-        usage_count = self.db.query(Project).filter(
-            Project.stage_template_id == template_id
-        ).count()
+        usage_count = (
+            self.db.query(Project).filter(Project.stage_template_id == template_id).count()
+        )
 
         if usage_count > 0:
             raise ValueError(f"模板正在被 {usage_count} 个项目使用，无法删除")
@@ -261,7 +255,11 @@ class TemplateCrudMixin:
             for old_node in old_stage.nodes:
                 if old_node.dependency_node_ids:
                     new_node_id = node_id_mapping[old_node.id]
-                    new_deps = [node_id_mapping[dep_id] for dep_id in old_node.dependency_node_ids if dep_id in node_id_mapping]
+                    new_deps = [
+                        node_id_mapping[dep_id]
+                        for dep_id in old_node.dependency_node_ids
+                        if dep_id in node_id_mapping
+                    ]
                     if new_deps:
                         self.db.query(NodeDefinition).filter(
                             NodeDefinition.id == new_node_id

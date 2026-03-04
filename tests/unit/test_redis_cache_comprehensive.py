@@ -16,9 +16,9 @@ RedisCache 综合单元测试
 - flush: 清空缓存
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import timedelta
 import json
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,7 +28,7 @@ class TestRedisCacheInit:
 
     def test_initializes_with_defaults(self):
         """测试使用默认参数初始化"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', False):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", False):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache()
@@ -41,15 +41,10 @@ class TestRedisCacheInit:
 
     def test_initializes_with_custom_params(self):
         """测试使用自定义参数初始化"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', False):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", False):
             from app.services.cache.redis_cache import RedisCache
 
-            cache = RedisCache(
-                host="redis.example.com",
-                port=6380,
-                db=1,
-                password="secret"
-            )
+            cache = RedisCache(host="redis.example.com", port=6380, db=1, password="secret")
 
             assert cache.host == "redis.example.com"
             assert cache.port == 6380
@@ -61,8 +56,8 @@ class TestRedisCacheInit:
         mock_redis = MagicMock()
         mock_redis.ping.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
-            with patch('app.services.cache.redis_cache.redis.Redis', return_value=mock_redis):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
+            with patch("app.services.cache.redis_cache.redis.Redis", return_value=mock_redis):
                 from app.services.cache.redis_cache import RedisCache
 
                 cache = RedisCache()
@@ -75,7 +70,7 @@ class TestIsAvailable:
 
     def test_returns_false_when_redis_not_available(self):
         """测试 Redis 不可用时返回 False"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', False):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", False):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache()
@@ -86,7 +81,7 @@ class TestIsAvailable:
 
     def test_returns_false_when_no_client(self):
         """测试没有客户端时返回 False"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -101,7 +96,7 @@ class TestIsAvailable:
         mock_client = MagicMock()
         mock_client.ping.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -116,7 +111,7 @@ class TestIsAvailable:
         mock_client = MagicMock()
         mock_client.ping.side_effect = Exception("Connection failed")
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -135,7 +130,7 @@ class TestSet:
         mock_client = MagicMock()
         mock_client.set.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -151,7 +146,7 @@ class TestSet:
         mock_client = MagicMock()
         mock_client.set.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -166,7 +161,7 @@ class TestSet:
         mock_client = MagicMock()
         mock_client.set.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -178,7 +173,7 @@ class TestSet:
 
     def test_returns_false_when_no_client(self):
         """测试没有客户端时返回 False"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -193,7 +188,7 @@ class TestSet:
         mock_client = MagicMock()
         mock_client.set.side_effect = Exception("Redis error")
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -212,7 +207,7 @@ class TestGet:
         mock_client = MagicMock()
         mock_client.get.return_value = b'"test_value"'
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -227,7 +222,7 @@ class TestGet:
         mock_client = MagicMock()
         mock_client.get.return_value = None
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -242,7 +237,7 @@ class TestGet:
         mock_client = MagicMock()
         mock_client.get.return_value = None
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -254,7 +249,7 @@ class TestGet:
 
     def test_returns_none_when_no_client(self):
         """测试没有客户端时返回 None"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -273,7 +268,7 @@ class TestDelete:
         mock_client = MagicMock()
         mock_client.delete.return_value = 1
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -288,7 +283,7 @@ class TestDelete:
         mock_client = MagicMock()
         mock_client.delete.return_value = 0
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -300,7 +295,7 @@ class TestDelete:
 
     def test_returns_false_when_no_client(self):
         """测试没有客户端时返回 False"""
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -319,7 +314,7 @@ class TestExists:
         mock_client = MagicMock()
         mock_client.exists.return_value = 1
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -334,7 +329,7 @@ class TestExists:
         mock_client = MagicMock()
         mock_client.exists.return_value = 0
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -353,7 +348,7 @@ class TestExpire:
         mock_client = MagicMock()
         mock_client.expire.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -369,7 +364,7 @@ class TestExpire:
         mock_client = MagicMock()
         mock_client.expire.return_value = True
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -388,7 +383,7 @@ class TestTTL:
         mock_client = MagicMock()
         mock_client.ttl.return_value = 3600
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -403,7 +398,7 @@ class TestTTL:
         mock_client = MagicMock()
         mock_client.ttl.return_value = -1
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -422,7 +417,7 @@ class TestKeys:
         mock_client = MagicMock()
         mock_client.keys.return_value = [b"user:1", b"user:2", b"user:3"]
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)
@@ -437,7 +432,7 @@ class TestKeys:
         mock_client = MagicMock()
         mock_client.keys.return_value = []
 
-        with patch('app.services.cache.redis_cache.REDIS_AVAILABLE', True):
+        with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", True):
             from app.services.cache.redis_cache import RedisCache
 
             cache = RedisCache.__new__(RedisCache)

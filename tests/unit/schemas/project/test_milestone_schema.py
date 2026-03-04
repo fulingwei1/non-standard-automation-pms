@@ -6,9 +6,9 @@ ProjectMilestone Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
     from app.schemas.project import ProjectMilestoneCreate, ProjectMilestoneUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False

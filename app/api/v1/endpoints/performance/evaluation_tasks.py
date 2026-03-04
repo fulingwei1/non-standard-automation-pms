@@ -15,14 +15,14 @@ from sqlalchemy.orm import Session, joinedload
 from app.api import deps
 from app.core import security
 from app.models.organization import Department
+from app.models.performance.enums import (
+    EvaluationStatusEnum,
+    EvaluatorTypeEnum,
+    MonthlySummaryStatusEnum,
+)
 from app.models.performance.monthly_system import (
     MonthlyWorkSummary,
     PerformanceEvaluationRecord,
-)
-from app.models.performance.enums import (
-    EvaluatorTypeEnum,
-    EvaluationStatusEnum,
-    MonthlySummaryStatusEnum,
 )
 from app.models.project import Project, ProjectMember
 from app.models.user import User
@@ -30,10 +30,7 @@ from app.schemas.performance import EvaluationTaskItem, EvaluationTaskListRespon
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(
-    prefix="/performance",
-    tags=["performance-evaluation-tasks"]
-)
+router = APIRouter(prefix="/performance", tags=["performance-evaluation-tasks"])
 
 
 def _get_department_members(db: Session, user: User) -> List[int]:
@@ -47,22 +44,24 @@ def _get_department_members(db: Session, user: User) -> List[int]:
     from app.models.organization import Employee
 
     # 先查找当前用户关联的 employee
-    employee = db.query(Employee).filter(
-        Employee.is_active,
-        or_(
-            Employee.name == user.real_name,
-            Employee.employee_code == user.username
+    employee = (
+        db.query(Employee)
+        .filter(
+            Employee.is_active,
+            or_(Employee.name == user.real_name, Employee.employee_code == user.username),
         )
-    ).first()
+        .first()
+    )
 
     if not employee:
         return []
 
     # 查找以该员工为经理的部门
-    managed_depts = db.query(Department).filter(
-        Department.manager_id == employee.id,
-        Department.is_active
-    ).all()
+    managed_depts = (
+        db.query(Department)
+        .filter(Department.manager_id == employee.id, Department.is_active)
+        .all()
+    )
 
     if not managed_depts:
         return []
@@ -71,11 +70,11 @@ def _get_department_members(db: Session, user: User) -> List[int]:
 
     # 获取这些部门的所有员工的 user_id
     # 通过 User 表的 department 字段匹配
-    member_ids = db.query(User.id).filter(
-        User.department.in_(dept_names),
-        User.is_active,
-        User.id != user.id  # 排除自己
-    ).all()
+    member_ids = (
+        db.query(User.id)
+        .filter(User.department.in_(dept_names), User.is_active, User.id != user.id)  # 排除自己
+        .all()
+    )
 
     return [m[0] for m in member_ids]
 
@@ -88,10 +87,7 @@ def _get_project_member_info(db: Session, user: User) -> List[dict]:
         List[dict]: [{"project_id": ..., "project_name": ..., "member_ids": [...]}]
     """
     # 查找当前用户担任PM的活跃项目
-    managed_projects = db.query(Project).filter(
-        Project.pm_id == user.id,
-        Project.is_active
-    ).all()
+    managed_projects = db.query(Project).filter(Project.pm_id == user.id, Project.is_active).all()
 
     if not managed_projects:
         return []
@@ -99,18 +95,22 @@ def _get_project_member_info(db: Session, user: User) -> List[dict]:
     result = []
     for project in managed_projects:
         # 获取项目成员 (排除PM自己)
-        members = db.query(ProjectMember.user_id).filter(
-            ProjectMember.project_id == project.id,
-            ProjectMember.user_id != user.id
-        ).distinct().all()
+        members = (
+            db.query(ProjectMember.user_id)
+            .filter(ProjectMember.project_id == project.id, ProjectMember.user_id != user.id)
+            .distinct()
+            .all()
+        )
 
         member_ids = [m[0] for m in members]
         if member_ids:
-            result.append({
-                "project_id": project.id,
-                "project_name": project.project_name,
-                "member_ids": member_ids
-            })
+            result.append(
+                {
+                    "project_id": project.id,
+                    "project_name": project.project_name,
+                    "member_ids": member_ids,
+                }
+            )
 
     return result
 
@@ -120,7 +120,7 @@ def _build_evaluation_task(
     evaluation_type: str,
     project_id: Optional[int] = None,
     project_name: Optional[str] = None,
-    existing_eval: Optional[PerformanceEvaluationRecord] = None
+    existing_eval: Optional[PerformanceEvaluationRecord] = None,
 ) -> EvaluationTaskItem:
     """构建评价任务项"""
     return EvaluationTaskItem(
@@ -132,13 +132,19 @@ def _build_evaluation_task(
         evaluation_type=evaluation_type,
         project_id=project_id,
         project_name=project_name,
-        status="COMPLETED" if existing_eval and existing_eval.status == EvaluationStatusEnum.COMPLETED.value else "PENDING",
+        status=(
+            "COMPLETED"
+            if existing_eval and existing_eval.status == EvaluationStatusEnum.COMPLETED.value
+            else "PENDING"
+        ),
         deadline=None,  # 可以从配置中获取截止日期
-        submit_date=summary.submit_date
+        submit_date=summary.submit_date,
     )
 
 
-@router.get("/evaluation-tasks", response_model=EvaluationTaskListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/evaluation-tasks", response_model=EvaluationTaskListResponse, status_code=status.HTTP_200_OK
+)
 def get_evaluation_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -156,7 +162,9 @@ def get_evaluation_tasks(
     if not period:
         period = date.today().strftime("%Y-%m")
 
-    logger.info(f"用户 {current_user.username} 查询绩效评价，周期: {period}, 租户: {current_user.tenant_id}")
+    logger.info(
+        f"用户 {current_user.username} 查询绩效评价，周期: {period}, 租户: {current_user.tenant_id}"
+    )
 
     tasks: List[EvaluationTaskItem] = []
 
@@ -166,37 +174,46 @@ def get_evaluation_tasks(
 
     if dept_member_ids:
         # 查询这些员工已提交的工作总结（添加租户过滤）
-        dept_summaries = db.query(MonthlyWorkSummary).options(
-            joinedload(MonthlyWorkSummary.employee),
-            joinedload(MonthlyWorkSummary.evaluations)
-        ).filter(
-            MonthlyWorkSummary.employee_id.in_(dept_member_ids),
-            MonthlyWorkSummary.period == period,
-            MonthlyWorkSummary.status.in_([
-                MonthlySummaryStatusEnum.SUBMITTED.value,
-                MonthlySummaryStatusEnum.EVALUATING.value
-            ])
-        ).all()
+        dept_summaries = (
+            db.query(MonthlyWorkSummary)
+            .options(
+                joinedload(MonthlyWorkSummary.employee), joinedload(MonthlyWorkSummary.evaluations)
+            )
+            .filter(
+                MonthlyWorkSummary.employee_id.in_(dept_member_ids),
+                MonthlyWorkSummary.period == period,
+                MonthlyWorkSummary.status.in_(
+                    [
+                        MonthlySummaryStatusEnum.SUBMITTED.value,
+                        MonthlySummaryStatusEnum.EVALUATING.value,
+                    ]
+                ),
+            )
+            .all()
+        )
 
         logger.debug(f"部门工作总结数量: {len(dept_summaries)}")
 
         for summary in dept_summaries:
             # 租户隔离检查
-            if hasattr(summary, 'tenant_id') and summary.tenant_id != current_user.tenant_id:
-                logger.warning(f"跨租户数据访问被阻止: summary.id={summary.id}, summary.tenant_id={summary.tenant_id}, user.tenant_id={current_user.tenant_id}")
+            if hasattr(summary, "tenant_id") and summary.tenant_id != current_user.tenant_id:
+                logger.warning(
+                    f"跨租户数据访问被阻止: summary.id={summary.id}, summary.tenant_id={summary.tenant_id}, user.tenant_id={current_user.tenant_id}"
+                )
                 continue
 
             # 检查当前用户是否已评价
             existing_eval = next(
-                (e for e in summary.evaluations
-                 if e.evaluator_id == current_user.id
-                 and e.evaluator_type == EvaluatorTypeEnum.DEPT_MANAGER.value),
-                None
+                (
+                    e
+                    for e in summary.evaluations
+                    if e.evaluator_id == current_user.id
+                    and e.evaluator_type == EvaluatorTypeEnum.DEPT_MANAGER.value
+                ),
+                None,
             )
             task = _build_evaluation_task(
-                summary,
-                evaluation_type="dept",
-                existing_eval=existing_eval
+                summary, evaluation_type="dept", existing_eval=existing_eval
             )
             tasks.append(task)
 
@@ -210,40 +227,49 @@ def get_evaluation_tasks(
         member_ids = project_info["member_ids"]
 
         # 查询这些员工已提交的工作总结
-        project_summaries = db.query(MonthlyWorkSummary).options(
-            joinedload(MonthlyWorkSummary.employee),
-            joinedload(MonthlyWorkSummary.evaluations)
-        ).filter(
-            MonthlyWorkSummary.employee_id.in_(member_ids),
-            MonthlyWorkSummary.period == period,
-            MonthlyWorkSummary.status.in_([
-                MonthlySummaryStatusEnum.SUBMITTED.value,
-                MonthlySummaryStatusEnum.EVALUATING.value
-            ])
-        ).all()
+        project_summaries = (
+            db.query(MonthlyWorkSummary)
+            .options(
+                joinedload(MonthlyWorkSummary.employee), joinedload(MonthlyWorkSummary.evaluations)
+            )
+            .filter(
+                MonthlyWorkSummary.employee_id.in_(member_ids),
+                MonthlyWorkSummary.period == period,
+                MonthlyWorkSummary.status.in_(
+                    [
+                        MonthlySummaryStatusEnum.SUBMITTED.value,
+                        MonthlySummaryStatusEnum.EVALUATING.value,
+                    ]
+                ),
+            )
+            .all()
+        )
 
         logger.debug(f"项目 {project_name} 工作总结数量: {len(project_summaries)}")
 
         for summary in project_summaries:
             # 租户隔离检查
-            if hasattr(summary, 'tenant_id') and summary.tenant_id != current_user.tenant_id:
+            if hasattr(summary, "tenant_id") and summary.tenant_id != current_user.tenant_id:
                 logger.warning(f"跨租户数据访问被阻止: summary.id={summary.id}")
                 continue
 
             # 检查当前用户是否已对该项目评价
             existing_eval = next(
-                (e for e in summary.evaluations
-                 if e.evaluator_id == current_user.id
-                 and e.evaluator_type == EvaluatorTypeEnum.PROJECT_MANAGER.value
-                 and e.project_id == project_id),
-                None
+                (
+                    e
+                    for e in summary.evaluations
+                    if e.evaluator_id == current_user.id
+                    and e.evaluator_type == EvaluatorTypeEnum.PROJECT_MANAGER.value
+                    and e.project_id == project_id
+                ),
+                None,
             )
             task = _build_evaluation_task(
                 summary,
                 evaluation_type="project",
                 project_id=project_id,
                 project_name=project_name,
-                existing_eval=existing_eval
+                existing_eval=existing_eval,
             )
             tasks.append(task)
 
@@ -259,8 +285,5 @@ def get_evaluation_tasks(
     completed_count = sum(1 for t in tasks if t.status == "COMPLETED")
 
     return EvaluationTaskListResponse(
-        tasks=tasks,
-        total=len(tasks),
-        pending_count=pending_count,
-        completed_count=completed_count
+        tasks=tasks, total=len(tasks), pending_count=pending_count, completed_count=completed_count
     )

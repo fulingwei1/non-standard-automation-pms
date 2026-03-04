@@ -1,6 +1,7 @@
 """
 问题管理中心模块 - Pydantic Schemas
 """
+
 from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
@@ -11,8 +12,10 @@ from app.schemas.common import PaginatedResponse
 
 # ==================== 问题相关 Schema ====================
 
+
 class IssueBase(BaseModel):
     """问题基础模型"""
+
     category: str = Field(..., description="问题分类")
     project_id: Optional[int] = Field(None, description="关联项目ID")
     machine_id: Optional[int] = Field(None, description="关联机台ID")
@@ -35,7 +38,10 @@ class IssueBase(BaseModel):
     is_blocking: bool = Field(default=False, description="是否阻塞")
 
     # 问题原因和责任工程师
-    root_cause: Optional[str] = Field(None, description="问题原因：DESIGN_ERROR/MATERIAL_DEFECT/PROCESS_ERROR/EXTERNAL_FACTOR/OTHER")
+    root_cause: Optional[str] = Field(
+        None,
+        description="问题原因：DESIGN_ERROR/MATERIAL_DEFECT/PROCESS_ERROR/EXTERNAL_FACTOR/OTHER",
+    )
     responsible_engineer_id: Optional[int] = Field(None, description="责任工程师ID")
     responsible_engineer_name: Optional[str] = Field(None, description="责任工程师姓名")
     estimated_inventory_loss: Optional[Decimal] = Field(None, description="预估库存损失金额")
@@ -47,11 +53,13 @@ class IssueBase(BaseModel):
 
 class IssueCreate(IssueBase):
     """创建问题"""
+
     pass
 
 
 class IssueUpdate(BaseModel):
     """更新问题"""
+
     issue_type: Optional[str] = None
     severity: Optional[str] = None
     priority: Optional[str] = None
@@ -76,6 +84,7 @@ class IssueUpdate(BaseModel):
 
 class IssueResponse(IssueBase):
     """问题响应模型"""
+
     id: int
     issue_no: str
     reporter_id: int
@@ -110,8 +119,10 @@ class IssueResponse(IssueBase):
 
 # ==================== 问题跟进相关 Schema ====================
 
+
 class IssueFollowUpBase(BaseModel):
     """问题跟进基础模型"""
+
     follow_up_type: str = Field(..., description="跟进类型")
     content: str = Field(..., description="跟进内容")
     old_status: Optional[str] = Field(None, description="原状态")
@@ -121,11 +132,13 @@ class IssueFollowUpBase(BaseModel):
 
 class IssueFollowUpCreate(IssueFollowUpBase):
     """创建问题跟进"""
+
     issue_id: int
 
 
 class IssueFollowUpResponse(IssueFollowUpBase):
     """问题跟进响应模型"""
+
     id: int
     issue_id: int
     operator_id: int
@@ -138,8 +151,10 @@ class IssueFollowUpResponse(IssueFollowUpBase):
 
 # ==================== 问题操作相关 Schema ====================
 
+
 class IssueAssignRequest(BaseModel):
     """分配问题请求"""
+
     assignee_id: int = Field(..., description="处理负责人ID")
     due_date: Optional[date] = Field(None, description="要求完成日期")
     comment: Optional[str] = Field(None, description="分配说明")
@@ -147,26 +162,31 @@ class IssueAssignRequest(BaseModel):
 
 class IssueResolveRequest(BaseModel):
     """解决问题请求"""
+
     solution: str = Field(..., description="解决方案")
     comment: Optional[str] = Field(None, description="解决说明")
 
 
 class IssueVerifyRequest(BaseModel):
     """验证问题请求"""
+
     verified_result: str = Field(..., description="验证结果：VERIFIED/REJECTED")
     comment: Optional[str] = Field(None, description="验证说明")
 
 
 class IssueStatusChangeRequest(BaseModel):
     """问题状态变更请求"""
+
     status: str = Field(..., description="新状态")
     comment: Optional[str] = Field(None, description="状态变更说明")
 
 
 # ==================== 问题查询相关 Schema ====================
 
+
 class IssueFilterParams(BaseModel):
     """问题筛选参数"""
+
     category: Optional[str] = None
     project_id: Optional[int] = None
     machine_id: Optional[int] = None
@@ -185,11 +205,13 @@ class IssueFilterParams(BaseModel):
 
 class IssueListResponse(PaginatedResponse[IssueResponse]):
     """问题列表响应"""
+
     pass
 
 
 class IssueStatistics(BaseModel):
     """问题统计"""
+
     total: int = 0
     open: int = 0
     processing: int = 0
@@ -201,7 +223,9 @@ class IssueStatistics(BaseModel):
     by_category: dict = {}
     by_type: dict = {}
 
-    @field_validator('total', 'open', 'processing', 'resolved', 'closed', 'overdue', 'blocking', mode='before')
+    @field_validator(
+        "total", "open", "processing", "resolved", "closed", "overdue", "blocking", mode="before"
+    )
     @classmethod
     def convert_none_to_zero(cls, v):
         """Convert None to 0 for integer fields"""
@@ -210,6 +234,7 @@ class IssueStatistics(BaseModel):
 
 class EngineerIssueStatistics(BaseModel):
     """工程师问题统计"""
+
     engineer_id: int
     engineer_name: str
     total_issues: int = 0  # 总问题数
@@ -221,8 +246,10 @@ class EngineerIssueStatistics(BaseModel):
 
 # ==================== 问题模板相关 Schema ====================
 
+
 class IssueTemplateBase(BaseModel):
     """问题模板基础模型"""
+
     template_name: str = Field(..., max_length=100, description="模板名称")
     template_code: str = Field(..., max_length=50, description="模板编码")
     category: str = Field(..., description="问题分类")
@@ -242,11 +269,13 @@ class IssueTemplateBase(BaseModel):
 
 class IssueTemplateCreate(IssueTemplateBase):
     """创建问题模板"""
+
     pass
 
 
 class IssueTemplateUpdate(BaseModel):
     """更新问题模板"""
+
     template_name: Optional[str] = None
     category: Optional[str] = None
     issue_type: Optional[str] = None
@@ -265,6 +294,7 @@ class IssueTemplateUpdate(BaseModel):
 
 class IssueTemplateResponse(IssueTemplateBase):
     """问题模板响应模型"""
+
     id: int
     usage_count: int = 0
     last_used_at: Optional[datetime] = None
@@ -277,11 +307,13 @@ class IssueTemplateResponse(IssueTemplateBase):
 
 class IssueTemplateListResponse(PaginatedResponse[IssueTemplateResponse]):
     """问题模板列表响应"""
+
     pass
 
 
 class IssueFromTemplateRequest(BaseModel):
     """从模板创建问题请求（template_id在路径参数中）"""
+
     project_id: Optional[int] = Field(None, description="关联项目ID")
     machine_id: Optional[int] = Field(None, description="关联机台ID")
     task_id: Optional[int] = Field(None, description="关联任务ID")
@@ -297,8 +329,10 @@ class IssueFromTemplateRequest(BaseModel):
 
 # ==================== 问题统计快照相关 Schema ====================
 
+
 class IssueStatisticsSnapshotResponse(BaseModel):
     """问题统计快照响应模型"""
+
     id: int
     snapshot_date: date
     total_issues: int
@@ -343,5 +377,5 @@ class IssueStatisticsSnapshotResponse(BaseModel):
 
 class IssueStatisticsSnapshotListResponse(PaginatedResponse[IssueStatisticsSnapshotResponse]):
     """问题统计快照列表响应"""
-    pass
 
+    pass

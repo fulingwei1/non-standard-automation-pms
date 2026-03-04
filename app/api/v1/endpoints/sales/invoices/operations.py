@@ -27,6 +27,7 @@ from app.services.approval_engine import ApprovalEngineService as ApprovalWorkfl
 logger = logging.getLogger(__name__)
 
 from app.utils.db_helpers import get_or_404
+
 router = APIRouter()
 
 
@@ -46,8 +47,7 @@ def issue_invoice(
     # 检查是否已通过审批（如果启用了审批工作流）
     workflow_service = ApprovalWorkflowService(db)
     record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE,
-        entity_id=invoice_id
+        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
     )
 
     if record and record.status != ApprovalRecordStatusEnum.APPROVED:
@@ -66,6 +66,7 @@ def issue_invoice(
     # 发送发票开具通知
     try:
         from app.services.sales_reminder import notify_invoice_issued
+
         notify_invoice_issued(db, invoice.id)
         db.commit()
     except Exception as e:
@@ -114,10 +115,11 @@ def receive_payment(
 
     db.commit()
 
-    return ResponseModel(code=200, message="收款记录成功", data={
-        "paid_amount": float(new_paid),
-        "payment_status": invoice.payment_status
-    })
+    return ResponseModel(
+        code=200,
+        message="收款记录成功",
+        data={"paid_amount": float(new_paid), "payment_status": invoice.payment_status},
+    )
 
 
 @router.put("/invoices/{invoice_id}/void", response_model=ResponseModel)

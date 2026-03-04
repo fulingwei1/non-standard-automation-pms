@@ -51,7 +51,7 @@ def get_sales_data_scope(user: User, db: Session) -> str:
         'NONE': 无权限
     """
     from app.core.auth import is_superuser
-    
+
     if is_superuser(user):
         return "ALL"
 
@@ -79,7 +79,16 @@ def get_sales_data_scope(user: User, db: Session) -> str:
         if user_role.role and user_role.role.is_active:
             role_code = (user_role.role.role_code or "").upper()
             # 财务角色：如果数据范围是 ALL，则保持 ALL；否则标记为 FINANCE_ONLY
-            if role_code in ["FINANCE", "FI", "CFO", "财务", "财务人员", "财务专员", "财务经理", "财务总监"]:
+            if role_code in [
+                "FINANCE",
+                "FI",
+                "CFO",
+                "财务",
+                "财务人员",
+                "财务专员",
+                "财务经理",
+                "财务总监",
+            ]:
                 if sales_scope != "ALL":
                     return "FINANCE_ONLY"
 
@@ -120,13 +129,10 @@ def filter_sales_data_by_scope(
     elif scope == "DEPT":
         # 部门可见：同部门用户的数据
         if user.department and owner_field is not None:
-            dept = (
-                db.query(Department)
-                .filter(Department.dept_name == user.department)
-                .first()
-            )
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
             if dept:
                 from ..models.user import User as UserModel
+
                 dept_users = (
                     db.query(UserModel).filter(UserModel.department == user.department).all()
                 )
@@ -194,13 +200,10 @@ def filter_sales_finance_data_by_scope(
     if scope == "DEPT":
         # 部门可见：同部门用户的数据
         if user.department and owner_field is not None:
-            dept = (
-                db.query(Department)
-                .filter(Department.dept_name == user.department)
-                .first()
-            )
+            dept = db.query(Department).filter(Department.dept_name == user.department).first()
             if dept:
                 from ..models.user import User as UserModel
+
                 dept_users = (
                     db.query(UserModel).filter(UserModel.department == user.department).all()
                 )
@@ -385,9 +388,7 @@ def require_sales_edit_permission(
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ):
-        if not check_sales_edit_permission(
-            current_user, db, entity_created_by, entity_owner_id
-        ):
+        if not check_sales_edit_permission(current_user, db, entity_created_by, entity_owner_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="您没有权限编辑此数据"
             )

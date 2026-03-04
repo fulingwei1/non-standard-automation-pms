@@ -29,7 +29,7 @@ router = APIRouter()
 async def create_payment_reminder(
     reminder_data: PaymentReminderCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:create"))
+    current_user: User = Depends(security.require_permission("business_support:create")),
 ):
     """创建回款催收记录"""
     try:
@@ -51,7 +51,7 @@ async def create_payment_reminder(
             customer_response=reminder_data.customer_response,
             next_reminder_date=reminder_data.next_reminder_date,
             status="pending",
-            remark=reminder_data.remark
+            remark=reminder_data.remark,
         )
 
         db.add(reminder)
@@ -77,8 +77,8 @@ async def create_payment_reminder(
                 status=reminder.status,
                 remark=reminder.remark,
                 created_at=reminder.created_at,
-                updated_at=reminder.updated_at
-            )
+                updated_at=reminder.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -87,14 +87,18 @@ async def create_payment_reminder(
         raise HTTPException(status_code=500, detail=f"创建回款催收记录失败: {str(e)}")
 
 
-@router.get("", response_model=ResponseModel[PaginatedResponse[PaymentReminderResponse]], summary="获取回款催收记录列表")
+@router.get(
+    "",
+    response_model=ResponseModel[PaginatedResponse[PaymentReminderResponse]],
+    summary="获取回款催收记录列表",
+)
 async def get_payment_reminders(
     pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     reminder_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:read"))
+    current_user: User = Depends(security.require_permission("business_support:read")),
 ):
     """获取回款催收记录列表"""
     try:
@@ -137,7 +141,7 @@ async def get_payment_reminders(
                 status=item.status,
                 remark=item.remark,
                 created_at=item.created_at,
-                updated_at=item.updated_at
+                updated_at=item.updated_at,
             )
             for item in items
         ]
@@ -150,8 +154,8 @@ async def get_payment_reminders(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取回款催收记录列表失败: {str(e)}")

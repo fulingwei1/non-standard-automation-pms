@@ -29,10 +29,10 @@ class StatusTransitionService:
         self.db = db
 
         # 延迟导入处理器，避免循环依赖
-        from app.services.status_handlers.contract_handler import ContractStatusHandler
-        from app.services.status_handlers.material_handler import MaterialStatusHandler
         from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+        from app.services.status_handlers.contract_handler import ContractStatusHandler
         from app.services.status_handlers.ecn_handler import ECNStatusHandler
+        from app.services.status_handlers.material_handler import MaterialStatusHandler
 
         # 初始化各个处理器
         self.contract_handler = ContractStatusHandler(db, self)
@@ -65,9 +65,7 @@ class StatusTransitionService:
 
     # === BOM和物料相关事件 ===
 
-    def handle_bom_published(
-        self, project_id: int, machine_id: Optional[int] = None
-    ) -> bool:
+    def handle_bom_published(self, project_id: int, machine_id: Optional[int] = None) -> bool:
         """
         处理BOM发布完成事件
 
@@ -86,9 +84,7 @@ class StatusTransitionService:
             log_status_change=self._log_status_change,
         )
 
-    def handle_material_shortage(
-        self, project_id: int, is_critical: bool = True
-    ) -> bool:
+    def handle_material_shortage(self, project_id: int, is_critical: bool = True) -> bool:
         """
         处理关键物料缺货事件
 
@@ -126,9 +122,7 @@ class StatusTransitionService:
 
     # === 验收相关事件 ===
 
-    def handle_fat_passed(
-        self, project_id: int, machine_id: Optional[int] = None
-    ) -> bool:
+    def handle_fat_passed(self, project_id: int, machine_id: Optional[int] = None) -> bool:
         """
         处理FAT验收通过事件
 
@@ -173,9 +167,7 @@ class StatusTransitionService:
             log_status_change=self._log_status_change,
         )
 
-    def handle_sat_passed(
-        self, project_id: int, machine_id: Optional[int] = None
-    ) -> bool:
+    def handle_sat_passed(self, project_id: int, machine_id: Optional[int] = None) -> bool:
         """
         处理SAT验收通过事件
 
@@ -239,9 +231,7 @@ class StatusTransitionService:
 
     # === ECN相关事件 ===
 
-    def handle_ecn_schedule_impact(
-        self, project_id: int, ecn_id: int, impact_days: int
-    ) -> bool:
+    def handle_ecn_schedule_impact(self, project_id: int, ecn_id: int, impact_days: int) -> bool:
         """
         处理ECN变更影响交期事件
 
@@ -306,9 +296,7 @@ class StatusTransitionService:
 
         # 根据当前阶段检查流转条件
         if current_stage == "S3":
-            can_advance, target_stage, missing_items = check_s3_to_s4_transition(
-                self.db, project
-            )
+            can_advance, target_stage, missing_items = check_s3_to_s4_transition(self.db, project)
             if can_advance:
                 transition_reason = "合同已签订，自动推进至方案设计阶段"
 
@@ -320,9 +308,7 @@ class StatusTransitionService:
                 transition_reason = "BOM已发布，自动推进至采购制造阶段"
 
         elif current_stage == "S5":
-            can_advance, target_stage, missing_items = check_s5_to_s6_transition(
-                self.db, project
-            )
+            can_advance, target_stage, missing_items = check_s5_to_s6_transition(self.db, project)
             if can_advance:
                 transition_reason = "物料齐套率≥80%，可推进至装配联调阶段"
 
@@ -334,9 +320,7 @@ class StatusTransitionService:
                 transition_reason = "FAT验收已通过，自动推进至现场交付阶段"
 
         elif current_stage == "S8":
-            can_advance, target_stage, missing_items = check_s8_to_s9_transition(
-                self.db, project
-            )
+            can_advance, target_stage, missing_items = check_s8_to_s9_transition(self.db, project)
             if can_advance:
                 transition_reason = "终验收已通过且回款达标，可推进至质保结项阶段"
 

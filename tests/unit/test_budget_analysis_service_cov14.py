@@ -2,13 +2,15 @@
 """
 第十四批：预算分析服务 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 try:
-    from app.services.budget_analysis_service import BudgetAnalysisService
-    from app.models.project import Project, ProjectCost
     from app.models.budget import ProjectBudget
+    from app.models.project import Project, ProjectCost
+    from app.services.budget_analysis_service import BudgetAnalysisService
+
     SKIP = False
 except Exception:
     SKIP = True

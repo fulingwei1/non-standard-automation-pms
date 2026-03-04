@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import and_, func, case
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -15,9 +15,9 @@ from app.models.production import (
     EquipmentOEERecord,
     Worker,
     WorkerEfficiencyRecord,
+    WorkOrder,
     Workshop,
     Workstation,
-    WorkOrder,
 )
 
 router = APIRouter()
@@ -34,12 +34,12 @@ def identify_bottlenecks(
 ):
     """
     产能瓶颈识别
-    
+
     瓶颈识别标准:
     1. 产能利用率最高(超过阈值)
     2. 影响整体产出
     3. 持续时间长
-    
+
     返回瓶颈工位、设备和工人信息
     """
     # 默认查询最近30天
@@ -47,88 +47,107 @@ def identify_bottlenecks(
         start_date = date.today() - timedelta(days=30)
     if not end_date:
         end_date = date.today()
-    
+
     filters = [
         EquipmentOEERecord.record_date >= start_date,
         EquipmentOEERecord.record_date <= end_date,
     ]
     if workshop_id:
         filters.append(EquipmentOEERecord.workshop_id == workshop_id)
-    
+
     # 1. 设备瓶颈分析
     equipment_bottlenecks = (
         db.query(
-            Equipment.id.label('equipment_id'),
+            Equipment.id.label("equipment_id"),
             Equipment.equipment_code,
             Equipment.equipment_name,
             Workshop.workshop_name,
-            func.count(EquipmentOEERecord.id).label('record_count'),
-            func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-            func.sum(EquipmentOEERecord.operating_time).label('total_operating_time'),
-            func.sum(EquipmentOEERecord.planned_production_time).label('total_planned_time'),
-            func.sum(EquipmentOEERecord.unplanned_downtime).label('total_downtime'),
-            func.sum(EquipmentOEERecord.actual_output).label('total_output'),
-            (func.sum(EquipmentOEERecord.operating_time) * 100.0 / 
-             func.sum(EquipmentOEERecord.planned_production_time)).label('utilization_rate'),
+            func.count(EquipmentOEERecord.id).label("record_count"),
+            func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+            func.sum(EquipmentOEERecord.operating_time).label("total_operating_time"),
+            func.sum(EquipmentOEERecord.planned_production_time).label("total_planned_time"),
+            func.sum(EquipmentOEERecord.unplanned_downtime).label("total_downtime"),
+            func.sum(EquipmentOEERecord.actual_output).label("total_output"),
+            (
+                func.sum(EquipmentOEERecord.operating_time)
+                * 100.0
+                / func.sum(EquipmentOEERecord.planned_production_time)
+            ).label("utilization_rate"),
         )
         .join(Equipment, EquipmentOEERecord.equipment_id == Equipment.id)
         .join(Workshop, Equipment.workshop_id == Workshop.id)
         .filter(and_(*filters))
-        .group_by(Equipment.id, Equipment.equipment_code, Equipment.equipment_name, Workshop.workshop_name)
-        .having(func.sum(EquipmentOEERecord.operating_time) * 100.0 / 
-                func.sum(EquipmentOEERecord.planned_production_time) >= threshold)
-        .order_by((func.sum(EquipmentOEERecord.operating_time) * 100.0 / 
-                   func.sum(EquipmentOEERecord.planned_production_time)).desc())
+        .group_by(
+            Equipment.id, Equipment.equipment_code, Equipment.equipment_name, Workshop.workshop_name
+        )
+        .having(
+            func.sum(EquipmentOEERecord.operating_time)
+            * 100.0
+            / func.sum(EquipmentOEERecord.planned_production_time)
+            >= threshold
+        )
+        .order_by(
+            (
+                func.sum(EquipmentOEERecord.operating_time)
+                * 100.0
+                / func.sum(EquipmentOEERecord.planned_production_time)
+            ).desc()
+        )
         .limit(limit)
         .all()
     )
-    
+
     # 2. 工位瓶颈分析
     workstation_bottlenecks = (
         db.query(
-            Workstation.id.label('workstation_id'),
+            Workstation.id.label("workstation_id"),
             Workstation.workstation_code,
             Workstation.workstation_name,
             Workshop.workshop_name,
-            func.count(WorkOrder.id).label('work_order_count'),
-            func.sum(WorkOrder.actual_hours).label('total_hours'),
-            func.sum(WorkOrder.completed_qty).label('total_completed'),
+            func.count(WorkOrder.id).label("work_order_count"),
+            func.sum(WorkOrder.actual_hours).label("total_hours"),
+            func.sum(WorkOrder.completed_qty).label("total_completed"),
             func.avg(
                 case(
                     (
                         WorkOrder.actual_hours > 0,
                         WorkOrder.standard_hours * 100.0 / WorkOrder.actual_hours,
                     ),
-                    else_=0
+                    else_=0,
                 )
-            ).label('avg_efficiency'),
+            ).label("avg_efficiency"),
         )
         .join(Workshop, Workstation.workshop_id == Workshop.id)
         .join(WorkOrder, Workstation.id == WorkOrder.workstation_id, isouter=True)
         .filter(WorkOrder.actual_start_time >= start_date)
         .filter(WorkOrder.actual_start_time <= end_date)
-        .group_by(Workstation.id, Workstation.workstation_code, Workstation.workstation_name, Workshop.workshop_name)
+        .group_by(
+            Workstation.id,
+            Workstation.workstation_code,
+            Workstation.workstation_name,
+            Workshop.workshop_name,
+        )
         .having(func.count(WorkOrder.id) > 0)
         .order_by(func.sum(WorkOrder.actual_hours).desc())
         .limit(limit)
         .all()
     )
-    
+
     # 3. 工人瓶颈分析(效率低的工人)
     worker_filter = [
         WorkerEfficiencyRecord.record_date >= start_date,
         WorkerEfficiencyRecord.record_date <= end_date,
     ]
-    
+
     low_efficiency_workers = (
         db.query(
-            Worker.id.label('worker_id'),
+            Worker.id.label("worker_id"),
             Worker.worker_no,
             Worker.worker_name,
-            func.count(WorkerEfficiencyRecord.id).label('record_count'),
-            func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
-            func.sum(WorkerEfficiencyRecord.actual_hours).label('total_hours'),
-            func.sum(WorkerEfficiencyRecord.completed_qty).label('total_completed'),
+            func.count(WorkerEfficiencyRecord.id).label("record_count"),
+            func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
+            func.sum(WorkerEfficiencyRecord.actual_hours).label("total_hours"),
+            func.sum(WorkerEfficiencyRecord.completed_qty).label("total_completed"),
         )
         .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
         .filter(and_(*worker_filter))
@@ -138,7 +157,7 @@ def identify_bottlenecks(
         .limit(limit)
         .all()
     )
-    
+
     return {
         "code": 200,
         "message": "瓶颈识别成功",
@@ -208,7 +227,7 @@ async def get_capacity_utilization(
 ):
     """
     产能利用率分析
-    
+
     利用率 = 实际使用时间 / 可用时间 × 100%
     """
     # 默认查询最近30天
@@ -216,7 +235,7 @@ async def get_capacity_utilization(
         start_date = date.today() - timedelta(days=30)
     if not end_date:
         end_date = date.today()
-    
+
     if type == "equipment":
         filters = [
             EquipmentOEERecord.record_date >= start_date,
@@ -224,27 +243,30 @@ async def get_capacity_utilization(
         ]
         if workshop_id:
             filters.append(EquipmentOEERecord.workshop_id == workshop_id)
-        
+
         # 设备利用率
         query = (
             db.query(
                 Equipment.id,
                 Equipment.equipment_code,
                 Equipment.equipment_name,
-                func.sum(EquipmentOEERecord.operating_time).label('total_operating'),
-                func.sum(EquipmentOEERecord.planned_production_time).label('total_planned'),
-                func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                (func.sum(EquipmentOEERecord.operating_time) * 100.0 / 
-                 func.sum(EquipmentOEERecord.planned_production_time)).label('utilization_rate'),
+                func.sum(EquipmentOEERecord.operating_time).label("total_operating"),
+                func.sum(EquipmentOEERecord.planned_production_time).label("total_planned"),
+                func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                (
+                    func.sum(EquipmentOEERecord.operating_time)
+                    * 100.0
+                    / func.sum(EquipmentOEERecord.planned_production_time)
+                ).label("utilization_rate"),
             )
             .join(Equipment, EquipmentOEERecord.equipment_id == Equipment.id)
             .filter(and_(*filters))
             .group_by(Equipment.id, Equipment.equipment_code, Equipment.equipment_name)
         )
-        
+
         total = query.count()
         results = query.offset((page - 1) * page_size).limit(page_size).all()
-        
+
         items = [
             {
                 "id": row.id,
@@ -254,11 +276,13 @@ async def get_capacity_utilization(
                 "avg_oee": float(row.avg_oee) if row.avg_oee else 0,
                 "total_operating": row.total_operating or 0,
                 "total_planned": row.total_planned or 0,
-                "status": _get_utilization_status(float(row.utilization_rate) if row.utilization_rate else 0),
+                "status": _get_utilization_status(
+                    float(row.utilization_rate) if row.utilization_rate else 0
+                ),
             }
             for row in results
         ]
-        
+
     elif type == "worker":
         filters = [
             WorkerEfficiencyRecord.record_date >= start_date,
@@ -266,26 +290,26 @@ async def get_capacity_utilization(
         ]
         if workshop_id:
             filters.append(WorkerEfficiencyRecord.workshop_id == workshop_id)
-        
+
         # 工人利用率
         query = (
             db.query(
                 Worker.id,
                 Worker.worker_no,
                 Worker.worker_name,
-                func.avg(WorkerEfficiencyRecord.utilization_rate).label('avg_utilization'),
-                func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
-                func.sum(WorkerEfficiencyRecord.actual_hours).label('total_hours'),
-                func.sum(WorkerEfficiencyRecord.idle_hours).label('total_idle'),
+                func.avg(WorkerEfficiencyRecord.utilization_rate).label("avg_utilization"),
+                func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
+                func.sum(WorkerEfficiencyRecord.actual_hours).label("total_hours"),
+                func.sum(WorkerEfficiencyRecord.idle_hours).label("total_idle"),
             )
             .join(Worker, WorkerEfficiencyRecord.worker_id == Worker.id)
             .filter(and_(*filters))
             .group_by(Worker.id, Worker.worker_no, Worker.worker_name)
         )
-        
+
         total = query.count()
         results = query.offset((page - 1) * page_size).limit(page_size).all()
-        
+
         items = [
             {
                 "id": row.id,
@@ -295,7 +319,9 @@ async def get_capacity_utilization(
                 "avg_efficiency": float(row.avg_efficiency) if row.avg_efficiency else 0,
                 "total_hours": float(row.total_hours) if row.total_hours else 0,
                 "total_idle": float(row.total_idle) if row.total_idle else 0,
-                "status": _get_utilization_status(float(row.avg_utilization) if row.avg_utilization else 0),
+                "status": _get_utilization_status(
+                    float(row.avg_utilization) if row.avg_utilization else 0
+                ),
             }
             for row in results
         ]
@@ -305,7 +331,7 @@ async def get_capacity_utilization(
             "message": "不支持的类型",
             "data": None,
         }
-    
+
     return {
         "code": 200,
         "message": "查询成功",

@@ -2,12 +2,14 @@
 """
 第三十二批覆盖率测试 - 里程碑告警服务
 """
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, timedelta
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.alert.milestone_alert_service import MilestoneAlertService
+
     HAS_MAS = True
 except Exception:
     HAS_MAS = False
@@ -130,12 +132,14 @@ class TestCheckMilestoneAlerts:
         """无里程碑时返回0"""
         svc, db = make_service()
 
-        with patch.object(svc, "_get_upcoming_milestones", return_value=[]), \
-             patch.object(svc, "_get_overdue_milestones", return_value=[]), \
-             patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()), \
-             patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()), \
-             patch.object(svc, "_process_upcoming_milestones", return_value=0), \
-             patch.object(svc, "_process_overdue_milestones", return_value=0):
+        with (
+            patch.object(svc, "_get_upcoming_milestones", return_value=[]),
+            patch.object(svc, "_get_overdue_milestones", return_value=[]),
+            patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()),
+            patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()),
+            patch.object(svc, "_process_upcoming_milestones", return_value=0),
+            patch.object(svc, "_process_overdue_milestones", return_value=0),
+        ):
             result = svc.check_milestone_alerts()
 
         assert result == 0
@@ -145,12 +149,14 @@ class TestCheckMilestoneAlerts:
         svc, db = make_service()
         mock_ms = MagicMock()
 
-        with patch.object(svc, "_get_upcoming_milestones", return_value=[mock_ms]), \
-             patch.object(svc, "_get_overdue_milestones", return_value=[]), \
-             patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()), \
-             patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()), \
-             patch.object(svc, "_process_upcoming_milestones", return_value=1), \
-             patch.object(svc, "_process_overdue_milestones", return_value=0):
+        with (
+            patch.object(svc, "_get_upcoming_milestones", return_value=[mock_ms]),
+            patch.object(svc, "_get_overdue_milestones", return_value=[]),
+            patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()),
+            patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()),
+            patch.object(svc, "_process_upcoming_milestones", return_value=1),
+            patch.object(svc, "_process_overdue_milestones", return_value=0),
+        ):
             result = svc.check_milestone_alerts()
 
         assert result == 1
@@ -160,12 +166,14 @@ class TestCheckMilestoneAlerts:
         svc, db = make_service()
         mock_ms = MagicMock()
 
-        with patch.object(svc, "_get_upcoming_milestones", return_value=[]), \
-             patch.object(svc, "_get_overdue_milestones", return_value=[mock_ms]), \
-             patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()), \
-             patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()), \
-             patch.object(svc, "_process_upcoming_milestones", return_value=0), \
-             patch.object(svc, "_process_overdue_milestones", return_value=2):
+        with (
+            patch.object(svc, "_get_upcoming_milestones", return_value=[]),
+            patch.object(svc, "_get_overdue_milestones", return_value=[mock_ms]),
+            patch.object(svc, "_get_or_create_warning_rule", return_value=MagicMock()),
+            patch.object(svc, "_get_or_create_critical_rule", return_value=MagicMock()),
+            patch.object(svc, "_process_upcoming_milestones", return_value=0),
+            patch.object(svc, "_process_overdue_milestones", return_value=2),
+        ):
             result = svc.check_milestone_alerts()
 
         assert result == 2

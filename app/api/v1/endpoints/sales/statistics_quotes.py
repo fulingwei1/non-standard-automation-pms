@@ -5,7 +5,8 @@
 包含报价统计数据
 """
 
-from datetime import date as date_type, datetime, timedelta
+from datetime import date as date_type
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -69,8 +70,7 @@ def get_quote_stats(
         last_start = start_date - timedelta(days=365)
 
     last_period = base_query.filter(
-        Quote.created_at >= last_start,
-        Quote.created_at < start_date
+        Quote.created_at >= last_start, Quote.created_at < start_date
     ).count()
 
     # 增长率
@@ -99,7 +99,7 @@ def get_quote_stats(
         Quote.valid_until is not None,
         Quote.valid_until <= today + timedelta(days=7),
         Quote.valid_until > today,
-        Quote.status.in_(["DRAFT", "IN_REVIEW", "APPROVED", "SENT"])
+        Quote.status.in_(["DRAFT", "IN_REVIEW", "APPROVED", "SENT"]),
     ).count()
 
     return ResponseModel(
@@ -122,6 +122,6 @@ def get_quote_stats(
             "thisMonth": this_period,
             "lastMonth": last_period,
             "growth": growth,
-            "expiringSoon": expiring_soon
-        }
+            "expiringSoon": expiring_soon,
+        },
     )

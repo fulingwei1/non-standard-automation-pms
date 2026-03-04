@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：报告引擎单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.engine import ReportEngine, PermissionError, ParameterError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -17,9 +19,11 @@ def _make_engine():
     cache = MagicMock()
     cache.get.return_value = None  # 默认无缓存
 
-    with patch("app.services.report_framework.engine.ConfigLoader") as MockLoader, \
-         patch("app.services.report_framework.engine.DataResolver") as MockResolver, \
-         patch("app.services.report_framework.engine.ExpressionParser"):
+    with (
+        patch("app.services.report_framework.engine.ConfigLoader") as MockLoader,
+        patch("app.services.report_framework.engine.DataResolver") as MockResolver,
+        patch("app.services.report_framework.engine.ExpressionParser"),
+    ):
         engine = ReportEngine(db=db, cache_manager=cache)
         engine.config_loader = MagicMock()
         engine.data_resolver = MagicMock()
@@ -30,9 +34,11 @@ def _make_engine():
 class TestReportEngineInit:
     def test_init_with_db(self):
         db = MagicMock()
-        with patch("app.services.report_framework.engine.ConfigLoader"), \
-             patch("app.services.report_framework.engine.DataResolver"), \
-             patch("app.services.report_framework.engine.ExpressionParser"):
+        with (
+            patch("app.services.report_framework.engine.ConfigLoader"),
+            patch("app.services.report_framework.engine.DataResolver"),
+            patch("app.services.report_framework.engine.ExpressionParser"),
+        ):
             engine = ReportEngine(db=db)
             assert engine.db is db
 
@@ -95,6 +101,7 @@ class TestReportEngineGenerate:
 
     def test_generate_raises_for_unsupported_format(self):
         from app.services.report_framework.config_loader import ConfigError
+
         engine, config, _ = self._setup_engine_for_generate()
         engine.cache.get.return_value = None
 
@@ -105,8 +112,10 @@ class TestReportEngineGenerate:
         engine, config, mock_result = self._setup_engine_for_generate()
         engine.cache.get.return_value = None
 
-        with patch.object(engine, '_validate_params', return_value={}), \
-             patch.object(engine, '_render_sections', return_value=[]):
+        with (
+            patch.object(engine, "_validate_params", return_value={}),
+            patch.object(engine, "_render_sections", return_value=[]),
+        ):
             result = engine.generate(report_code="test", params={}, format="json")
             assert result is mock_result
 
@@ -126,7 +135,7 @@ class TestReportEnginePermission:
         user = MagicMock()
         user.roles = ["admin"]
 
-        with patch.object(engine, '_check_permission') as mock_check:
+        with patch.object(engine, "_check_permission") as mock_check:
             engine.generate(report_code="test", params={}, user=user)
             mock_check.assert_called_once()
 

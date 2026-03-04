@@ -159,9 +159,7 @@ def get_role_permissions(
 
     if inherited_perm_ids:
         inherited_perms = (
-            db.query(ApiPermission)
-            .filter(ApiPermission.id.in_(inherited_perm_ids))
-            .all()
+            db.query(ApiPermission).filter(ApiPermission.id.in_(inherited_perm_ids)).all()
         )
         for perm in inherited_perms:
             result.append(

@@ -9,11 +9,11 @@ KitRateService 单元测试
 - 趋势分析
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi import HTTPException
 
 from app.services.kit_rate.kit_rate_service import KitRateService
@@ -21,12 +21,14 @@ from app.services.kit_rate.kit_rate_service import KitRateService
 
 class MockMaterial:
     """Mock Material model"""
+
     def __init__(self, current_stock=0):
         self.current_stock = current_stock
 
 
 class MockBomItem:
     """Mock BomItem model"""
+
     def __init__(
         self,
         id=1,
@@ -60,6 +62,7 @@ class MockBomItem:
 
 class MockBomHeader:
     """Mock BomHeader model"""
+
     def __init__(self, id=1, bom_no="BOM001", bom_name="测试BOM", items=None):
         self.id = id
         self.bom_no = bom_no
@@ -75,6 +78,7 @@ class MockBomHeader:
 
 class MockMachine:
     """Mock Machine model"""
+
     def __init__(self, id=1, machine_no="MC001", machine_name="测试机台", project_id=1):
         self.id = id
         self.machine_no = machine_no
@@ -84,6 +88,7 @@ class MockMachine:
 
 class MockProject:
     """Mock Project model"""
+
     def __init__(
         self,
         id=1,

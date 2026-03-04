@@ -16,10 +16,7 @@ class BudgetAnalysisService:
     """预算分析服务"""
 
     @staticmethod
-    def get_budget_execution_analysis(
-        db: Session,
-        project_id: int
-    ) -> Dict:
+    def get_budget_execution_analysis(db: Session, project_id: int) -> Dict:
         """
         获取项目预算执行情况分析
 
@@ -36,7 +33,7 @@ class BudgetAnalysisService:
             .filter(
                 ProjectBudget.project_id == project_id,
                 ProjectBudget.is_active,
-                ProjectBudget.status == "APPROVED"
+                ProjectBudget.status == "APPROVED",
             )
             .order_by(ProjectBudget.version.desc())
             .first()
@@ -91,15 +88,21 @@ class BudgetAnalysisService:
                 cat_variance_pct = (cat_variance / budget_amt * 100) if budget_amt > 0 else 0
                 cat_execution_rate = (actual_amt / budget_amt * 100) if budget_amt > 0 else 0
 
-                category_comparison.append({
-                    "category": category,
-                    "budget_amount": round(budget_amt, 2),
-                    "actual_amount": round(actual_amt, 2),
-                    "variance": round(cat_variance, 2),
-                    "variance_pct": round(cat_variance_pct, 2),
-                    "execution_rate": round(cat_execution_rate, 2),
-                    "status": "正常" if abs(cat_variance_pct) <= 5 else "警告" if abs(cat_variance_pct) <= 10 else "超支"
-                })
+                category_comparison.append(
+                    {
+                        "category": category,
+                        "budget_amount": round(budget_amt, 2),
+                        "actual_amount": round(actual_amt, 2),
+                        "variance": round(cat_variance, 2),
+                        "variance_pct": round(cat_variance_pct, 2),
+                        "execution_rate": round(cat_execution_rate, 2),
+                        "status": (
+                            "正常"
+                            if abs(cat_variance_pct) <= 5
+                            else "警告" if abs(cat_variance_pct) <= 10 else "超支"
+                        ),
+                    }
+                )
 
         # 预警状态
         if execution_rate > 100:
@@ -124,7 +127,7 @@ class BudgetAnalysisService:
             "warning_status": warning_status,
             "budget_version": budget.version if budget else None,
             "budget_no": budget.budget_no if budget else None,
-            "category_comparison": category_comparison
+            "category_comparison": category_comparison,
         }
 
     @staticmethod
@@ -132,7 +135,7 @@ class BudgetAnalysisService:
         db: Session,
         project_id: int,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> Dict:
         """
         获取预算执行趋势分析（按时间维度）
@@ -154,7 +157,7 @@ class BudgetAnalysisService:
             .filter(
                 ProjectBudget.project_id == project_id,
                 ProjectBudget.is_active,
-                ProjectBudget.status == "APPROVED"
+                ProjectBudget.status == "APPROVED",
             )
             .order_by(ProjectBudget.version.desc())
             .first()
@@ -184,7 +187,7 @@ class BudgetAnalysisService:
                         "monthly_cost": 0,
                         "cumulative_cost": 0,
                         "budget_amount": budget_amount,
-                        "execution_rate": 0
+                        "execution_rate": 0,
                     }
 
                 monthly_data[month_key]["monthly_cost"] += float(cost.amount or 0)
@@ -195,7 +198,9 @@ class BudgetAnalysisService:
             data = monthly_data[month_key]
             cumulative_cost += data["monthly_cost"]
             data["cumulative_cost"] = round(cumulative_cost, 2)
-            data["execution_rate"] = round((cumulative_cost / budget_amount * 100) if budget_amount > 0 else 0, 2)
+            data["execution_rate"] = round(
+                (cumulative_cost / budget_amount * 100) if budget_amount > 0 else 0, 2
+            )
             data["monthly_cost"] = round(data["monthly_cost"], 2)
             monthly_list.append(data)
 
@@ -203,11 +208,5 @@ class BudgetAnalysisService:
             "project_id": project_id,
             "budget_amount": round(budget_amount, 2),
             "total_actual_cost": round(cumulative_cost, 2),
-            "monthly_trend": monthly_list
+            "monthly_trend": monthly_list,
         }
-
-
-
-
-
-

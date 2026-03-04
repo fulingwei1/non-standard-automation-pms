@@ -47,32 +47,40 @@ def get_recommended_templates(
         config = {}
         if template.template_config:
             try:
-                config = _json.loads(template.template_config) if isinstance(template.template_config, str) else template.template_config
+                config = (
+                    _json.loads(template.template_config)
+                    if isinstance(template.template_config, str)
+                    else template.template_config
+                )
             except Exception:
                 pass
 
-        items.append({
-            "id": template.id,
-            "template_id": template.id,
-            "template_code": template.template_code,
-            "template_name": template.template_name,
-            "project_type": template.project_type,
-            "product_category": template.product_category,
-            "industry": template.industry,
-            "description": template.description,
-            "usage_count": template.usage_count or 0,
-            "template_config": _json.dumps(config) if config else None,
-            "milestones_count": len(config.get("milestones", [])),
-        })
+        items.append(
+            {
+                "id": template.id,
+                "template_id": template.id,
+                "template_code": template.template_code,
+                "template_name": template.template_name,
+                "project_type": template.project_type,
+                "product_category": template.product_category,
+                "industry": template.industry,
+                "description": template.description,
+                "usage_count": template.usage_count or 0,
+                "template_config": _json.dumps(config) if config else None,
+                "milestones_count": len(config.get("milestones", [])),
+            }
+        )
 
     return ResponseModel(
-        code=200,
-        message="获取推荐模板成功",
-        data={"recommendations": items, "templates": items}
+        code=200, message="获取推荐模板成功", data={"recommendations": items, "templates": items}
     )
 
 
-@router.get("/templates/{template_id}/usage-statistics", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/templates/{template_id}/usage-statistics",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def get_template_usage_statistics(
     *,
     db: Session = Depends(deps.get_db),
@@ -90,7 +98,7 @@ def get_template_usage_statistics(
     # 按阶段统计
     stage_stats = {}
     for project in projects:
-        stage = project.stage or 'S1'
+        stage = project.stage or "S1"
         if stage not in stage_stats:
             stage_stats[stage] = 0
         stage_stats[stage] += 1
@@ -98,7 +106,7 @@ def get_template_usage_statistics(
     # 按健康度统计
     health_stats = {}
     for project in projects:
-        health = project.health or 'H1'
+        health = project.health or "H1"
         if health not in health_stats:
             health_stats[health] = 0
         health_stats[health] += 1
@@ -122,6 +130,6 @@ def get_template_usage_statistics(
                     "created_at": p.created_at.isoformat() if p.created_at else None,
                 }
                 for p in projects[:10]  # 只返回前10个
-            ]
-        }
+            ],
+        },
     )

@@ -35,9 +35,12 @@ def get_cost_update_reminder(
     """
     获取物料成本更新提醒配置和状态
     """
-    reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled
-    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    reminder = (
+        db.query(MaterialCostUpdateReminder)
+        .filter(MaterialCostUpdateReminder.is_enabled)
+        .order_by(desc(MaterialCostUpdateReminder.created_at))
+        .first()
+    )
 
     if not reminder:
         # 创建默认提醒配置
@@ -48,8 +51,14 @@ def get_cost_update_reminder(
             is_enabled=True,
             include_standard=True,
             include_non_standard=True,
-            notify_roles=["procurement", "procurement_manager", "采购工程师", "采购专员", "采购部经理"],
-            reminder_count=0
+            notify_roles=[
+                "procurement",
+                "procurement_manager",
+                "采购工程师",
+                "采购专员",
+                "采购部经理",
+            ],
+            reminder_count=0,
         )
         save_obj(db, reminder)
 
@@ -66,7 +75,7 @@ def get_cost_update_reminder(
     reminder_dict = {
         **{c.name: getattr(reminder, c.name) for c in reminder.__table__.columns},
         "days_until_next": days_until_next,
-        "is_due": is_due
+        "is_due": is_due,
     }
 
     return MaterialCostUpdateReminderResponse(**reminder_dict)
@@ -82,9 +91,12 @@ def update_cost_update_reminder(
     """
     更新物料成本更新提醒配置
     """
-    reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled
-    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    reminder = (
+        db.query(MaterialCostUpdateReminder)
+        .filter(MaterialCostUpdateReminder.is_enabled)
+        .order_by(desc(MaterialCostUpdateReminder.created_at))
+        .first()
+    )
 
     if not reminder:
         reminder = MaterialCostUpdateReminder(
@@ -94,8 +106,14 @@ def update_cost_update_reminder(
             is_enabled=True,
             include_standard=True,
             include_non_standard=True,
-            notify_roles=["procurement", "procurement_manager", "采购工程师", "采购专员", "采购部经理"],
-            reminder_count=0
+            notify_roles=[
+                "procurement",
+                "procurement_manager",
+                "采购工程师",
+                "采购专员",
+                "采购部经理",
+            ],
+            reminder_count=0,
         )
         db.add(reminder)
 
@@ -122,7 +140,7 @@ def update_cost_update_reminder(
     reminder_dict = {
         **{c.name: getattr(reminder, c.name) for c in reminder.__table__.columns},
         "days_until_next": days_until_next,
-        "is_due": is_due
+        "is_due": is_due,
     }
 
     return MaterialCostUpdateReminderResponse(**reminder_dict)
@@ -137,9 +155,12 @@ def acknowledge_cost_update_reminder(
     """
     确认物料成本更新提醒（标记为已处理，更新下次提醒日期）
     """
-    reminder = db.query(MaterialCostUpdateReminder).filter(
-        MaterialCostUpdateReminder.is_enabled
-    ).order_by(desc(MaterialCostUpdateReminder.created_at)).first()
+    reminder = (
+        db.query(MaterialCostUpdateReminder)
+        .filter(MaterialCostUpdateReminder.is_enabled)
+        .order_by(desc(MaterialCostUpdateReminder.created_at))
+        .first()
+    )
 
     if not reminder:
         raise HTTPException(status_code=404, detail="提醒配置不存在")
@@ -159,6 +180,6 @@ def acknowledge_cost_update_reminder(
         message="提醒已确认",
         data={
             "next_reminder_date": reminder.next_reminder_date.isoformat(),
-            "reminder_count": reminder.reminder_count
-        }
+            "reminder_count": reminder.reminder_count,
+        },
     )

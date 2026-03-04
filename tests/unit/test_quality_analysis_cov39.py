@@ -2,12 +2,14 @@
 """
 第三十九批覆盖率测试 - procurement_analysis/quality_analysis.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip("app.services.procurement_analysis.quality_analysis",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip(
+    "app.services.procurement_analysis.quality_analysis", reason="import failed, skip"
+)
 
 
 @pytest.fixture
@@ -139,7 +141,7 @@ class TestQualityAnalyzerWithData:
 
         rows = [
             self._make_row(1, "供应商A", "M001", "物料A", 98, 2, 100),  # 98% >= 98 -> high
-            self._make_row(2, "供应商B", "M002", "物料B", 85, 15, 100), # 85% < 90 -> low
+            self._make_row(2, "供应商B", "M002", "物料B", 85, 15, 100),  # 85% < 90 -> low
         ]
         mock_query = MagicMock()
         mock_db.query.return_value = mock_query

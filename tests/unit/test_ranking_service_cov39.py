@@ -2,11 +2,13 @@
 """
 第三十九批覆盖率测试 - engineer_performance/ranking_service.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip("app.services.engineer_performance.ranking_service",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip(
+    "app.services.engineer_performance.ranking_service", reason="import failed, skip"
+)
 
 
 @pytest.fixture
@@ -17,6 +19,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.engineer_performance.ranking_service import RankingService
+
     return RankingService(mock_db)
 
 
@@ -50,8 +53,10 @@ class TestRankingServiceGetRanking:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = items
 
-        with patch(_MOCK_PERF_RESULT_MODULE) as MockPR, \
-             patch(_MOCK_DESC_MODULE, return_value=MagicMock()):
+        with (
+            patch(_MOCK_PERF_RESULT_MODULE) as MockPR,
+            patch(_MOCK_DESC_MODULE, return_value=MagicMock()),
+        ):
             MockPR.period_id = MagicMock()
             MockPR.job_type = MagicMock()
             MockPR.job_level = MagicMock()
@@ -70,15 +75,18 @@ class TestRankingServiceGetRanking:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [_make_result(1, 90, "test")]
 
-        with patch(_MOCK_PERF_RESULT_MODULE) as MockPR, \
-             patch(_MOCK_DESC_MODULE, return_value=MagicMock()):
+        with (
+            patch(_MOCK_PERF_RESULT_MODULE) as MockPR,
+            patch(_MOCK_DESC_MODULE, return_value=MagicMock()),
+        ):
             MockPR.period_id = MagicMock()
             MockPR.job_type = MagicMock()
             MockPR.job_level = MagicMock()
             MockPR.department_id = MagicMock()
             MockPR.total_score = MagicMock()
-            items, total = service.get_ranking(period_id=1, job_type="test",
-                                               job_level="L2", department_id=5)
+            items, total = service.get_ranking(
+                period_id=1, job_type="test", job_level="L2", department_id=5
+            )
         assert total == 1
 
 
@@ -160,9 +168,11 @@ class TestRankingServiceEngineerTrend:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [r]
 
-        with patch(_MOCK_PERF_RESULT_MODULE) as MockPR, \
-             patch(_MOCK_PERF_PERIOD_MODULE) as MockPP, \
-             patch(_MOCK_DESC_MODULE, return_value=MagicMock()):
+        with (
+            patch(_MOCK_PERF_RESULT_MODULE) as MockPR,
+            patch(_MOCK_PERF_PERIOD_MODULE) as MockPP,
+            patch(_MOCK_DESC_MODULE, return_value=MagicMock()),
+        ):
             MockPR.user_id = MagicMock()
             MockPP.start_date = MagicMock()
             MockPP.id = MagicMock()
@@ -180,9 +190,11 @@ class TestRankingServiceEngineerTrend:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = []
 
-        with patch(_MOCK_PERF_RESULT_MODULE) as MockPR, \
-             patch(_MOCK_PERF_PERIOD_MODULE) as MockPP, \
-             patch(_MOCK_DESC_MODULE, return_value=MagicMock()):
+        with (
+            patch(_MOCK_PERF_RESULT_MODULE) as MockPR,
+            patch(_MOCK_PERF_PERIOD_MODULE) as MockPP,
+            patch(_MOCK_DESC_MODULE, return_value=MagicMock()),
+        ):
             MockPR.user_id = MagicMock()
             MockPP.start_date = MagicMock()
             trends = service.get_engineer_trend(engineer_id=99)

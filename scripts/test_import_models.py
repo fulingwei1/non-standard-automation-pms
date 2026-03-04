@@ -4,8 +4,8 @@
 简单的模型导入测试，捕获所有 SQLAlchemy warnings
 """
 
-import warnings
 import sys
+import warnings
 from pathlib import Path
 
 # 添加项目根目录到路径
@@ -17,22 +17,26 @@ warnings.simplefilter("always")
 warning_count = 0
 relationship_warnings = []
 
+
 def warning_handler(message, category, filename, lineno, file=None, line=None):
     """捕获warnings"""
     global warning_count, relationship_warnings
     warning_count += 1
     msg_str = str(message)
-    
-    if 'relationship' in msg_str.lower():
-        relationship_warnings.append({
-            'message': msg_str,
-            'category': category.__name__,
-            'filename': filename,
-            'lineno': lineno
-        })
+
+    if "relationship" in msg_str.lower():
+        relationship_warnings.append(
+            {
+                "message": msg_str,
+                "category": category.__name__,
+                "filename": filename,
+                "lineno": lineno,
+            }
+        )
         print(f"⚠️  Relationship Warning #{len(relationship_warnings)}:")
         print(f"    {msg_str[:200]}")
         print()
+
 
 # 设置warning handler
 warnings.showwarning = warning_handler
@@ -46,13 +50,14 @@ print()
 
 try:
     # 导入所有核心模型
-    
+
     print("✅ 所有模型导入成功")
     print()
-    
+
 except Exception as e:
     print(f"❌ 导入失败: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 

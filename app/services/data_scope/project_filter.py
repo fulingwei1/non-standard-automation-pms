@@ -55,14 +55,16 @@ class ProjectFilterService:
             project_ids = set()
             dept_name = user.department
             if dept_name:
-                dept = db.query(Department).filter(
-                    Department.dept_name == dept_name
-                ).first()
+                dept = db.query(Department).filter(Department.dept_name == dept_name).first()
                 if dept:
-                    dept_projects = db.query(Project.id).filter(
-                        Project.dept_id == dept.id,
-                        Project.is_active,
-                    ).all()
+                    dept_projects = (
+                        db.query(Project.id)
+                        .filter(
+                            Project.dept_id == dept.id,
+                            Project.is_active,
+                        )
+                        .all()
+                    )
                     project_ids = {p[0] for p in dept_projects}
 
             # 同时包含自己参与的项目
@@ -74,13 +76,17 @@ class ProjectFilterService:
             subordinate_ids = UserScopeService.get_subordinate_ids(db, user.id)
             allowed_user_ids = subordinate_ids | {user.id}
 
-            sub_projects = db.query(Project.id).filter(
-                or_(
-                    Project.created_by.in_(allowed_user_ids),
-                    Project.pm_id.in_(allowed_user_ids),
-                ),
-                Project.is_active,
-            ).all()
+            sub_projects = (
+                db.query(Project.id)
+                .filter(
+                    or_(
+                        Project.created_by.in_(allowed_user_ids),
+                        Project.pm_id.in_(allowed_user_ids),
+                    ),
+                    Project.is_active,
+                )
+                .all()
+            )
             project_ids = {p[0] for p in sub_projects}
 
             # 同时包含自己参与的项目
@@ -93,13 +99,17 @@ class ProjectFilterService:
 
         else:  # OWN
             # 自己创建/负责的项目 + 参与的项目
-            own_projects = db.query(Project.id).filter(
-                or_(
-                    Project.created_by == user.id,
-                    Project.pm_id == user.id,
-                ),
-                Project.is_active,
-            ).all()
+            own_projects = (
+                db.query(Project.id)
+                .filter(
+                    or_(
+                        Project.created_by == user.id,
+                        Project.pm_id == user.id,
+                    ),
+                    Project.is_active,
+                )
+                .all()
+            )
             project_ids = {p[0] for p in own_projects}
 
             # 同时包含自己参与的项目
@@ -147,10 +157,7 @@ class ProjectFilterService:
 
     @staticmethod
     def filter_projects_by_scope(
-        db: Session,
-        query: Query,
-        user: User,
-        project_ids: Optional[List[int]] = None
+        db: Session, query: Query, user: User, project_ids: Optional[List[int]] = None
     ) -> Query:
         """
         根据用户数据权限范围过滤项目查询
@@ -193,10 +200,7 @@ class ProjectFilterService:
             # 包括自己和所有下属
             allowed_user_ids = subordinate_ids | {user.id}
             return query.filter(
-                or_(
-                    Project.created_by.in_(allowed_user_ids),
-                    Project.pm_id.in_(allowed_user_ids)
-                )
+                or_(Project.created_by.in_(allowed_user_ids), Project.pm_id.in_(allowed_user_ids))
             )
         elif data_scope == DataScopeEnum.PROJECT.value:
             # 参与项目可见
@@ -219,19 +223,10 @@ class ProjectFilterService:
     @staticmethod
     def _filter_own_projects(query: Query, user: User) -> Query:
         """过滤自己创建或负责的项目"""
-        return query.filter(
-            or_(
-                Project.created_by == user.id,
-                Project.pm_id == user.id
-            )
-        )
+        return query.filter(or_(Project.created_by == user.id, Project.pm_id == user.id))
 
     @staticmethod
-    def check_project_access(
-        db: Session,
-        user: User,
-        project_id: int
-    ) -> bool:
+    def check_project_access(db: Session, user: User, project_id: int) -> bool:
         """
         检查用户是否有权限访问指定项目
 
@@ -265,19 +260,17 @@ class ProjectFilterService:
                 return False
             subordinate_ids = UserScopeService.get_subordinate_ids(db, user.id)
             allowed_user_ids = subordinate_ids | {user.id}
-            return (
-                project.created_by in allowed_user_ids or
-                project.pm_id in allowed_user_ids
-            )
+            return project.created_by in allowed_user_ids or project.pm_id in allowed_user_ids
         elif data_scope == DataScopeEnum.PROJECT.value:
             # 检查是否是项目成员
             from app.models.project import ProjectMember
+
             member = (
                 db.query(ProjectMember)
                 .filter(
                     ProjectMember.project_id == project_id,
                     ProjectMember.user_id == user.id,
-                    ProjectMember.is_active
+                    ProjectMember.is_active,
                 )
                 .first()
             )
@@ -287,7 +280,4 @@ class ProjectFilterService:
             project = db.query(Project).filter(Project.id == project_id).first()
             if not project:
                 return False
-            return (
-                project.created_by == user.id or
-                project.pm_id == user.id
-            )
+            return project.created_by == user.id or project.pm_id == user.id

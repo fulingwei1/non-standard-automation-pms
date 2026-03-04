@@ -2,15 +2,17 @@
 """
 第三十三批覆盖率测试 - 预警PDF导出服务
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.alert_pdf_service import (
         build_alert_query,
         calculate_alert_statistics,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -56,11 +58,7 @@ class TestBuildAlertQuery:
     def test_with_date_range(self):
         """指定日期范围时添加过滤"""
         db, q = self._make_db()
-        result = build_alert_query(
-            db,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
-        )
+        result = build_alert_query(db, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31))
         assert q.filter.call_count >= 2  # 开始日期和结束日期各一次
 
     def test_with_rule_type_joins_alert_rule(self):

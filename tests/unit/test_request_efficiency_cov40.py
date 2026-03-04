@@ -3,12 +3,14 @@
 第四十批覆盖测试 - 采购申请处理时效分析
 """
 
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.procurement_analysis.request_efficiency import RequestEfficiencyAnalyzer
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -21,7 +23,14 @@ def mock_db():
     return MagicMock()
 
 
-def _make_row(request_no, requested_at, order_created_at, status="APPROVED", total_amount=10000.0, source_type="MANUAL"):
+def _make_row(
+    request_no,
+    requested_at,
+    order_created_at,
+    status="APPROVED",
+    total_amount=10000.0,
+    source_type="MANUAL",
+):
     row = MagicMock()
     row.request_no = request_no
     row.requested_at = requested_at
@@ -106,7 +115,7 @@ class TestRequestEfficiencyAnalyzer:
 
     def test_within_24h_rate_calculation(self, mock_db):
         r1 = _make_row("R1", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 1, 16, 0))  # 8h
-        r2 = _make_row("R2", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 3, 8, 0))   # 48h
+        r2 = _make_row("R2", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 3, 8, 0))  # 48h
 
         query_mock = MagicMock()
         query_mock.outerjoin.return_value = query_mock
@@ -125,7 +134,7 @@ class TestRequestEfficiencyAnalyzer:
 
     def test_efficiency_data_sorted_by_hours_desc(self, mock_db):
         r1 = _make_row("R1", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 1, 10, 0))  # 2h
-        r2 = _make_row("R2", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 2, 8, 0))   # 24h
+        r2 = _make_row("R2", datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 2, 8, 0))  # 24h
 
         query_mock = MagicMock()
         query_mock.outerjoin.return_value = query_mock

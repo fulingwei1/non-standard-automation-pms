@@ -44,6 +44,7 @@ def _make_invoice(invoice_id=1, amount=10000.0, invoice_type="VAT_SPECIAL", stat
 # get_entity
 # ---------------------------------------------------------------------------
 
+
 class TestGetEntity:
     def test_returns_invoice_when_found(self, adapter, mock_db):
         invoice = _make_invoice()
@@ -68,6 +69,7 @@ class TestGetEntity:
 # ---------------------------------------------------------------------------
 # get_entity_data
 # ---------------------------------------------------------------------------
+
 
 class TestGetEntityData:
     def test_returns_empty_when_invoice_not_found(self, adapter, mock_db):
@@ -110,6 +112,7 @@ class TestGetEntityData:
 # on_submit
 # ---------------------------------------------------------------------------
 
+
 class TestOnSubmit:
     def test_updates_invoice_status_on_submit(self, adapter, mock_db):
         invoice = _make_invoice()
@@ -135,6 +138,7 @@ class TestOnSubmit:
 # ---------------------------------------------------------------------------
 # entity_type class attr
 # ---------------------------------------------------------------------------
+
 
 class TestEntityType:
     def test_entity_type_is_invoice(self, adapter):

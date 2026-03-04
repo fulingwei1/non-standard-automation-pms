@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """邮件通知处理器单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
-from app.services.channel_handlers.email_handler import EmailChannelHandler
+
+import pytest
+
 from app.services.channel_handlers.base import NotificationRequest, NotificationResult
+from app.services.channel_handlers.email_handler import EmailChannelHandler
 
 
 class TestEmailChannelHandler:

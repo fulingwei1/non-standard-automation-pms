@@ -29,7 +29,8 @@ def analyze_database_performance() -> Dict[str, Any]:
     try:
         # 1. 分析大表
         large_tables = db.execute(
-            text("""
+            text(
+                """
             SELECT
                 schemaname,
                 tablename,
@@ -39,7 +40,8 @@ def analyze_database_performance() -> Dict[str, Any]:
             FROM pg_stats
             WHERE schemaname = 'public'
             ORDER BY tablename, attname;
-        """)
+        """
+            )
         ).fetchall()
 
         results["large_tables"] = large_tables[:20]  # 取前20个最大的表
@@ -47,12 +49,14 @@ def analyze_database_performance() -> Dict[str, Any]:
         # 2. 分析慢查询（如果有）
         slow_queries = (
             db.execute(
-                text("""
+                text(
+                    """
             SELECT query, mean_time, calls, total_time
             FROM pg_stat_statements
             ORDER BY mean_time DESC
             LIMIT 10;
-        """)
+        """
+                )
             ).fetchall()
             if has_pg_stat_statements(db)
             else []
@@ -62,7 +66,8 @@ def analyze_database_performance() -> Dict[str, Any]:
 
         # 3. 分析索引使用情况
         index_usage = db.execute(
-            text("""
+            text(
+                """
             SELECT
                 schemaname,
                 tablename,
@@ -72,14 +77,16 @@ def analyze_database_performance() -> Dict[str, Any]:
                 idx_tup_fetch
             FROM pg_stat_user_indexes
             ORDER BY idx_scan DESC;
-        """)
+        """
+            )
         ).fetchall()
 
         results["index_usage"] = index_usage
 
         # 4. 检查缺失的索引
         missing_indexes = db.execute(
-            text("""
+            text(
+                """
             SELECT
                 schemaname,
                 tablename,
@@ -91,7 +98,8 @@ def analyze_database_performance() -> Dict[str, Any]:
               AND tablename IN ('project', 'issue', 'alert_record', 'shortage_report')
               AND attname NOT IN ('id', 'created_at', 'updated_at')
             ORDER BY n_distinct DESC;
-        """)
+        """
+            )
         ).fetchall()
 
         results["missing_indexes"] = missing_indexes
@@ -107,9 +115,7 @@ def analyze_database_performance() -> Dict[str, Any]:
 def has_pg_stat_statements(db: Session) -> bool:
     """检查是否有pg_stat_statements扩展"""
     try:
-        db.execute(
-            text("SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements'")
-        )
+        db.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements'"))
         return True
     except Exception:
         return False
@@ -141,9 +147,7 @@ def analyze_code_complexity() -> Dict[str, Any]:
         except (OSError, UnicodeDecodeError):
             pass
 
-    results["large_files"] = sorted(
-        large_files, key=lambda x: x["lines"], reverse=True
-    )[:20]
+    results["large_files"] = sorted(large_files, key=lambda x: x["lines"], reverse=True)[:20]
 
     # 分析函数复杂度
     complex_functions = []
@@ -302,12 +306,8 @@ def main():
             print(f"- 最大文件: {max_file['file']} ({max_file['lines']}行)")
 
         if code_results["complex_functions"]:
-            max_func = max(
-                code_results["complex_functions"], key=lambda x: x["complexity_lines"]
-            )
-            print(
-                f"- 最复杂函数: {max_func['function']} ({max_func['complexity_lines']}行)"
-            )
+            max_func = max(code_results["complex_functions"], key=lambda x: x["complexity_lines"])
+            print(f"- 最复杂函数: {max_func['function']} ({max_func['complexity_lines']}行)")
 
     except Exception as e:
         print(f"❌ 分析失败: {e}")

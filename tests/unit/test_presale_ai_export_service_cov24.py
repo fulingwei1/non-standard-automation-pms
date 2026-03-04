@@ -2,8 +2,9 @@
 """第二十四批 - presale_ai_export_service 单元测试"""
 
 import os
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, mock_open
 
 pytest.importorskip("app.services.presale_ai_export_service")
 

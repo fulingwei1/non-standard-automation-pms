@@ -32,8 +32,8 @@ from app.models.production import (
     WorkOrder,
 )
 
-
 # ==================== Helpers ====================
+
 
 def run_async(coro):
     """在同步测试中运行 async 函数"""
@@ -95,6 +95,7 @@ def _make_work_order(id=1):
 
 # ==================== generate_schedule ====================
 
+
 class TestGenerateSchedule:
 
     def test_generate_success(self, mock_db, mock_user):
@@ -119,18 +120,23 @@ class TestGenerateSchedule:
         mock_service._fetch_work_orders.return_value = [_make_work_order()]
         mock_service.calculate_overall_metrics.return_value = mock_metrics
 
-        with patch(
-            "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
-            return_value=MagicMock()
+        with (
+            patch(
+                "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
+                return_value=mock_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
+                return_value=MagicMock(),
+            ),
         ):
-            result = run_async(generate_schedule(
-                request=mock_request,
-                db=mock_db,
-                current_user=mock_user,
-            ))
+            result = run_async(
+                generate_schedule(
+                    request=mock_request,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result is not None
         assert result.plan_id == 1
 
@@ -154,18 +160,23 @@ class TestGenerateSchedule:
         mock_service._fetch_work_orders.return_value = []
         mock_service.calculate_overall_metrics.return_value = mock_metrics
 
-        with patch(
-            "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
-            return_value=MagicMock()
+        with (
+            patch(
+                "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
+                return_value=mock_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
+                return_value=MagicMock(),
+            ),
         ):
-            result = run_async(generate_schedule(
-                request=mock_request,
-                db=mock_db,
-                current_user=mock_user,
-            ))
+            result = run_async(
+                generate_schedule(
+                    request=mock_request,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result is not None
         assert len(result.warnings) > 0  # 应有冲突警告
 
@@ -179,14 +190,16 @@ class TestGenerateSchedule:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
+            return_value=mock_service,
         ):
             with pytest.raises(HTTPException) as exc:
-                run_async(generate_schedule(
-                    request=mock_request,
-                    db=mock_db,
-                    current_user=mock_user,
-                ))
+                run_async(
+                    generate_schedule(
+                        request=mock_request,
+                        db=mock_db,
+                        current_user=mock_user,
+                    )
+                )
         assert exc.value.status_code == 400
 
     def test_generate_unexpected_error_raises_500(self, mock_db, mock_user):
@@ -199,18 +212,21 @@ class TestGenerateSchedule:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
+            return_value=mock_service,
         ):
             with pytest.raises(HTTPException) as exc:
-                run_async(generate_schedule(
-                    request=mock_request,
-                    db=mock_db,
-                    current_user=mock_user,
-                ))
+                run_async(
+                    generate_schedule(
+                        request=mock_request,
+                        db=mock_db,
+                        current_user=mock_user,
+                    )
+                )
         assert exc.value.status_code == 500
 
 
 # ==================== preview_schedule ====================
+
 
 class TestPreviewSchedule:
 
@@ -248,24 +264,27 @@ class TestPreviewSchedule:
 
         mock_db.query.side_effect = q_side
 
-        with patch(
-            "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
-            return_value=MagicMock()
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ConflictResponse.model_validate",
-            return_value=MagicMock()
+        with (
+            patch(
+                "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
+                return_value=mock_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ConflictResponse.model_validate",
+                return_value=MagicMock(),
+            ),
         ):
-            result = run_async(preview_schedule(
-                plan_id=1, db=mock_db, current_user=mock_user
-            ))
+            result = run_async(preview_schedule(plan_id=1, db=mock_db, current_user=mock_user))
         assert result is not None
         assert result.plan_id == 1
 
 
 # ==================== confirm_schedule ====================
+
 
 class TestConfirmSchedule:
 
@@ -319,6 +338,7 @@ class TestConfirmSchedule:
 
 # ==================== check_conflicts ====================
 
+
 class TestCheckConflicts:
 
     def test_no_conflicts(self, mock_db, mock_user):
@@ -337,12 +357,17 @@ class TestCheckConflicts:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ConflictResponse.model_validate",
-            return_value=MagicMock()
+            return_value=MagicMock(),
         ):
-            result = run_async(check_conflicts(
-                plan_id=1, schedule_id=None, status=None,
-                db=mock_db, current_user=mock_user,
-            ))
+            result = run_async(
+                check_conflicts(
+                    plan_id=1,
+                    schedule_id=None,
+                    status=None,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result.has_conflicts is False
         assert result.total_conflicts == 0
 
@@ -366,12 +391,17 @@ class TestCheckConflicts:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ConflictResponse.model_validate",
-            return_value=MagicMock()
+            return_value=MagicMock(),
         ):
-            result = run_async(check_conflicts(
-                plan_id=None, schedule_id=1, status=None,
-                db=mock_db, current_user=mock_user,
-            ))
+            result = run_async(
+                check_conflicts(
+                    plan_id=None,
+                    schedule_id=1,
+                    status=None,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result.has_conflicts is True
         assert result.total_conflicts == 1
 
@@ -388,16 +418,22 @@ class TestCheckConflicts:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ConflictResponse.model_validate",
-            return_value=MagicMock()
+            return_value=MagicMock(),
         ):
-            result = run_async(check_conflicts(
-                plan_id=None, schedule_id=None, status="UNRESOLVED",
-                db=mock_db, current_user=mock_user,
-            ))
+            result = run_async(
+                check_conflicts(
+                    plan_id=None,
+                    schedule_id=None,
+                    status="UNRESOLVED",
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result is not None
 
 
 # ==================== adjust_schedule ====================
+
 
 class TestAdjustSchedule:
 
@@ -410,9 +446,7 @@ class TestAdjustSchedule:
         mock_request.schedule_id = 999
 
         with pytest.raises(HTTPException) as exc:
-            run_async(adjust_schedule(
-                request=mock_request, db=mock_db, current_user=mock_user
-            ))
+            run_async(adjust_schedule(request=mock_request, db=mock_db, current_user=mock_user))
         assert exc.value.status_code == 404
 
     def test_adjust_start_time(self, mock_db, mock_user):
@@ -431,9 +465,9 @@ class TestAdjustSchedule:
         mock_request.adjustment_type = "TIME_CHANGE"
         mock_request.auto_resolve_conflicts = False
 
-        result = run_async(adjust_schedule(
-            request=mock_request, db=mock_db, current_user=mock_user
-        ))
+        result = run_async(
+            adjust_schedule(request=mock_request, db=mock_db, current_user=mock_user)
+        )
         assert result["success"] is True
         assert "开始时间" in result["changes"]
 
@@ -453,9 +487,9 @@ class TestAdjustSchedule:
         mock_request.adjustment_type = "RESOURCE_CHANGE"
         mock_request.auto_resolve_conflicts = False
 
-        result = run_async(adjust_schedule(
-            request=mock_request, db=mock_db, current_user=mock_user
-        ))
+        result = run_async(
+            adjust_schedule(request=mock_request, db=mock_db, current_user=mock_user)
+        )
         assert result["success"] is True
         assert "设备" in result["changes"]
 
@@ -480,15 +514,16 @@ class TestAdjustSchedule:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
+            return_value=mock_service,
         ):
-            result = run_async(adjust_schedule(
-                request=mock_request, db=mock_db, current_user=mock_user
-            ))
+            result = run_async(
+                adjust_schedule(request=mock_request, db=mock_db, current_user=mock_user)
+            )
         assert result["success"] is True
 
 
 # ==================== reset_schedule ====================
+
 
 class TestResetSchedule:
 
@@ -519,6 +554,7 @@ class TestResetSchedule:
 
 # ==================== get_schedule_history ====================
 
+
 class TestGetScheduleHistory:
 
     def test_history_empty(self, mock_db, mock_user):
@@ -535,18 +571,26 @@ class TestGetScheduleHistory:
 
         mock_db.query.side_effect = q_side
 
-        with patch(
-            "app.api.v1.endpoints.production.schedule.AdjustmentLogResponse.model_validate",
-            return_value=MagicMock()
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
-            return_value=MagicMock()
+        with (
+            patch(
+                "app.api.v1.endpoints.production.schedule.AdjustmentLogResponse.model_validate",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
+                return_value=MagicMock(),
+            ),
         ):
-            result = run_async(get_schedule_history(
-                schedule_id=None, plan_id=None,
-                page=1, page_size=20,
-                db=mock_db, current_user=mock_user,
-            ))
+            result = run_async(
+                get_schedule_history(
+                    schedule_id=None,
+                    plan_id=None,
+                    page=1,
+                    page_size=20,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result is not None
         assert result.total_count == 0
 
@@ -569,40 +613,45 @@ class TestGetScheduleHistory:
 
         mock_db.query.side_effect = q_side
 
-        with patch(
-            "app.api.v1.endpoints.production.schedule.AdjustmentLogResponse.model_validate",
-            return_value=MagicMock()
-        ), patch(
-            "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
-            return_value=MagicMock()
+        with (
+            patch(
+                "app.api.v1.endpoints.production.schedule.AdjustmentLogResponse.model_validate",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "app.api.v1.endpoints.production.schedule.ScheduleResponse.model_validate",
+                return_value=MagicMock(),
+            ),
         ):
-            result = run_async(get_schedule_history(
-                schedule_id=1, plan_id=None,
-                page=1, page_size=20,
-                db=mock_db, current_user=mock_user,
-            ))
+            result = run_async(
+                get_schedule_history(
+                    schedule_id=1,
+                    plan_id=None,
+                    page=1,
+                    page_size=20,
+                    db=mock_db,
+                    current_user=mock_user,
+                )
+            )
         assert result is not None
         assert result.total_count == 1
 
 
 # ==================== compare_schedules ====================
 
+
 class TestCompareSchedules:
 
     def test_compare_too_few_plans_raises_400(self, mock_db, mock_user):
         """少于2个方案时抛出 400"""
         with pytest.raises(HTTPException) as exc:
-            run_async(compare_schedules(
-                plan_ids="1", db=mock_db, current_user=mock_user
-            ))
+            run_async(compare_schedules(plan_ids="1", db=mock_db, current_user=mock_user))
         assert exc.value.status_code == 400
 
     def test_compare_too_many_plans_raises_400(self, mock_db, mock_user):
         """超过5个方案时抛出 400"""
         with pytest.raises(HTTPException) as exc:
-            run_async(compare_schedules(
-                plan_ids="1,2,3,4,5,6", db=mock_db, current_user=mock_user
-            ))
+            run_async(compare_schedules(plan_ids="1,2,3,4,5,6", db=mock_db, current_user=mock_user))
         assert exc.value.status_code == 400
 
     def test_compare_two_plans(self, mock_db, mock_user):
@@ -639,16 +688,17 @@ class TestCompareSchedules:
 
         with patch(
             "app.api.v1.endpoints.production.schedule.ProductionScheduleService",
-            return_value=mock_service
+            return_value=mock_service,
         ):
-            result = run_async(compare_schedules(
-                plan_ids="1,2", db=mock_db, current_user=mock_user
-            ))
+            result = run_async(
+                compare_schedules(plan_ids="1,2", db=mock_db, current_user=mock_user)
+            )
         assert result is not None
         assert result.plans_compared <= 2
 
 
 # ==================== get_gantt_data ====================
+
 
 class TestGetGanttData:
 

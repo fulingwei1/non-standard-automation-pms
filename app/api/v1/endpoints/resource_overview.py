@@ -24,6 +24,7 @@ router = APIRouter()
 # Schemas
 # ============================================================================
 
+
 class ProjectAllocation(BaseModel):
     project_id: int
     project_name: str
@@ -75,6 +76,7 @@ class DepartmentSummary(BaseModel):
 # Helper functions
 # ============================================================================
 
+
 def _detect_conflicts(allocations: List[ProjectAllocation], today: date) -> List[ConflictPeriod]:
     """Detect time periods where total allocation > 100%."""
     if not allocations:
@@ -108,15 +110,21 @@ def _detect_conflicts(allocations: List[ProjectAllocation], today: date) -> List
 
         if total > 100:
             # Merge with previous conflict if contiguous
-            if conflicts and conflicts[-1].end_date == period_start and conflicts[-1].total_allocation == total:
+            if (
+                conflicts
+                and conflicts[-1].end_date == period_start
+                and conflicts[-1].total_allocation == total
+            ):
                 conflicts[-1].end_date = period_end
             else:
-                conflicts.append(ConflictPeriod(
-                    start_date=period_start,
-                    end_date=period_end,
-                    total_allocation=total,
-                    projects=project_names,
-                ))
+                conflicts.append(
+                    ConflictPeriod(
+                        start_date=period_start,
+                        end_date=period_end,
+                        total_allocation=total,
+                        projects=project_names,
+                    )
+                )
 
     return conflicts
 
@@ -124,6 +132,7 @@ def _detect_conflicts(allocations: List[ProjectAllocation], today: date) -> List
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
 
 @router.get("/", response_model=ResourceOverviewResponse, summary="跨项目资源全景视图")
 def get_resource_overview(
@@ -138,7 +147,7 @@ def get_resource_overview(
 ) -> Any:
     """
     获取所有人员的跨项目资源分配全景视图。
-    
+
     数据来源：
     1. project_members — 项目成员分配
     2. project_stage_resource_plan — 阶段资源计划
@@ -150,7 +159,8 @@ def get_resource_overview(
         end_date = today + timedelta(days=180)
 
     # Query 1: project_members allocations
-    member_sql = text("""
+    member_sql = text(
+        """
         SELECT 
             pm.user_id,
             u.real_name,
@@ -169,12 +179,14 @@ def get_resource_overview(
         WHERE pm.is_active = 1
           AND p.is_active = 1
           AND (:dept IS NULL OR u.department = :dept)
-    """)
+    """
+    )
 
     member_rows = db.execute(member_sql, {"dept": department}).fetchall()
 
     # Query 2: project_stage_resource_plan allocations
-    plan_sql = text("""
+    plan_sql = text(
+        """
         SELECT 
             rp.assigned_employee_id as user_id,
             u.real_name,
@@ -193,7 +205,8 @@ def get_resource_overview(
         WHERE rp.assigned_employee_id IS NOT NULL
           AND p.is_active = 1
           AND (:dept IS NULL OR u.department = :dept)
-    """)
+    """
+    )
 
     plan_rows = db.execute(plan_sql, {"dept": department}).fetchall()
 
@@ -217,24 +230,8 @@ def get_resource_overview(
 
     for row in member_rows:
         emp = ensure_employee(row.user_id, row.real_name, row.department)
-        emp.allocations.append(ProjectAllocation(
-            project_id=row.project_id,
-            project_name=row.project_name,
-            project_code=row.project_code,
-            stage=row.stage,
-            role=row.role,
-            allocation_pct=float(row.allocation_pct),
-            start_date=row.start_date,
-            end_date=row.end_date,
-            source="member",
-        ))
-
-    for row in plan_rows:
-        emp = ensure_employee(row.user_id, row.real_name, row.department)
-        # Avoid duplicates (same project+user already from project_members)
-        existing = {(a.project_id, a.source) for a in emp.allocations}
-        if (row.project_id, "member") not in existing:
-            emp.allocations.append(ProjectAllocation(
+        emp.allocations.append(
+            ProjectAllocation(
                 project_id=row.project_id,
                 project_name=row.project_name,
                 project_code=row.project_code,
@@ -243,15 +240,37 @@ def get_resource_overview(
                 allocation_pct=float(row.allocation_pct),
                 start_date=row.start_date,
                 end_date=row.end_date,
-                source="resource_plan",
-            ))
+                source="member",
+            )
+        )
+
+    for row in plan_rows:
+        emp = ensure_employee(row.user_id, row.real_name, row.department)
+        # Avoid duplicates (same project+user already from project_members)
+        existing = {(a.project_id, a.source) for a in emp.allocations}
+        if (row.project_id, "member") not in existing:
+            emp.allocations.append(
+                ProjectAllocation(
+                    project_id=row.project_id,
+                    project_name=row.project_name,
+                    project_code=row.project_code,
+                    stage=row.stage,
+                    role=row.role,
+                    allocation_pct=float(row.allocation_pct),
+                    start_date=row.start_date,
+                    end_date=row.end_date,
+                    source="resource_plan",
+                )
+            )
 
     # If only_assigned=False, also include unassigned employees
     if not only_assigned:
-        all_users_sql = text("""
+        all_users_sql = text(
+            """
             SELECT id, real_name, department FROM users
             WHERE is_active = 1 AND (:dept IS NULL OR department = :dept)
-        """)
+        """
+        )
         for row in db.execute(all_users_sql, {"dept": department}).fetchall():
             ensure_employee(row.id, row.real_name, row.department)
 
@@ -266,7 +285,8 @@ def get_resource_overview(
 
         # Current allocation: sum of allocations active today
         emp.current_allocation = sum(
-            a.allocation_pct for a in emp.allocations
+            a.allocation_pct
+            for a in emp.allocations
             if a.start_date and a.end_date and a.start_date <= today <= a.end_date
         )
 
@@ -279,8 +299,7 @@ def get_resource_overview(
 
         # Max allocation (peak)
         emp.max_allocation = max(
-            [emp.current_allocation] + [c.total_allocation for c in emp.conflicts],
-            default=0
+            [emp.current_allocation] + [c.total_allocation for c in emp.conflicts], default=0
         )
 
         total_util += emp.current_allocation
@@ -312,7 +331,8 @@ def get_department_summary(
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
     """按部门汇总资源分配情况。"""
-    sql = text("""
+    sql = text(
+        """
         SELECT 
             u.department,
             COUNT(DISTINCT u.id) as total_members,
@@ -323,18 +343,21 @@ def get_department_summary(
         WHERE u.is_active = 1 AND u.department IS NOT NULL AND u.department != ''
         GROUP BY u.department
         ORDER BY assigned_members DESC
-    """)
+    """
+    )
 
     rows = db.execute(sql).fetchall()
     results = []
     for row in rows:
-        results.append(DepartmentSummary(
-            department=row.department,
-            total_members=row.total_members,
-            assigned_members=row.assigned_members or 0,
-            avg_utilization=round(float(row.avg_allocation or 0), 1),
-            conflict_count=0,  # TODO: calculate per-dept conflicts
-        ))
+        results.append(
+            DepartmentSummary(
+                department=row.department,
+                total_members=row.total_members,
+                assigned_members=row.assigned_members or 0,
+                avg_utilization=round(float(row.avg_allocation or 0), 1),
+                conflict_count=0,  # TODO: calculate per-dept conflicts
+            )
+        )
 
     return results
 
@@ -356,7 +379,8 @@ def get_resource_timeline(
     if not end_date:
         end_date = today + timedelta(days=180)
 
-    sql = text("""
+    sql = text(
+        """
         SELECT 
             pm.user_id,
             u.real_name,
@@ -378,29 +402,35 @@ def get_resource_timeline(
           AND COALESCE(pm.end_date, p.planned_end_date) >= :start
           AND COALESCE(pm.start_date, p.planned_start_date) <= :end
         ORDER BY u.real_name, pm.start_date
-    """)
+    """
+    )
 
-    rows = db.execute(sql, {
-        "uid": user_id,
-        "dept": department,
-        "start": start_date.isoformat(),
-        "end": end_date.isoformat(),
-    }).fetchall()
+    rows = db.execute(
+        sql,
+        {
+            "uid": user_id,
+            "dept": department,
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+        },
+    ).fetchall()
 
     timeline = []
     for row in rows:
-        timeline.append({
-            "user_id": row.user_id,
-            "real_name": row.real_name,
-            "department": row.department,
-            "project_id": row.project_id,
-            "project_name": row.project_name,
-            "project_code": row.project_code,
-            "stage": row.stage,
-            "role": row.role_code,
-            "allocation_pct": float(row.allocation_pct),
-            "start_date": str(row.start_date) if row.start_date else None,
-            "end_date": str(row.end_date) if row.end_date else None,
-        })
+        timeline.append(
+            {
+                "user_id": row.user_id,
+                "real_name": row.real_name,
+                "department": row.department,
+                "project_id": row.project_id,
+                "project_name": row.project_name,
+                "project_code": row.project_code,
+                "stage": row.stage,
+                "role": row.role_code,
+                "allocation_pct": float(row.allocation_pct),
+                "start_date": str(row.start_date) if row.start_date else None,
+                "end_date": str(row.end_date) if row.end_date else None,
+            }
+        )
 
     return {"items": timeline, "total": len(timeline)}

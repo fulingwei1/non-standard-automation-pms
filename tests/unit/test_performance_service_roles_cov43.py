@@ -9,8 +9,8 @@ pytest.importorskip("app.services.performance_service.roles")
 from unittest.mock import MagicMock
 
 from app.services.performance_service.roles import (
-    get_user_manager_roles,
     get_manageable_employees,
+    get_user_manager_roles,
 )
 
 
@@ -72,8 +72,10 @@ def test_get_user_manager_roles_project_manager():
     user.employee_id = None
     user.id = 3
 
-    proj1 = MagicMock(); proj1.id = 100
-    proj2 = MagicMock(); proj2.id = 200
+    proj1 = MagicMock()
+    proj1.id = 100
+    proj2 = MagicMock()
+    proj2.id = 200
 
     q_proj = MagicMock()
     q_proj.filter.return_value.all.return_value = [proj1, proj2]

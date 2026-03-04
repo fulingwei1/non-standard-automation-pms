@@ -25,10 +25,7 @@ class TestApprovalsWorkflowsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/workflows/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Workflows API not implemented")
@@ -48,16 +45,18 @@ class TestApprovalsWorkflowsAPI:
             "workflow_type": "purchase_request",
             "enabled": True,
             "steps": [
-                {"step_order": 1, "approver_role": "department_manager", "step_name": "部门经理审批"},
+                {
+                    "step_order": 1,
+                    "approver_role": "department_manager",
+                    "step_name": "部门经理审批",
+                },
                 {"step_order": 2, "approver_role": "finance_manager", "step_name": "财务经理审批"},
-                {"step_order": 3, "approver_role": "general_manager", "step_name": "总经理审批"}
-            ]
+                {"step_order": 3, "approver_role": "general_manager", "step_name": "总经理审批"},
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/",
-            headers=headers,
-            json=workflow_data
+            f"{settings.API_V1_PREFIX}/approvals/workflows/", headers=headers, json=workflow_data
         )
 
         if response.status_code == 404:
@@ -72,10 +71,7 @@ class TestApprovalsWorkflowsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/workflows/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No workflow data or API not implemented")
@@ -89,15 +85,10 @@ class TestApprovalsWorkflowsAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "description": "更新后的流程描述",
-            "enabled": False
-        }
+        update_data = {"description": "更新后的流程描述", "enabled": False}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/approvals/workflows/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -113,8 +104,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -130,8 +120,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/1/enable",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/1/enable", headers=headers
         )
 
         if response.status_code == 404:
@@ -147,8 +136,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/1/disable",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/1/disable", headers=headers
         )
 
         if response.status_code == 404:
@@ -167,13 +155,11 @@ class TestApprovalsWorkflowsAPI:
             "step_order": 4,
             "approver_role": "ceo",
             "step_name": "CEO终审",
-            "condition": "amount > 100000"
+            "condition": "amount > 100000",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/1/steps",
-            headers=headers,
-            json=step_data
+            f"{settings.API_V1_PREFIX}/approvals/workflows/1/steps", headers=headers, json=step_data
         )
 
         if response.status_code == 404:
@@ -189,8 +175,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/?type=purchase_request",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/?type=purchase_request", headers=headers
         )
 
         if response.status_code == 404:
@@ -206,8 +191,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/?enabled=true",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/?enabled=true", headers=headers
         )
 
         if response.status_code == 404:
@@ -223,8 +207,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/templates",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/templates", headers=headers
         )
 
         if response.status_code == 404:
@@ -239,15 +222,12 @@ class TestApprovalsWorkflowsAPI:
 
         headers = _auth_headers(admin_token)
 
-        template_data = {
-            "template_id": 1,
-            "name": "基于模板的审批流程"
-        }
+        template_data = {"template_id": 1, "name": "基于模板的审批流程"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/workflows/from-template",
             headers=headers,
-            json=template_data
+            json=template_data,
         )
 
         if response.status_code == 404:
@@ -263,8 +243,7 @@ class TestApprovalsWorkflowsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/workflows/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -274,9 +253,7 @@ class TestApprovalsWorkflowsAPI:
 
     def test_workflow_unauthorized(self, client: TestClient):
         """测试未授权访问审批流程"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/workflows/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -287,14 +264,10 @@ class TestApprovalsWorkflowsAPI:
 
         headers = _auth_headers(admin_token)
 
-        invalid_data = {
-            "steps": []  # 没有审批步骤
-        }
+        invalid_data = {"steps": []}  # 没有审批步骤
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/workflows/",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/approvals/workflows/", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:

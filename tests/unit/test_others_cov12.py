@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：综合仪表盘适配器单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.dashboard_adapters.others import OthersDashboardAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -95,23 +97,27 @@ class TestAdditionalMethods:
         adapter, db = _make_adapter()
         db.query.return_value.count.return_value = 0
         db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.order_by.return_value.limit.return_value.all.return_value = []
 
-        methods = [m for m in dir(adapter) if not m.startswith('_') and callable(getattr(adapter, m))]
+        methods = [
+            m for m in dir(adapter) if not m.startswith("_") and callable(getattr(adapter, m))
+        ]
         # 至少有 get_quick_stats 和 get_recent_activities
         assert len(methods) >= 2
 
     def test_get_system_health(self):
         adapter, db = _make_adapter()
-        if not hasattr(adapter, 'get_system_health'):
+        if not hasattr(adapter, "get_system_health"):
             pytest.skip("无此方法")
         result = adapter.get_system_health()
         assert isinstance(result, dict)
 
     def test_get_pending_tasks(self):
         adapter, db = _make_adapter()
-        if not hasattr(adapter, 'get_pending_tasks'):
+        if not hasattr(adapter, "get_pending_tasks"):
             pytest.skip("无此方法")
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q

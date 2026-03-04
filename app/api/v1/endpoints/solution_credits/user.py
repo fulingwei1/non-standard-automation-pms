@@ -24,8 +24,7 @@ router = APIRouter()
 
 @router.get("/my-credits", response_model=CreditInfoResponse)
 async def get_my_credits(
-    db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user)
+    db: Session = Depends(deps.get_db), current_user=Depends(deps.get_current_user)
 ):
     """
     获取当前用户积分信息
@@ -46,7 +45,7 @@ async def get_my_transactions(
     pagination: PaginationParams = Depends(get_pagination_query),
     transaction_type: Optional[str] = Query(None, description="交易类型过滤"),
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user)
+    current_user=Depends(deps.get_current_user),
 ):
     """
     获取当前用户积分交易历史
@@ -56,21 +55,20 @@ async def get_my_transactions(
         user_id=current_user.id,
         page=pagination.page,
         page_size=pagination.page_size,
-        transaction_type=transaction_type
+        transaction_type=transaction_type,
     )
 
     return TransactionListResponse(
         items=[TransactionResponse.model_validate(t) for t in transactions],
         total=total,
         page=pagination.page,
-        page_size=pagination.page_size
+        page_size=pagination.page_size,
     )
 
 
 @router.post("/check-can-generate", response_model=OperationResponse)
 async def check_can_generate(
-    db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user)
+    db: Session = Depends(deps.get_db), current_user=Depends(deps.get_current_user)
 ):
     """
     检查当前用户是否可以生成方案
@@ -81,7 +79,5 @@ async def check_can_generate(
     can_generate, message = service.can_generate_solution(current_user.id)
 
     return OperationResponse(
-        success=can_generate,
-        message=message,
-        data={"can_generate": can_generate}
+        success=can_generate, message=message, data={"can_generate": can_generate}
     )

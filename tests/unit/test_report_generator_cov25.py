@@ -2,9 +2,10 @@
 """第二十五批 - project_review_ai/report_generator 单元测试"""
 
 import json
+from datetime import date, datetime
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, date
 
 pytest.importorskip("app.services.project_review_ai.report_generator")
 
@@ -43,6 +44,7 @@ def _make_project(project_id=1):
 
 # ── _extract_project_data ─────────────────────────────────────────────────────
 
+
 class TestExtractProjectData:
     def test_returns_none_when_project_not_found(self, generator, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -68,8 +70,8 @@ class TestExtractProjectData:
         # Make filter().all() return different values per call
         db.query.return_value.filter.return_value.all.side_effect = [
             [ts1, ts2],  # timesheets
-            [],           # costs
-            [],           # changes
+            [],  # costs
+            [],  # changes
         ]
         result = generator._extract_project_data(1)
         assert result["statistics"]["total_hours"] == 10
@@ -79,9 +81,9 @@ class TestExtractProjectData:
         db.query.return_value.filter.return_value.first.return_value = proj
         changes = [MagicMock() for _ in range(3)]
         db.query.return_value.filter.return_value.all.side_effect = [
-            [],      # timesheets
-            [],      # costs
-            changes, # changes
+            [],  # timesheets
+            [],  # costs
+            changes,  # changes
         ]
         result = generator._extract_project_data(1)
         assert result["statistics"]["change_count"] == 3
@@ -96,6 +98,7 @@ class TestExtractProjectData:
 
 # ── _format_changes ───────────────────────────────────────────────────────────
 
+
 class TestFormatChanges:
     def test_empty_changes_returns_no_record_text(self, generator):
         result = generator._format_changes([])
@@ -107,18 +110,23 @@ class TestFormatChanges:
         assert "变更A" in result
 
     def test_max_five_changes_displayed(self, generator):
-        changes = [{"title": f"变更{i}", "type": "T", "impact": "L", "status": "S"} for i in range(8)]
+        changes = [
+            {"title": f"变更{i}", "type": "T", "impact": "L", "status": "S"} for i in range(8)
+        ]
         result = generator._format_changes(changes)
         # Should show ellipsis for more than 5
         assert "8" in result
 
     def test_exactly_five_changes_no_ellipsis(self, generator):
-        changes = [{"title": f"变更{i}", "type": "T", "impact": "L", "status": "S"} for i in range(5)]
+        changes = [
+            {"title": f"变更{i}", "type": "T", "impact": "L", "status": "S"} for i in range(5)
+        ]
         result = generator._format_changes(changes)
         assert "..." not in result
 
 
 # ── _build_review_prompt ──────────────────────────────────────────────────────
+
 
 class TestBuildReviewPrompt:
     def _make_project_data(self):
@@ -167,28 +175,34 @@ class TestBuildReviewPrompt:
 
 # ── _parse_ai_response ────────────────────────────────────────────────────────
 
+
 class TestParseAiResponse:
     def _make_project_data(self):
         return {
             "project": {"id": 1, "code": "P0001", "budget": 100000.0},
             "statistics": {
-                "plan_duration": 180, "actual_duration": 186,
-                "schedule_variance": 6, "total_cost": 95000.0,
-                "cost_variance": -5000.0, "change_count": 2,
+                "plan_duration": 180,
+                "actual_duration": 186,
+                "schedule_variance": 6,
+                "total_cost": 95000.0,
+                "cost_variance": -5000.0,
+                "change_count": 2,
             },
         }
 
     def test_parse_valid_json_content(self, generator):
         ai_response = {
-            "content": json.dumps({
-                "summary": "项目圆满完成",
-                "success_factors": ["因素1", "因素2"],
-                "problems": ["问题1"],
-                "improvements": ["改进1"],
-                "best_practices": ["实践1"],
-                "conclusion": "总体良好",
-                "insights": {}
-            })
+            "content": json.dumps(
+                {
+                    "summary": "项目圆满完成",
+                    "success_factors": ["因素1", "因素2"],
+                    "problems": ["问题1"],
+                    "improvements": ["改进1"],
+                    "best_practices": ["实践1"],
+                    "conclusion": "总体良好",
+                    "insights": {},
+                }
+            )
         }
         result = generator._parse_ai_response(ai_response, self._make_project_data())
         assert result["ai_summary"] == "项目圆满完成"
@@ -220,6 +234,7 @@ class TestParseAiResponse:
 
 
 # ── generate_report integration ───────────────────────────────────────────────
+
 
 class TestGenerateReport:
     def test_raises_when_project_not_found(self, generator, db):

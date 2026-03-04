@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - evaluation_notifications 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.ecn_notification.evaluation_notifications")
 
@@ -12,8 +13,7 @@ from app.services.ecn_notification.evaluation_notifications import (
 )
 
 
-def _make_ecn(ecn_id=1, ecn_no="ECN-001", ecn_title="变更标题",
-              applicant_id=10, project_id=None):
+def _make_ecn(ecn_id=1, ecn_no="ECN-001", ecn_title="变更标题", applicant_id=10, project_id=None):
     ecn = MagicMock()
     ecn.id = ecn_id
     ecn.ecn_no = ecn_no
@@ -23,8 +23,9 @@ def _make_ecn(ecn_id=1, ecn_no="ECN-001", ecn_title="变更标题",
     return ecn
 
 
-def _make_evaluation(eval_id=1, eval_dept="机械部", eval_result="同意",
-                     cost_estimate=5000, schedule_estimate=7):
+def _make_evaluation(
+    eval_id=1, eval_dept="机械部", eval_result="同意", cost_estimate=5000, schedule_estimate=7
+):
     ev = MagicMock()
     ev.id = eval_id
     ev.eval_dept = eval_dept

@@ -5,6 +5,7 @@ import pytest
 
 try:
     from app.services.preset_stage_templates.templates.repeat import REPEAT_TEMPLATE
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

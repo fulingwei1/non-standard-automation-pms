@@ -25,9 +25,7 @@ class ProjectDocument(Base, TimestampMixin):
     __tablename__ = "project_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
     rd_project_id = Column(Integer, ForeignKey("rd_project.id"), comment="研发项目ID")
     doc_type = Column(String(50), nullable=False, comment="文档类型")
@@ -97,13 +95,22 @@ class ProjectTemplate(Base, TimestampMixin):
     usage_count = Column(Integer, default=0, comment="使用次数")
 
     # 版本管理
-    current_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="当前版本ID")
+    current_version_id = Column(
+        Integer, ForeignKey("project_template_versions.id"), comment="当前版本ID"
+    )
 
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
 
     # 关系
-    versions = relationship("ProjectTemplateVersion", back_populates="template", foreign_keys="ProjectTemplateVersion.template_id", cascade="all, delete-orphan")
-    current_version = relationship("ProjectTemplateVersion", foreign_keys=[current_version_id], post_update=True)
+    versions = relationship(
+        "ProjectTemplateVersion",
+        back_populates="template",
+        foreign_keys="ProjectTemplateVersion.template_id",
+        cascade="all, delete-orphan",
+    )
+    current_version = relationship(
+        "ProjectTemplateVersion", foreign_keys=[current_version_id], post_update=True
+    )
 
     __table_args__ = (
         Index("idx_project_template_code", "template_code"),
@@ -121,7 +128,9 @@ class ProjectTemplateVersion(Base, TimestampMixin):
     __tablename__ = "project_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    template_id = Column(Integer, ForeignKey("project_templates.id"), nullable=False, comment="模板ID")
+    template_id = Column(
+        Integer, ForeignKey("project_templates.id"), nullable=False, comment="模板ID"
+    )
     version_no = Column(String(20), nullable=False, comment="版本号")
     status = Column(String(20), default="DRAFT", comment="状态：DRAFT/ACTIVE/ARCHIVED")
     template_config = Column(Text, comment="模板配置JSON")
@@ -131,9 +140,15 @@ class ProjectTemplateVersion(Base, TimestampMixin):
     published_at = Column(DateTime, comment="发布时间")
 
     # 关系
-    template = relationship("ProjectTemplate", back_populates="versions", foreign_keys=[template_id])
-    creator = relationship("User", foreign_keys=[created_by], backref="project_template_versions_created")
-    publisher = relationship("User", foreign_keys=[published_by], backref="project_template_versions_published")
+    template = relationship(
+        "ProjectTemplate", back_populates="versions", foreign_keys=[template_id]
+    )
+    creator = relationship(
+        "User", foreign_keys=[created_by], backref="project_template_versions_created"
+    )
+    publisher = relationship(
+        "User", foreign_keys=[published_by], backref="project_template_versions_published"
+    )
 
     __table_args__ = (
         Index("idx_project_template_version_template", "template_id"),

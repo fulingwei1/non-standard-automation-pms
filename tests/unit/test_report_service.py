@@ -10,16 +10,16 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.report_service import ReportService
 from app.models.report import (
-    ReportTypeEnum,
-    GeneratedByEnum,
     ArchiveStatusEnum,
+    GeneratedByEnum,
+    ReportTypeEnum,
 )
+from app.services.report_service import ReportService
 
 
 class TestReportServiceGetTemplates(unittest.TestCase):
@@ -35,13 +35,13 @@ class TestReportServiceGetTemplates(unittest.TestCase):
         mock_template1.id = 1
         mock_template1.name = "人员月报"
         mock_template1.enabled = True
-        mock_template1.frequency = 'MONTHLY'
+        mock_template1.frequency = "MONTHLY"
 
         mock_template2 = MagicMock()
         mock_template2.id = 2
         mock_template2.name = "部门月报"
         mock_template2.enabled = True
-        mock_template2.frequency = 'MONTHLY'
+        mock_template2.frequency = "MONTHLY"
 
         self.db.query.return_value.filter.return_value.all.return_value = [
             mock_template1,
@@ -80,7 +80,7 @@ class TestReportServiceGenerateReport(unittest.TestCase):
 
         self.assertIn("报表模板不存在", str(context.exception))
 
-    @patch.object(ReportService, '_generate_user_monthly_report')
+    @patch.object(ReportService, "_generate_user_monthly_report")
     def test_generate_report_user_monthly(self, mock_generate):
         """测试生成人员月度报表"""
         # Mock模板
@@ -93,23 +93,23 @@ class TestReportServiceGenerateReport(unittest.TestCase):
 
         # Mock生成方法返回
         mock_generate.return_value = {
-            'summary': [{'user_name': '张三', 'total_hours': 160}],
-            'detail': [],
-            'year': 2026,
-            'month': 1,
+            "summary": [{"user_name": "张三", "total_hours": 160}],
+            "detail": [],
+            "year": 2026,
+            "month": 1,
         }
 
         # 调用
         result = ReportService.generate_report(self.db, template_id=1, period="2026-01")
 
         # 验证
-        self.assertEqual(result['period'], "2026-01")
-        self.assertEqual(result['generated_by'], GeneratedByEnum.SYSTEM.value)
-        self.assertEqual(result['template'], mock_template)
-        self.assertIn('summary', result)
+        self.assertEqual(result["period"], "2026-01")
+        self.assertEqual(result["generated_by"], GeneratedByEnum.SYSTEM.value)
+        self.assertEqual(result["template"], mock_template)
+        self.assertIn("summary", result)
         mock_generate.assert_called_once_with(self.db, mock_template, 2026, 1)
 
-    @patch.object(ReportService, '_generate_dept_monthly_report')
+    @patch.object(ReportService, "_generate_dept_monthly_report")
     def test_generate_report_dept_monthly(self, mock_generate):
         """测试生成部门月度报表"""
         mock_template = MagicMock()
@@ -118,18 +118,18 @@ class TestReportServiceGenerateReport(unittest.TestCase):
         self.db.query.return_value.filter.return_value.first.return_value = mock_template
 
         mock_generate.return_value = {
-            'summary': [],
-            'detail': [],
-            'year': 2026,
-            'month': 1,
+            "summary": [],
+            "detail": [],
+            "year": 2026,
+            "month": 1,
         }
 
         result = ReportService.generate_report(self.db, template_id=2, period="2026-01")
 
-        self.assertIn('summary', result)
+        self.assertIn("summary", result)
         mock_generate.assert_called_once()
 
-    @patch.object(ReportService, '_generate_project_monthly_report')
+    @patch.object(ReportService, "_generate_project_monthly_report")
     def test_generate_report_project_monthly(self, mock_generate):
         """测试生成项目月度报表"""
         mock_template = MagicMock()
@@ -137,13 +137,13 @@ class TestReportServiceGenerateReport(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_template
 
-        mock_generate.return_value = {'summary': [], 'detail': [], 'year': 2026, 'month': 1}
+        mock_generate.return_value = {"summary": [], "detail": [], "year": 2026, "month": 1}
 
         ReportService.generate_report(self.db, template_id=3, period="2026-01")
 
         mock_generate.assert_called_once()
 
-    @patch.object(ReportService, '_generate_company_monthly_report')
+    @patch.object(ReportService, "_generate_company_monthly_report")
     def test_generate_report_company_monthly(self, mock_generate):
         """测试生成公司整体报表"""
         mock_template = MagicMock()
@@ -151,13 +151,13 @@ class TestReportServiceGenerateReport(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_template
 
-        mock_generate.return_value = {'summary': [], 'detail': [], 'year': 2026, 'month': 1}
+        mock_generate.return_value = {"summary": [], "detail": [], "year": 2026, "month": 1}
 
         ReportService.generate_report(self.db, template_id=4, period="2026-01")
 
         mock_generate.assert_called_once()
 
-    @patch.object(ReportService, '_generate_overtime_monthly_report')
+    @patch.object(ReportService, "_generate_overtime_monthly_report")
     def test_generate_report_overtime_monthly(self, mock_generate):
         """测试生成加班统计报表"""
         mock_template = MagicMock()
@@ -165,7 +165,7 @@ class TestReportServiceGenerateReport(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_template
 
-        mock_generate.return_value = {'summary': [], 'detail': [], 'year': 2026, 'month': 1}
+        mock_generate.return_value = {"summary": [], "detail": [], "year": 2026, "month": 1}
 
         ReportService.generate_report(self.db, template_id=5, period="2026-01")
 
@@ -238,32 +238,28 @@ class TestReportServiceUserMonthly(unittest.TestCase):
         self.db.query.side_effect = [mock_query, mock_detail_query]
 
         # 调用
-        result = ReportService._generate_user_monthly_report(
-            self.db, self.mock_template, 2026, 1
-        )
+        result = ReportService._generate_user_monthly_report(self.db, self.mock_template, 2026, 1)
 
         # 验证
-        self.assertEqual(result['year'], 2026)
-        self.assertEqual(result['month'], 1)
-        self.assertEqual(len(result['summary']), 2)
-        self.assertEqual(len(result['detail']), 1)
+        self.assertEqual(result["year"], 2026)
+        self.assertEqual(result["month"], 1)
+        self.assertEqual(len(result["summary"]), 2)
+        self.assertEqual(len(result["detail"]), 1)
 
         # 验证汇总数据
-        self.assertEqual(result['summary'][0]['user_name'], "张三")
-        self.assertEqual(result['summary'][0]['total_hours'], 168.0)
-        self.assertEqual(result['summary'][0]['work_days'], 21)
-        self.assertEqual(result['summary'][0]['avg_hours_per_day'], 8.0)
+        self.assertEqual(result["summary"][0]["user_name"], "张三")
+        self.assertEqual(result["summary"][0]["total_hours"], 168.0)
+        self.assertEqual(result["summary"][0]["work_days"], 21)
+        self.assertEqual(result["summary"][0]["avg_hours_per_day"], 8.0)
 
         # 验证明细数据
-        self.assertEqual(result['detail'][0]['user_name'], "张三")
-        self.assertEqual(result['detail'][0]['hours'], 8.0)
-        self.assertEqual(result['detail'][0]['work_date'], "2026-01-05")
+        self.assertEqual(result["detail"][0]["user_name"], "张三")
+        self.assertEqual(result["detail"][0]["hours"], 8.0)
+        self.assertEqual(result["detail"][0]["work_date"], "2026-01-05")
 
     def test_generate_user_monthly_report_with_filters(self):
         """测试带部门过滤条件的报表"""
-        self.mock_template.config = {
-            'filters': {'department_ids': [1, 2]}
-        }
+        self.mock_template.config = {"filters": {"department_ids": [1, 2]}}
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
@@ -276,12 +272,10 @@ class TestReportServiceUserMonthly(unittest.TestCase):
 
         self.db.query.side_effect = [mock_query, mock_detail_query]
 
-        result = ReportService._generate_user_monthly_report(
-            self.db, self.mock_template, 2026, 1
-        )
+        result = ReportService._generate_user_monthly_report(self.db, self.mock_template, 2026, 1)
 
-        self.assertEqual(len(result['summary']), 0)
-        self.assertEqual(len(result['detail']), 0)
+        self.assertEqual(len(result["summary"]), 0)
+        self.assertEqual(len(result["detail"]), 0)
 
     def test_generate_user_monthly_report_december(self):
         """测试12月的报表（边界情况：跨年）"""
@@ -296,12 +290,10 @@ class TestReportServiceUserMonthly(unittest.TestCase):
 
         self.db.query.side_effect = [mock_query, mock_detail_query]
 
-        result = ReportService._generate_user_monthly_report(
-            self.db, self.mock_template, 2025, 12
-        )
+        result = ReportService._generate_user_monthly_report(self.db, self.mock_template, 2025, 12)
 
-        self.assertEqual(result['year'], 2025)
-        self.assertEqual(result['month'], 12)
+        self.assertEqual(result["year"], 2025)
+        self.assertEqual(result["month"], 12)
 
     def test_generate_user_monthly_report_zero_work_days(self):
         """测试0工作日情况（避免除零错误）"""
@@ -325,12 +317,10 @@ class TestReportServiceUserMonthly(unittest.TestCase):
 
         self.db.query.side_effect = [mock_query, mock_detail_query]
 
-        result = ReportService._generate_user_monthly_report(
-            self.db, self.mock_template, 2026, 1
-        )
+        result = ReportService._generate_user_monthly_report(self.db, self.mock_template, 2026, 1)
 
         # 验证没有除零错误
-        self.assertEqual(result['summary'][0]['avg_hours_per_day'], 0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_day"], 0)
 
 
 class TestReportServiceDeptMonthly(unittest.TestCase):
@@ -357,15 +347,13 @@ class TestReportServiceDeptMonthly(unittest.TestCase):
 
         self.db.query.return_value = mock_query
 
-        result = ReportService._generate_dept_monthly_report(
-            self.db, self.mock_template, 2026, 1
-        )
+        result = ReportService._generate_dept_monthly_report(self.db, self.mock_template, 2026, 1)
 
-        self.assertEqual(len(result['summary']), 1)
-        self.assertEqual(result['summary'][0]['department_name'], "研发部")
-        self.assertEqual(result['summary'][0]['user_count'], 10)
-        self.assertEqual(result['summary'][0]['total_hours'], 1600.0)
-        self.assertEqual(result['summary'][0]['avg_hours_per_user'], 160.0)
+        self.assertEqual(len(result["summary"]), 1)
+        self.assertEqual(result["summary"][0]["department_name"], "研发部")
+        self.assertEqual(result["summary"][0]["user_count"], 10)
+        self.assertEqual(result["summary"][0]["total_hours"], 1600.0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 160.0)
 
     def test_generate_dept_monthly_report_zero_users(self):
         """测试0用户的部门（避免除零）"""
@@ -384,11 +372,9 @@ class TestReportServiceDeptMonthly(unittest.TestCase):
 
         self.db.query.return_value = mock_query
 
-        result = ReportService._generate_dept_monthly_report(
-            self.db, self.mock_template, 2026, 1
-        )
+        result = ReportService._generate_dept_monthly_report(self.db, self.mock_template, 2026, 1)
 
-        self.assertEqual(result['summary'][0]['avg_hours_per_user'], 0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 0)
 
 
 class TestReportServiceProjectMonthly(unittest.TestCase):
@@ -423,10 +409,10 @@ class TestReportServiceProjectMonthly(unittest.TestCase):
             self.db, self.mock_template, 2026, 1
         )
 
-        self.assertEqual(len(result['summary']), 2)
-        self.assertEqual(result['summary'][0]['project_name'], "项目A")
-        self.assertEqual(result['summary'][0]['total_hours'], 400.0)
-        self.assertEqual(result['summary'][0]['avg_hours_per_user'], 80.0)
+        self.assertEqual(len(result["summary"]), 2)
+        self.assertEqual(result["summary"][0]["project_name"], "项目A")
+        self.assertEqual(result["summary"][0]["total_hours"], 400.0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 80.0)
 
 
 class TestReportServiceCompanyMonthly(unittest.TestCase):
@@ -454,10 +440,10 @@ class TestReportServiceCompanyMonthly(unittest.TestCase):
             self.db, self.mock_template, 2026, 1
         )
 
-        self.assertEqual(len(result['summary']), 1)
-        self.assertEqual(result['summary'][0]['total_users'], 50)
-        self.assertEqual(result['summary'][0]['total_hours'], 8000.0)
-        self.assertEqual(result['summary'][0]['avg_hours_per_user'], 160.0)
+        self.assertEqual(len(result["summary"]), 1)
+        self.assertEqual(result["summary"][0]["total_users"], 50)
+        self.assertEqual(result["summary"][0]["total_hours"], 8000.0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 160.0)
 
     def test_generate_company_monthly_report_zero_users(self):
         """测试0用户情况"""
@@ -477,7 +463,7 @@ class TestReportServiceCompanyMonthly(unittest.TestCase):
             self.db, self.mock_template, 2026, 1
         )
 
-        self.assertEqual(result['summary'][0]['avg_hours_per_user'], 0)
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 0)
 
 
 class TestReportServiceOvertimeMonthly(unittest.TestCase):
@@ -508,12 +494,12 @@ class TestReportServiceOvertimeMonthly(unittest.TestCase):
             self.db, self.mock_template, 2026, 1
         )
 
-        self.assertEqual(len(result['summary']), 1)
-        self.assertEqual(result['summary'][0]['user_name'], "张三")
-        self.assertEqual(result['summary'][0]['overtime_hours'], 10.0)
-        self.assertEqual(result['summary'][0]['weekend_hours'], 16.0)
-        self.assertEqual(result['summary'][0]['holiday_hours'], 8.0)
-        self.assertEqual(result['summary'][0]['total_overtime'], 34.0)
+        self.assertEqual(len(result["summary"]), 1)
+        self.assertEqual(result["summary"][0]["user_name"], "张三")
+        self.assertEqual(result["summary"][0]["overtime_hours"], 10.0)
+        self.assertEqual(result["summary"][0]["weekend_hours"], 16.0)
+        self.assertEqual(result["summary"][0]["holiday_hours"], 8.0)
+        self.assertEqual(result["summary"][0]["total_overtime"], 34.0)
 
     def test_generate_overtime_monthly_report_null_values(self):
         """测试NULL值情况"""
@@ -536,10 +522,10 @@ class TestReportServiceOvertimeMonthly(unittest.TestCase):
             self.db, self.mock_template, 2026, 1
         )
 
-        self.assertEqual(result['summary'][0]['overtime_hours'], 0.0)
-        self.assertEqual(result['summary'][0]['weekend_hours'], 8.0)
-        self.assertEqual(result['summary'][0]['holiday_hours'], 0.0)
-        self.assertEqual(result['summary'][0]['total_overtime'], 8.0)
+        self.assertEqual(result["summary"][0]["overtime_hours"], 0.0)
+        self.assertEqual(result["summary"][0]["weekend_hours"], 8.0)
+        self.assertEqual(result["summary"][0]["holiday_hours"], 0.0)
+        self.assertEqual(result["summary"][0]["total_overtime"], 8.0)
 
 
 class TestReportServiceUtility(unittest.TestCase):
@@ -547,61 +533,61 @@ class TestReportServiceUtility(unittest.TestCase):
 
     def test_get_last_month_period_january(self):
         """测试1月份获取上月（12月）"""
-        with patch('app.services.report_service.datetime') as mock_datetime:
+        with patch("app.services.report_service.datetime") as mock_datetime:
             # Mock datetime.now() 返回值
             mock_now = MagicMock()
             mock_now.year = 2026
             mock_now.month = 1
             mock_datetime.now.return_value = mock_now
-            
+
             # Mock datetime() 构造函数的行为
             def datetime_side_effect(year, month, day=1):
                 mock_dt = MagicMock()
                 mock_dt.strftime.return_value = f"{year}-{month:02d}"
                 return mock_dt
-            
+
             mock_datetime.side_effect = datetime_side_effect
-            
+
             result = ReportService.get_last_month_period()
-            
+
             self.assertEqual(result, "2025-12")
 
     def test_get_last_month_period_february(self):
         """测试2月份获取上月（1月）"""
-        with patch('app.services.report_service.datetime') as mock_datetime:
+        with patch("app.services.report_service.datetime") as mock_datetime:
             mock_now = MagicMock()
             mock_now.year = 2026
             mock_now.month = 2
             mock_datetime.now.return_value = mock_now
-            
+
             def datetime_side_effect(year, month, day=1):
                 mock_dt = MagicMock()
                 mock_dt.strftime.return_value = f"{year}-{month:02d}"
                 return mock_dt
-            
+
             mock_datetime.side_effect = datetime_side_effect
-            
+
             result = ReportService.get_last_month_period()
-            
+
             self.assertEqual(result, "2026-01")
 
     def test_get_last_month_period_december(self):
         """测试12月份获取上月（11月）"""
-        with patch('app.services.report_service.datetime') as mock_datetime:
+        with patch("app.services.report_service.datetime") as mock_datetime:
             mock_now = MagicMock()
             mock_now.year = 2026
             mock_now.month = 12
             mock_datetime.now.return_value = mock_now
-            
+
             def datetime_side_effect(year, month, day=1):
                 mock_dt = MagicMock()
                 mock_dt.strftime.return_value = f"{year}-{month:02d}"
                 return mock_dt
-            
+
             mock_datetime.side_effect = datetime_side_effect
-            
+
             result = ReportService.get_last_month_period()
-            
+
             self.assertEqual(result, "2026-11")
 
 
@@ -611,8 +597,8 @@ class TestReportServiceArchive(unittest.TestCase):
     def setUp(self):
         self.db = MagicMock()
 
-    @patch('app.services.report_service.save_obj')
-    @patch('app.services.report_service.datetime')
+    @patch("app.services.report_service.save_obj")
+    @patch("app.services.report_service.datetime")
     def test_archive_report_success(self, mock_datetime, mock_save_obj):
         """测试成功归档报表"""
         mock_datetime.utcnow.return_value = datetime(2026, 2, 1, 10, 0, 0)
@@ -648,7 +634,7 @@ class TestReportServiceArchive(unittest.TestCase):
         self.assertEqual(archive.status, ArchiveStatusEnum.SUCCESS.value)
         self.assertEqual(archive.download_count, 0)
 
-    @patch('app.services.report_service.save_obj')
+    @patch("app.services.report_service.save_obj")
     def test_archive_report_with_error(self, mock_save_obj):
         """测试归档失败的报表"""
         mock_template = MagicMock()

@@ -6,9 +6,9 @@ Invoice Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
     from app.schemas.finance import InvoiceCreate, InvoiceUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False

@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/budget.py"""
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.budget import (
+    ProjectBudgetApproveRequest,
+    ProjectBudgetCreate,
     ProjectBudgetItemCreate,
     ProjectBudgetItemUpdate,
-    ProjectBudgetCreate,
-    ProjectBudgetUpdate,
     ProjectBudgetResponse,
-    ProjectBudgetApproveRequest,
-    ProjectCostAllocationRuleCreate,
+    ProjectBudgetUpdate,
     ProjectCostAllocationRequest,
+    ProjectCostAllocationRuleCreate,
 )
 
 
 class TestProjectBudgetItemCreate:
     def test_valid(self):
         i = ProjectBudgetItemCreate(
-            item_no=1, cost_category="材料费", cost_item="螺丝",
+            item_no=1,
+            cost_category="材料费",
+            cost_item="螺丝",
             budget_amount=Decimal("1000"),
         )
         assert i.remark is None
@@ -31,8 +34,11 @@ class TestProjectBudgetItemCreate:
 
     def test_with_machine(self):
         i = ProjectBudgetItemCreate(
-            item_no=1, cost_category="人工", cost_item="工时",
-            budget_amount=Decimal("5000"), machine_id=1,
+            item_no=1,
+            cost_category="人工",
+            cost_item="工时",
+            budget_amount=Decimal("5000"),
+            machine_id=1,
         )
         assert i.machine_id == 1
 
@@ -40,7 +46,8 @@ class TestProjectBudgetItemCreate:
 class TestProjectBudgetCreate:
     def test_valid(self):
         b = ProjectBudgetCreate(
-            project_id=1, budget_name="初始预算",
+            project_id=1,
+            budget_name="初始预算",
             total_amount=Decimal("100000"),
         )
         assert b.budget_type == "INITIAL"
@@ -48,11 +55,15 @@ class TestProjectBudgetCreate:
 
     def test_with_items(self):
         item = ProjectBudgetItemCreate(
-            item_no=1, cost_category="C", cost_item="I",
+            item_no=1,
+            cost_category="C",
+            cost_item="I",
             budget_amount=Decimal("1000"),
         )
         b = ProjectBudgetCreate(
-            project_id=1, budget_name="预算", total_amount=Decimal("1000"),
+            project_id=1,
+            budget_name="预算",
+            total_amount=Decimal("1000"),
             items=[item],
         )
         assert len(b.items) == 1
@@ -63,8 +74,11 @@ class TestProjectBudgetCreate:
 
     def test_with_dates(self):
         b = ProjectBudgetCreate(
-            project_id=1, budget_name="B", total_amount=Decimal("1"),
-            effective_date=date(2024, 1, 1), expiry_date=date(2024, 12, 31),
+            project_id=1,
+            budget_name="B",
+            total_amount=Decimal("1"),
+            effective_date=date(2024, 1, 1),
+            expiry_date=date(2024, 12, 31),
         )
         assert b.effective_date == date(2024, 1, 1)
 

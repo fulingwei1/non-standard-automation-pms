@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Import all schema modules to boost coverage through class definition execution"""
 
-import pytest
 import importlib
+
+import pytest
 
 SCHEMA_MODULES = [
     "app.schemas.organization",
@@ -50,7 +51,7 @@ def test_schema_importable(module_path):
         # Try to find and instantiate schema classes
         for name in dir(mod):
             obj = getattr(mod, name)
-            if isinstance(obj, type) and hasattr(obj, '__fields__'):
+            if isinstance(obj, type) and hasattr(obj, "__fields__"):
                 # It's a Pydantic model, just verify the class exists
                 assert obj is not None
     except ImportError as e:
@@ -59,7 +60,7 @@ def test_schema_importable(module_path):
         pytest.skip(f"Module {module_path} error: {e}")
 
 
-# Also import more service modules  
+# Also import more service modules
 MORE_SERVICE_MODULES = [
     "app.services.production.material_tracking.material_tracking_service",
     "app.services.production.exception.exception_enhancement_service",

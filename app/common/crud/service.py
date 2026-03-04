@@ -4,15 +4,16 @@ Service层基类
 业务逻辑层抽象
 """
 
-from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
-from app.common.crud.repository import BaseRepository
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.common.crud.exceptions import (
-    raise_not_found,
     raise_already_exists,
+    raise_not_found,
 )
+from app.common.crud.repository import BaseRepository
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -20,14 +21,10 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 ResponseSchemaType = TypeVar("ResponseSchemaType", bound=BaseModel)
 
 
-class BaseService(
-    Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]
-):
+class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]):
     """Service基类"""
 
-    def __init__(
-        self, model: Type[ModelType], db: AsyncSession, resource_name: str = None
-    ):
+    def __init__(self, model: Type[ModelType], db: AsyncSession, resource_name: str = None):
         """
         Args:
             model: SQLAlchemy模型类
@@ -190,9 +187,7 @@ class BaseService(
         db_obj = await self._after_update(db_obj)
 
         # 记录审计日志
-        await self._log_audit(
-            "UPDATE", db_obj, changes=obj_in.model_dump(exclude_unset=True)
-        )
+        await self._log_audit("UPDATE", db_obj, changes=obj_in.model_dump(exclude_unset=True))
 
         return self._to_response(db_obj)
 
@@ -282,9 +277,10 @@ class BaseService(
         自动记录审计日志 (Async)
         """
         try:
+            import json
+
             from app.common.context import get_audit_context
             from app.models.user import PermissionAudit
-            import json
 
             ctx = get_audit_context()
             operator_id = ctx.get("operator_id")
@@ -306,9 +302,7 @@ class BaseService(
                 detail["changes"] = changes
 
             if not detail.get("description"):
-                detail["description"] = (
-                    f"{self.resource_name} {action_type.lower()}: {target_id}"
-                )
+                detail["description"] = f"{self.resource_name} {action_type.lower()}: {target_id}"
 
             audit = PermissionAudit(
                 operator_id=operator_id,
@@ -327,6 +321,4 @@ class BaseService(
         except Exception as e:
             import logging
 
-            logging.getLogger(__name__).warning(
-                f"Failed to record async audit log: {e}"
-            )
+            logging.getLogger(__name__).warning(f"Failed to record async audit log: {e}")

@@ -2,10 +2,10 @@
 """第四十六批 - 租户服务单元测试"""
 import pytest
 
-pytest.importorskip("app.services.tenant_service",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.tenant_service", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.tenant_service import TenantService
 
 

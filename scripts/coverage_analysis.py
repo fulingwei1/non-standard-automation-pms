@@ -4,20 +4,18 @@ Coverage Analysis Script
 Analyzes coverage.json to compute coverage delta per module and identify top uncovered by fan-out.
 """
 
+import argparse
 import json
 import sys
-import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 
 def load_coverage_json(json_path: str = "coverage.json") -> Dict[str, Any]:
     """Load coverage.json file."""
     coverage_path = Path(json_path)
     if not coverage_path.exists():
-        print(
-            f"Error: {json_path} not found. Run tests first: pytest --cov=app --cov-report=json"
-        )
+        print(f"Error: {json_path} not found. Run tests first: pytest --cov=app --cov-report=json")
         sys.exit(1)
 
     with open(coverage_path) as f:
@@ -54,9 +52,7 @@ def compute_module_coverage(coverage_data: Dict[str, Any]) -> Dict[str, Dict]:
         elif "models" in parts:
             models_idx = parts.index("models")
             module_key = (
-                "models/" + parts[models_idx + 1]
-                if models_idx + 1 < len(parts)
-                else "models"
+                "models/" + parts[models_idx + 1] if models_idx + 1 < len(parts) else "models"
             )
         elif "api" in parts:
             api_idx = parts.index("api")
@@ -106,9 +102,7 @@ def compute_coverage_delta(modules: Dict[str, Dict]) -> List[Tuple]:
             continue
 
         line_coverage = (lines_covered / lines_total) * 100 if lines_total > 0 else 0
-        branch_coverage = (
-            (branches_covered / branches_total) * 100 if branches_total > 0 else 0
-        )
+        branch_coverage = (branches_covered / branches_total) * 100 if branches_total > 0 else 0
         lines_missing = lines_total - lines_covered
 
         results.append(
@@ -157,9 +151,7 @@ def print_coverage_report(
     )
     print("-" * 95)
 
-    for module, line_cov, branch_cov, missing, total, covered, files in modules_results[
-        :limit
-    ]:
+    for module, line_cov, branch_cov, missing, total, covered, files in modules_results[:limit]:
         marker = "***" if line_cov < 10 else " .." if line_cov < 50 else "    "
         print(
             f"{marker} {module:42s} {files:5} {line_cov:6.1f}% {branch_cov:8.1f}% {missing:8} {total:8}"
@@ -248,9 +240,7 @@ def print_priority_ranking(modules_results: List[Tuple]):
 
     ranked.sort(key=lambda x: x[3], reverse=True)
 
-    print(
-        f"{'Module':45s} {'Fan-Out':>8s} {'Missing':>8s} {'Impact':>8s} {'Line%':>7s}"
-    )
+    print(f"{'Module':45s} {'Fan-Out':>8s} {'Missing':>8s} {'Impact':>8s} {'Line%':>7s}")
     print("-" * 95)
 
     for module, fan_out, missing, impact, line_cov, total, files in ranked[:25]:
@@ -272,9 +262,7 @@ def main():
         default=30,
         help="Number of modules to show in top list (default: 30)",
     )
-    parser.add_argument(
-        "--full", action="store_true", help="Show all modules, not just top N"
-    )
+    parser.add_argument("--full", action="store_true", help="Show all modules, not just top N")
     args = parser.parse_args()
 
     # Load and analyze coverage
@@ -299,15 +287,9 @@ def main():
     high_coverage = sum(1 for r in modules_results if r[1] >= 50)
 
     print(f"Total modules analyzed: {total_modules}")
-    print(
-        f"  - <10% coverage:   {low_coverage} ({low_coverage / total_modules * 100:.1f}%)"
-    )
-    print(
-        f"  - 10-49% coverage: {medium_coverage} ({medium_coverage / total_modules * 100:.1f}%)"
-    )
-    print(
-        f"  - 50%+ coverage:   {high_coverage} ({high_coverage / total_modules * 100:.1f}%)"
-    )
+    print(f"  - <10% coverage:   {low_coverage} ({low_coverage / total_modules * 100:.1f}%)")
+    print(f"  - 10-49% coverage: {medium_coverage} ({medium_coverage / total_modules * 100:.1f}%)")
+    print(f"  - 50%+ coverage:   {high_coverage} ({high_coverage / total_modules * 100:.1f}%)")
 
 
 if __name__ == "__main__":

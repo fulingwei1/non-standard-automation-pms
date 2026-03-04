@@ -43,7 +43,8 @@ def find_duplicate_roles(session) -> Dict[str, List[Dict]]:
     """
     # 查询所有角色
     result = session.execute(
-        text("""
+        text(
+            """
         SELECT
             id,
             role_code,
@@ -56,7 +57,8 @@ def find_duplicate_roles(session) -> Dict[str, List[Dict]]:
             updated_at
         FROM roles
         ORDER BY role_name, created_at
-    """)
+    """
+        )
     )
 
     roles_by_name = defaultdict(list)
@@ -81,9 +83,7 @@ def find_duplicate_roles(session) -> Dict[str, List[Dict]]:
             chinese_role_codes.append(role)
 
     # 只返回重复的角色名称
-    duplicates = {
-        name: roles for name, roles in roles_by_name.items() if len(roles) > 1
-    }
+    duplicates = {name: roles for name, roles in roles_by_name.items() if len(roles) > 1}
 
     # 添加中文 role_code 的角色到清理列表
     for role in chinese_role_codes:
@@ -117,9 +117,7 @@ def choose_role_to_keep(roles: List[Dict]) -> Dict:
         roles = system_roles
 
     # 优先保留 role_code 不是中文的
-    non_chinese_roles = [
-        r for r in roles if not is_chinese_role_code(r.get("role_code", ""))
-    ]
+    non_chinese_roles = [r for r in roles if not is_chinese_role_code(r.get("role_code", ""))]
     if non_chinese_roles:
         roles = non_chinese_roles
 
@@ -133,9 +131,7 @@ def choose_role_to_keep(roles: List[Dict]) -> Dict:
     return roles[0]
 
 
-def migrate_user_roles(
-    session, from_role_id: int, to_role_id: int, dry_run: bool = False
-) -> int:
+def migrate_user_roles(session, from_role_id: int, to_role_id: int, dry_run: bool = False) -> int:
     """
     迁移用户角色关联
 
@@ -150,11 +146,13 @@ def migrate_user_roles(
     """
     # 先查询需要迁移的记录
     result = session.execute(
-        text("""
+        text(
+            """
         SELECT user_id, role_id
         FROM user_roles
         WHERE role_id = :from_role_id
-    """),
+    """
+        ),
         {"from_role_id": from_role_id},
     )
 
@@ -164,10 +162,12 @@ def migrate_user_roles(
     for user_id, role_id in user_roles:
         # 检查目标角色是否已经存在该用户的关联
         check_result = session.execute(
-            text("""
+            text(
+                """
             SELECT COUNT(*) FROM user_roles
             WHERE user_id = :user_id AND role_id = :to_role_id
-        """),
+        """
+            ),
             {"user_id": user_id, "to_role_id": to_role_id},
         )
 
@@ -177,11 +177,13 @@ def migrate_user_roles(
             if not dry_run:
                 # 迁移到新角色
                 session.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE user_roles
                     SET role_id = :to_role_id
                     WHERE user_id = :user_id AND role_id = :from_role_id
-                """),
+                """
+                    ),
                     {
                         "user_id": user_id,
                         "from_role_id": from_role_id,
@@ -193,10 +195,12 @@ def migrate_user_roles(
             # 如果已存在，直接删除旧的关联
             if not dry_run:
                 session.execute(
-                    text("""
+                    text(
+                        """
                     DELETE FROM user_roles
                     WHERE user_id = :user_id AND role_id = :from_role_id
-                """),
+                """
+                    ),
                     {"user_id": user_id, "from_role_id": from_role_id},
                 )
 
@@ -220,11 +224,13 @@ def migrate_role_permissions(
     """
     # 先查询需要迁移的记录
     result = session.execute(
-        text("""
+        text(
+            """
         SELECT permission_id
         FROM role_permissions
         WHERE role_id = :from_role_id
-    """),
+    """
+        ),
         {"from_role_id": from_role_id},
     )
 
@@ -234,10 +240,12 @@ def migrate_role_permissions(
     for permission_id in permissions:
         # 检查目标角色是否已经存在该权限
         check_result = session.execute(
-            text("""
+            text(
+                """
             SELECT COUNT(*) FROM role_permissions
             WHERE role_id = :to_role_id AND permission_id = :permission_id
-        """),
+        """
+            ),
             {"to_role_id": to_role_id, "permission_id": permission_id},
         )
 
@@ -247,11 +255,13 @@ def migrate_role_permissions(
             if not dry_run:
                 # 迁移到新角色
                 session.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE role_permissions
                     SET role_id = :to_role_id
                     WHERE role_id = :from_role_id AND permission_id = :permission_id
-                """),
+                """
+                    ),
                     {
                         "from_role_id": from_role_id,
                         "to_role_id": to_role_id,
@@ -263,10 +273,12 @@ def migrate_role_permissions(
             # 如果已存在，直接删除旧的关联
             if not dry_run:
                 session.execute(
-                    text("""
+                    text(
+                        """
                     DELETE FROM role_permissions
                     WHERE role_id = :from_role_id AND permission_id = :permission_id
-                """),
+                """
+                    ),
                     {"from_role_id": from_role_id, "permission_id": permission_id},
                 )
 
@@ -291,10 +303,12 @@ def migrate_user_role_assignments(
     try:
         # 检查表是否存在
         result = session.execute(
-            text("""
+            text(
+                """
             SELECT name FROM sqlite_master
             WHERE type='table' AND name='user_role_assignments'
-        """)
+        """
+            )
         )
 
         if not result.fetchone():
@@ -302,11 +316,13 @@ def migrate_user_role_assignments(
 
         # 查询需要迁移的记录
         result = session.execute(
-            text("""
+            text(
+                """
             SELECT id, user_id
             FROM user_role_assignments
             WHERE role_id = :from_role_id
-        """),
+        """
+            ),
             {"from_role_id": from_role_id},
         )
 
@@ -316,10 +332,12 @@ def migrate_user_role_assignments(
         for assignment_id, user_id in assignments:
             # 检查目标角色是否已经存在该用户的分配
             check_result = session.execute(
-                text("""
+                text(
+                    """
                 SELECT COUNT(*) FROM user_role_assignments
                 WHERE user_id = :user_id AND role_id = :to_role_id
-            """),
+            """
+                ),
                 {"user_id": user_id, "to_role_id": to_role_id},
             )
 
@@ -329,11 +347,13 @@ def migrate_user_role_assignments(
                 if not dry_run:
                     # 迁移到新角色
                     session.execute(
-                        text("""
+                        text(
+                            """
                         UPDATE user_role_assignments
                         SET role_id = :to_role_id
                         WHERE id = :assignment_id
-                    """),
+                    """
+                        ),
                         {"assignment_id": assignment_id, "to_role_id": to_role_id},
                     )
                 migrated_count += 1
@@ -341,10 +361,12 @@ def migrate_user_role_assignments(
                 # 如果已存在，直接删除旧的分配
                 if not dry_run:
                     session.execute(
-                        text("""
+                        text(
+                            """
                         DELETE FROM user_role_assignments
                         WHERE id = :assignment_id
-                    """),
+                    """
+                        ),
                         {"assignment_id": assignment_id},
                     )
 
@@ -366,9 +388,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
         print("=" * 60)
         print("清理重复角色工具")
         print("=" * 60)
-        print(
-            f"模式: {'预览模式（不会实际删除）' if dry_run else '执行模式（将删除重复角色）'}"
-        )
+        print(f"模式: {'预览模式（不会实际删除）' if dry_run else '执行模式（将删除重复角色）'}")
         print()
 
         # 查找重复的角色
@@ -394,9 +414,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
             role_to_keep = choose_role_to_keep(roles)
             roles_to_delete = [r for r in roles if r["id"] != role_to_keep["id"]]
 
-            print(
-                f"  保留角色 ID: {role_to_keep['id']} (role_code: {role_to_keep['role_code']})"
-            )
+            print(f"  保留角色 ID: {role_to_keep['id']} (role_code: {role_to_keep['role_code']})")
             if role_to_keep.get("is_system"):
                 print(f"    - 系统角色")
             if role_to_keep.get("is_active"):
@@ -409,9 +427,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
 
             for role in roles_to_delete:
                 chinese_mark = (
-                    " ⚠️ 中文role_code"
-                    if is_chinese_role_code(role.get("role_code", ""))
-                    else ""
+                    " ⚠️ 中文role_code" if is_chinese_role_code(role.get("role_code", "")) else ""
                 )
                 print(
                     f"    - ID {role['id']}: role_code={role['role_code']} (创建于 {role.get('created_at')}){chinese_mark}"
@@ -477,9 +493,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
                                         )
                                     else:
                                         conn.execute(
-                                            text(
-                                                f"DELETE FROM {table} WHERE role_id = :role_id"
-                                            ),
+                                            text(f"DELETE FROM {table} WHERE role_id = :role_id"),
                                             {"role_id": role["id"]},
                                         )
                             except Exception as e:
@@ -490,11 +504,13 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
                         # 更新角色的父级关系
                         try:
                             conn.execute(
-                                text("""
+                                text(
+                                    """
                                 UPDATE roles
                                 SET parent_role_id = :to_role_id
                                 WHERE parent_role_id = :from_role_id
-                            """),
+                            """
+                                ),
                                 {
                                     "from_role_id": role["id"],
                                     "to_role_id": role_to_keep["id"],
@@ -527,9 +543,7 @@ def cleanup_duplicate_roles(dry_run: bool = True, verbose: bool = False):
         if dry_run:
             print()
             print("这是预览模式，未实际删除任何数据。")
-            print(
-                "要执行清理，请运行: python scripts/cleanup_duplicate_roles.py --execute"
-            )
+            print("要执行清理，请运行: python scripts/cleanup_duplicate_roles.py --execute")
         else:
             session.commit()
             print()
@@ -540,9 +554,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="清理数据库中重复的角色")
-    parser.add_argument(
-        "--execute", action="store_true", help="实际执行清理（默认是预览模式）"
-    )
+    parser.add_argument("--execute", action="store_true", help="实际执行清理（默认是预览模式）")
     parser.add_argument("--verbose", action="store_true", help="显示详细信息")
 
     args = parser.parse_args()

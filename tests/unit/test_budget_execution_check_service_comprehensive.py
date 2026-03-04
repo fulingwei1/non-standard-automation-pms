@@ -32,7 +32,9 @@ class TestGetProjectBudget:
         mock_budget = MagicMock()
         mock_budget.total_amount = 150000
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_budget
+        )
 
         result = get_project_budget(mock_db, 1, mock_project)
 
@@ -46,7 +48,9 @@ class TestGetProjectBudget:
         mock_project = MagicMock()
         mock_project.budget_amount = 100000
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = get_project_budget(mock_db, 1, mock_project)
 
@@ -60,7 +64,9 @@ class TestGetProjectBudget:
         mock_project = MagicMock()
         mock_project.budget_amount = None
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = get_project_budget(mock_db, 1, mock_project)
 
@@ -130,7 +136,7 @@ class TestGetOrCreateAlertRule:
 
         mock_db = MagicMock()
         mock_rule = MagicMock()
-        mock_rule.rule_code = 'COST_OVERRUN'
+        mock_rule.rule_code = "COST_OVERRUN"
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_rule
 
@@ -150,8 +156,8 @@ class TestGetOrCreateAlertRule:
 
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        assert result.rule_code == 'COST_OVERRUN'
-        assert result.rule_name == '成本超支预警'
+        assert result.rule_code == "COST_OVERRUN"
+        assert result.rule_name == "成本超支预警"
 
 
 class TestDetermineAlertLevel:
@@ -167,7 +173,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=125000
+            actual_cost=125000,
         )
 
         assert level == "URGENT"
@@ -183,7 +189,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=115000
+            actual_cost=115000,
         )
 
         assert level == "CRITICAL"
@@ -199,7 +205,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=107000
+            actual_cost=107000,
         )
 
         assert level == "WARNING"
@@ -215,7 +221,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=95000
+            actual_cost=95000,
         )
 
         assert level == "WARNING"
@@ -231,7 +237,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=85000
+            actual_cost=85000,
         )
 
         assert level == "INFO"
@@ -247,7 +253,7 @@ class TestDetermineAlertLevel:
             project_name="测试项目",
             project_code="PJ001",
             budget_amount=100000,
-            actual_cost=50000
+            actual_cost=50000,
         )
 
         assert level is None
@@ -298,12 +304,14 @@ class TestGenerateAlertNo:
         from app.services.budget_execution_check_service import generate_alert_no
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = generate_alert_no(mock_db)
 
         today = date.today().strftime("%Y%m%d")
-        assert result == f'CO{today}0001'
+        assert result == f"CO{today}0001"
 
     def test_increments_sequence_number(self):
         """测试递增序号"""
@@ -312,13 +320,15 @@ class TestGenerateAlertNo:
         mock_db = MagicMock()
         mock_existing = MagicMock()
         today = date.today().strftime("%Y%m%d")
-        mock_existing.alert_no = f'CO{today}0005'
+        mock_existing.alert_no = f"CO{today}0005"
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_existing
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_existing
+        )
 
         result = generate_alert_no(mock_db)
 
-        assert result == f'CO{today}0006'
+        assert result == f"CO{today}0006"
 
 
 class TestCreateAlertRecord:
@@ -337,12 +347,22 @@ class TestCreateAlertRecord:
         mock_rule.id = 10
 
         # Mock generate_alert_no
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = create_alert_record(
-            mock_db, mock_project, 1, mock_rule,
-            "WARNING", "测试预警", "预警内容",
-            100000, 90000, "COST", 123
+            mock_db,
+            mock_project,
+            1,
+            mock_rule,
+            "WARNING",
+            "测试预警",
+            "预警内容",
+            100000,
+            90000,
+            "COST",
+            123,
         )
 
         mock_db.add.assert_called_once()
@@ -363,12 +383,22 @@ class TestCreateAlertRecord:
         mock_rule = MagicMock()
         mock_rule.id = 10
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = create_alert_record(
-            mock_db, mock_project, 1, mock_rule,
-            "WARNING", "测试预警", "预警内容",
-            100000, 90000, "TIMESHEET", 456
+            mock_db,
+            mock_project,
+            1,
+            mock_rule,
+            "WARNING",
+            "测试预警",
+            "预警内容",
+            100000,
+            90000,
+            "TIMESHEET",
+            456,
         )
 
         assert result.source_module == "TIMESHEET"
@@ -386,12 +416,22 @@ class TestCreateAlertRecord:
         mock_rule = MagicMock()
         mock_rule.id = 10
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = create_alert_record(
-            mock_db, mock_project, 1, mock_rule,
-            "WARNING", "测试预警", "预警内容",
-            100000, 90000, None, None
+            mock_db,
+            mock_project,
+            1,
+            mock_rule,
+            "WARNING",
+            "测试预警",
+            "预警内容",
+            100000,
+            90000,
+            None,
+            None,
         )
 
         assert result.source_module == "COST"

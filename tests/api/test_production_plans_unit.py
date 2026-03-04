@@ -20,6 +20,7 @@ sys.modules.setdefault("redis", redis_mock)
 sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import os
+
 os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
@@ -34,6 +35,7 @@ SVC = "app.services.production.plan_service"
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _make_db():
     db = MagicMock()
@@ -53,6 +55,7 @@ def _make_user():
 
 def _make_plan(plan_id=1, status="DRAFT"):
     from datetime import date
+
     plan = MagicMock()
     plan.id = plan_id
     plan.plan_no = f"PP{plan_id:06d}"
@@ -87,6 +90,7 @@ def _make_pagination():
 # ──────────────────────────────────────────────
 # Tests: read_production_plans
 # ──────────────────────────────────────────────
+
 
 class TestReadProductionPlans:
 
@@ -132,7 +136,9 @@ class TestReadProductionPlans:
 
         with patch(f"{SVC}.apply_pagination") as mock_pag:
             mock_pag.return_value.all.return_value = [plan]
-            db.query.return_value.filter.return_value.first.return_value = None  # project/workshop lookups
+            db.query.return_value.filter.return_value.first.return_value = (
+                None  # project/workshop lookups
+            )
 
             result = read_production_plans(
                 db=db,
@@ -150,6 +156,7 @@ class TestReadProductionPlans:
 # ──────────────────────────────────────────────
 # Tests: create_production_plan
 # ──────────────────────────────────────────────
+
 
 class TestCreateProductionPlan:
 
@@ -174,14 +181,21 @@ class TestCreateProductionPlan:
         workshop_mock = MagicMock(workshop_name="一号车间")
 
         db.query.return_value.filter.return_value.first.side_effect = [
-            project_mock, workshop_mock, project_mock, workshop_mock
+            project_mock,
+            workshop_mock,
+            project_mock,
+            workshop_mock,
         ]
 
         plan_instance = _make_plan()
 
-        with patch(f"{SVC}.ProductionPlan") as MockPlan, \
-             patch("app.api.v1.endpoints.production.utils.generate_plan_no", return_value="PP000001"), \
-             patch(f"{SVC}.save_obj"):
+        with (
+            patch(f"{SVC}.ProductionPlan") as MockPlan,
+            patch(
+                "app.api.v1.endpoints.production.utils.generate_plan_no", return_value="PP000001"
+            ),
+            patch(f"{SVC}.save_obj"),
+        ):
             MockPlan.return_value = plan_instance
 
             result = create_production_plan(db=db, plan_in=plan_in, current_user=current_user)
@@ -232,6 +246,7 @@ class TestCreateProductionPlan:
 # Tests: read_production_plan
 # ──────────────────────────────────────────────
 
+
 class TestReadProductionPlan:
 
     def test_read_plan_success(self):
@@ -257,8 +272,7 @@ class TestReadProductionPlan:
         current_user = _make_user()
 
         with patch(
-            f"{SVC}.get_or_404",
-            side_effect=HTTPException(status_code=404, detail="生产计划不存在")
+            f"{SVC}.get_or_404", side_effect=HTTPException(status_code=404, detail="生产计划不存在")
         ):
             with pytest.raises(HTTPException) as exc_info:
                 read_production_plan(plan_id=999, db=db, current_user=current_user)
@@ -269,6 +283,7 @@ class TestReadProductionPlan:
 # ──────────────────────────────────────────────
 # Tests: update_production_plan
 # ──────────────────────────────────────────────
+
 
 class TestUpdateProductionPlan:
 
@@ -283,10 +298,11 @@ class TestUpdateProductionPlan:
         plan_in = MagicMock()
         plan_in.model_dump.return_value = {"plan_name": "更新计划名"}
 
-        with patch(f"{SVC}.get_or_404", return_value=plan), \
-             patch(f"{SVC}.save_obj"):
+        with patch(f"{SVC}.get_or_404", return_value=plan), patch(f"{SVC}.save_obj"):
             db.query.return_value.filter.return_value.first.return_value = None
-            result = update_production_plan(db=db, plan_id=1, plan_in=plan_in, current_user=current_user)
+            result = update_production_plan(
+                db=db, plan_id=1, plan_in=plan_in, current_user=current_user
+            )
 
         assert result is not None
 
@@ -311,6 +327,7 @@ class TestUpdateProductionPlan:
 # ──────────────────────────────────────────────
 # Tests: submit / approve / publish
 # ──────────────────────────────────────────────
+
 
 class TestPlanWorkflow:
 

@@ -3,10 +3,11 @@
 库存盘点服务单元测试
 覆盖任务状态流转、差异计算、统计更新等
 """
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.stock_count_service import StockCountService
 
@@ -37,7 +38,9 @@ def make_task(id=1, status="PENDING", total_items=5, counted_items=0, **kwargs):
     return t
 
 
-def make_detail(id=1, task_id=1, system_quantity=Decimal("100"), unit_price=Decimal("10"), status="PENDING"):
+def make_detail(
+    id=1, task_id=1, system_quantity=Decimal("100"), unit_price=Decimal("10"), status="PENDING"
+):
     d = MagicMock()
     d.id = id
     d.task_id = task_id
@@ -172,4 +175,4 @@ class TestUpdateTaskStatistics:
         assert task.total_items == 3
         assert task.counted_items == 2  # COUNTED 状态
         assert task.matched_items == 1  # difference == 0
-        assert task.diff_items == 1    # difference != 0 且 not None
+        assert task.diff_items == 1  # difference != 0 且 not None

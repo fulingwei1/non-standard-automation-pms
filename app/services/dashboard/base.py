@@ -19,9 +19,12 @@ from typing import Callable, Optional, TypeVar
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+
 def _get_cache_service_class():
     from app.services.dashboard_cache_service import DashboardCacheService
+
     return DashboardCacheService
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,7 @@ T = TypeVar("T")
 @dataclass
 class DateRange:
     """时间范围"""
+
     start: date
     end: date
 
@@ -112,9 +116,7 @@ class BaseDashboardService:
             ttl: 自定义 TTL（秒），默认使用 default_cache_ttl
             **key_parts: 额外的缓存键部分（如 project_id=123）
         """
-        cache_key = self._cache._get_cache_key(
-            f"{self.cache_prefix}:{key_suffix}", **key_parts
-        )
+        cache_key = self._cache._get_cache_key(f"{self.cache_prefix}:{key_suffix}", **key_parts)
         result = self._cache.get(cache_key)
         if result is not None:
             return result
@@ -133,9 +135,7 @@ class BaseDashboardService:
 
     def invalidate(self, key_suffix: str, **key_parts) -> None:
         """删除指定缓存"""
-        cache_key = self._cache._get_cache_key(
-            f"{self.cache_prefix}:{key_suffix}", **key_parts
-        )
+        cache_key = self._cache._get_cache_key(f"{self.cache_prefix}:{key_suffix}", **key_parts)
         self._cache.delete(cache_key)
 
     # ── 时间范围 ──────────────────────────────────────────

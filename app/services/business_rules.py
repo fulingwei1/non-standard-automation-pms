@@ -26,15 +26,15 @@ from typing import List, Literal
 
 KPI_BENCHMARKS = {
     # 毛利率
-    "gross_margin_warning": Decimal("0.20"),   # 低于 20% 预警
+    "gross_margin_warning": Decimal("0.20"),  # 低于 20% 预警
     "gross_margin_gm_approval": Decimal("0.10"),  # 低于 10% 需总经理审批
     # 套件率
-    "kit_rate_target": Decimal("0.95"),         # 套件率目标 95%
+    "kit_rate_target": Decimal("0.95"),  # 套件率目标 95%
     # 进度绩效
-    "spi_warning": Decimal("0.90"),             # SPI < 0.9 触发延期预警
-    "spi_urgent": Decimal("0.80"),              # SPI < 0.8 触发紧急预警
+    "spi_warning": Decimal("0.90"),  # SPI < 0.9 触发延期预警
+    "spi_urgent": Decimal("0.80"),  # SPI < 0.8 触发紧急预警
     # 付款逾期
-    "payment_overdue_escalation_days": 30,     # 逾期超 30 天需升级
+    "payment_overdue_escalation_days": 30,  # 逾期超 30 天需升级
     # 工时
     "daily_overtime_threshold": Decimal("10"),  # 日工时 > 10h 标记异常
     "monthly_hr_review_threshold": Decimal("220"),  # 月工时 > 220h 触发 HR 关注
@@ -43,6 +43,7 @@ KPI_BENCHMARKS = {
 # ---------------------------------------------------------------------------
 # 1. 毛利率计算规则
 # ---------------------------------------------------------------------------
+
 
 def calc_gross_margin(
     contract: float | Decimal,
@@ -118,6 +119,7 @@ def requires_gm_approval(margin: float | Decimal) -> bool:
 # 2. 套件率（Kit Rate）计算规则
 # ---------------------------------------------------------------------------
 
+
 def calc_kit_rate(actual_qty: int | float | Decimal, bom_qty: int | float | Decimal) -> Decimal:
     """
     计算套件率。
@@ -162,6 +164,7 @@ def should_trigger_shortage_alert(kit_rate: float | Decimal) -> bool:
 # ---------------------------------------------------------------------------
 # 3. 项目延期预警规则（基于 EVM SPI）
 # ---------------------------------------------------------------------------
+
 
 def calc_spi(ev: float | Decimal, pv: float | Decimal) -> Decimal:
     """
@@ -217,21 +220,23 @@ def get_delay_alert_level(spi: float | Decimal) -> DelayAlertLevel:
 # 4. 付款节点验证
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PaymentMilestone:
     """付款里程碑数据类"""
-    stage: str              # 付款阶段名称
-    ratio: Decimal          # 比例（0~1）
-    amount: Decimal         # 金额（元）
-    trigger: str = ""       # 触发条件说明
+
+    stage: str  # 付款阶段名称
+    ratio: Decimal  # 比例（0~1）
+    amount: Decimal  # 金额（元）
+    trigger: str = ""  # 触发条件说明
 
 
 # 标准合同付款结构（可由业务配置覆盖）
 STANDARD_PAYMENT_RATIOS: List[dict] = [
-    {"stage": "签约款",  "ratio": Decimal("0.30"), "trigger": "合同签订后"},
-    {"stage": "到货款",  "ratio": Decimal("0.30"), "trigger": "设备到货后"},
-    {"stage": "验收款",  "ratio": Decimal("0.30"), "trigger": "终验通过后"},
-    {"stage": "质保款",  "ratio": Decimal("0.10"), "trigger": "质保期满后"},
+    {"stage": "签约款", "ratio": Decimal("0.30"), "trigger": "合同签订后"},
+    {"stage": "到货款", "ratio": Decimal("0.30"), "trigger": "设备到货后"},
+    {"stage": "验收款", "ratio": Decimal("0.30"), "trigger": "终验通过后"},
+    {"stage": "质保款", "ratio": Decimal("0.10"), "trigger": "质保期满后"},
 ]
 
 
@@ -312,6 +317,7 @@ def is_overdue_escalation_required(overdue_days: int) -> bool:
 # 5. 工时异常检测
 # ---------------------------------------------------------------------------
 
+
 def is_daily_overtime(hours: float | Decimal) -> bool:
     """
     判断日工时是否触发异常标记。
@@ -352,9 +358,10 @@ FATStatus = Literal["PASSED", "CONDITIONAL_PASS", "FAILED"]
 @dataclass
 class FATResult:
     """FAT验收结果数据类"""
-    status: FATStatus          # 验收结论
-    can_ship: bool             # 是否允许发货
-    failed_items: List[str] = field(default_factory=list)   # 不通过项列表
+
+    status: FATStatus  # 验收结论
+    can_ship: bool  # 是否允许发货
+    failed_items: List[str] = field(default_factory=list)  # 不通过项列表
     conditional_items: List[str] = field(default_factory=list)  # 有条件通过项
 
 
@@ -427,6 +434,7 @@ def evaluate_fat_result(test_items: List[dict]) -> FATResult:
 # 7. 项目最终毛利核算（结项时）
 # ---------------------------------------------------------------------------
 
+
 def calc_final_margin(project_data: dict) -> float:
     """
     计算项目结项毛利率。
@@ -475,6 +483,7 @@ def requires_margin_review(margin: float) -> bool:
 # 8. 工期偏差分析（D6组：交付专项）
 # ---------------------------------------------------------------------------
 
+
 def analyze_delay_root_causes(delays: List[dict]) -> List[dict]:
     """
     分析延期根因，按频次和延误天数排序。
@@ -504,12 +513,14 @@ def analyze_delay_root_causes(delays: List[dict]) -> List[dict]:
 
     result = []
     for reason, s in stats.items():
-        result.append({
-            "reason": reason,
-            "frequency": s["frequency"],
-            "total_days": s["total_days"],
-            "avg_days": round(s["total_days"] / s["frequency"], 1) if s["frequency"] else 0,
-        })
+        result.append(
+            {
+                "reason": reason,
+                "frequency": s["frequency"],
+                "total_days": s["total_days"],
+                "avg_days": round(s["total_days"] / s["frequency"], 1) if s["frequency"] else 0,
+            }
+        )
 
     # 按频次降序，频次相同则按总延误天数降序
     result.sort(key=lambda x: (-x["frequency"], -x["total_days"]))
@@ -547,11 +558,13 @@ def recalculate_delivery_date(
 # 9. BOM 套件率计算 & 缺料预警（D6组：交付专项）
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ShortageAlert:
     """缺料预警数据类"""
+
     project_id: int
-    missing_materials: List[str]          # 缺料物料名称列表
+    missing_materials: List[str]  # 缺料物料名称列表
     severity: Literal["CRITICAL", "WARNING", "INFO"]  # 预警等级
     details: List[dict] = field(default_factory=list)  # 缺料明细
 
@@ -630,18 +643,18 @@ def generate_shortage_alert(
         if available < required:
             shortage_qty = required - available
             missing_materials.append(material)
-            details.append({
-                "material": material,
-                "required": required,
-                "available": available,
-                "shortage": shortage_qty,
-            })
+            details.append(
+                {
+                    "material": material,
+                    "required": required,
+                    "available": available,
+                    "shortage": shortage_qty,
+                }
+            )
             if available == 0:
                 has_zero_stock = True
 
-    severity: Literal["CRITICAL", "WARNING", "INFO"] = (
-        "CRITICAL" if has_zero_stock else "WARNING"
-    )
+    severity: Literal["CRITICAL", "WARNING", "INFO"] = "CRITICAL" if has_zero_stock else "WARNING"
 
     return ShortageAlert(
         project_id=project_id,

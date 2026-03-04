@@ -43,7 +43,7 @@ def check_work_order_kit(
     # 保存检查记录到 mat_kit_check 表
     check_record = KitCheck(
         check_no=generate_check_no(db),
-        check_type='work_order',
+        check_type="work_order",
         work_order_id=work_order_id,
         project_id=work_order.project_id,
         total_items=kit_data["total_items"],
@@ -54,7 +54,7 @@ def check_work_order_kit(
         kit_status=kit_data["kit_status"],
         shortage_summary=kit_data.get("shortage_details", []),
         check_time=datetime.now(),
-        check_method='manual',
+        check_method="manual",
         checked_by=current_user.id,
         can_start=kit_data["is_kit_complete"],
     )
@@ -74,7 +74,7 @@ def check_work_order_kit(
             "kit_data": kit_data,
             "check_time": check_record.check_time.isoformat(),
             "checked_by": current_user.id,
-        }
+        },
     )
 
 
@@ -96,7 +96,9 @@ def confirm_work_order_start(
         raise HTTPException(status_code=404, detail="工单不存在")
 
     if confirm_type not in ["start_now", "wait", "partial_start"]:
-        raise HTTPException(status_code=400, detail="确认类型必须是 start_now、wait 或 partial_start")
+        raise HTTPException(
+            status_code=400, detail="确认类型必须是 start_now、wait 或 partial_start"
+        )
 
     # 计算齐套率
     kit_data = calculate_work_order_kit_rate(db, work_order)
@@ -126,7 +128,7 @@ def confirm_work_order_start(
         # 如果没有检查记录，先创建一个
         latest_check = KitCheck(
             check_no=generate_check_no(db),
-            check_type='work_order',
+            check_type="work_order",
             work_order_id=work_order_id,
             project_id=work_order.project_id,
             total_items=kit_data["total_items"],
@@ -137,17 +139,17 @@ def confirm_work_order_start(
             kit_status=kit_data["kit_status"],
             shortage_summary=kit_data.get("shortage_details", []),
             check_time=datetime.now(),
-            check_method='manual',
+            check_method="manual",
             checked_by=current_user.id,
         )
         db.add(latest_check)
 
     # 更新确认信息
-    latest_check.start_confirmed = (confirm_type in ["start_now", "partial_start"])
+    latest_check.start_confirmed = confirm_type in ["start_now", "partial_start"]
     latest_check.confirm_time = datetime.now()
     latest_check.confirmed_by = current_user.id
     latest_check.confirm_remark = confirm_note
-    latest_check.can_start = (confirm_type in ["start_now", "partial_start"])
+    latest_check.can_start = confirm_type in ["start_now", "partial_start"]
 
     db.add(work_order)
     db.add(latest_check)
@@ -166,5 +168,5 @@ def confirm_work_order_start(
             "kit_rate": kit_data["kit_rate"],
             "confirmed_by": current_user.id,
             "confirmed_at": datetime.now().isoformat(),
-        }
+        },
     )

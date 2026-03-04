@@ -6,12 +6,14 @@ import pytest
 
 try:
     from unittest.mock import MagicMock, patch
+
+    import app.services.dashboard_cache_service as _mod
     from app.services.dashboard_cache_service import (
         DashboardCacheService,
         get_cache_service,
         invalidate_dashboard_cache,
     )
-    import app.services.dashboard_cache_service as _mod
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -23,6 +25,7 @@ pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="导入失败，跳过")
 def reset_global_cache():
     """每个测试前后重置全局缓存实例"""
     import app.services.dashboard_cache_service as mod
+
     original = mod._cache_instance
     mod._cache_instance = None
     yield
@@ -86,6 +89,7 @@ class TestDashboardCacheServiceEnabled:
 
     def test_get_hit(self):
         import json
+
         svc = self._make_service_with_mock_redis()
         svc.redis_client.get.return_value = json.dumps({"x": 1})
         result = svc.get("key")
@@ -119,6 +123,7 @@ class TestDashboardCacheServiceEnabled:
 
     def test_get_or_set_uses_cache_when_available(self):
         import json
+
         svc = self._make_service_with_mock_redis()
         svc.redis_client.get.return_value = json.dumps({"cached": True})
         fetch = MagicMock()
@@ -149,6 +154,7 @@ class TestModuleFunctions:
         svc.cache_enabled = False
         svc.redis_client = None
         import app.services.dashboard_cache_service as mod
+
         mod._cache_instance = svc
         result = invalidate_dashboard_cache("dashboard:*")
         assert result == 0

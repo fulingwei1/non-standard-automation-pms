@@ -9,7 +9,6 @@ Batch: 3
 """
 
 
-
 class TestPerformanceCollectorConstants:
     """Test suite for performance_collector/constants."""
 

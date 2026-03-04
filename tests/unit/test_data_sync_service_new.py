@@ -26,21 +26,22 @@ def service(db):
 # sync_contract_to_project - 更多场景
 # ============================================================
 
+
 class TestSyncContractToProjectExtended:
 
     def test_syncs_delivery_deadline(self, service, db):
         """测试同步 delivery_deadline"""
         from datetime import date
+
         contract = MagicMock(
             project_id=1,
             contract_amount=None,
             signed_date=None,
             delivery_deadline=date(2025, 6, 30),
-            quote_version=None
+            quote_version=None,
         )
         project = MagicMock(
-            contract_amount=None, contract_date=None,
-            planned_end_date=date(2025, 5, 31)
+            contract_amount=None, contract_date=None, planned_end_date=date(2025, 5, 31)
         )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = service.sync_contract_to_project(1)
@@ -50,17 +51,15 @@ class TestSyncContractToProjectExtended:
     def test_syncs_contract_date(self, service, db):
         """测试同步合同签订日期"""
         from datetime import date
+
         contract = MagicMock(
             project_id=1,
             contract_amount=None,
             signed_date=date(2025, 1, 15),
             delivery_deadline=None,
-            quote_version=None
+            quote_version=None,
         )
-        project = MagicMock(
-            contract_amount=None, contract_date=None,
-            planned_end_date=None
-        )
+        project = MagicMock(contract_amount=None, contract_date=None, planned_end_date=None)
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = service.sync_contract_to_project(1)
         assert result["success"] is True
@@ -69,17 +68,17 @@ class TestSyncContractToProjectExtended:
     def test_syncs_from_quote_version(self, service, db):
         """测试从 quote_version 获取交期"""
         from datetime import date
+
         quote_version = MagicMock(delivery_date=date(2025, 7, 1))
         contract = MagicMock(
             project_id=1,
             contract_amount=None,
             signed_date=None,
             delivery_deadline=None,
-            quote_version=quote_version
+            quote_version=quote_version,
         )
         project = MagicMock(
-            contract_amount=None, contract_date=None,
-            planned_end_date=date(2025, 5, 1)
+            contract_amount=None, contract_date=None, planned_end_date=date(2025, 5, 1)
         )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = service.sync_contract_to_project(1)
@@ -89,6 +88,7 @@ class TestSyncContractToProjectExtended:
 # ============================================================
 # sync_payment_plans_from_contract 测试
 # ============================================================
+
 
 class TestSyncPaymentPlansFromContract:
 
@@ -118,6 +118,7 @@ class TestSyncPaymentPlansFromContract:
 # sync_project_to_contract - 更多场景
 # ============================================================
 
+
 class TestSyncProjectToContractExtended:
 
     def test_project_completed_updates_contract(self, service, db):
@@ -145,19 +146,16 @@ class TestSyncProjectToContractExtended:
 # sync_customer_to_projects - 更多场景
 # ============================================================
 
+
 class TestSyncCustomerToProjectsExtended:
 
     def test_syncs_name_contact_phone(self, service, db):
         """测试同步客户名称、联系人、电话"""
         customer = MagicMock(
-            customer_name="新名称",
-            contact_person="新联系人",
-            contact_phone="13900000000"
+            customer_name="新名称", contact_person="新联系人", contact_phone="13900000000"
         )
         project = MagicMock(
-            customer_name="旧名称",
-            customer_contact="旧联系人",
-            customer_phone="13800000000"
+            customer_name="旧名称", customer_contact="旧联系人", customer_phone="13800000000"
         )
         db.query.return_value.filter.return_value.first.return_value = customer
         db.query.return_value.filter.return_value.all.return_value = [project]
@@ -169,14 +167,10 @@ class TestSyncCustomerToProjectsExtended:
     def test_no_update_when_data_same(self, service, db):
         """测试数据相同时不更新"""
         customer = MagicMock(
-            customer_name="名称A",
-            contact_person="联系人A",
-            contact_phone="13900000000"
+            customer_name="名称A", contact_person="联系人A", contact_phone="13900000000"
         )
         project = MagicMock(
-            customer_name="名称A",
-            customer_contact="联系人A",
-            customer_phone="13900000000"
+            customer_name="名称A", customer_contact="联系人A", customer_phone="13900000000"
         )
         db.query.return_value.filter.return_value.first.return_value = customer
         db.query.return_value.filter.return_value.all.return_value = [project]
@@ -188,19 +182,16 @@ class TestSyncCustomerToProjectsExtended:
 # sync_customer_to_contracts - 更多场景
 # ============================================================
 
+
 class TestSyncCustomerToContractsExtended:
 
     def test_syncs_contract_customer_name(self, service, db):
         """测试同步合同中客户名称字段"""
         customer = MagicMock(
-            customer_name="新名称",
-            contact_person="新联系人",
-            contact_phone="13900000000"
+            customer_name="新名称", contact_person="新联系人", contact_phone="13900000000"
         )
         contract = MagicMock(
-            customer_name="旧名称",
-            contact_person="旧联系人",
-            contact_phone="13800000000"
+            customer_name="旧名称", contact_person="旧联系人", contact_phone="13800000000"
         )
         # hasattr must return True for contract attributes
         db.query.return_value.filter.return_value.first.return_value = customer
@@ -220,6 +211,7 @@ class TestSyncCustomerToContractsExtended:
 # ============================================================
 # get_sync_status - 更多场景
 # ============================================================
+
 
 class TestGetSyncStatusExtended:
 
@@ -242,10 +234,7 @@ class TestGetSyncStatusExtended:
     def test_project_with_amount_sync_check(self, service, db):
         """测试项目金额是否同步检查"""
         project = MagicMock(contract_amount=Decimal("100000"))
-        c = MagicMock(
-            id=1, contract_code="CT001",
-            contract_amount=Decimal("100000")
-        )
+        c = MagicMock(id=1, contract_code="CT001", contract_amount=Decimal("100000"))
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.all.return_value = [c]
         result = service.get_sync_status(project_id=1)
@@ -255,10 +244,7 @@ class TestGetSyncStatusExtended:
     def test_project_with_amount_not_synced(self, service, db):
         """测试项目金额不同步时的状态"""
         project = MagicMock(contract_amount=Decimal("100000"))
-        c = MagicMock(
-            id=1, contract_code="CT001",
-            contract_amount=Decimal("90000")
-        )
+        c = MagicMock(id=1, contract_code="CT001", contract_amount=Decimal("90000"))
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.all.return_value = [c]
         result = service.get_sync_status(project_id=1)

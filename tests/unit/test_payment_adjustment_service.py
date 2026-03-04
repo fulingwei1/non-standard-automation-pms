@@ -38,7 +38,7 @@ class TestAdjustPaymentPlanByMilestone:
         plan = MagicMock(id=1, payment_name="首付款", planned_date=date(2026, 2, 1), remark=None)
         db.query.return_value.filter.return_value.first.side_effect = [milestone, plan]
         db.query.return_value.filter.return_value.all.return_value = [plan]
-        with patch.object(service, '_send_adjustment_notifications'):
+        with patch.object(service, "_send_adjustment_notifications"):
             result = service.adjust_payment_plan_by_milestone(1)
             assert result["success"] is True
             assert len(result["adjusted_plans"]) == 1
@@ -48,7 +48,7 @@ class TestAdjustPaymentPlanByMilestone:
         plan = MagicMock(id=1, payment_name="首付款", planned_date=date(2026, 2, 1), remark=None)
         db.query.return_value.filter.return_value.first.side_effect = [milestone, plan]
         db.query.return_value.filter.return_value.all.return_value = [plan]
-        with patch.object(service, '_send_adjustment_notifications'):
+        with patch.object(service, "_send_adjustment_notifications"):
             result = service.adjust_payment_plan_by_milestone(1)
             assert result["success"] is True
 
@@ -64,7 +64,7 @@ class TestManualAdjust:
         milestone = MagicMock(project=MagicMock())
         plan.milestone = milestone
         db.query.return_value.filter.return_value.first.return_value = plan
-        with patch.object(service, '_send_adjustment_notifications'):
+        with patch.object(service, "_send_adjustment_notifications"):
             result = service.manual_adjust_payment_plan(1, date(2026, 3, 1), "延期", 1)
             assert result["success"] is True
 

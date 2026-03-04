@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - report_framework/generators/project 单元测试"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.generators.project")
 

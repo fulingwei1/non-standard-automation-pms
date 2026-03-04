@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - approval_engine/workflow_engine"""
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.approval_engine.workflow_engine import WorkflowEngine
     from app.services.approval_engine.models import (
-        ApprovalStatus,
         ApprovalDecision,
         ApprovalNodeRole,
+        ApprovalStatus,
     )
+    from app.services.approval_engine.workflow_engine import WorkflowEngine
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

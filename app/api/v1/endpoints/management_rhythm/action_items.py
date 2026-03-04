@@ -35,19 +35,18 @@ from app.schemas.management_rhythm import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/action-items",
-    tags=["action_items"]
-)
+router = APIRouter(prefix="/action-items", tags=["action_items"])
 
 # 共 3 个路由
 
 # ==================== 会议行动项 ====================
 
-@router.get("/strategic-meetings/{meeting_id}/action-items", response_model=List[ActionItemResponse])
+
+@router.get(
+    "/strategic-meetings/{meeting_id}/action-items", response_model=List[ActionItemResponse]
+)
 def read_meeting_action_items(
     meeting_id: int,
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -84,7 +83,11 @@ def read_meeting_action_items(
     ]
 
 
-@router.post("/strategic-meetings/{meeting_id}/action-items", response_model=ActionItemResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/strategic-meetings/{meeting_id}/action-items",
+    response_model=ActionItemResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_action_item(
     meeting_id: int,
     item_data: ActionItemCreate,
@@ -130,7 +133,9 @@ def create_action_item(
     )
 
 
-@router.put("/strategic-meetings/{meeting_id}/action-items/{item_id}", response_model=ActionItemResponse)
+@router.put(
+    "/strategic-meetings/{meeting_id}/action-items/{item_id}", response_model=ActionItemResponse
+)
 def update_action_item(
     meeting_id: int,
     item_id: int,
@@ -141,12 +146,11 @@ def update_action_item(
     """
     更新会议行动项
     """
-    action_item = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.id == item_id,
-            MeetingActionItem.meeting_id == meeting_id
-        )
-    ).first()
+    action_item = (
+        db.query(MeetingActionItem)
+        .filter(and_(MeetingActionItem.id == item_id, MeetingActionItem.meeting_id == meeting_id))
+        .first()
+    )
 
     if not action_item:
         raise HTTPException(status_code=404, detail="行动项不存在")
@@ -154,7 +158,10 @@ def update_action_item(
     update_data = item_data.dict(exclude_unset=True)
 
     # 如果状态更新为已完成，自动设置完成日期
-    if update_data.get("status") == ActionItemStatus.COMPLETED.value and not action_item.completed_date:
+    if (
+        update_data.get("status") == ActionItemStatus.COMPLETED.value
+        and not action_item.completed_date
+    ):
         update_data["completed_date"] = date.today()
 
     # 如果状态更新为已完成，但完成日期被清除，则恢复为待处理
@@ -166,7 +173,10 @@ def update_action_item(
         setattr(action_item, field, value)
 
     # 检查是否逾期
-    if action_item.status != ActionItemStatus.COMPLETED.value and action_item.due_date < date.today():
+    if (
+        action_item.status != ActionItemStatus.COMPLETED.value
+        and action_item.due_date < date.today()
+    ):
         action_item.status = ActionItemStatus.OVERDUE.value
 
     db.commit()
@@ -187,6 +197,3 @@ def update_action_item(
         created_at=action_item.created_at,
         updated_at=action_item.updated_at,
     )
-
-
-

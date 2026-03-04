@@ -28,7 +28,9 @@ from .utils import generate_order_no
 router = APIRouter()
 
 
-def _enrich_order_with_relations(order: InstallationDispatchOrder, db: Session) -> InstallationDispatchOrder:
+def _enrich_order_with_relations(
+    order: InstallationDispatchOrder, db: Session
+) -> InstallationDispatchOrder:
     """为派工单填充关联信息"""
     if order.project_id:
         project = db.query(Project).filter(Project.id == order.project_id).first()
@@ -46,7 +48,11 @@ def _enrich_order_with_relations(order: InstallationDispatchOrder, db: Session) 
     return order
 
 
-@router.get("/orders", response_model=PaginatedResponse[InstallationDispatchOrderResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/orders",
+    response_model=PaginatedResponse[InstallationDispatchOrderResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_installation_dispatch_orders(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -81,10 +87,16 @@ def read_installation_dispatch_orders(
         query = query.filter(InstallationDispatchOrder.task_type == task_type)
 
     # 应用关键词过滤（派工单号/任务标题）
-    query = apply_keyword_filter(query, InstallationDispatchOrder, keyword, ["order_no", "task_title"])
+    query = apply_keyword_filter(
+        query, InstallationDispatchOrder, keyword, ["order_no", "task_title"]
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(InstallationDispatchOrder.created_at)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(InstallationDispatchOrder.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 获取关联信息
     for item in items:
@@ -99,7 +111,9 @@ def read_installation_dispatch_orders(
     }
 
 
-@router.post("/orders", response_model=InstallationDispatchOrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/orders", response_model=InstallationDispatchOrderResponse, status_code=status.HTTP_201_CREATED
+)
 def create_installation_dispatch_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -154,7 +168,11 @@ def create_installation_dispatch_order(
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
-@router.get("/orders/{order_id}", response_model=InstallationDispatchOrderResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/orders/{order_id}",
+    response_model=InstallationDispatchOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_installation_dispatch_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -163,14 +181,20 @@ def read_installation_dispatch_order(
     """
     获取安装调试派工单详情
     """
-    order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
+    order = (
+        db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 
     return _enrich_order_with_relations(order, db)
 
 
-@router.put("/orders/{order_id}", response_model=InstallationDispatchOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/orders/{order_id}",
+    response_model=InstallationDispatchOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_installation_dispatch_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -181,7 +205,9 @@ def update_installation_dispatch_order(
     """
     更新安装调试派工单
     """
-    order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
+    order = (
+        db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 

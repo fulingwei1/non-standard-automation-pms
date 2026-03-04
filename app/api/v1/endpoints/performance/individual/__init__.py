@@ -10,10 +10,7 @@ from .my_performance import router as my_performance_router
 from .trends import router as trends_router
 from .user_performance import router as user_performance_router
 
-router = APIRouter(
-    prefix="/performance/individual",
-    tags=["individual"]
-)
+router = APIRouter(prefix="/performance/individual", tags=["individual"])
 
 # 聚合所有子路由
 for route in my_performance_router.routes:

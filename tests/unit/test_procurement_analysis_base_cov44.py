@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 采购分析服务基础类"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.procurement_analysis.base import ProcurementAnalysisService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -32,14 +34,18 @@ class TestProcurementAnalysisService:
         mock_method.assert_called_once()
         assert result == {"data": []}
 
-    @patch("app.services.procurement_analysis.base.DeliveryPerformanceAnalyzer.get_delivery_performance_data")
+    @patch(
+        "app.services.procurement_analysis.base.DeliveryPerformanceAnalyzer.get_delivery_performance_data"
+    )
     def test_get_delivery_performance_data_delegates(self, mock_method):
         mock_method.return_value = {"rate": 0.95}
         result = ProcurementAnalysisService.get_delivery_performance_data(db=None)
         mock_method.assert_called_once()
         assert result == {"rate": 0.95}
 
-    @patch("app.services.procurement_analysis.base.RequestEfficiencyAnalyzer.get_request_efficiency_data")
+    @patch(
+        "app.services.procurement_analysis.base.RequestEfficiencyAnalyzer.get_request_efficiency_data"
+    )
     def test_get_request_efficiency_data_delegates(self, mock_method):
         mock_method.return_value = {"efficiency": 0.88}
         result = ProcurementAnalysisService.get_request_efficiency_data(db=None)

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十批：ContractEnhancedService 单元测试"""
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.sales.contract_enhanced import ContractEnhancedService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

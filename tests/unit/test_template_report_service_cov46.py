@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 模板报表服务单元测试"""
-import pytest
 from datetime import date
 
-pytest.importorskip("app.services.template_report_service",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.template_report_service", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.template_report_service import TemplateReportService
 
 
@@ -23,8 +24,11 @@ class TestGenerateFromTemplate:
         db = MagicMock()
         template = _make_template("PROJECT_WEEKLY")
 
-        with patch.object(TemplateReportService, "_generate_project_weekly",
-                          return_value={"template_code": "TPL001"}) as mock_gen:
+        with patch.object(
+            TemplateReportService,
+            "_generate_project_weekly",
+            return_value={"template_code": "TPL001"},
+        ) as mock_gen:
             result = TemplateReportService.generate_from_template(db, template, project_id=1)
 
         mock_gen.assert_called_once()
@@ -33,8 +37,9 @@ class TestGenerateFromTemplate:
         db = MagicMock()
         template = _make_template("DEPT_WEEKLY")
 
-        with patch.object(TemplateReportService, "_generate_dept_weekly",
-                          return_value={"template_code": "TPL001"}) as mock_gen:
+        with patch.object(
+            TemplateReportService, "_generate_dept_weekly", return_value={"template_code": "TPL001"}
+        ) as mock_gen:
             result = TemplateReportService.generate_from_template(db, template, department_id=2)
 
         mock_gen.assert_called_once()

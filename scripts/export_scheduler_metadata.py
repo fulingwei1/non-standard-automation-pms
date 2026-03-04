@@ -25,10 +25,10 @@ def export_to_yaml(output_path: Path) -> None:
         "version": "1.0",
         "export_date": __import__("datetime").datetime.now().isoformat(),
         "total_tasks": len(SCHEDULER_TASKS),
-        "tasks": SCHEDULER_TASKS
+        "tasks": SCHEDULER_TASKS,
     }
 
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
     print(f"✅ YAML 元数据已导出到: {output_path}")
@@ -37,9 +37,19 @@ def export_to_yaml(output_path: Path) -> None:
 def export_to_csv(output_path: Path) -> None:
     """导出元数据到 CSV 格式（扁平化）"""
     fieldnames = [
-        "id", "name", "module", "callable", "cron", "owner", "category",
-        "description", "enabled", "dependencies_tables", "risk_level",
-        "sla_max_execution_time_seconds", "sla_retry_on_failure"
+        "id",
+        "name",
+        "module",
+        "callable",
+        "cron",
+        "owner",
+        "category",
+        "description",
+        "enabled",
+        "dependencies_tables",
+        "risk_level",
+        "sla_max_execution_time_seconds",
+        "sla_retry_on_failure",
     ]
 
     rows = []
@@ -56,12 +66,14 @@ def export_to_csv(output_path: Path) -> None:
             "enabled": task.get("enabled", True),
             "dependencies_tables": ", ".join(task.get("dependencies_tables", [])),
             "risk_level": task.get("risk_level", "UNKNOWN"),
-            "sla_max_execution_time_seconds": task.get("sla", {}).get("max_execution_time_seconds", ""),
+            "sla_max_execution_time_seconds": task.get("sla", {}).get(
+                "max_execution_time_seconds", ""
+            ),
             "sla_retry_on_failure": task.get("sla", {}).get("retry_on_failure", ""),
         }
         rows.append(row)
 
-    with open(output_path, 'w', encoding='utf-8-sig', newline='') as f:
+    with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
@@ -80,17 +92,18 @@ def export_dependencies_matrix(output_path: Path) -> None:
     matrix = []
     for table in sorted(all_tables):
         affected_tasks = [
-            task["id"] for task in SCHEDULER_TASKS
-            if table in task.get("dependencies_tables", [])
+            task["id"] for task in SCHEDULER_TASKS if table in task.get("dependencies_tables", [])
         ]
-        matrix.append({
-            "table": table,
-            "affected_tasks_count": len(affected_tasks),
-            "affected_tasks": ", ".join(affected_tasks)
-        })
+        matrix.append(
+            {
+                "table": table,
+                "affected_tasks_count": len(affected_tasks),
+                "affected_tasks": ", ".join(affected_tasks),
+            }
+        )
 
     # 导出为 CSV
-    with open(output_path, 'w', encoding='utf-8-sig', newline='') as f:
+    with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["table", "affected_tasks_count", "affected_tasks"])
         writer.writeheader()
         writer.writerows(matrix)
@@ -105,15 +118,17 @@ def export_risk_summary(output_path: Path) -> None:
         risk_level = task.get("risk_level", "UNKNOWN")
         if risk_level not in risk_summary:
             risk_summary[risk_level] = []
-        risk_summary[risk_level].append({
-            "id": task["id"],
-            "name": task["name"],
-            "owner": task.get("owner", ""),
-            "category": task.get("category", ""),
-        })
+        risk_summary[risk_level].append(
+            {
+                "id": task["id"],
+                "name": task["name"],
+                "owner": task.get("owner", ""),
+                "category": task.get("category", ""),
+            }
+        )
 
     # 导出为 YAML
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         yaml.dump(risk_summary, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
     print(f"✅ 风险级别汇总已导出到: {output_path}")
@@ -156,8 +171,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ 导出失败: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
-
-
-

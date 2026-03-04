@@ -16,6 +16,7 @@ from app.services.report_framework.models import ReportConfig, ReportMeta
 
 class ConfigError(Exception):
     """配置错误"""
+
     pass
 
 

@@ -29,9 +29,7 @@ def get_delay_root_cause(
     """延期根因分析"""
     service = DelayRootCauseService(db)
     result = service.analyze_root_cause(
-        start_date=start_date,
-        end_date=end_date,
-        project_id=project_id
+        start_date=start_date, end_date=end_date, project_id=project_id
     )
     return ResponseModel(code=200, message="分析成功", data=result)
 

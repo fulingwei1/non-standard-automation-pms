@@ -7,13 +7,14 @@
 - 模型验证
 """
 
-import pytest
-from sqlalchemy.orm import Session
 from datetime import datetime
 
-from app.models.user import User
-from app.models import Project
+import pytest
+from sqlalchemy.orm import Session
+
 from app.core.auth import get_password_hash
+from app.models import Project
+from app.models.user import User
 
 
 @pytest.mark.unit
@@ -99,10 +100,7 @@ class TestBasicCRUD:
         if user:
             # 获取该用户管理的项目
             managed_projects = (
-                db_session.query(Project)
-                .filter(Project.pm_id == user.id)
-                .limit(5)
-                .all()
+                db_session.query(Project).filter(Project.pm_id == user.id).limit(5).all()
             )
 
             # 验证关系

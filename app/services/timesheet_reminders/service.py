@@ -13,9 +13,9 @@ from sqlalchemy.orm import Session
 from app.models.timesheet_reminder import (
     ReminderStatusEnum,
     ReminderTypeEnum,
+    TimesheetAnomalyRecord,
     TimesheetReminderConfig,
     TimesheetReminderRecord,
-    TimesheetAnomalyRecord,
 )
 from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
 
@@ -49,9 +49,11 @@ class TimesheetReminderService:
     ) -> TimesheetReminderConfig:
         """创建提醒规则配置"""
         # 检查规则编码是否已存在
-        existing = self.db.query(TimesheetReminderConfig).filter(
-            TimesheetReminderConfig.rule_code == rule_code
-        ).first()
+        existing = (
+            self.db.query(TimesheetReminderConfig)
+            .filter(TimesheetReminderConfig.rule_code == rule_code)
+            .first()
+        )
 
         if existing:
             raise ValueError(f"规则编码已存在: {rule_code}")
@@ -75,9 +77,7 @@ class TimesheetReminderService:
 
         return config
 
-    def update_reminder_config(
-        self, config_id: int, **kwargs
-    ) -> Optional[TimesheetReminderConfig]:
+    def update_reminder_config(self, config_id: int, **kwargs) -> Optional[TimesheetReminderConfig]:
         """更新提醒规则配置"""
         config = self.manager.update_reminder_config(config_id=config_id, **kwargs)
         return config
@@ -348,9 +348,7 @@ class TimesheetReminderService:
 
         # 按优先级统计
         by_priority_query = (
-            self.db.query(
-                TimesheetReminderRecord.priority, func.count(TimesheetReminderRecord.id)
-            )
+            self.db.query(TimesheetReminderRecord.priority, func.count(TimesheetReminderRecord.id))
             .filter(TimesheetReminderRecord.user_id == user_id)
             .group_by(TimesheetReminderRecord.priority)
             .all()
@@ -416,9 +414,7 @@ class TimesheetReminderService:
         by_anomaly_type = {str(at): count for at, count in by_anomaly_type_query}
 
         by_severity_query = (
-            self.db.query(
-                TimesheetAnomalyRecord.severity, func.count(TimesheetAnomalyRecord.id)
-            )
+            self.db.query(TimesheetAnomalyRecord.severity, func.count(TimesheetAnomalyRecord.id))
             .filter(TimesheetAnomalyRecord.user_id == user_id)
             .group_by(TimesheetAnomalyRecord.severity)
             .all()

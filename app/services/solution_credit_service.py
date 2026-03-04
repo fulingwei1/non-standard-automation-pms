@@ -19,12 +19,13 @@ from app.utils.db_helpers import save_obj
 
 class CreditTransactionType:
     """积分交易类型"""
-    INIT = "INIT"                    # 初始化积分
-    GENERATE = "GENERATE"            # 生成方案扣除
-    ADMIN_ADD = "ADMIN_ADD"          # 管理员充值
-    ADMIN_DEDUCT = "ADMIN_DEDUCT"    # 管理员扣除
+
+    INIT = "INIT"  # 初始化积分
+    GENERATE = "GENERATE"  # 生成方案扣除
+    ADMIN_ADD = "ADMIN_ADD"  # 管理员充值
+    ADMIN_DEDUCT = "ADMIN_DEDUCT"  # 管理员扣除
     SYSTEM_REWARD = "SYSTEM_REWARD"  # 系统奖励
-    REFUND = "REFUND"                # 退还
+    REFUND = "REFUND"  # 退还
 
 
 class SolutionCreditService:
@@ -44,10 +45,11 @@ class SolutionCreditService:
 
     def get_config(self, key: str) -> int:
         """获取配置值"""
-        config = self.db.query(SolutionCreditConfig).filter(
-            SolutionCreditConfig.config_key == key,
-            SolutionCreditConfig.is_active
-        ).first()
+        config = (
+            self.db.query(SolutionCreditConfig)
+            .filter(SolutionCreditConfig.config_key == key, SolutionCreditConfig.is_active)
+            .first()
+        )
 
         if config:
             return int(config.config_value)
@@ -105,7 +107,7 @@ class SolutionCreditService:
         related_id: int = None,
         remark: str = None,
         ip_address: str = None,
-        user_agent: str = None
+        user_agent: str = None,
     ) -> Tuple[bool, str, Optional[SolutionCreditTransaction]]:
         """
         生成方案时扣除积分
@@ -202,7 +204,7 @@ class SolutionCreditService:
         operator_id: int,
         remark: str = None,
         ip_address: str = None,
-        user_agent: str = None
+        user_agent: str = None,
     ) -> Tuple[bool, str, Optional[SolutionCreditTransaction]]:
         """
         管理员充值积分
@@ -247,7 +249,11 @@ class SolutionCreditService:
 
         save_obj(self.db, transaction)
 
-        return True, f"充值成功，增加 {actual_amount} 积分，当前余额 {balance_after} 积分", transaction
+        return (
+            True,
+            f"充值成功，增加 {actual_amount} 积分，当前余额 {balance_after} 积分",
+            transaction,
+        )
 
     def admin_deduct_credits(
         self,
@@ -256,7 +262,7 @@ class SolutionCreditService:
         operator_id: int,
         remark: str = None,
         ip_address: str = None,
-        user_agent: str = None
+        user_agent: str = None,
     ) -> Tuple[bool, str, Optional[SolutionCreditTransaction]]:
         """
         管理员扣除积分
@@ -300,14 +306,14 @@ class SolutionCreditService:
 
         save_obj(self.db, transaction)
 
-        return True, f"扣除成功，减少 {actual_amount} 积分，当前余额 {balance_after} 积分", transaction
+        return (
+            True,
+            f"扣除成功，减少 {actual_amount} 积分，当前余额 {balance_after} 积分",
+            transaction,
+        )
 
     def get_transaction_history(
-        self,
-        user_id: int,
-        page: int = 1,
-        page_size: int = 20,
-        transaction_type: str = None
+        self, user_id: int, page: int = 1, page_size: int = 20, transaction_type: str = None
     ) -> Tuple[List[SolutionCreditTransaction], int]:
         """
         获取用户积分交易历史
@@ -331,10 +337,7 @@ class SolutionCreditService:
         return transactions, total
 
     def get_all_users_credits(
-        self,
-        page: int = 1,
-        page_size: int = 20,
-        search: str = None
+        self, page: int = 1, page_size: int = 20, search: str = None
     ) -> Tuple[List[Dict[str, Any]], int]:
         """
         获取所有用户积分列表（管理员用）
@@ -355,25 +358,23 @@ class SolutionCreditService:
         result = []
         for user in users:
             balance = user.solution_credits or 0
-            result.append({
-                "user_id": user.id,
-                "username": user.username,
-                "real_name": user.real_name,
-                "employee_no": user.employee_no,
-                "department": user.department,
-                "balance": balance,
-                "remaining_generations": balance // generate_cost if generate_cost > 0 else 0,
-                "last_updated": user.credits_updated_at,
-            })
+            result.append(
+                {
+                    "user_id": user.id,
+                    "username": user.username,
+                    "real_name": user.real_name,
+                    "employee_no": user.employee_no,
+                    "department": user.department,
+                    "balance": balance,
+                    "remaining_generations": balance // generate_cost if generate_cost > 0 else 0,
+                    "last_updated": user.credits_updated_at,
+                }
+            )
 
         return result, total
 
     def batch_add_credits(
-        self,
-        user_ids: List[int],
-        amount: int,
-        operator_id: int,
-        remark: str = None
+        self, user_ids: List[int], amount: int, operator_id: int, remark: str = None
     ) -> Dict[str, Any]:
         """
         批量充值积分
@@ -387,38 +388,28 @@ class SolutionCreditService:
 
         for user_id in user_ids:
             success, message, _ = self.admin_add_credits(
-                user_id=user_id,
-                amount=amount,
-                operator_id=operator_id,
-                remark=remark
+                user_id=user_id, amount=amount, operator_id=operator_id, remark=remark
             )
             if success:
                 success_count += 1
             else:
                 fail_count += 1
-            results.append({
-                "user_id": user_id,
-                "success": success,
-                "message": message
-            })
+            results.append({"user_id": user_id, "success": success, "message": message})
 
         return {
             "total": len(user_ids),
             "success_count": success_count,
             "fail_count": fail_count,
-            "results": results
+            "results": results,
         }
 
-    def update_config(
-        self,
-        key: str,
-        value: str,
-        description: str = None
-    ) -> Tuple[bool, str]:
+    def update_config(self, key: str, value: str, description: str = None) -> Tuple[bool, str]:
         """更新积分配置"""
-        config = self.db.query(SolutionCreditConfig).filter(
-            SolutionCreditConfig.config_key == key
-        ).first()
+        config = (
+            self.db.query(SolutionCreditConfig)
+            .filter(SolutionCreditConfig.config_key == key)
+            .first()
+        )
 
         if config:
             config.config_value = value
@@ -427,9 +418,7 @@ class SolutionCreditService:
             config.updated_at = datetime.now()
         else:
             config = SolutionCreditConfig(
-                config_key=key,
-                config_value=value,
-                description=description
+                config_key=key, config_value=value, description=description
             )
             self.db.add(config)
 
@@ -443,11 +432,13 @@ class SolutionCreditService:
         result = []
         for key, default_value in self.DEFAULT_CONFIG.items():
             config = next((c for c in configs if c.config_key == key), None)
-            result.append({
-                "key": key,
-                "value": config.config_value if config else str(default_value),
-                "description": config.description if config else "",
-                "is_active": config.is_active if config else True,
-            })
+            result.append(
+                {
+                    "key": key,
+                    "value": config.config_value if config else str(default_value),
+                    "description": config.description if config else "",
+                    "is_active": config.is_active if config else True,
+                }
+            )
 
         return result

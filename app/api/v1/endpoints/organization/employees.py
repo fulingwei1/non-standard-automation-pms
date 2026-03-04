@@ -10,9 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.schemas import list_response, success_response
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core.schemas import list_response, success_response
 from app.models.organization import Employee
 from app.schemas.organization import (
     EmployeeCreate,
@@ -35,10 +35,7 @@ def read_employees(
     emp_responses = [EmployeeResponse.model_validate(emp) for emp in employees]
 
     # 使用统一响应格式
-    return list_response(
-        items=emp_responses,
-        message="获取员工列表成功"
-    )
+    return list_response(items=emp_responses, message="获取员工列表成功")
 
 
 @router.post("/employees")
@@ -48,11 +45,7 @@ def create_employee(
     emp_in: EmployeeCreate,
 ) -> Any:
     """创建新员工"""
-    employee = (
-        db.query(Employee)
-        .filter(Employee.employee_code == emp_in.employee_code)
-        .first()
-    )
+    employee = db.query(Employee).filter(Employee.employee_code == emp_in.employee_code).first()
     if employee:
         raise HTTPException(
             status_code=400,
@@ -67,10 +60,7 @@ def create_employee(
     emp_response = EmployeeResponse.model_validate(employee)
 
     # 使用统一响应格式
-    return success_response(
-        data=emp_response,
-        message="员工创建成功"
-    )
+    return success_response(data=emp_response, message="员工创建成功")
 
 
 @router.get("/employees/{emp_id}")
@@ -88,10 +78,7 @@ def read_employee(
     emp_response = EmployeeResponse.model_validate(employee)
 
     # 使用统一响应格式
-    return success_response(
-        data=emp_response,
-        message="获取员工信息成功"
-    )
+    return success_response(data=emp_response, message="获取员工信息成功")
 
 
 @router.put("/employees/{emp_id}")
@@ -118,10 +105,7 @@ def update_employee(
     emp_response = EmployeeResponse.model_validate(employee)
 
     # 使用统一响应格式
-    return success_response(
-        data=emp_response,
-        message="员工更新成功"
-    )
+    return success_response(data=emp_response, message="员工更新成功")
 
 
 @router.get("/{emp_id}/assignments")
@@ -134,9 +118,7 @@ def get_employee_assignments(
     from app.models.organization import EmployeeOrgAssignment
 
     limit = 100
-    query = db.query(EmployeeOrgAssignment).filter(
-        EmployeeOrgAssignment.employee_id == emp_id
-    )
+    query = db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.employee_id == emp_id)
     assignments = query.limit(limit).all()
 
     # 手动构建响应数据（包含关联名称）
@@ -163,7 +145,4 @@ def get_employee_assignments(
         result.append(a_dict)
 
     # 使用统一响应格式
-    return list_response(
-        items=result,
-        message="获取员工分配成功"
-    )
+    return list_response(items=result, message="获取员工分配成功")

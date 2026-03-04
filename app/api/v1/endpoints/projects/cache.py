@@ -30,6 +30,7 @@ def get_cache_stats(
     """
     try:
         from app.services.cache_service import CacheService
+
         cache_service = CacheService()
         stats = cache_service.get_stats()
 
@@ -40,7 +41,7 @@ def get_cache_stats(
                 "enabled": True,
                 "stats": stats,
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
     except Exception as e:
         return ResponseModel(
@@ -50,7 +51,7 @@ def get_cache_stats(
                 "enabled": False,
                 "error": str(e),
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
 
 
@@ -73,6 +74,7 @@ def clear_cache(
     """
     try:
         from app.services.cache_service import CacheService
+
         cache_service = CacheService()
 
         if cache_type == "project_list":
@@ -95,14 +97,10 @@ def clear_cache(
             data={
                 "cache_type": cache_type or "all",
                 "cleared_at": datetime.now().isoformat(),
-            }
+            },
         )
     except Exception as e:
-        return ResponseModel(
-            code=500,
-            message=f"缓存清理失败: {str(e)}",
-            data=None
-        )
+        return ResponseModel(code=500, message=f"缓存清理失败: {str(e)}", data=None)
 
 
 @router.post("/cache/reset-stats", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -116,6 +114,7 @@ def reset_cache_stats(
     """
     try:
         from app.services.cache_service import CacheService
+
         cache_service = CacheService()
         cache_service.reset_stats()
 
@@ -124,11 +123,7 @@ def reset_cache_stats(
             message="缓存统计已重置",
             data={
                 "reset_at": datetime.now().isoformat(),
-            }
+            },
         )
     except Exception as e:
-        return ResponseModel(
-            code=500,
-            message=f"缓存统计重置失败: {str(e)}",
-            data=None
-        )
+        return ResponseModel(code=500, message=f"缓存统计重置失败: {str(e)}", data=None)

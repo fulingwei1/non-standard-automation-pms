@@ -33,7 +33,9 @@ class BiddingProject(Base, TimestampMixin):
 
     # 招标信息
     tender_no = Column(String(100), comment="招标编号")
-    tender_type = Column(String(20), comment="招标类型：public/invited/competitive/single_source/online")
+    tender_type = Column(
+        String(20), comment="招标类型：public/invited/competitive/single_source/online"
+    )
     tender_platform = Column(String(200), comment="招标平台")
     tender_url = Column(String(500), comment="招标链接")
 
@@ -44,11 +46,17 @@ class BiddingProject(Base, TimestampMixin):
 
     # 标书信息
     bid_bond = Column(Numeric(15, 2), comment="投标保证金")
-    bid_bond_status = Column(String(20), default="not_required", comment="保证金状态：not_required/pending/paid/returned")
+    bid_bond_status = Column(
+        String(20), default="not_required", comment="保证金状态：not_required/pending/paid/returned"
+    )
     estimated_amount = Column(Numeric(15, 2), comment="预估金额")
 
     # 投标准备
-    bid_document_status = Column(String(20), default="not_started", comment="标书状态：not_started/in_progress/completed/submitted")
+    bid_document_status = Column(
+        String(20),
+        default="not_started",
+        comment="标书状态：not_started/in_progress/completed/submitted",
+    )
     technical_doc_ready = Column(Boolean, default=False, comment="技术文件就绪")
     commercial_doc_ready = Column(Boolean, default=False, comment="商务文件就绪")
     qualification_doc_ready = Column(Boolean, default=False, comment="资质文件就绪")
@@ -64,7 +72,9 @@ class BiddingProject(Base, TimestampMixin):
     support_person_name = Column(String(50), comment="商务支持")
 
     # 投标结果
-    bid_result = Column(String(20), default="pending", comment="投标结果：pending/won/lost/cancelled/invalid")
+    bid_result = Column(
+        String(20), default="pending", comment="投标结果：pending/won/lost/cancelled/invalid"
+    )
     bid_price = Column(Numeric(15, 2), comment="投标价格")
     win_price = Column(Numeric(15, 2), comment="中标价格")
     result_date = Column(Date, comment="结果公布日期")
@@ -77,7 +87,9 @@ class BiddingProject(Base, TimestampMixin):
     customer = relationship("Customer", foreign_keys=[customer_id])
     sales_person = relationship("User", foreign_keys=[sales_person_id])
     support_person = relationship("User", foreign_keys=[support_person_id])
-    documents = relationship("BiddingDocument", back_populates="bidding_project", cascade="all, delete-orphan")
+    documents = relationship(
+        "BiddingDocument", back_populates="bidding_project", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_bidding_no", "bidding_no"),
@@ -92,12 +104,15 @@ class BiddingProject(Base, TimestampMixin):
 
 class BiddingDocument(Base, TimestampMixin):
     """投标文件表
-    
+
     【状态】未启用 - 招投标文档管理"""
+
     __tablename__ = "bidding_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    bidding_project_id = Column(Integer, ForeignKey("bidding_projects.id"), nullable=False, comment="投标项目ID")
+    bidding_project_id = Column(
+        Integer, ForeignKey("bidding_projects.id"), nullable=False, comment="投标项目ID"
+    )
     document_type = Column(String(50), comment="文件类型：technical/commercial/qualification/other")
     document_name = Column(String(200), comment="文件名称")
     file_path = Column(String(500), comment="文件路径")

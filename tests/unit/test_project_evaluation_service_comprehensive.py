@@ -142,8 +142,8 @@ class TestGetLevelThresholds:
 
     def test_returns_configured_thresholds(self):
         """测试返回配置的阈值"""
-        from app.services.project_evaluation_service import ProjectEvaluationService
         from app.models.enums import ProjectEvaluationLevelEnum
+        from app.services.project_evaluation_service import ProjectEvaluationService
 
         mock_db = MagicMock()
 
@@ -514,8 +514,8 @@ class TestGetBonusCoefficient:
 
     def test_returns_s_coefficient_for_s_level(self):
         """测试 S 级项目返回 1.5 倍系数"""
-        from app.services.project_evaluation_service import ProjectEvaluationService
         from app.models.enums import ProjectEvaluationLevelEnum
+        from app.services.project_evaluation_service import ProjectEvaluationService
 
         mock_db = MagicMock()
         service = ProjectEvaluationService(mock_db)
@@ -526,17 +526,15 @@ class TestGetBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.evaluation_level = ProjectEvaluationLevelEnum.S
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_bonus_coefficient(mock_project)
 
         assert result == Decimal("1.5")
 
     def test_returns_d_coefficient_for_d_level(self):
         """测试 D 级项目返回 0.9 倍系数"""
-        from app.services.project_evaluation_service import ProjectEvaluationService
         from app.models.enums import ProjectEvaluationLevelEnum
+        from app.services.project_evaluation_service import ProjectEvaluationService
 
         mock_db = MagicMock()
         service = ProjectEvaluationService(mock_db)
@@ -547,9 +545,7 @@ class TestGetBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.evaluation_level = ProjectEvaluationLevelEnum.D
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_bonus_coefficient(mock_project)
 
         assert result == Decimal("0.9")
@@ -586,9 +582,7 @@ class TestGetDifficultyBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.difficulty_score = Decimal("2")  # 极高难度
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_difficulty_bonus_coefficient(mock_project)
 
         assert result == Decimal("1.5")
@@ -606,9 +600,7 @@ class TestGetDifficultyBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.difficulty_score = Decimal("9")  # 低难度
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_difficulty_bonus_coefficient(mock_project)
 
         assert result == Decimal("1.0")
@@ -645,9 +637,7 @@ class TestGetNewTechBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.new_tech_score = Decimal("2")  # 大量新技术
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_new_tech_bonus_coefficient(mock_project)
 
         assert result == Decimal("1.4")
@@ -665,9 +655,7 @@ class TestGetNewTechBonusCoefficient:
         mock_evaluation = MagicMock()
         mock_evaluation.new_tech_score = Decimal("9")  # 少量新技术
 
-        with patch.object(
-            service, "get_latest_evaluation", return_value=mock_evaluation
-        ):
+        with patch.object(service, "get_latest_evaluation", return_value=mock_evaluation):
             result = service.get_new_tech_bonus_coefficient(mock_project)
 
         assert result == Decimal("1.0")

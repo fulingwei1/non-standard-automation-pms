@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.data_integrity.reminders")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.data_integrity.reminders import RemindersMixin
 
 
@@ -20,6 +21,7 @@ def make_service():
 
 # ------------------------------------------------------------------ tests ---
 
+
 def test_get_reminders_returns_empty_when_no_period():
     svc, db = make_service()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -33,9 +35,9 @@ def test_get_reminders_contains_project_eval_type():
     period.start_date = "2024-01-01"
     period.end_date = "2024-12-31"
 
+    from app.models.engineer_performance import EngineerProfile
     from app.models.performance import PerformancePeriod
     from app.models.project import Project
-    from app.models.engineer_performance import EngineerProfile
 
     period_q = MagicMock()
     period_q.filter.return_value.first.return_value = period
@@ -79,7 +81,12 @@ def test_send_reminders_skips_when_no_period():
 def test_send_reminders_filters_by_type():
     svc, db = make_service()
     two_reminders = [
-        {"type": "project_evaluation_missing", "priority": "high", "message": "test", "engineer_id": 1},
+        {
+            "type": "project_evaluation_missing",
+            "priority": "high",
+            "message": "test",
+            "engineer_id": 1,
+        },
         {"type": "work_log_missing", "priority": "low", "message": "test2", "engineer_id": 2},
     ]
     with patch.object(svc, "get_missing_data_reminders", return_value=two_reminders):

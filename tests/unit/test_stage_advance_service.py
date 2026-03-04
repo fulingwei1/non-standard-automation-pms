@@ -54,14 +54,14 @@ class TestValidateTargetStage:
     def test_validate_target_stage_invalid_stage_format(self):
         """测试无效格式的阶段编码"""
         invalid_stages = [
-        "s1",  # 小写
-        "S01",  # 两位数字
-        "SA",  # 字母而非数字
-        "S0",  # 0不在有效范围
-        "S10",  # 10不在有效范围
-        "Stage1",  # 完全不同的格式
-        "S-1",  # 包含特殊字符
-        "",  # 空字符串
+            "s1",  # 小写
+            "S01",  # 两位数字
+            "SA",  # 字母而非数字
+            "S0",  # 0不在有效范围
+            "S10",  # 10不在有效范围
+            "Stage1",  # 完全不同的格式
+            "S-1",  # 包含特殊字符
+            "",  # 空字符串
         ]
 
         for stage in invalid_stages:
@@ -127,14 +127,14 @@ class TestValidateStageAdvancement:
     def test_validate_stage_advancement_boundary_conditions(self):
         """测试边界条件 - 阶段1到阶段9的推进"""
         valid_transitions = [
-        ("S1", "S2"),
-        ("S2", "S3"),
-        ("S3", "S4"),
-        ("S4", "S5"),
-        ("S5", "S6"),
-        ("S6", "S7"),
-        ("S7", "S8"),
-        ("S8", "S9"),
+            ("S1", "S2"),
+            ("S2", "S3"),
+            ("S3", "S4"),
+            ("S4", "S5"),
+            ("S5", "S6"),
+            ("S6", "S7"),
+            ("S7", "S8"),
+            ("S8", "S9"),
         ]
 
         for current, target in valid_transitions:
@@ -143,52 +143,52 @@ class TestValidateStageAdvancement:
     def test_validate_stage_advancement_invalid_transitions(self):
         """测试所有无效的阶段转换"""
         invalid_transitions = [
-        ("S2", "S1"),
-        ("S3", "S2"),
-        ("S3", "S1"),
-        ("S4", "S3"),
-        ("S4", "S2"),
-        ("S4", "S1"),
-        ("S5", "S4"),
-        ("S5", "S3"),
-        ("S5", "S2"),
-        ("S5", "S1"),
-        ("S6", "S5"),
-        ("S6", "S4"),
-        ("S6", "S3"),
-        ("S6", "S2"),
-        ("S6", "S1"),
-        ("S7", "S6"),
-        ("S7", "S5"),
-        ("S7", "S4"),
-        ("S7", "S3"),
-        ("S7", "S2"),
-        ("S7", "S1"),
-        ("S8", "S7"),
-        ("S8", "S6"),
-        ("S8", "S5"),
-        ("S8", "S4"),
-        ("S8", "S3"),
-        ("S8", "S2"),
-        ("S8", "S1"),
-        ("S9", "S8"),
-        ("S9", "S7"),
-        ("S9", "S6"),
-        ("S9", "S5"),
-        ("S9", "S4"),
-        ("S9", "S3"),
-        ("S9", "S2"),
-        ("S9", "S1"),
+            ("S2", "S1"),
+            ("S3", "S2"),
+            ("S3", "S1"),
+            ("S4", "S3"),
+            ("S4", "S2"),
+            ("S4", "S1"),
+            ("S5", "S4"),
+            ("S5", "S3"),
+            ("S5", "S2"),
+            ("S5", "S1"),
+            ("S6", "S5"),
+            ("S6", "S4"),
+            ("S6", "S3"),
+            ("S6", "S2"),
+            ("S6", "S1"),
+            ("S7", "S6"),
+            ("S7", "S5"),
+            ("S7", "S4"),
+            ("S7", "S3"),
+            ("S7", "S2"),
+            ("S7", "S1"),
+            ("S8", "S7"),
+            ("S8", "S6"),
+            ("S8", "S5"),
+            ("S8", "S4"),
+            ("S8", "S3"),
+            ("S8", "S2"),
+            ("S8", "S1"),
+            ("S9", "S8"),
+            ("S9", "S7"),
+            ("S9", "S6"),
+            ("S9", "S5"),
+            ("S9", "S4"),
+            ("S9", "S3"),
+            ("S9", "S2"),
+            ("S9", "S1"),
             # 相同阶段
-        ("S1", "S1"),
-        ("S2", "S2"),
-        ("S3", "S3"),
-        ("S4", "S4"),
-        ("S5", "S5"),
-        ("S6", "S6"),
-        ("S7", "S7"),
-        ("S8", "S8"),
-        ("S9", "S9"),
+            ("S1", "S1"),
+            ("S2", "S2"),
+            ("S3", "S3"),
+            ("S4", "S4"),
+            ("S5", "S5"),
+            ("S6", "S6"),
+            ("S7", "S7"),
+            ("S8", "S8"),
+            ("S9", "S9"),
         ]
 
         for current, target in invalid_transitions:
@@ -233,22 +233,22 @@ class TestGetStageStatusMapping:
         mapping = get_stage_status_mapping()
 
         expected_mapping = {
-        "S1": "ST01",
-        "S2": "ST03",
-        "S3": "ST05",
-        "S4": "ST07",
-        "S5": "ST10",
-        "S6": "ST15",
-        "S7": "ST20",
-        "S8": "ST25",
-        "S9": "ST30",
+            "S1": "ST01",
+            "S2": "ST03",
+            "S3": "ST05",
+            "S4": "ST07",
+            "S5": "ST10",
+            "S6": "ST15",
+            "S7": "ST20",
+            "S8": "ST25",
+            "S9": "ST30",
         }
 
         for stage, expected_status in expected_mapping.items():
             actual_status = mapping.get(stage)
-            assert actual_status == expected_status, (
-            f"阶段 {stage} 的映射应该是 {expected_status}，实际是 {actual_status}"
-            )
+            assert (
+                actual_status == expected_status
+            ), f"阶段 {stage} 的映射应该是 {expected_status}，实际是 {actual_status}"
 
     def test_get_stage_status_mapping_monotonic_status_codes(self):
         """测试状态代码单调递增"""
@@ -264,9 +264,9 @@ class TestGetStageStatusMapping:
 
             # 验证状态编号单调递增
             for i in range(len(status_numbers) - 1):
-                assert status_numbers[i] < status_numbers[i + 1], (
-                f"状态编号不是单调递增: {status_numbers}"
-                )
+                assert (
+                    status_numbers[i] < status_numbers[i + 1]
+                ), f"状态编号不是单调递增: {status_numbers}"
 
     def test_get_stage_status_mapping_immutability(self):
         """测试返回的映射是否可变"""
@@ -285,28 +285,24 @@ class TestGetStageStatusMapping:
 class TestUpdateProjectStageAndStatus:
     """更新项目阶段和状态测试"""
 
-    def test_update_project_stage_and_status_with_status_change(
-        self, db_session: Session
-    ):
+    def test_update_project_stage_and_status_with_status_change(self, db_session: Session):
         """测试状态发生变更时的更新"""
         from app.models import Project
 
         # 创建测试项目
         project = Project(
-        project_code="PJ-TEST-001",
-        project_name="测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-TEST-001",
+            project_name="测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.flush()
 
         # 更新阶段和状态
-        new_status = update_project_stage_and_status(
-        db_session, project, "S2", "S1", "ST01"
-        )
+        new_status = update_project_stage_and_status(db_session, project, "S2", "S1", "ST01")
 
         assert project.stage == "S2"
         assert project.status == "ST03"  # S2对应ST03
@@ -314,28 +310,24 @@ class TestUpdateProjectStageAndStatus:
 
         db_session.rollback()
 
-    def test_update_project_stage_and_status_without_status_change(
-        self, db_session: Session
-    ):
+    def test_update_project_stage_and_status_without_status_change(self, db_session: Session):
         """测试状态不发生变更时的更新（保持旧状态）"""
         from app.models import Project
 
         # 创建测试项目
         project = Project(
-        project_code="PJ-TEST-002",
-        project_name="测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-TEST-002",
+            project_name="测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.flush()
 
         # 传入一个映射中不存在的阶段，应该保持旧状态
-        with patch(
-            "app.services.stage_advance_service.get_stage_status_mapping"
-        ) as mock_mapping:
+        with patch("app.services.stage_advance_service.get_stage_status_mapping") as mock_mapping:
             mock_mapping.return_value = {}  # 空映射，模拟目标阶段没有对应状态
 
             new_status = update_project_stage_and_status(
@@ -354,12 +346,12 @@ class TestUpdateProjectStageAndStatus:
 
         # 创建测试项目
         project = Project(
-        project_code="PJ-TEST-003",
-        project_name="测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-TEST-003",
+            project_name="测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.flush()
@@ -386,11 +378,11 @@ class TestPerformGateCheck:
         project.id = 1
 
         passed, missing, result = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=True,
-        current_user_is_superuser=True,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=True,
+            current_user_is_superuser=True,
         )
 
         assert passed
@@ -406,11 +398,11 @@ class TestPerformGateCheck:
 
         with pytest.raises(HTTPException) as exc_info:
             perform_gate_check(
-            db_session,
-            project,
-            "S2",
-            skip_gate_check=True,
-            current_user_is_superuser=False,
+                db_session,
+                project,
+                "S2",
+                skip_gate_check=True,
+                current_user_is_superuser=False,
             )
 
             assert exc_info.value.status_code == 403
@@ -424,11 +416,11 @@ class TestPerformGateCheck:
         project.id = 1
 
         passed, missing, result = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=True,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=True,
         )
 
         assert passed
@@ -450,11 +442,11 @@ class TestPerformGateCheck:
         mock_check_gate.return_value = (True, [])
 
         passed, missing, result = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=False,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=False,
         )
 
         assert passed
@@ -479,11 +471,11 @@ class TestPerformGateCheck:
         mock_check_gate_detailed.return_value = {"total": 10, "completed": 5}
 
         passed, missing, result = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=False,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=False,
         )
 
         assert not passed
@@ -535,12 +527,12 @@ class TestIntegrationScenarios:
 
         # 创建测试项目
         project = Project(
-        project_code="PJ-TEST-INTEGRATION",
-        project_name="集成测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-TEST-INTEGRATION",
+            project_name="集成测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.flush()
@@ -552,11 +544,11 @@ class TestIntegrationScenarios:
         # 执行阶段门校验
         mock_check_gate.return_value = (True, [])
         passed, missing, _ = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=False,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=False,
         )
 
         assert passed

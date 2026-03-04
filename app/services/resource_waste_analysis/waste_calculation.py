@@ -19,11 +19,7 @@ from app.models.work_log import WorkLog
 class WasteCalculationMixin:
     """浪费计算功能混入类"""
 
-    def calculate_waste_by_period(
-        self,
-        start_date: date,
-        end_date: date
-    ) -> Dict[str, Any]:
+    def calculate_waste_by_period(self, start_date: date, end_date: date) -> Dict[str, Any]:
         """计算指定周期内的资源浪费
 
         Returns:
@@ -41,22 +37,24 @@ class WasteCalculationMixin:
                 'loss_reasons': dict
             }
         """
-        projects = self.db.query(Project).filter(
-            Project.created_at >= start_date,
-            Project.created_at < end_date
-        ).all()
+        projects = (
+            self.db.query(Project)
+            .filter(Project.created_at >= start_date, Project.created_at < end_date)
+            .all()
+        )
 
         total_leads = len(projects)
         won_projects = [p for p in projects if p.outcome == LeadOutcomeEnum.WON.value]
-        lost_projects = [p for p in projects if p.outcome in [
-            LeadOutcomeEnum.LOST.value,
-            LeadOutcomeEnum.ABANDONED.value
-        ]]
-        pending_projects = [p for p in projects if p.outcome in [
-            LeadOutcomeEnum.PENDING.value,
-            LeadOutcomeEnum.ON_HOLD.value,
-            None
-        ]]
+        lost_projects = [
+            p
+            for p in projects
+            if p.outcome in [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]
+        ]
+        pending_projects = [
+            p
+            for p in projects
+            if p.outcome in [LeadOutcomeEnum.PENDING.value, LeadOutcomeEnum.ON_HOLD.value, None]
+        ]
 
         # 计算各类项目的工时
         total_investment_hours = 0.0
@@ -68,12 +66,10 @@ class WasteCalculationMixin:
         project_ids = [p.id for p in projects]
         if project_ids:
             work_hours_map = dict(
-                self.db.query(
-                    WorkLog.project_id,
-                    func.sum(WorkLog.work_hours)
-                ).filter(
-                    WorkLog.project_id.in_(project_ids)
-                ).group_by(WorkLog.project_id).all()
+                self.db.query(WorkLog.project_id, func.sum(WorkLog.work_hours))
+                .filter(WorkLog.project_id.in_(project_ids))
+                .group_by(WorkLog.project_id)
+                .all()
             )
         else:
             work_hours_map = {}
@@ -86,24 +82,28 @@ class WasteCalculationMixin:
                 productive_hours += hours
             elif project.outcome in [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]:
                 wasted_hours += hours
-                reason = project.loss_reason or 'OTHER'
+                reason = project.loss_reason or "OTHER"
                 loss_reasons[reason] += 1
 
-        win_rate = len(won_projects) / (len(won_projects) + len(lost_projects)) if (len(won_projects) + len(lost_projects)) > 0 else 0
+        win_rate = (
+            len(won_projects) / (len(won_projects) + len(lost_projects))
+            if (len(won_projects) + len(lost_projects)) > 0
+            else 0
+        )
         waste_rate = wasted_hours / total_investment_hours if total_investment_hours > 0 else 0
         wasted_cost = Decimal(str(wasted_hours)) * self.hourly_rate
 
         return {
-            'period': f'{start_date.isoformat()} ~ {end_date.isoformat()}',
-            'total_leads': total_leads,
-            'won_leads': len(won_projects),
-            'lost_leads': len(lost_projects),
-            'pending_leads': len(pending_projects),
-            'win_rate': round(win_rate, 3),
-            'total_investment_hours': round(total_investment_hours, 1),
-            'productive_hours': round(productive_hours, 1),
-            'wasted_hours': round(wasted_hours, 1),
-            'wasted_cost': wasted_cost,
-            'waste_rate': round(waste_rate, 3),
-            'loss_reasons': dict(loss_reasons)
+            "period": f"{start_date.isoformat()} ~ {end_date.isoformat()}",
+            "total_leads": total_leads,
+            "won_leads": len(won_projects),
+            "lost_leads": len(lost_projects),
+            "pending_leads": len(pending_projects),
+            "win_rate": round(win_rate, 3),
+            "total_investment_hours": round(total_investment_hours, 1),
+            "productive_hours": round(productive_hours, 1),
+            "wasted_hours": round(wasted_hours, 1),
+            "wasted_cost": wasted_cost,
+            "waste_rate": round(waste_rate, 3),
+            "loss_reasons": dict(loss_reasons),
         }

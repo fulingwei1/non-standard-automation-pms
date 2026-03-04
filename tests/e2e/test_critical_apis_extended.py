@@ -8,16 +8,17 @@ API集成测试补充：针对低覆盖率端点的集成测试。
 """
 
 import pytest
+
 pytestmark = pytest.mark.skip(reason="E2E tests need endpoint verification")
 
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.main import app
-from app.models.user import User
 from app.models.organization import Employee
+from app.models.user import User
 
 
 @pytest.fixture(scope="function")
@@ -81,9 +82,7 @@ class TestProjectsAPIIntegration:
         """获取项目列表。"""
         client, token = authenticated_client
 
-        response = client.get(
-            "/api/v1/projects/", headers={"Authorization": f"Bearer {token}"}
-        )
+        response = client.get("/api/v1/projects/", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == 200
         data = response.json()
 

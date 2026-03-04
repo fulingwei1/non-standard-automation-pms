@@ -10,14 +10,14 @@ ECN审批适配器单元测试 - 重写版本
 
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
+from app.models.approval import ApprovalInstance, ApprovalNodeDefinition, ApprovalTask
+from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
+from app.models.project import Machine, Project
+from app.models.user import Role, User, UserRole
 from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
-from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnApprovalMatrix
-from app.models.approval import ApprovalInstance, ApprovalTask, ApprovalNodeDefinition
-from app.models.project import Project, Machine
-from app.models.user import User, Role, UserRole
 
 
 class TestEcnAdapterCore(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestEcnAdapterCore(unittest.TestCase):
             priority="HIGH",
             urgency="URGENT",
             cost_impact=Decimal("5000.00"),
-            schedule_impact_days=10
+            schedule_impact_days=10,
         )
 
         self._setup_query_returns(mock_ecn, [])
@@ -82,10 +82,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_with_project(self):
         """测试获取包含项目信息的ECN数据"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_no="ECN-2024-002",
-            project_id=10
-        )
+        mock_ecn = self._create_mock_ecn(ecn_no="ECN-2024-002", project_id=10)
 
         mock_project = MagicMock(spec=Project)
         mock_project.project_code = "PRJ-001"
@@ -103,10 +100,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_without_project(self):
         """测试ECN没有关联项目"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_no="ECN-2024-003",
-            project_id=None
-        )
+        mock_ecn = self._create_mock_ecn(ecn_no="ECN-2024-003", project_id=None)
         mock_ecn.project = None
 
         self._setup_query_returns(mock_ecn, [])
@@ -119,10 +113,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_with_applicant(self):
         """测试获取包含申请人信息的ECN数据"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_no="ECN-2024-004",
-            applicant_id=5
-        )
+        mock_ecn = self._create_mock_ecn(ecn_no="ECN-2024-004", applicant_id=5)
 
         mock_user = MagicMock(spec=User)
         mock_user.name = "张三"
@@ -138,10 +129,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_without_applicant(self):
         """测试ECN没有申请人"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_no="ECN-2024-005",
-            applicant_id=None
-        )
+        mock_ecn = self._create_mock_ecn(ecn_no="ECN-2024-005", applicant_id=None)
         mock_ecn.applicant = None
 
         self._setup_query_returns(mock_ecn, [])
@@ -161,19 +149,19 @@ class TestEcnAdapterCore(unittest.TestCase):
                 eval_dept="工程部",
                 status="COMPLETED",
                 cost_estimate=Decimal("2000.00"),
-                schedule_estimate=5
+                schedule_estimate=5,
             ),
             self._create_mock_evaluation(
                 eval_dept="采购部",
                 status="PENDING",
                 cost_estimate=Decimal("1000.00"),
-                schedule_estimate=3
+                schedule_estimate=3,
             ),
             self._create_mock_evaluation(
                 eval_dept="生产部",
                 status="COMPLETED",
                 cost_estimate=Decimal("500.00"),
-                schedule_estimate=2
+                schedule_estimate=2,
             ),
         ]
 
@@ -314,10 +302,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_title_with_ecn(self):
         """测试生成ECN标题"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_no="ECN-2024-001",
-            ecn_title="设计变更"
-        )
+        mock_ecn = self._create_mock_ecn(ecn_no="ECN-2024-001", ecn_title="设计变更")
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         title = self.adapter.get_title(self.entity_id)
@@ -342,7 +327,7 @@ class TestEcnAdapterCore(unittest.TestCase):
             project_id=10,
             cost_impact=Decimal("8000.50"),
             schedule_impact_days=15,
-            priority="HIGH"
+            priority="HIGH",
         )
 
         mock_project = MagicMock(spec=Project)
@@ -369,7 +354,7 @@ class TestEcnAdapterCore(unittest.TestCase):
             project_id=None,
             cost_impact=None,
             schedule_impact_days=0,
-            priority=None
+            priority=None,
         )
         mock_ecn.project = None
 
@@ -386,6 +371,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_summary_ecn_not_found(self):
         """测试生成不存在ECN的摘要"""
+
         def query_side_effect(model):
             mock_query = MagicMock()
             mock_query.filter.return_value.first.return_value = None
@@ -401,10 +387,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_required_evaluators_design_type(self):
         """测试设计类ECN的评估部门"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="DESIGN",
-            cost_impact=Decimal("5000.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="DESIGN", cost_impact=Decimal("5000.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluators = self.adapter.get_required_evaluators(self.entity_id)
@@ -416,10 +399,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_required_evaluators_material_type(self):
         """测试物料类ECN的评估部门"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="MATERIAL",
-            cost_impact=Decimal("3000.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="MATERIAL", cost_impact=Decimal("3000.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluators = self.adapter.get_required_evaluators(self.entity_id)
@@ -432,10 +412,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_required_evaluators_supplier_type(self):
         """测试供应商类ECN的评估部门"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="SUPPLIER",
-            cost_impact=Decimal("2000.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="SUPPLIER", cost_impact=Decimal("2000.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluators = self.adapter.get_required_evaluators(self.entity_id)
@@ -447,10 +424,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_required_evaluators_process_type(self):
         """测试工艺类ECN的评估部门"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="PROCESS",
-            cost_impact=Decimal("1000.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="PROCESS", cost_impact=Decimal("1000.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluators = self.adapter.get_required_evaluators(self.entity_id)
@@ -462,10 +436,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_get_required_evaluators_spec_type(self):
         """测试规格类ECN的评估部门"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="SPEC",
-            cost_impact=Decimal("500.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="SPEC", cost_impact=Decimal("500.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluators = self.adapter.get_required_evaluators(self.entity_id)
@@ -478,8 +449,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_get_required_evaluators_high_cost_adds_finance(self):
         """测试高成本影响添加财务部评估"""
         mock_ecn = self._create_mock_ecn(
-            ecn_type="DESIGN",
-            cost_impact=Decimal("15000.00")  # > 10000
+            ecn_type="DESIGN", cost_impact=Decimal("15000.00")  # > 10000
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
@@ -492,8 +462,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_get_required_evaluators_low_cost_no_finance(self):
         """测试低成本影响不添加财务部"""
         mock_ecn = self._create_mock_ecn(
-            ecn_type="DESIGN",
-            cost_impact=Decimal("5000.00")  # <= 10000
+            ecn_type="DESIGN", cost_impact=Decimal("5000.00")  # <= 10000
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
@@ -530,10 +499,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_create_evaluation_tasks_material_type(self):
         """测试物料类ECN创建多个评估任务"""
-        mock_ecn = self._create_mock_ecn(
-            ecn_type="MATERIAL",
-            cost_impact=Decimal("15000.00")
-        )
+        mock_ecn = self._create_mock_ecn(ecn_type="MATERIAL", cost_impact=Decimal("15000.00"))
         self.db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
         evaluations = self.adapter.create_evaluation_tasks(self.entity_id, self.instance)
@@ -551,14 +517,14 @@ class TestEcnAdapterCore(unittest.TestCase):
                 status="COMPLETED",
                 eval_result="APPROVE",
                 cost_estimate=Decimal("1000.00"),
-                schedule_estimate=5
+                schedule_estimate=5,
             ),
             self._create_mock_evaluation(
                 eval_dept="采购部",
                 status="COMPLETED",
                 eval_result="APPROVE",
                 cost_estimate=Decimal("2000.00"),
-                schedule_estimate=3
+                schedule_estimate=3,
             ),
         ]
 
@@ -579,15 +545,9 @@ class TestEcnAdapterCore(unittest.TestCase):
         """测试有未完成的评估"""
         evaluations = [
             self._create_mock_evaluation(
-                eval_dept="工程部",
-                status="COMPLETED",
-                eval_result="APPROVE"
+                eval_dept="工程部", status="COMPLETED", eval_result="APPROVE"
             ),
-            self._create_mock_evaluation(
-                eval_dept="采购部",
-                status="PENDING",
-                eval_result=None
-            ),
+            self._create_mock_evaluation(eval_dept="采购部", status="PENDING", eval_result=None),
         ]
 
         self.db.query.return_value.filter.return_value.all.return_value = evaluations
@@ -603,14 +563,10 @@ class TestEcnAdapterCore(unittest.TestCase):
         """测试有评估拒绝"""
         evaluations = [
             self._create_mock_evaluation(
-                eval_dept="工程部",
-                status="COMPLETED",
-                eval_result="APPROVE"
+                eval_dept="工程部", status="COMPLETED", eval_result="APPROVE"
             ),
             self._create_mock_evaluation(
-                eval_dept="采购部",
-                status="COMPLETED",
-                eval_result="REJECT"
+                eval_dept="采购部", status="COMPLETED", eval_result="REJECT"
             ),
         ]
 
@@ -637,7 +593,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_sync_from_approval_instance_approved(self):
         """测试同步审批通过状态"""
         mock_ecn = self._create_mock_ecn(approval_status="PENDING")
-        
+
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.status = "APPROVED"
         mock_instance.completed_at = datetime(2024, 1, 15, 10, 0, 0)
@@ -661,7 +617,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_sync_from_approval_instance_rejected(self):
         """测试同步审批驳回状态"""
         mock_ecn = self._create_mock_ecn(approval_status="PENDING")
-        
+
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.status = "REJECTED"
         mock_instance.completed_at = datetime(2024, 1, 15, 11, 0, 0)
@@ -680,7 +636,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_sync_from_approval_instance_cancelled(self):
         """测试同步取消状态"""
         mock_ecn = self._create_mock_ecn(approval_status="PENDING")
-        
+
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.status = "CANCELLED"
         mock_instance.completed_at = None
@@ -698,7 +654,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_sync_from_approval_instance_terminated(self):
         """测试同步终止状态"""
         mock_ecn = self._create_mock_ecn(approval_status="PENDING")
-        
+
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.status = "TERMINATED"
         mock_instance.completed_at = None
@@ -718,7 +674,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_determine_approval_level_with_node(self):
         """测试根据节点确定审批层级"""
         mock_ecn = self._create_mock_ecn()
-        
+
         mock_node = MagicMock(spec=ApprovalNodeDefinition)
         mock_node.node_order = 2
 
@@ -761,7 +717,7 @@ class TestEcnAdapterCore(unittest.TestCase):
         mock_query_chain.join.return_value = mock_query_chain
         mock_query_chain.filter.return_value = mock_query_chain
         mock_query_chain.all.return_value = [mock_user1, mock_user2]
-        
+
         self.db.query.return_value = mock_query_chain
 
         approvers = self.adapter.get_ecn_approvers(mock_ecn, 1, [mock_matrix_item])
@@ -782,7 +738,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
         # 模拟重复的用户ID
         call_count = [0]
-        
+
         def create_mock_query():
             mock_query_chain = MagicMock()
             mock_query_chain.join.return_value = mock_query_chain
@@ -823,7 +779,7 @@ class TestEcnAdapterCore(unittest.TestCase):
         def create_mock_query():
             mock_query_chain = MagicMock()
             call_count[0] += 1
-            
+
             if call_count[0] == 1:
                 # 第一次调用：查询矩阵
                 mock_query_chain.filter.return_value = mock_query_chain
@@ -835,7 +791,7 @@ class TestEcnAdapterCore(unittest.TestCase):
                 u = MagicMock()
                 u.id = 50
                 mock_query_chain.all.return_value = [u]
-            
+
             return mock_query_chain
 
         self.db.query.side_effect = lambda *args: create_mock_query()
@@ -851,12 +807,12 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_submit_for_approval_success(self):
         """测试成功提交ECN到审批引擎"""
         # 在方法内部导入，所以需要patch正确的位置
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as mock_wf_class:
+        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
                 ecn_no="ECN-2024-001",
                 ecn_title="测试变更",
                 ecn_type="DESIGN",
-                approval_instance_id=None
+                approval_instance_id=None,
             )
 
             # Mock评估记录
@@ -868,7 +824,7 @@ class TestEcnAdapterCore(unittest.TestCase):
                     cost_estimate=Decimal("1000.00"),
                     schedule_estimate=5,
                     status="COMPLETED",
-                    eval_result="APPROVE"
+                    eval_result="APPROVE",
                 ),
             ]
 
@@ -894,10 +850,7 @@ class TestEcnAdapterCore(unittest.TestCase):
             mock_wf_class.return_value = mock_engine
 
             result = self.adapter.submit_for_approval(
-                mock_ecn,
-                initiator_id=1,
-                title="自定义标题",
-                urgency="URGENT"
+                mock_ecn, initiator_id=1, title="自定义标题", urgency="URGENT"
             )
 
             # 验证调用
@@ -909,16 +862,17 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_submit_for_approval_already_submitted(self):
         """测试ECN已提交审批"""
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as mock_wf_class:
+        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
-                ecn_no="ECN-2024-002",
-                approval_instance_id=50  # 已有实例ID
+                ecn_no="ECN-2024-002", approval_instance_id=50  # 已有实例ID
             )
 
             mock_existing_instance = MagicMock(spec=ApprovalInstance)
             mock_existing_instance.id = 50
 
-            self.db.query.return_value.filter.return_value.first.return_value = mock_existing_instance
+            self.db.query.return_value.filter.return_value.first.return_value = (
+                mock_existing_instance
+            )
 
             result = self.adapter.submit_for_approval(mock_ecn, initiator_id=1)
 
@@ -930,7 +884,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_build_form_data_in_submit_for_approval(self):
         """测试在submit_for_approval中构建表单数据"""
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as mock_wf_class:
+        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
                 id=1,
                 ecn_no="ECN-2024-001",
@@ -938,7 +892,7 @@ class TestEcnAdapterCore(unittest.TestCase):
                 ecn_type="DESIGN",
                 applicant_id=5,
                 project_id=10,
-                approval_instance_id=None
+                approval_instance_id=None,
             )
             mock_ecn.applicant_name = "李四"
             mock_ecn.impact_analysis = "影响分析内容"
@@ -967,90 +921,91 @@ class TestEcnAdapterCore(unittest.TestCase):
 
             # 获取create_instance的调用参数
             call_args = mock_engine.create_instance.call_args
-            config = call_args.kwargs['config']
+            config = call_args.kwargs["config"]
 
             # 验证表单数据
-            ecn_data = config['ecn']
-            self.assertEqual(ecn_data['ecn_id'], 1)
-            self.assertEqual(ecn_data['ecn_no'], "ECN-2024-001")
-            self.assertEqual(ecn_data['ecn_title'], "测试变更")
-            self.assertEqual(ecn_data['ecn_type'], "DESIGN")
-            self.assertEqual(ecn_data['applicant_id'], 5)
-            self.assertEqual(ecn_data['project_id'], 10)
+            ecn_data = config["ecn"]
+            self.assertEqual(ecn_data["ecn_id"], 1)
+            self.assertEqual(ecn_data["ecn_no"], "ECN-2024-001")
+            self.assertEqual(ecn_data["ecn_title"], "测试变更")
+            self.assertEqual(ecn_data["ecn_type"], "DESIGN")
+            self.assertEqual(ecn_data["applicant_id"], 5)
+            self.assertEqual(ecn_data["project_id"], 10)
 
     # ========== 辅助方法 ==========
 
     def _create_mock_ecn(self, **kwargs):
         """创建模拟ECN对象"""
         mock_ecn = MagicMock(spec=Ecn)
-        
+
         defaults = {
-            'id': self.entity_id,
-            'ecn_no': 'ECN-TEST-001',
-            'ecn_title': '测试ECN',
-            'ecn_type': 'DESIGN',
-            'status': 'DRAFT',
-            'priority': 'MEDIUM',
-            'urgency': 'NORMAL',
-            'cost_impact': None,
-            'schedule_impact_days': 0,
-            'quality_impact': None,
-            'project_id': None,
-            'machine_id': None,
-            'source_type': None,
-            'source_no': None,
-            'applicant_id': None,
-            'applicant_name': None,  # 添加这个字段
-            'applicant_dept': None,
-            'root_cause': None,
-            'root_cause_category': None,
-            'current_step': None,
-            'approval_result': None,
-            'approval_status': None,
-            'approval_instance_id': None,
-            'approval_note': None,
-            'approval_date': None,
-            'final_approver_id': None,
-            'impact_analysis': None,  # 添加这个字段
-            'project': None,
-            'applicant': None,
+            "id": self.entity_id,
+            "ecn_no": "ECN-TEST-001",
+            "ecn_title": "测试ECN",
+            "ecn_type": "DESIGN",
+            "status": "DRAFT",
+            "priority": "MEDIUM",
+            "urgency": "NORMAL",
+            "cost_impact": None,
+            "schedule_impact_days": 0,
+            "quality_impact": None,
+            "project_id": None,
+            "machine_id": None,
+            "source_type": None,
+            "source_no": None,
+            "applicant_id": None,
+            "applicant_name": None,  # 添加这个字段
+            "applicant_dept": None,
+            "root_cause": None,
+            "root_cause_category": None,
+            "current_step": None,
+            "approval_result": None,
+            "approval_status": None,
+            "approval_instance_id": None,
+            "approval_note": None,
+            "approval_date": None,
+            "final_approver_id": None,
+            "impact_analysis": None,  # 添加这个字段
+            "project": None,
+            "applicant": None,
         }
-        
+
         defaults.update(kwargs)
-        
+
         for key, value in defaults.items():
             setattr(mock_ecn, key, value)
-        
+
         return mock_ecn
 
     def _create_mock_evaluation(self, **kwargs):
         """创建模拟评估对象"""
         mock_eval = MagicMock(spec=EcnEvaluation)
-        
+
         defaults = {
-            'ecn_id': self.entity_id,
-            'eval_dept': '工程部',
-            'evaluator_id': None,
-            'evaluator_name': None,
-            'status': 'PENDING',
-            'eval_result': None,
-            'cost_estimate': None,
-            'schedule_estimate': None,
-            'impact_analysis': None,
-            'resource_requirement': None,
-            'risk_assessment': None,
-            'eval_opinion': None,
+            "ecn_id": self.entity_id,
+            "eval_dept": "工程部",
+            "evaluator_id": None,
+            "evaluator_name": None,
+            "status": "PENDING",
+            "eval_result": None,
+            "cost_estimate": None,
+            "schedule_estimate": None,
+            "impact_analysis": None,
+            "resource_requirement": None,
+            "risk_assessment": None,
+            "eval_opinion": None,
         }
-        
+
         defaults.update(kwargs)
-        
+
         for key, value in defaults.items():
             setattr(mock_eval, key, value)
-        
+
         return mock_eval
 
     def _setup_query_returns(self, mock_ecn, evaluations):
         """设置基础查询返回"""
+
         def query_side_effect(model):
             mock_query = MagicMock()
             if model == Ecn:
@@ -1070,5 +1025,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(EcnApprovalAdapter.entity_type, "ECN")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

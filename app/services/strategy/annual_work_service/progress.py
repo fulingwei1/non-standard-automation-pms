@@ -14,9 +14,7 @@ from .crud import get_annual_work
 
 
 def update_progress(
-    db: Session,
-    work_id: int,
-    data: AnnualKeyWorkProgressUpdate
+    db: Session, work_id: int, data: AnnualKeyWorkProgressUpdate
 ) -> Optional[AnnualKeyWork]:
     """
     更新进度
@@ -59,10 +57,13 @@ def calculate_progress_from_projects(db: Session, work_id: int) -> Optional[Deci
     Returns:
         Optional[Decimal]: 加权进度
     """
-    links = db.query(AnnualKeyWorkProjectLink).filter(
-        AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active
-    ).all()
+    links = (
+        db.query(AnnualKeyWorkProjectLink)
+        .filter(
+            AnnualKeyWorkProjectLink.annual_work_id == work_id, AnnualKeyWorkProjectLink.is_active
+        )
+        .all()
+    )
 
     if not links:
         return None
@@ -72,6 +73,7 @@ def calculate_progress_from_projects(db: Session, work_id: int) -> Optional[Deci
 
     for link in links:
         from app.models.project import Project
+
         project = db.query(Project).filter(Project.id == link.project_id).first()
         if project and project.progress is not None:
             weight = link.contribution_weight or Decimal(1)

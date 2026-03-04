@@ -5,29 +5,73 @@
 import re
 from pathlib import Path
 
+
 def read_file_lines(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
 
+
 def main():
-    source_file = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/performance.py')
-    output_dir = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/performance')
+    source_file = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/performance.py")
+    output_dir = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/performance")
 
     print("📖 读取 performance.py (1594行)...")
     lines = read_file_lines(source_file)
 
     # 提取导入（行1-194，到第一个section之前）
-    imports = ''.join(lines[0:194])
+    imports = "".join(lines[0:194])
 
     # 根据章节注释定义模块
     modules = [
-        {'name': 'individual.py', 'start': 196, 'end': 482, 'prefix': '/performance/individual', 'routes': '个人绩效'},
-        {'name': 'team.py', 'start': 483, 'end': 749, 'prefix': '/performance/team', 'routes': '团队/部门绩效'},
-        {'name': 'project.py', 'start': 750, 'end': 962, 'prefix': '/performance/project', 'routes': '项目绩效'},
-        {'name': 'employee_api.py', 'start': 963, 'end': 1208, 'prefix': '/performance/new/employee', 'routes': '新绩效-员工端'},
-        {'name': 'manager_api.py', 'start': 1209, 'end': 1446, 'prefix': '/performance/new/manager', 'routes': '新绩效-经理端'},
-        {'name': 'hr_api.py', 'start': 1447, 'end': 1519, 'prefix': '/performance/new/hr', 'routes': '新绩效-HR端'},
-        {'name': 'integration.py', 'start': 1520, 'end': 1594, 'prefix': '/performance/integration', 'routes': '绩效融合'},
+        {
+            "name": "individual.py",
+            "start": 196,
+            "end": 482,
+            "prefix": "/performance/individual",
+            "routes": "个人绩效",
+        },
+        {
+            "name": "team.py",
+            "start": 483,
+            "end": 749,
+            "prefix": "/performance/team",
+            "routes": "团队/部门绩效",
+        },
+        {
+            "name": "project.py",
+            "start": 750,
+            "end": 962,
+            "prefix": "/performance/project",
+            "routes": "项目绩效",
+        },
+        {
+            "name": "employee_api.py",
+            "start": 963,
+            "end": 1208,
+            "prefix": "/performance/new/employee",
+            "routes": "新绩效-员工端",
+        },
+        {
+            "name": "manager_api.py",
+            "start": 1209,
+            "end": 1446,
+            "prefix": "/performance/new/manager",
+            "routes": "新绩效-经理端",
+        },
+        {
+            "name": "hr_api.py",
+            "start": 1447,
+            "end": 1519,
+            "prefix": "/performance/new/hr",
+            "routes": "新绩效-HR端",
+        },
+        {
+            "name": "integration.py",
+            "start": 1520,
+            "end": 1594,
+            "prefix": "/performance/integration",
+            "routes": "绩效融合",
+        },
     ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -35,11 +79,11 @@ def main():
     for module in modules:
         print(f"📝 生成 {module['name']}...")
 
-        start = module['start'] - 1
-        end = min(module['end'], len(lines))
+        start = module["start"] - 1
+        end = min(module["end"], len(lines))
 
-        module_code = ''.join(lines[start:end])
-        routes = len(re.findall(r'@router\.', module_code))
+        module_code = "".join(lines[start:end])
+        routes = len(re.findall(r"@router\.", module_code))
 
         if routes == 0:
             print(f"  ⚠️ 跳过: 没有找到路由")
@@ -65,8 +109,8 @@ router = APIRouter(
 {module_code}
 '''
 
-        output_path = output_dir / module['name']
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = output_dir / module["name"]
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module['name']}: {routes} 个路由")
@@ -100,11 +144,12 @@ router.include_router(integration_router)
 __all__ = ['router']
 '''
 
-    with open(output_dir / '__init__.py', 'w', encoding='utf-8') as f:
+    with open(output_dir / "__init__.py", "w", encoding="utf-8") as f:
         f.write(init_content)
 
     print("\n✅ performance.py 拆分完成！")
     print(f"总计: {len(modules)} 个模块")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -23,7 +23,7 @@ class TestValidateAcceptanceRules:
 
     def test_project_not_found(self, db_session):
         """项目不存在应抛出 404 错误。"""
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = None
 
             with pytest.raises(HTTPException) as exc_info:
@@ -37,7 +37,7 @@ class TestValidateAcceptanceRules:
         mock_project = MagicMock()
         mock_project.stage = "S5"
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_project
 
             with pytest.raises(HTTPException) as exc_info:
@@ -51,7 +51,7 @@ class TestValidateAcceptanceRules:
         mock_project = MagicMock()
         mock_project.stage = "S5"
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             # 第一次查询返回项目，第二次查询返回 None（设备不存在）
             mock_query.return_value.filter.return_value.first.side_effect = [
                 mock_project,
@@ -72,7 +72,7 @@ class TestValidateAcceptanceRules:
         mock_machine = MagicMock()
         mock_machine.stage = "S3"  # 不在允许的阶段
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.side_effect = [
                 mock_project,
                 mock_machine,
@@ -84,7 +84,9 @@ class TestValidateAcceptanceRules:
             assert exc_info.value.status_code == 400
             assert "尚未完成调试" in str(exc_info.value.detail)
 
-    @pytest.mark.skip(reason="Complex mock setup required - function queries multiple models (AcceptanceOrder for FAT records)")
+    @pytest.mark.skip(
+        reason="Complex mock setup required - function queries multiple models (AcceptanceOrder for FAT records)"
+    )
     def test_sat_requires_passed_fat(self, db_session):
         """SAT 验收必须在 FAT 通过后。"""
         mock_project = MagicMock()
@@ -93,14 +95,16 @@ class TestValidateAcceptanceRules:
         mock_machine = MagicMock()
         mock_machine.stage = "S7"
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             # 设置多次查询的返回值
             mock_query.return_value.filter.return_value.first.side_effect = [
                 mock_project,
                 mock_machine,
             ]
             # FAT 验收记录查询返回空
-            mock_query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+            mock_query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+                []
+            )
 
             with pytest.raises(HTTPException) as exc_info:
                 validate_acceptance_rules(db_session, "SAT", project_id=1, machine_id=1)
@@ -114,7 +118,7 @@ class TestValidateCompletionRules:
 
     def test_order_not_found(self, db_session):
         """验收单不存在应抛出 404。"""
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = None
 
             with pytest.raises(HTTPException) as exc_info:
@@ -123,7 +127,9 @@ class TestValidateCompletionRules:
             assert exc_info.value.status_code == 404
             assert "验收单不存在" in str(exc_info.value.detail)
 
-    @pytest.mark.skip(reason="Complex mock setup required - function queries AcceptanceIssue with multiple conditions")
+    @pytest.mark.skip(
+        reason="Complex mock setup required - function queries AcceptanceIssue with multiple conditions"
+    )
     def test_blocking_issues_prevent_completion(self, db_session):
         """存在未闭环的阻塞问题不能通过验收。"""
         mock_order = MagicMock()
@@ -133,9 +139,11 @@ class TestValidateCompletionRules:
         mock_issue.is_blocking = True
         mock_issue.issue_no = "AI-FAT001-001"
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_order
-            mock_query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [mock_issue]
+            mock_query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+                mock_issue
+            ]
 
             with pytest.raises(HTTPException) as exc_info:
                 validate_completion_rules(db_session, order_id=1)
@@ -154,7 +162,7 @@ class TestValidateEditRules:
         mock_order.customer_signer = "客户代表"
         mock_order.is_officially_completed = False
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_order
 
             with pytest.raises(HTTPException) as exc_info:
@@ -170,7 +178,7 @@ class TestValidateEditRules:
         mock_order.customer_signer = None
         mock_order.is_officially_completed = True
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_order
 
             with pytest.raises(HTTPException) as exc_info:
@@ -185,8 +193,10 @@ class TestGenerateOrderNo:
 
     def test_fat_order_no_format(self, db_session):
         """FAT 验收单号格式：FAT-{项目编号}-{设备序号}-{序号}。"""
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             order_no = generate_order_no(db_session, "FAT", "P2025001", machine_no=1)
 
@@ -194,8 +204,10 @@ class TestGenerateOrderNo:
 
     def test_sat_order_no_format(self, db_session):
         """SAT 验收单号格式：SAT-{项目编号}-{设备序号}-{序号}。"""
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             order_no = generate_order_no(db_session, "SAT", "P2025001", machine_no=2)
 
@@ -203,8 +215,10 @@ class TestGenerateOrderNo:
 
     def test_final_order_no_format(self, db_session):
         """终验收单号格式：FIN-{项目编号}-{序号}。"""
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             order_no = generate_order_no(db_session, "FINAL", "P2025001")
 
@@ -222,8 +236,10 @@ class TestGenerateOrderNo:
         mock_existing_order = MagicMock()
         mock_existing_order.order_no = "FAT-P2025001-M01-003"
 
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_existing_order
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                mock_existing_order
+            )
 
             order_no = generate_order_no(db_session, "FAT", "P2025001", machine_no=1)
 
@@ -235,8 +251,10 @@ class TestGenerateIssueNo:
 
     def test_issue_no_format(self, db_session):
         """问题编号格式：AI-{验收单号后缀}-{序号}。"""
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             issue_no = generate_issue_no(db_session, "FAT-P2025001-M01-001")
 
@@ -247,8 +265,10 @@ class TestGenerateIssueNo:
         mock_existing_issue = MagicMock()
         mock_existing_issue.issue_no = "AI-FAT001-005"
 
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_existing_issue
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                mock_existing_issue
+            )
 
             issue_no = generate_issue_no(db_session, "FAT-P2025001-M01-001")
 

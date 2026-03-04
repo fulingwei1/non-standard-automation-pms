@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.material import Material, MaterialSupplier
-from app.utils.db_helpers import get_or_404
 from app.models.user import User
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -60,16 +60,18 @@ def get_material_suppliers(
     result = []
     for ms in material_suppliers:
         supplier = ms.vendor
-        result.append({
-            "id": supplier.id,
-            "supplier_code": supplier.supplier_code,
-            "supplier_name": supplier.supplier_name,
-            "price": float(ms.price) if ms.price else 0,
-            "currency": ms.currency,
-            "lead_time_days": ms.lead_time_days,
-            "min_order_qty": float(ms.min_order_qty) if ms.min_order_qty else 0,
-            "is_preferred": ms.is_preferred,
-            "supplier_material_code": ms.supplier_material_code,
-        })
+        result.append(
+            {
+                "id": supplier.id,
+                "supplier_code": supplier.supplier_code,
+                "supplier_name": supplier.supplier_name,
+                "price": float(ms.price) if ms.price else 0,
+                "currency": ms.currency,
+                "lead_time_days": ms.lead_time_days,
+                "min_order_qty": float(ms.min_order_qty) if ms.min_order_qty else 0,
+                "is_preferred": ms.is_preferred,
+                "supplier_material_code": ms.supplier_material_code,
+            }
+        )
 
     return result

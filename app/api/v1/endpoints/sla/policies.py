@@ -11,9 +11,9 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
+from app.core import security
 from app.models.sla import SLAMonitor, SLAPolicy
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -26,9 +26,7 @@ from app.schemas.sla import (
 router = APIRouter()
 
 
-@router.get(
-    "/policies", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/policies", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def get_sla_policies(
     *,
     db: Session = Depends(deps.get_db),
@@ -46,14 +44,10 @@ def get_sla_policies(
 
     if problem_type:
         query = query.filter(
-            or_(
-                SLAPolicy.problem_type == problem_type, SLAPolicy.problem_type.is_(None)
-            )
+            or_(SLAPolicy.problem_type == problem_type, SLAPolicy.problem_type.is_(None))
         )
     if urgency:
-        query = query.filter(
-            or_(SLAPolicy.urgency == urgency, SLAPolicy.urgency.is_(None))
-        )
+        query = query.filter(or_(SLAPolicy.urgency == urgency, SLAPolicy.urgency.is_(None)))
     if is_active is not None:
         query = query.filter(SLAPolicy.is_active == is_active)
     query = apply_keyword_filter(query, SLAPolicy, keyword, ["policy_name", "policy_code"])
@@ -95,9 +89,7 @@ def get_sla_policy(
     """
     policy = db.query(SLAPolicy).filter(SLAPolicy.id == policy_id).first()
     if not policy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在")
 
     return ResponseModel(
         code=200,
@@ -106,9 +98,7 @@ def get_sla_policy(
     )
 
 
-@router.post(
-    "/policies", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
-)
+@router.post("/policies", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def create_sla_policy(
     *,
     db: Session = Depends(deps.get_db),
@@ -119,15 +109,9 @@ def create_sla_policy(
     创建SLA策略
     """
     # 检查策略编码是否已存在
-    existing = (
-        db.query(SLAPolicy)
-        .filter(SLAPolicy.policy_code == policy_data.policy_code)
-        .first()
-    )
+    existing = db.query(SLAPolicy).filter(SLAPolicy.policy_code == policy_data.policy_code).first()
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="策略编码已存在"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="策略编码已存在")
 
     policy = SLAPolicy(
         policy_name=policy_data.policy_name,
@@ -136,8 +120,7 @@ def create_sla_policy(
         urgency=policy_data.urgency,
         response_time_hours=policy_data.response_time_hours,
         resolve_time_hours=policy_data.resolve_time_hours,
-        warning_threshold_percent=policy_data.warning_threshold_percent
-        or Decimal("80"),
+        warning_threshold_percent=policy_data.warning_threshold_percent or Decimal("80"),
         priority=policy_data.priority or 100,
         description=policy_data.description,
         remark=policy_data.remark,
@@ -174,9 +157,7 @@ def update_sla_policy(
     """
     policy = db.query(SLAPolicy).filter(SLAPolicy.id == policy_id).first()
     if not policy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在")
 
     update_data = policy_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -208,21 +189,15 @@ def delete_sla_policy(
     """
     policy = db.query(SLAPolicy).filter(SLAPolicy.id == policy_id).first()
     if not policy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SLA策略不存在")
 
     # 检查是否有监控记录在使用此策略
-    monitor_count = (
-        db.query(SLAMonitor).filter(SLAMonitor.policy_id == policy_id).count()
-    )
+    monitor_count = db.query(SLAMonitor).filter(SLAMonitor.policy_id == policy_id).count()
     if monitor_count > 0:
         # 如果有监控记录，只设置为不启用
         policy.is_active = False
         db.commit()
-        return ResponseModel(
-            code=200, message="SLA策略已禁用（存在监控记录）", data=None
-        )
+        return ResponseModel(code=200, message="SLA策略已禁用（存在监控记录）", data=None)
     else:
         # 如果没有监控记录，可以删除
         db.delete(policy)

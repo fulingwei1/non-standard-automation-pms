@@ -3,9 +3,10 @@
 tests/unit/test_pc_project_collector_cov51.py
 Unit tests for app/services/performance_collector/project_collector.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.performance_collector.project_collector import ProjectCollector
@@ -31,6 +32,7 @@ def _make_task(status, actual_end=None, due=None):
 
 
 # ─── collect_task_completion_data ─────────────────────────────────────────────
+
 
 def test_task_completion_no_tasks():
     collector, db = _make_collector()
@@ -82,6 +84,7 @@ def test_task_completion_exception_returns_defaults():
 
 
 # ─── collect_project_participation_data ──────────────────────────────────────
+
 
 def test_project_participation_no_projects():
     collector, db = _make_collector()

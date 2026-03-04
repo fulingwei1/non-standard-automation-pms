@@ -11,17 +11,18 @@ TimesheetForecastService 单元测试
 - _calculate_trend (间接通过 analyze_trend)
 """
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.services.timesheet_forecast_service import TimesheetForecastService
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def db():
@@ -37,10 +38,13 @@ def service(db):
 # Tests: forecast_project_hours – HISTORICAL_AVERAGE (无历史数据)
 # ---------------------------------------------------------------------------
 
+
 class TestForecastProjectHoursHistoricalNoData:
     def test_no_historical_data_uses_default_estimate(self, service, db):
         """无历史数据时降级到默认估算，置信度=50"""
-        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = service.forecast_project_hours(
             project_name="新项目",
             complexity="MEDIUM",
@@ -53,33 +57,54 @@ class TestForecastProjectHoursHistoricalNoData:
         assert float(result.predicted_hours) > 0
 
     def test_high_complexity_higher_hours(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result_low = service.forecast_project_hours(
-            project_name="P", complexity="LOW", team_size=5, duration_days=30,
+            project_name="P",
+            complexity="LOW",
+            team_size=5,
+            duration_days=30,
             forecast_method="HISTORICAL_AVERAGE",
         )
         result_high = service.forecast_project_hours(
-            project_name="P", complexity="HIGH", team_size=5, duration_days=30,
+            project_name="P",
+            complexity="HIGH",
+            team_size=5,
+            duration_days=30,
             forecast_method="HISTORICAL_AVERAGE",
         )
         assert float(result_high.predicted_hours) > float(result_low.predicted_hours)
 
     def test_larger_team_higher_hours(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result_small = service.forecast_project_hours(
-            project_name="P", complexity="MEDIUM", team_size=3, duration_days=30,
+            project_name="P",
+            complexity="MEDIUM",
+            team_size=3,
+            duration_days=30,
             forecast_method="HISTORICAL_AVERAGE",
         )
         result_large = service.forecast_project_hours(
-            project_name="P", complexity="MEDIUM", team_size=10, duration_days=30,
+            project_name="P",
+            complexity="MEDIUM",
+            team_size=10,
+            duration_days=30,
             forecast_method="HISTORICAL_AVERAGE",
         )
         assert float(result_large.predicted_hours) > float(result_small.predicted_hours)
 
     def test_forecast_range_is_wider_than_point(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = service.forecast_project_hours(
-            project_name="P", complexity="MEDIUM", team_size=5, duration_days=30,
+            project_name="P",
+            complexity="MEDIUM",
+            team_size=5,
+            duration_days=30,
             forecast_method="HISTORICAL_AVERAGE",
         )
         assert float(result.predicted_hours_min) < float(result.predicted_hours)
@@ -89,6 +114,7 @@ class TestForecastProjectHoursHistoricalNoData:
 # ---------------------------------------------------------------------------
 # Tests: forecast_project_hours – HISTORICAL_AVERAGE (有历史数据)
 # ---------------------------------------------------------------------------
+
 
 class TestForecastProjectHoursHistoricalWithData:
     def _make_row(self, project_id, project_name, total_hours):
@@ -100,7 +126,9 @@ class TestForecastProjectHoursHistoricalWithData:
 
     def test_with_similar_projects_confidence_70(self, service, db):
         rows = [self._make_row(i, f"Proj{i}", 500.0) for i in range(3)]
-        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = (
+            rows
+        )
         result = service.forecast_project_hours(
             project_name="新项目",
             complexity="MEDIUM",
@@ -116,6 +144,7 @@ class TestForecastProjectHoursHistoricalWithData:
 # Tests: forecast_project_hours – unsupported method
 # ---------------------------------------------------------------------------
 
+
 class TestForecastUnsupportedMethod:
     def test_raises_value_error(self, service, db):
         with pytest.raises(ValueError, match="Unsupported forecast method"):
@@ -128,6 +157,7 @@ class TestForecastUnsupportedMethod:
 # ---------------------------------------------------------------------------
 # Tests: forecast_completion
 # ---------------------------------------------------------------------------
+
 
 class TestForecastCompletion:
     def _make_project(self, name="测试项目"):
@@ -156,9 +186,7 @@ class TestForecastCompletion:
 
         result_mock = MagicMock()
         result_mock.consumed_hours = None
-        db.query.return_value.filter.return_value.first.side_effect = [
-            project, result_mock
-        ]
+        db.query.return_value.filter.return_value.first.side_effect = [project, result_mock]
         # Should not raise
         try:
             result = service.forecast_completion(project_id=1)
@@ -176,9 +204,7 @@ class TestForecastCompletion:
         recent.work_days = 5
 
         # chain: Project query, consumed query, recent query
-        db.query.return_value.filter.return_value.first.side_effect = [
-            project, consumed, recent
-        ]
+        db.query.return_value.filter.return_value.first.side_effect = [project, consumed, recent]
 
         result = service.forecast_completion(project_id=1)
         assert result.project_id == 1
@@ -188,6 +214,7 @@ class TestForecastCompletion:
 # ---------------------------------------------------------------------------
 # Tests: _generate_forecast_curve
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateForecastCurve:
     def test_labels_contain_past_and_future(self, service):
@@ -215,6 +242,7 @@ class TestGenerateForecastCurve:
 # ---------------------------------------------------------------------------
 # Tests: analyze_gap
 # ---------------------------------------------------------------------------
+
 
 class TestAnalyzeGap:
     def test_gap_positive_when_required_exceeds_available(self, service, db):
@@ -272,6 +300,7 @@ class TestAnalyzeGap:
 # Tests: forecast_workload_alert
 # ---------------------------------------------------------------------------
 
+
 class TestForecastWorkloadAlert:
     def _make_user_row(self, user_id, user_name, dept, total_hours, overtime_hours=0):
         row = MagicMock()
@@ -312,8 +341,11 @@ class TestForecastWorkloadAlert:
 
     def test_sorted_by_saturation_desc(self, service, db):
         row1 = self._make_user_row(1, "A", "D", total_hours=240)  # CRITICAL ~140%
-        row2 = self._make_user_row(2, "B", "D", total_hours=50)   # LOW ~29%
-        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [row1, row2]
+        row2 = self._make_user_row(2, "B", "D", total_hours=50)  # LOW ~29%
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            row1,
+            row2,
+        ]
         alerts = service.forecast_workload_alert(forecast_days=30)
         if len(alerts) >= 2:
             assert float(alerts[0].workload_saturation) >= float(alerts[1].workload_saturation)

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 import pytest
 from sqlalchemy.orm import Session
+
 from app.core.security import (
     check_permission,
     check_sales_create_permission,
-    check_sales_edit_permission,
     check_sales_delete_permission,
+    check_sales_edit_permission,
     get_sales_data_scope,
     has_sales_approval_access,
 )
-from app.models.user import User, Role, UserRole, ApiPermission, RoleApiPermission
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 
 
 def _clear_permission_cache():
     """Clear permission cache between tests"""
     try:
         from app.services.permission_cache_service import get_permission_cache_service
+
         cache_service = get_permission_cache_service()
         # Clear the underlying CacheService memory_cache
         cache_service._cache.memory_cache.clear()
@@ -43,39 +45,25 @@ class TestBasePermissionChecks:
             ("procurement:read", "Read Procurement", "procurement"),
         ]
         for code, name, mod in perms:
-            p = (
-                db_session.query(ApiPermission)
-                .filter(ApiPermission.perm_code == code)
-                .first()
-            )
+            p = db_session.query(ApiPermission).filter(ApiPermission.perm_code == code).first()
             if not p:
-                db_session.add(
-                    ApiPermission(perm_code=code, perm_name=name, module=mod)
-                )
+                db_session.add(ApiPermission(perm_code=code, perm_name=name, module=mod))
 
         role_pm = db_session.query(Role).filter(Role.role_code == "PM").first()
         if not role_pm:
-            role_pm = Role(
-                role_code="PM", role_name="Project Manager", data_scope="OWN"
-            )
+            role_pm = Role(role_code="PM", role_name="Project Manager", data_scope="OWN")
             db_session.add(role_pm)
         db_session.flush()
 
         for code in ["project:read", "project:write"]:
-            p = (
-                db_session.query(ApiPermission)
-                .filter(ApiPermission.perm_code == code)
-                .first()
-            )
+            p = db_session.query(ApiPermission).filter(ApiPermission.perm_code == code).first()
             exists = (
                 db_session.query(RoleApiPermission)
                 .filter_by(role_id=role_pm.id, permission_id=p.id)
                 .first()
             )
             if not exists:
-                db_session.add(
-                    RoleApiPermission(role_id=role_pm.id, permission_id=p.id)
-                )
+                db_session.add(RoleApiPermission(role_id=role_pm.id, permission_id=p.id))
 
         db_session.commit()
         return {"pm": role_pm}
@@ -93,9 +81,7 @@ class TestBasePermissionChecks:
             )
             db_session.add(user)
             db_session.flush()
-            db_session.add(
-                UserRole(user_id=user.id, role_id=setup_permissions["pm"].id)
-            )
+            db_session.add(UserRole(user_id=user.id, role_id=setup_permissions["pm"].id))
             db_session.commit()
         return user
 
@@ -153,11 +139,7 @@ class TestModulePermissions:
             db_session.add(role)
             db_session.flush()
 
-        p = (
-            db_session.query(ApiPermission)
-            .filter_by(perm_code="procurement:read")
-            .first()
-        )
+        p = db_session.query(ApiPermission).filter_by(perm_code="procurement:read").first()
         if not p:
             p = ApiPermission(
                 perm_code="procurement:read",
@@ -190,9 +172,7 @@ class TestModulePermissions:
         return user
 
     def test_procurement_access(self, procurement_user, db_session):
-        assert (
-            check_permission(procurement_user, "procurement:read", db_session) is True
-        )
+        assert check_permission(procurement_user, "procurement:read", db_session) is True
         assert check_permission(procurement_user, "finance:read", db_session) is False
 
 
@@ -203,9 +183,7 @@ class TestSalesPermissions:
     def sales_director(self, db_session):
         role = db_session.query(Role).filter_by(role_code="SALES_DIRECTOR").first()
         if not role:
-            role = Role(
-                role_code="SALES_DIRECTOR", role_name="Sales Director", data_scope="ALL"
-            )
+            role = Role(role_code="SALES_DIRECTOR", role_name="Sales Director", data_scope="ALL")
             db_session.add(role)
         else:
             role.data_scope = "ALL"
@@ -242,18 +220,14 @@ class TestSalesPermissions:
     def sales_rep(self, db_session):
         role = db_session.query(Role).filter_by(role_code="SALES_REP_TEST").first()
         if not role:
-            role = Role(
-                role_code="SALES_REP_TEST", role_name="Sales Rep", data_scope="OWN"
-            )
+            role = Role(role_code="SALES_REP_TEST", role_name="Sales Rep", data_scope="OWN")
             db_session.add(role)
         else:
             role.data_scope = "OWN"
 
         p = db_session.query(ApiPermission).filter_by(perm_code="sales:create").first()
         if not p:
-            p = ApiPermission(
-                perm_code="sales:create", perm_name="sales:create", module="sales"
-            )
+            p = ApiPermission(perm_code="sales:create", perm_name="sales:create", module="sales")
             db_session.add(p)
             db_session.flush()
         exists = (

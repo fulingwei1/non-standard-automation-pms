@@ -17,8 +17,9 @@ class BusinessCacheService:
     def __init__(self):
         self.cache = get_cache()
 
-    def get_project_list(self, skip: int = 0, limit: int = 50,
-                        status: Optional[str] = None) -> Optional[List[Project]]:
+    def get_project_list(
+        self, skip: int = 0, limit: int = 50, status: Optional[str] = None
+    ) -> Optional[List[Project]]:
         """
         获取项目列表（带缓存）
 
@@ -35,8 +36,9 @@ class BusinessCacheService:
 
         return None  # 需要从数据库获取
 
-    def set_project_list(self, projects: List[Project], skip: int = 0,
-                         limit: int = 50, status: Optional[str] = None):
+    def set_project_list(
+        self, projects: List[Project], skip: int = 0, limit: int = 50, status: Optional[str] = None
+    ):
         """
         设置项目列表缓存
         """
@@ -97,8 +99,9 @@ class BusinessCacheService:
         key = cache_key(CacheKeys.USER_PERMISSIONS, user_id)
         self.cache.set(key, permissions, expire=900)  # 15分钟
 
-    def get_search_results(self, search_type: str, keyword: str,
-                          filters: Dict[str, Any]) -> Optional[List[Any]]:
+    def get_search_results(
+        self, search_type: str, keyword: str, filters: Dict[str, Any]
+    ) -> Optional[List[Any]]:
         """
         获取搜索结果（带缓存）
 
@@ -107,18 +110,21 @@ class BusinessCacheService:
         - 键格式：search:{type}:{keyword}:{filters_hash}
         """
         import hashlib
+
         filters_str = str(sorted(filters.items()))
         filters_hash = hashlib.sha256(filters_str.encode()).hexdigest()[:8]
 
         key = cache_key(CacheKeys.SEARCH, search_type, keyword, filters_hash)
         return self.cache.get(key)
 
-    def set_search_results(self, results: List[Any], search_type: str,
-                          keyword: str, filters: Dict[str, Any]):
+    def set_search_results(
+        self, results: List[Any], search_type: str, keyword: str, filters: Dict[str, Any]
+    ):
         """
         设置搜索结果缓存
         """
         import hashlib
+
         filters_str = str(sorted(filters.items()))
         filters_hash = hashlib.sha256(filters_str.encode()).hexdigest()[:8]
 
@@ -239,10 +245,10 @@ class BusinessCacheService:
                 "keyspace_hits": info.get("keyspace_hits", 0),
                 "keyspace_misses": info.get("keyspace_misses", 0),
                 "hit_rate": (
-                    info.get("keyspace_hits", 0) /
-                    max(info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0), 1)
+                    info.get("keyspace_hits", 0)
+                    / max(info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0), 1)
                     * 100
-                )
+                ),
             }
         except Exception as e:
             return {"error": f"获取缓存统计失败: {str(e)}"}
@@ -271,11 +277,11 @@ def invalidate_cache_on_change(cache_type: str, object_id: Optional[int] = None)
     """
     business_cache = get_business_cache()
 
-    if cache_type == 'project':
+    if cache_type == "project":
         business_cache.invalidate_project_cache(object_id or 0)
-    elif cache_type == 'user':
+    elif cache_type == "user":
         business_cache.invalidate_user_cache(object_id or 0)
-    elif cache_type == 'alert':
+    elif cache_type == "alert":
         business_cache.invalidate_alert_cache()
-    elif cache_type == 'config':
+    elif cache_type == "config":
         business_cache.invalidate_config_cache(str(object_id) if object_id else None)

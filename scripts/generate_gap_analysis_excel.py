@@ -13,45 +13,45 @@ from openpyxl.utils import get_column_letter
 def create_header_style():
     """创建表头样式"""
     return {
-        'font': Font(bold=True, color="FFFFFF", size=11),
-        'fill': PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid"),
-        'alignment': Alignment(horizontal='center', vertical='center', wrap_text=True),
-        'border': Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
-        )
+        "font": Font(bold=True, color="FFFFFF", size=11),
+        "fill": PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid"),
+        "alignment": Alignment(horizontal="center", vertical="center", wrap_text=True),
+        "border": Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin"),
+        ),
     }
 
 
 def create_cell_style():
     """创建单元格样式"""
     return {
-        'alignment': Alignment(vertical='center', wrap_text=True),
-        'border': Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
-        )
+        "alignment": Alignment(vertical="center", wrap_text=True),
+        "border": Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin"),
+        ),
     }
 
 
 def apply_header_style(cell):
     """应用表头样式"""
     style = create_header_style()
-    cell.font = style['font']
-    cell.fill = style['fill']
-    cell.alignment = style['alignment']
-    cell.border = style['border']
+    cell.font = style["font"]
+    cell.fill = style["fill"]
+    cell.alignment = style["alignment"]
+    cell.border = style["border"]
 
 
 def apply_cell_style(cell):
     """应用单元格样式"""
     style = create_cell_style()
-    cell.alignment = style['alignment']
-    cell.border = style['border']
+    cell.alignment = style["alignment"]
+    cell.border = style["border"]
 
 
 def set_column_widths(ws, widths):
@@ -65,14 +65,14 @@ def create_executive_summary(wb):
     ws = wb.create_sheet("1-执行摘要")
 
     # 标题
-    ws.merge_cells('A1:D1')
-    ws['A1'] = "四算体系差距分析 - 执行摘要"
-    ws['A1'].font = Font(bold=True, size=14)
-    ws['A1'].alignment = Alignment(horizontal='center')
+    ws.merge_cells("A1:D1")
+    ws["A1"] = "四算体系差距分析 - 执行摘要"
+    ws["A1"].font = Font(bold=True, size=14)
+    ws["A1"].alignment = Alignment(horizontal="center")
 
     # 覆盖率分析
-    ws['A3'] = "模块覆盖率分析"
-    ws['A3'].font = Font(bold=True, size=12)
+    ws["A3"] = "模块覆盖率分析"
+    ws["A3"].font = Font(bold=True, size=12)
 
     headers = ["模块", "现有覆盖率", "差距评估", "核心缺失"]
     for col, header in enumerate(headers, 1):
@@ -93,15 +93,21 @@ def create_executive_summary(wb):
             # 覆盖率列标红/黄/绿
             if col_idx == 2:
                 if "0%" in value:
-                    cell.fill = PatternFill(start_color="FF6B6B", end_color="FF6B6B", fill_type="solid")
+                    cell.fill = PatternFill(
+                        start_color="FF6B6B", end_color="FF6B6B", fill_type="solid"
+                    )
                 elif "30%" in value or "50%" in value:
-                    cell.fill = PatternFill(start_color="FFE66D", end_color="FFE66D", fill_type="solid")
+                    cell.fill = PatternFill(
+                        start_color="FFE66D", end_color="FFE66D", fill_type="solid"
+                    )
                 elif "60%" in value:
-                    cell.fill = PatternFill(start_color="95E1D3", end_color="95E1D3", fill_type="solid")
+                    cell.fill = PatternFill(
+                        start_color="95E1D3", end_color="95E1D3", fill_type="solid"
+                    )
 
     # 工作量估算
-    ws['A10'] = "工作量估算"
-    ws['A10'].font = Font(bold=True, size=12)
+    ws["A10"] = "工作量估算"
+    ws["A10"].font = Font(bold=True, size=12)
 
     headers2 = ["任务类型", "数量", "优先级"]
     for col, header in enumerate(headers2, 1):
@@ -128,13 +134,13 @@ def create_existing_assets(wb):
     """创建现有资产分析"""
     ws = wb.create_sheet("2-现有资产")
 
-    ws.merge_cells('A1:E1')
-    ws['A1'] = "现有系统资产分析"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:E1")
+    ws["A1"] = "现有系统资产分析"
+    ws["A1"].font = Font(bold=True, size=14)
 
     # 数据库模型
-    ws['A3'] = "已有的四算相关数据库模型"
-    ws['A3'].font = Font(bold=True, size=12)
+    ws["A3"] = "已有的四算相关数据库模型"
+    ws["A3"].font = Font(bold=True, size=12)
 
     headers = ["模型名称", "文件位置", "四算关联", "覆盖功能", "评估"]
     for col, header in enumerate(headers, 1):
@@ -159,8 +165,8 @@ def create_existing_assets(wb):
             apply_cell_style(cell)
 
     # API端点
-    ws['A16'] = "已有的四算相关API端点"
-    ws['A16'].font = Font(bold=True, size=12)
+    ws["A16"] = "已有的四算相关API端点"
+    ws["A16"].font = Font(bold=True, size=12)
 
     headers2 = ["端点模块", "文件位置", "功能覆盖"]
     for col, header in enumerate(headers2, 1):
@@ -190,9 +196,9 @@ def create_new_tables(wb):
     """创建新增表清单"""
     ws = wb.create_sheet("3-新增数据表")
 
-    ws.merge_cells('A1:E1')
-    ws['A1'] = "需要新增的数据表（8张）"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:E1")
+    ws["A1"] = "需要新增的数据表（8张）"
+    ws["A1"].font = Font(bold=True, size=14)
 
     headers = ["序号", "表名", "模块", "用途", "主要字段"]
     for col, header in enumerate(headers, 1):
@@ -200,14 +206,62 @@ def create_new_tables(wb):
         apply_header_style(cell)
 
     data = [
-        ["1", "project_estimates", "概算", "概算主表", "estimate_no, project_id, opportunity_id, target_margin_rate, allowed_cost, estimated_cost, status, version"],
-        ["2", "project_estimate_items", "概算", "概算明细", "estimate_id, cost_category, cost_item, estimated_amount, reference_source, reference_project_id"],
-        ["3", "project_budget_adjustments", "预算", "预算调整记录", "budget_id, adjustment_no, adjustment_type, before_amount, adjust_amount, reason_category, related_ecn_id, status"],
-        ["4", "project_cost_ledgers", "核算", "项目成本台账（按期间汇总）", "project_id, machine_id, period_type, period_value, material_cost, labor_cost, outsource_cost, total_cost, budget_amount, variance_amount, status"],
-        ["5", "dept_financial_summaries", "核算", "部门财务汇总", "dept_id, period_type, period_value, project_count, total_estimate_revenue, total_actual_cost, budget_variance, estimate_accuracy"],
-        ["6", "project_settlement_finals", "决算", "决算主表", "settlement_no, project_id, estimate_id, budget_id, final_revenue, total_cost, gross_profit, cost_variance, estimate_accuracy, status"],
-        ["7", "settlement_variance_analyses", "决算", "决算偏差分析", "settlement_id, variance_category, variance_type, estimated_amount, actual_amount, root_cause, lesson_learned, feedback_to_template"],
-        ["8", "project_lessons_learned", "决算", "项目经验库", "settlement_id, project_type, lesson_type, title, description, estimated_value, actual_value, recommendation, reference_count"],
+        [
+            "1",
+            "project_estimates",
+            "概算",
+            "概算主表",
+            "estimate_no, project_id, opportunity_id, target_margin_rate, allowed_cost, estimated_cost, status, version",
+        ],
+        [
+            "2",
+            "project_estimate_items",
+            "概算",
+            "概算明细",
+            "estimate_id, cost_category, cost_item, estimated_amount, reference_source, reference_project_id",
+        ],
+        [
+            "3",
+            "project_budget_adjustments",
+            "预算",
+            "预算调整记录",
+            "budget_id, adjustment_no, adjustment_type, before_amount, adjust_amount, reason_category, related_ecn_id, status",
+        ],
+        [
+            "4",
+            "project_cost_ledgers",
+            "核算",
+            "项目成本台账（按期间汇总）",
+            "project_id, machine_id, period_type, period_value, material_cost, labor_cost, outsource_cost, total_cost, budget_amount, variance_amount, status",
+        ],
+        [
+            "5",
+            "dept_financial_summaries",
+            "核算",
+            "部门财务汇总",
+            "dept_id, period_type, period_value, project_count, total_estimate_revenue, total_actual_cost, budget_variance, estimate_accuracy",
+        ],
+        [
+            "6",
+            "project_settlement_finals",
+            "决算",
+            "决算主表",
+            "settlement_no, project_id, estimate_id, budget_id, final_revenue, total_cost, gross_profit, cost_variance, estimate_accuracy, status",
+        ],
+        [
+            "7",
+            "settlement_variance_analyses",
+            "决算",
+            "决算偏差分析",
+            "settlement_id, variance_category, variance_type, estimated_amount, actual_amount, root_cause, lesson_learned, feedback_to_template",
+        ],
+        [
+            "8",
+            "project_lessons_learned",
+            "决算",
+            "项目经验库",
+            "settlement_id, project_type, lesson_type, title, description, estimated_value, actual_value, recommendation, reference_count",
+        ],
     ]
 
     for row_idx, row_data in enumerate(data, 4):
@@ -222,9 +276,9 @@ def create_modify_tables(wb):
     """创建修改表清单"""
     ws = wb.create_sheet("4-修改数据表")
 
-    ws.merge_cells('A1:D1')
-    ws['A1'] = "需要修改的数据表（4张）"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:D1")
+    ws["A1"] = "需要修改的数据表（4张）"
+    ws["A1"].font = Font(bold=True, size=14)
 
     headers = ["序号", "表名", "修改内容", "SQL语句"]
     for col, header in enumerate(headers, 1):
@@ -232,14 +286,30 @@ def create_modify_tables(wb):
         apply_header_style(cell)
 
     data = [
-        ["1", "projects", "新增: estimate_id, four_estimate_status, settlement_id",
-         "ALTER TABLE projects ADD COLUMN estimate_id INT;\nALTER TABLE projects ADD COLUMN four_estimate_status VARCHAR(50) DEFAULT 'ESTIMATE_PENDING';\nALTER TABLE projects ADD COLUMN settlement_id INT;"],
-        ["2", "project_budgets", "新增: estimate_id, estimate_no, budget_source, budget_category, control_mode, warning_threshold, original_amount, adjusted_amount, adjustment_count",
-         "ALTER TABLE project_budgets ADD COLUMN estimate_id INT;\nALTER TABLE project_budgets ADD COLUMN estimate_no VARCHAR(50);\nALTER TABLE project_budgets ADD COLUMN budget_source VARCHAR(20) DEFAULT 'MANUAL';\nALTER TABLE project_budgets ADD COLUMN control_mode VARCHAR(20) DEFAULT 'SOFT';\nALTER TABLE project_budgets ADD COLUMN warning_threshold DECIMAL(5,2) DEFAULT 0.80;"],
-        ["3", "quotes / quote_versions", "新增: estimate_id",
-         "ALTER TABLE quotes ADD COLUMN estimate_id INT;\nALTER TABLE quote_versions ADD COLUMN estimate_id INT;"],
-        ["4", "quote_cost_templates", "新增: reference_project_ids (JSON), source_settlement_ids (JSON)",
-         "ALTER TABLE quote_cost_templates ADD COLUMN reference_project_ids JSON;\nALTER TABLE quote_cost_templates ADD COLUMN source_settlement_ids JSON;"],
+        [
+            "1",
+            "projects",
+            "新增: estimate_id, four_estimate_status, settlement_id",
+            "ALTER TABLE projects ADD COLUMN estimate_id INT;\nALTER TABLE projects ADD COLUMN four_estimate_status VARCHAR(50) DEFAULT 'ESTIMATE_PENDING';\nALTER TABLE projects ADD COLUMN settlement_id INT;",
+        ],
+        [
+            "2",
+            "project_budgets",
+            "新增: estimate_id, estimate_no, budget_source, budget_category, control_mode, warning_threshold, original_amount, adjusted_amount, adjustment_count",
+            "ALTER TABLE project_budgets ADD COLUMN estimate_id INT;\nALTER TABLE project_budgets ADD COLUMN estimate_no VARCHAR(50);\nALTER TABLE project_budgets ADD COLUMN budget_source VARCHAR(20) DEFAULT 'MANUAL';\nALTER TABLE project_budgets ADD COLUMN control_mode VARCHAR(20) DEFAULT 'SOFT';\nALTER TABLE project_budgets ADD COLUMN warning_threshold DECIMAL(5,2) DEFAULT 0.80;",
+        ],
+        [
+            "3",
+            "quotes / quote_versions",
+            "新增: estimate_id",
+            "ALTER TABLE quotes ADD COLUMN estimate_id INT;\nALTER TABLE quote_versions ADD COLUMN estimate_id INT;",
+        ],
+        [
+            "4",
+            "quote_cost_templates",
+            "新增: reference_project_ids (JSON), source_settlement_ids (JSON)",
+            "ALTER TABLE quote_cost_templates ADD COLUMN reference_project_ids JSON;\nALTER TABLE quote_cost_templates ADD COLUMN source_settlement_ids JSON;",
+        ],
     ]
 
     for row_idx, row_data in enumerate(data, 4):
@@ -255,9 +325,9 @@ def create_new_apis(wb):
     """创建新增API清单"""
     ws = wb.create_sheet("5-新增API端点")
 
-    ws.merge_cells('A1:D1')
-    ws['A1'] = "需要新增的API端点（35+个）"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:D1")
+    ws["A1"] = "需要新增的API端点（35+个）"
+    ws["A1"].font = Font(bold=True, size=14)
 
     headers = ["模块", "端点", "方法", "功能描述"]
     for col, header in enumerate(headers, 1):
@@ -326,13 +396,13 @@ def create_implementation_plan(wb):
     """创建实施计划"""
     ws = wb.create_sheet("6-实施优先级")
 
-    ws.merge_cells('A1:D1')
-    ws['A1'] = "实施优先级建议"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:D1")
+    ws["A1"] = "实施优先级建议"
+    ws["A1"].font = Font(bold=True, size=14)
 
     # Phase 1
-    ws['A3'] = "Phase 1: 基础闭环（优先实施）"
-    ws['A3'].font = Font(bold=True, size=12, color="FF0000")
+    ws["A3"] = "Phase 1: 基础闭环（优先实施）"
+    ws["A3"].font = Font(bold=True, size=12, color="FF0000")
 
     headers = ["任务", "工作量", "优先级", "备注"]
     for col, header in enumerate(headers, 1):
@@ -353,8 +423,8 @@ def create_implementation_plan(wb):
             apply_cell_style(cell)
 
     # Phase 2
-    ws['A12'] = "Phase 2: 控制机制（次优先）"
-    ws['A12'].font = Font(bold=True, size=12, color="FF8C00")
+    ws["A12"] = "Phase 2: 控制机制（次优先）"
+    ws["A12"].font = Font(bold=True, size=12, color="FF8C00")
 
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=13, column=col, value=header)
@@ -373,8 +443,8 @@ def create_implementation_plan(wb):
             apply_cell_style(cell)
 
     # Phase 3
-    ws['A20'] = "Phase 3: 管理提升（后续）"
-    ws['A20'].font = Font(bold=True, size=12, color="008000")
+    ws["A20"] = "Phase 3: 管理提升（后续）"
+    ws["A20"].font = Font(bold=True, size=12, color="008000")
 
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=21, column=col, value=header)
@@ -399,9 +469,9 @@ def create_services(wb):
     """创建服务类清单"""
     ws = wb.create_sheet("7-新增服务类")
 
-    ws.merge_cells('A1:C1')
-    ws['A1'] = "需要新增的服务类"
-    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells("A1:C1")
+    ws["A1"] = "需要新增的服务类"
+    ws["A1"].font = Font(bold=True, size=14)
 
     headers = ["服务类", "职责", "位置"]
     for col, header in enumerate(headers, 1):
@@ -443,14 +513,16 @@ def main():
     create_services(wb)
 
     # 保存文件
-    output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                              "docs/plans/项目四算差距分析报告.xlsx")
+    output_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "docs/plans/项目四算差距分析报告.xlsx"
+    )
     wb.save(output_path)
     print(f"Excel报告已生成: {output_path}")
 
     # 复制到桌面
     desktop_path = "/Users/flw/Desktop/AI 做的方案/项目四算差距分析报告.xlsx"
     import shutil
+
     shutil.copy(output_path, desktop_path)
     print(f"已复制到: {desktop_path}")
 

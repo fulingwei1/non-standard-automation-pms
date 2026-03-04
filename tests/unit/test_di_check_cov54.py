@@ -1,6 +1,8 @@
 """Tests for app/services/data_integrity/check.py"""
+
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.data_integrity.check import DataCheckMixin
@@ -45,8 +47,8 @@ def test_check_data_completeness_no_profile():
     db.query.return_value.filter.return_value.first.side_effect = [period, None]
     checker = ConcreteDataCheck(db)
     result = checker.check_data_completeness(99, 1)
-    assert result['completeness_score'] == 0.0
-    assert '工程师档案不存在' in result['missing_items']
+    assert result["completeness_score"] == 0.0
+    assert "工程师档案不存在" in result["missing_items"]
 
 
 def test_check_data_completeness_returns_dict():
@@ -64,12 +66,12 @@ def test_check_data_completeness_returns_dict():
     db.query.return_value.filter.return_value.all.return_value = []
     checker = ConcreteDataCheck(db)
     result = checker.check_data_completeness(1, 1)
-    assert 'engineer_id' in result
-    assert 'period_id' in result
-    assert 'completeness_score' in result
-    assert 'missing_items' in result
-    assert 'warnings' in result
-    assert 'suggestions' in result
+    assert "engineer_id" in result
+    assert "period_id" in result
+    assert "completeness_score" in result
+    assert "missing_items" in result
+    assert "warnings" in result
+    assert "suggestions" in result
 
 
 def test_check_data_completeness_mechanical_engineer_checks_reviews():
@@ -87,7 +89,7 @@ def test_check_data_completeness_mechanical_engineer_checks_reviews():
     checker = ConcreteDataCheck(db)
     result = checker.check_data_completeness(1, 1)
     # mechanical engineers should have design review check
-    assert any("评审" in w for w in result['warnings']) or result is not None
+    assert any("评审" in w for w in result["warnings"]) or result is not None
 
 
 def test_check_data_completeness_score_range():
@@ -104,7 +106,7 @@ def test_check_data_completeness_score_range():
     db.query.return_value.filter.return_value.all.return_value = []
     checker = ConcreteDataCheck(db)
     result = checker.check_data_completeness(1, 1)
-    assert 0.0 <= result['completeness_score'] <= 100.0
+    assert 0.0 <= result["completeness_score"] <= 100.0
 
 
 def test_check_data_completeness_missing_work_logs():
@@ -122,4 +124,4 @@ def test_check_data_completeness_missing_work_logs():
     db.query.return_value.filter.return_value.all.return_value = []
     checker = ConcreteDataCheck(db)
     result = checker.check_data_completeness(1, 1)
-    assert '工作日志缺失' in result['missing_items']
+    assert "工作日志缺失" in result["missing_items"]

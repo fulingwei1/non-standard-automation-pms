@@ -2,7 +2,7 @@
 """SessionService 综合测试"""
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -35,9 +35,9 @@ class TestCreateSession:
     def test_basic_creation(self, mock_db):
         mock_db.query.return_value.filter.return_value.count.return_value = 0
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        
-        with patch.object(SessionService, '_assess_risk', return_value=(False, 0)):
-            with patch.object(SessionService, '_cache_session'):
+
+        with patch.object(SessionService, "_assess_risk", return_value=(False, 0)):
+            with patch.object(SessionService, "_cache_session"):
                 session = SessionService.create_session(
                     db=mock_db,
                     user_id=1,
@@ -52,13 +52,15 @@ class TestCreateSession:
     def test_with_device_info(self, mock_db):
         mock_db.query.return_value.filter.return_value.count.return_value = 0
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        
+
         device = {"device_id": "dev-1", "device_name": "iPhone", "device_type": "mobile"}
-        with patch.object(SessionService, '_assess_risk', return_value=(False, 0)):
-            with patch.object(SessionService, '_cache_session'):
+        with patch.object(SessionService, "_assess_risk", return_value=(False, 0)):
+            with patch.object(SessionService, "_cache_session"):
                 session = SessionService.create_session(
-                    db=mock_db, user_id=1,
-                    access_token_jti="a1", refresh_token_jti="r1",
+                    db=mock_db,
+                    user_id=1,
+                    access_token_jti="a1",
+                    refresh_token_jti="r1",
                     device_info=device,
                 )
                 mock_db.add.assert_called_once()
@@ -66,12 +68,14 @@ class TestCreateSession:
     def test_no_ip_no_ua(self, mock_db):
         mock_db.query.return_value.filter.return_value.count.return_value = 0
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        
-        with patch.object(SessionService, '_assess_risk', return_value=(False, 0)):
-            with patch.object(SessionService, '_cache_session'):
+
+        with patch.object(SessionService, "_assess_risk", return_value=(False, 0)):
+            with patch.object(SessionService, "_cache_session"):
                 SessionService.create_session(
-                    db=mock_db, user_id=1,
-                    access_token_jti="a1", refresh_token_jti="r1",
+                    db=mock_db,
+                    user_id=1,
+                    access_token_jti="a1",
+                    refresh_token_jti="r1",
                 )
                 mock_db.add.assert_called_once()
 
@@ -114,8 +118,8 @@ class TestUpdateSessionActivity:
 class TestRevokeSession:
     def test_revokes(self, mock_db, mock_session):
         mock_db.query.return_value.filter.return_value.first.return_value = mock_session
-        with patch.object(SessionService, '_add_to_blacklist'):
-            with patch.object(SessionService, '_remove_session_cache'):
+        with patch.object(SessionService, "_add_to_blacklist"):
+            with patch.object(SessionService, "_remove_session_cache"):
                 result = SessionService.revoke_session(mock_db, 1, 10)
                 assert result is True
 
@@ -128,8 +132,8 @@ class TestRevokeSession:
 class TestRevokeAllSessions:
     def test_revokes_all(self, mock_db, mock_session):
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_session]
-        with patch.object(SessionService, '_add_to_blacklist'):
-            with patch.object(SessionService, '_remove_session_cache'):
+        with patch.object(SessionService, "_add_to_blacklist"):
+            with patch.object(SessionService, "_remove_session_cache"):
                 count = SessionService.revoke_all_sessions(mock_db, 10)
                 assert count == 1
 
@@ -140,8 +144,8 @@ class TestRevokeAllSessions:
 
     def test_exclude_current(self, mock_db, mock_session):
         # Just verify the method accepts exclude_session_id
-        with patch.object(SessionService, '_add_to_blacklist'):
-            with patch.object(SessionService, '_remove_session_cache'):
+        with patch.object(SessionService, "_add_to_blacklist"):
+            with patch.object(SessionService, "_remove_session_cache"):
                 try:
                     count = SessionService.revoke_all_sessions(mock_db, 10, exclude_session_id=99)
                     assert count >= 0
@@ -156,8 +160,8 @@ class TestCleanupExpiredSessions:
         expired.access_token_jti = "a1"
         expired.refresh_token_jti = "r1"
         mock_db.query.return_value.filter.return_value.all.return_value = [expired]
-        with patch.object(SessionService, '_add_to_blacklist'):
-            with patch.object(SessionService, '_remove_session_cache'):
+        with patch.object(SessionService, "_add_to_blacklist"):
+            with patch.object(SessionService, "_remove_session_cache"):
                 count = SessionService.cleanup_expired_sessions(mock_db)
                 assert count == 1
 
@@ -204,7 +208,9 @@ class TestGetLocation:
 
 class TestAssessRisk:
     def test_first_login(self, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         is_suspicious, score = SessionService._assess_risk(mock_db, 1, "1.2.3.4", None, None)
         assert isinstance(is_suspicious, bool)
         assert isinstance(score, (int, float))
@@ -213,7 +219,9 @@ class TestAssessRisk:
         prev = MagicMock()
         prev.ip_address = "1.2.3.4"
         prev.device_type = "desktop"
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = prev
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            prev
+        )
         is_suspicious, score = SessionService._assess_risk(mock_db, 1, "1.2.3.4", None, None)
         assert isinstance(is_suspicious, bool)
 
@@ -221,7 +229,9 @@ class TestAssessRisk:
         prev = MagicMock()
         prev.ip_address = "1.2.3.4"
         prev.device_type = "desktop"
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = prev
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            prev
+        )
         is_suspicious, score = SessionService._assess_risk(mock_db, 1, "9.8.7.6", None, None)
         assert isinstance(is_suspicious, bool)
 

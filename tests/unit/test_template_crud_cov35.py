@@ -6,7 +6,9 @@ import pytest
 
 try:
     from unittest.mock import MagicMock, call, patch
+
     from app.services.stage_template.template_crud import TemplateCrudMixin
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

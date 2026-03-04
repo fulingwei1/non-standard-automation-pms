@@ -14,50 +14,6 @@
  └── production_reports.py   # 生产报表 Schemas
 """
 
-# 车间管理
-from .workshop import (
-    WorkshopCreate,
-    WorkshopListResponse,
-    WorkshopResponse,
-    WorkshopUpdate,
-)
-
-# 工位管理
-from .workstation import (
-    WorkstationCreate,
-    WorkstationResponse,
-    WorkstationStatusResponse,
-    WorkstationUpdate,
-)
-
-# 生产计划
-from .production_plan import (
-    ProductionPlanCreate,
-    ProductionPlanListResponse,
-    ProductionPlanResponse,
-    ProductionPlanUpdate,
-)
-
-# 生产工单
-from .work_order import (
-    WorkOrderAssignRequest,
-    WorkOrderCreate,
-    WorkOrderListResponse,
-    WorkOrderProgressResponse,
-    WorkOrderResponse,
-    WorkOrderUpdate,
-    WorkReportItem,
-)
-
-# 报工
-from .work_report import (
-    WorkReportCompleteRequest,
-    WorkReportListResponse,
-    WorkReportProgressRequest,
-    WorkReportResponse,
-    WorkReportStartRequest,
-)
-
 # 生产领料
 from .material_requisition import (
     MaterialRequisitionCreate,
@@ -75,20 +31,20 @@ from .production_exception import (
     ProductionExceptionResponse,
 )
 
-# 生产人员管理
-from .worker import (
-    WorkerCreate,
-    WorkerListResponse,
-    WorkerResponse,
-    WorkerUpdate,
+# 生产计划
+from .production_plan import (
+    ProductionPlanCreate,
+    ProductionPlanListResponse,
+    ProductionPlanResponse,
+    ProductionPlanUpdate,
 )
 
 # 生产报表
 from .production_reports import (
     CapacityUtilizationResponse,
-    ProductionDashboardResponse,
     ProductionDailyReportCreate,
     ProductionDailyReportResponse,
+    ProductionDashboardResponse,
     ProductionEfficiencyReportResponse,
     WorkerPerformanceReportResponse,
     WorkerRankingResponse,
@@ -125,6 +81,50 @@ from .quality import (
     SPCDataPoint,
     SPCDataRequest,
     SPCDataResponse,
+)
+
+# 生产工单
+from .work_order import (
+    WorkOrderAssignRequest,
+    WorkOrderCreate,
+    WorkOrderListResponse,
+    WorkOrderProgressResponse,
+    WorkOrderResponse,
+    WorkOrderUpdate,
+    WorkReportItem,
+)
+
+# 报工
+from .work_report import (
+    WorkReportCompleteRequest,
+    WorkReportListResponse,
+    WorkReportProgressRequest,
+    WorkReportResponse,
+    WorkReportStartRequest,
+)
+
+# 生产人员管理
+from .worker import (
+    WorkerCreate,
+    WorkerListResponse,
+    WorkerResponse,
+    WorkerUpdate,
+)
+
+# 车间管理
+from .workshop import (
+    WorkshopCreate,
+    WorkshopListResponse,
+    WorkshopResponse,
+    WorkshopUpdate,
+)
+
+# 工位管理
+from .workstation import (
+    WorkstationCreate,
+    WorkstationResponse,
+    WorkstationStatusResponse,
+    WorkstationUpdate,
 )
 
 __all__ = [

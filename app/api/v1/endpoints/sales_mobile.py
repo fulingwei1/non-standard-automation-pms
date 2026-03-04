@@ -4,9 +4,10 @@
 提供拜访打卡、名片扫描、移动审批
 """
 
-from typing import Any, Optional, List
 from datetime import date, datetime
-from fastapi import APIRouter, Depends, Query, Body, UploadFile, File
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Body, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -17,6 +18,7 @@ router = APIRouter()
 
 
 # ========== 1. 拜访打卡 ==========
+
 
 @router.post("/mobile/check-in", summary="拜访打卡")
 def create_check_in(
@@ -31,13 +33,13 @@ def create_check_in(
 ) -> Any:
     """
     销售拜访打卡
-    
+
     功能：
     - GPS 定位验证
     - 现场拍照
     - 拜访记录
     """
-    
+
     return {
         "message": "打卡成功",
         "check_in_id": 1001,
@@ -62,7 +64,7 @@ def get_check_in_history(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取拜访打卡历史"""
-    
+
     history = [
         {
             "check_in_id": 1001,
@@ -85,7 +87,7 @@ def get_check_in_history(
             "notes": "EOL 设备现场勘测",
         },
     ]
-    
+
     return {
         "total_count": len(history),
         "total_duration_minutes": sum(h["duration_minutes"] for h in history),
@@ -95,6 +97,7 @@ def get_check_in_history(
 
 # ========== 2. 名片扫描 ==========
 
+
 @router.post("/mobile/business-card/scan", summary="名片扫描识别")
 async def scan_business_card(
     image: UploadFile = File(..., description="名片图片"),
@@ -103,10 +106,10 @@ async def scan_business_card(
 ) -> Any:
     """
     名片扫描识别
-    
+
     使用 OCR 识别名片信息，自动创建联系人
     """
-    
+
     # 模拟 OCR 识别结果
     ocr_result = {
         "name": "张三",
@@ -117,7 +120,7 @@ async def scan_business_card(
         "address": "福建省宁德市蕉城区漳湾镇新港路 2 号",
         "confidence": 0.95,
     }
-    
+
     return {
         "message": "名片识别成功",
         "ocr_result": ocr_result,
@@ -138,7 +141,7 @@ def save_business_card(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """保存名片信息为联系人"""
-    
+
     return {
         "message": "联系人已创建",
         "contact_id": 501,
@@ -150,6 +153,7 @@ def save_business_card(
 
 # ========== 3. 移动审批 ==========
 
+
 @router.get("/mobile/approvals/pending", summary="待审批列表")
 def get_pending_approvals(
     type: Optional[str] = Query(None, description="类型：quote/contract/discount"),
@@ -157,7 +161,7 @@ def get_pending_approvals(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取待审批列表（移动端优化）"""
-    
+
     approvals = [
         {
             "approval_id": 1,
@@ -182,7 +186,7 @@ def get_pending_approvals(
             "deadline": "2025-03-02 12:00:00",
         },
     ]
-    
+
     return {
         "total_count": len(approvals),
         "urgent_count": len([a for a in approvals if a["priority"] == "HIGH"]),
@@ -198,7 +202,7 @@ def approve_request(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """审批通过"""
-    
+
     return {
         "message": "审批通过",
         "approval_id": approval_id,
@@ -216,7 +220,7 @@ def reject_request(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """审批拒绝"""
-    
+
     return {
         "message": "审批拒绝",
         "approval_id": approval_id,
@@ -229,6 +233,7 @@ def reject_request(
 
 # ========== 4. 语音记录 ==========
 
+
 @router.post("/mobile/voice-note", summary="语音记录")
 async def create_voice_note(
     audio: UploadFile = File(..., description="语音文件"),
@@ -239,13 +244,13 @@ async def create_voice_note(
 ) -> Any:
     """
     语音记录
-    
+
     拜访后语音速记，自动转文字
     """
-    
+
     # 模拟语音转文字
     transcription = "今天拜访了宁德时代，与技术总监张三讨论了 FCT 测试方案。客户对我们的测试精度很满意，但是希望价格能再优惠一些。约定下周三提交最终报价。"
-    
+
     return {
         "message": "语音记录已保存",
         "note_id": 201,
@@ -261,6 +266,7 @@ async def create_voice_note(
 
 # ========== 5. 移动端首页 ==========
 
+
 @router.get("/mobile/dashboard", summary="移动端首页")
 def get_mobile_dashboard(
     db: Session = Depends(deps.get_db),
@@ -268,21 +274,19 @@ def get_mobile_dashboard(
 ) -> Any:
     """
     移动端首页数据
-    
+
     精简版仪表盘，适合手机查看
     """
-    
+
     return {
         "greeting": f"早上好，{current_user.username}",
         "date": date.today().isoformat(),
-        
         "quick_stats": {
             "today_visits": 2,
             "week_visits": 8,
             "month_revenue": 15800000,
             "month_target_completion": 158.0,
         },
-        
         "today_schedule": [
             {
                 "time": "10:00",
@@ -306,7 +310,6 @@ def get_mobile_dashboard(
                 "status": "pending",
             },
         ],
-        
         "pending_tasks": [
             {
                 "task_id": 1,
@@ -321,10 +324,8 @@ def get_mobile_dashboard(
                 "priority": "MEDIUM",
             },
         ],
-        
         "pending_approvals": 2,
         "unread_messages": 5,
-        
         "quick_actions": [
             {"action": "check_in", "label": "拜访打卡", "icon": "📍"},
             {"action": "scan_card", "label": "扫名片", "icon": "📇"},

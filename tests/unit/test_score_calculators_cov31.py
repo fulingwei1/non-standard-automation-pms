@@ -31,11 +31,11 @@ def _make_skill_eval(tag_id, score, tag_name="技能A"):
 # SkillScoreCalculator.calculate_skill_score
 # ---------------------------------------------------------------------------
 
+
 class TestSkillScoreCalculator:
     def test_no_required_skills_returns_60(self, mock_db):
         result = SkillScoreCalculator.calculate_skill_score(
-            mock_db, employee_id=1, profile=None,
-            required_skills=[], preferred_skills=[]
+            mock_db, employee_id=1, profile=None, required_skills=[], preferred_skills=[]
         )
         assert result["score"] == 60.0
 
@@ -47,9 +47,11 @@ class TestSkillScoreCalculator:
         chain.all.return_value = []  # 员工没有任何技能
 
         result = SkillScoreCalculator.calculate_skill_score(
-            mock_db, employee_id=1, profile=None,
+            mock_db,
+            employee_id=1,
+            profile=None,
             required_skills=[{"tag_id": 10, "min_score": 3, "tag_name": "Python"}],
-            preferred_skills=[]
+            preferred_skills=[],
         )
         assert result["score"] < 60.0
         assert "Python" in result["missing"]
@@ -63,9 +65,11 @@ class TestSkillScoreCalculator:
         chain.all.return_value = [ev]
 
         result = SkillScoreCalculator.calculate_skill_score(
-            mock_db, employee_id=1, profile=None,
+            mock_db,
+            employee_id=1,
+            profile=None,
             required_skills=[{"tag_id": 10, "min_score": 3, "tag_name": "Python"}],
-            preferred_skills=[]
+            preferred_skills=[],
         )
         assert result["score"] > 60.0
         assert "Python" in result["matched"]
@@ -79,9 +83,11 @@ class TestSkillScoreCalculator:
         chain.all.return_value = [ev]
 
         result_with = SkillScoreCalculator.calculate_skill_score(
-            mock_db, employee_id=1, profile=None,
+            mock_db,
+            employee_id=1,
+            profile=None,
             required_skills=[],
-            preferred_skills=[{"tag_id": 20, "tag_name": "Java"}]
+            preferred_skills=[{"tag_id": 20, "tag_name": "Java"}],
         )
         # 基础 60 + 加成 5
         assert result_with["score"] >= 65.0
@@ -98,9 +104,11 @@ class TestSkillScoreCalculator:
         preferred = [{"tag_id": i, "tag_name": f"P{i}"} for i in range(1, 5)]
 
         result = SkillScoreCalculator.calculate_skill_score(
-            mock_db, employee_id=1, profile=None,
+            mock_db,
+            employee_id=1,
+            profile=None,
             required_skills=required,
-            preferred_skills=preferred
+            preferred_skills=preferred,
         )
         assert result["score"] <= 100.0
 
@@ -109,11 +117,11 @@ class TestSkillScoreCalculator:
 # DomainScoreCalculator.calculate_domain_score
 # ---------------------------------------------------------------------------
 
+
 class TestDomainScoreCalculator:
     def test_no_required_domains_returns_60(self, mock_db):
         score = DomainScoreCalculator.calculate_domain_score(
-            mock_db, employee_id=1, profile=None,
-            required_domains=[]
+            mock_db, employee_id=1, profile=None, required_domains=[]
         )
         assert score == 60.0
 
@@ -130,8 +138,7 @@ class TestDomainScoreCalculator:
         chain.all.return_value = [ev]
 
         score = DomainScoreCalculator.calculate_domain_score(
-            mock_db, employee_id=1, profile=None,
-            required_domains=[{"tag_id": 5, "min_score": 3}]
+            mock_db, employee_id=1, profile=None, required_domains=[{"tag_id": 5, "min_score": 3}]
         )
         assert score > 0.0
 
@@ -143,8 +150,7 @@ class TestDomainScoreCalculator:
         chain.all.return_value = []
 
         score = DomainScoreCalculator.calculate_domain_score(
-            mock_db, employee_id=1, profile=None,
-            required_domains=[{"tag_id": 99, "min_score": 3}]
+            mock_db, employee_id=1, profile=None, required_domains=[{"tag_id": 99, "min_score": 3}]
         )
         assert score == 0.0
 
@@ -161,8 +167,7 @@ class TestDomainScoreCalculator:
         chain.all.return_value = [ev]
 
         score = DomainScoreCalculator.calculate_domain_score(
-            mock_db, employee_id=1, profile=None,
-            required_domains=[{"tag_id": 5, "min_score": 3}]
+            mock_db, employee_id=1, profile=None, required_domains=[{"tag_id": 5, "min_score": 3}]
         )
         # 未达标时乘以50%，故 score = (2/5) * 50 = 20
         assert score == pytest.approx(20.0, rel=0.01)

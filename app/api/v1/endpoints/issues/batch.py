@@ -25,9 +25,7 @@ router = APIRouter()
 
 # 创建数据范围过滤函数
 scope_filter = create_scope_filter(
-    model=Issue,
-    scope_service=DataScopeService,
-    filter_method="filter_issues_by_scope"
+    model=Issue, scope_service=DataScopeService, filter_method="filter_issues_by_scope"
 )
 
 
@@ -46,24 +44,21 @@ def batch_assign_issues(
         raise HTTPException(status_code=404, detail="处理人不存在")
 
     executor = BatchOperationExecutor(
-        model=Issue,
-        db=db,
-        current_user=current_user,
-        scope_filter_func=scope_filter
+        model=Issue, db=db, current_user=current_user, scope_filter_func=scope_filter
     )
-    
+
     def assign_issue(issue: Issue):
         """分配问题的操作函数"""
         issue.assignee_id = assignee_id
         issue.assignee_name = assignee.real_name or assignee.username
         if due_date:
             issue.due_date = due_date
-    
+
     def log_operation(issue: Issue, op_type: str):
         """记录操作日志"""
         follow_up = IssueFollowUpRecord(
             issue_id=issue.id,
-            follow_up_type='ASSIGNMENT',
+            follow_up_type="ASSIGNMENT",
             content=f"批量分配给 {assignee.real_name or assignee.username}",
             operator_id=current_user.id,
             operator_name=current_user.real_name or current_user.username,
@@ -71,14 +66,14 @@ def batch_assign_issues(
             new_status=None,
         )
         db.add(follow_up)
-    
+
     result = executor.execute(
         entity_ids=issue_ids,
         operation_func=assign_issue,
         log_func=log_operation,
-        operation_type="BATCH_ASSIGN"
+        operation_type="BATCH_ASSIGN",
     )
-    
+
     return BatchOperationResponse(**result.to_dict(id_field="issue_id"))
 
 
@@ -93,22 +88,19 @@ def batch_change_issue_status(
 ) -> BatchOperationResponse:
     """批量更新问题状态"""
     executor = BatchOperationExecutor(
-        model=Issue,
-        db=db,
-        current_user=current_user,
-        scope_filter_func=scope_filter
+        model=Issue, db=db, current_user=current_user, scope_filter_func=scope_filter
     )
-    
+
     def change_status(issue: Issue):
         """更新状态的操作函数"""
         issue.status = new_status
-    
+
     def log_operation(issue: Issue, op_type: str):
         """记录操作日志"""
-        old_status = getattr(issue, '_old_status', issue.status)
+        old_status = getattr(issue, "_old_status", issue.status)
         follow_up = IssueFollowUpRecord(
             issue_id=issue.id,
-            follow_up_type='STATUS_CHANGE',
+            follow_up_type="STATUS_CHANGE",
             content=comment or f"批量状态变更：{old_status} → {new_status}",
             operator_id=current_user.id,
             operator_name=current_user.real_name or current_user.username,
@@ -116,13 +108,11 @@ def batch_change_issue_status(
             new_status=new_status,
         )
         db.add(follow_up)
-    
+
     result = executor.batch_status_update(
-        entity_ids=issue_ids,
-        new_status=new_status,
-        log_func=log_operation
+        entity_ids=issue_ids, new_status=new_status, log_func=log_operation
     )
-    
+
     return BatchOperationResponse(**result.to_dict(id_field="issue_id"))
 
 
@@ -136,32 +126,29 @@ def batch_close_issues(
 ) -> BatchOperationResponse:
     """批量关闭问题"""
     executor = BatchOperationExecutor(
-        model=Issue,
-        db=db,
-        current_user=current_user,
-        scope_filter_func=scope_filter
+        model=Issue, db=db, current_user=current_user, scope_filter_func=scope_filter
     )
-    
+
     def log_operation(issue: Issue, op_type: str):
         """记录操作日志"""
-        old_status = getattr(issue, '_old_status', issue.status)
+        old_status = getattr(issue, "_old_status", issue.status)
         follow_up = IssueFollowUpRecord(
             issue_id=issue.id,
-            follow_up_type='STATUS_CHANGE',
+            follow_up_type="STATUS_CHANGE",
             content=comment or "批量关闭",
             operator_id=current_user.id,
             operator_name=current_user.real_name or current_user.username,
             old_status=old_status,
-            new_status='CLOSED',
+            new_status="CLOSED",
         )
         db.add(follow_up)
-    
+
     result = executor.batch_status_update(
         entity_ids=issue_ids,
-        new_status='CLOSED',
-        validator_func=lambda issue: issue.status != 'CLOSED',
+        new_status="CLOSED",
+        validator_func=lambda issue: issue.status != "CLOSED",
         error_message="问题已关闭",
-        log_func=log_operation
+        log_func=log_operation,
     )
-    
+
     return BatchOperationResponse(**result.to_dict(id_field="issue_id"))

@@ -13,14 +13,14 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum, OpenItemStatusEnum
 from app.models.sales import Lead, OpenItem, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import OpenItemCreate, OpenItemResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
@@ -50,7 +50,9 @@ def list_open_items(
         query = query.filter(OpenItem.blocks_quotation == blocks_quotation)
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(OpenItem.created_at)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(OpenItem.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     result = []
     for item in items:
@@ -59,30 +61,29 @@ def list_open_items(
             person = db.query(User).filter(User.id == item.responsible_person_id).first()
             responsible_person_name = person.real_name if person else None
 
-        result.append(OpenItemResponse(
-            id=item.id,
-            source_type=item.source_type,
-            source_id=item.source_id,
-            item_code=item.item_code,
-            item_type=item.item_type,
-            description=item.description,
-            responsible_party=item.responsible_party,
-            responsible_person_id=item.responsible_person_id,
-            due_date=item.due_date,
-            status=item.status,
-            close_evidence=item.close_evidence,
-            blocks_quotation=item.blocks_quotation,
-            closed_at=item.closed_at,
-            created_at=item.created_at,
-            updated_at=item.updated_at,
-            responsible_person_name=responsible_person_name
-        ))
+        result.append(
+            OpenItemResponse(
+                id=item.id,
+                source_type=item.source_type,
+                source_id=item.source_id,
+                item_code=item.item_code,
+                item_type=item.item_type,
+                description=item.description,
+                responsible_party=item.responsible_party,
+                responsible_person_id=item.responsible_person_id,
+                due_date=item.due_date,
+                status=item.status,
+                close_evidence=item.close_evidence,
+                blocks_quotation=item.blocks_quotation,
+                closed_at=item.closed_at,
+                created_at=item.created_at,
+                updated_at=item.updated_at,
+                responsible_person_name=responsible_person_name,
+            )
+        )
 
     return PaginatedResponse(
-        items=result,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=result, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -109,7 +110,7 @@ def create_open_item(
         responsible_party=request.responsible_party,
         responsible_person_id=request.responsible_person_id,
         due_date=request.due_date,
-        blocks_quotation=request.blocks_quotation
+        blocks_quotation=request.blocks_quotation,
     )
 
     save_obj(db, open_item)
@@ -135,7 +136,7 @@ def create_open_item(
         closed_at=open_item.closed_at,
         created_at=open_item.created_at,
         updated_at=open_item.updated_at,
-        responsible_person_name=responsible_person_name
+        responsible_person_name=responsible_person_name,
     )
 
 
@@ -162,7 +163,7 @@ def create_open_item_for_opportunity(
         responsible_party=request.responsible_party,
         responsible_person_id=request.responsible_person_id,
         due_date=request.due_date,
-        blocks_quotation=request.blocks_quotation
+        blocks_quotation=request.blocks_quotation,
     )
 
     save_obj(db, open_item)
@@ -188,7 +189,7 @@ def create_open_item_for_opportunity(
         closed_at=open_item.closed_at,
         created_at=open_item.created_at,
         updated_at=open_item.updated_at,
-        responsible_person_name=responsible_person_name
+        responsible_person_name=responsible_person_name,
     )
 
 
@@ -234,7 +235,7 @@ def update_open_item(
         closed_at=open_item.closed_at,
         created_at=open_item.created_at,
         updated_at=open_item.updated_at,
-        responsible_person_name=responsible_person_name
+        responsible_person_name=responsible_person_name,
     )
 
 

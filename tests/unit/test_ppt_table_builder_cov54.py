@@ -1,11 +1,14 @@
 """Tests for app/services/ppt_generator/table_builder.py"""
+
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
-    from app.services.ppt_generator.table_builder import TableSlideBuilder
-    from app.services.ppt_generator.config import PresentationConfig
     from pptx.util import Inches
+
+    from app.services.ppt_generator.config import PresentationConfig
+    from app.services.ppt_generator.table_builder import TableSlideBuilder
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -86,7 +89,7 @@ def test_add_table_slide_with_page_num():
     """add_table_slide 传入 page_num 时调用 _add_page_number"""
     prs, slide, _ = _make_mock_prs_with_table()
     builder = TableSlideBuilder(prs)
-    with patch.object(builder, '_add_page_number') as mock_page:
+    with patch.object(builder, "_add_page_number") as mock_page:
         builder.add_table_slide("表格", ["A"], [["1"]], page_num=5)
         mock_page.assert_called_once_with(slide, 5)
 
@@ -95,7 +98,7 @@ def test_add_table_slide_without_page_num():
     """add_table_slide 不传入 page_num 时不调用 _add_page_number"""
     prs, slide, _ = _make_mock_prs_with_table()
     builder = TableSlideBuilder(prs)
-    with patch.object(builder, '_add_page_number') as mock_page:
+    with patch.object(builder, "_add_page_number") as mock_page:
         builder.add_table_slide("表格", ["A"], [["1"]])
         mock_page.assert_not_called()
 

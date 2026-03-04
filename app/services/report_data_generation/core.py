@@ -23,15 +23,12 @@ class ReportDataGenerationCore:
         "ENGINEER": ["PROJECT_WEEKLY"],
         "SALES_MANAGER": ["SALES_FUNNEL", "CONTRACT_ANALYSIS"],
         "PROCUREMENT_MANAGER": ["PROCUREMENT_ANALYSIS", "MATERIAL_ANALYSIS"],
-        "CUSTOM": ["CUSTOM"]
+        "CUSTOM": ["CUSTOM"],
     }
 
     @staticmethod
     def check_permission(
-        db: Session,
-        user: User,
-        report_type: str,
-        role_code: Optional[str] = None
+        db: Session, user: User, report_type: str, role_code: Optional[str] = None
     ) -> bool:
         """
         检查用户是否有权限生成指定类型的报表
@@ -52,11 +49,11 @@ class ReportDataGenerationCore:
         # 获取用户的角色代码
         user_role_codes = []
         # User.roles 是 lazy="dynamic" 关系，需要调用 .all() 或遍历
-        from app.models.user import UserRole, Role
-        user_roles = db.query(UserRole).join(Role).filter(
-            UserRole.user_id == user.id,
-            Role.is_active
-        ).all()
+        from app.models.user import Role, UserRole
+
+        user_roles = (
+            db.query(UserRole).join(Role).filter(UserRole.user_id == user.id, Role.is_active).all()
+        )
         for user_role in user_roles:
             if user_role.role and user_role.role.is_active:
                 user_role_codes.append(user_role.role.role_code)

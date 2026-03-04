@@ -11,11 +11,12 @@ from typing import (
     Type,
     TypeVar,
 )
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
 
-from .sync_repository import SyncBaseRepository
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from .base_crud_service import BaseCRUDService
+from .sync_repository import SyncBaseRepository
 
 # 类型变量声明
 ModelType = TypeVar("ModelType")

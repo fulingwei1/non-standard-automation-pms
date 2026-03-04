@@ -5,9 +5,10 @@
 测试项目文档的上传、查询、下载、删除及权限管理
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -27,10 +28,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         # 获取项目
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
         if projects_response.status_code != 200:
             pytest.skip("No projects available")
 
@@ -43,8 +41,7 @@ class TestProjectDocumentsAPI:
 
         # 获取文档列表
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/documents/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/documents/", headers=headers
         )
 
         if response.status_code == 404:
@@ -62,20 +59,14 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         # 模拟文件上传
-        files = {
-            "file": ("test_document.pdf", b"fake pdf content", "application/pdf")
-        }
-        data = {
-            "document_type": "requirement",
-            "description": "项目需求文档",
-            "version": "1.0"
-        }
+        files = {"file": ("test_document.pdf", b"fake pdf content", "application/pdf")}
+        data = {"document_type": "requirement", "description": "项目需求文档", "version": "1.0"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/documents/",
             headers=headers,
             files=files,
-            data=data
+            data=data,
         )
 
         if response.status_code == 404:
@@ -90,10 +81,7 @@ class TestProjectDocumentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/documents/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No document data or API not implemented")
@@ -108,8 +96,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/1/download",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/1/download", headers=headers
         )
 
         if response.status_code == 404:
@@ -128,13 +115,11 @@ class TestProjectDocumentsAPI:
         update_data = {
             "description": "更新后的文档描述",
             "version": "1.1",
-            "tags": ["重要", "需求"]
+            "tags": ["重要", "需求"],
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/projects/1/documents/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -150,8 +135,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -161,9 +145,7 @@ class TestProjectDocumentsAPI:
 
     def test_document_unauthorized_access(self, client: TestClient):
         """测试未授权访问文档"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/documents/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -176,7 +158,7 @@ class TestProjectDocumentsAPI:
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/documents/?document_type=requirement",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -192,8 +174,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/?search=需求",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/?search=需求", headers=headers
         )
 
         if response.status_code == 404:
@@ -209,8 +190,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/1/versions",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/1/versions", headers=headers
         )
 
         if response.status_code == 404:
@@ -226,14 +206,10 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         # 测试无效的文件类型
-        files = {
-            "file": ("test.exe", b"fake exe content", "application/x-executable")
-        }
+        files = {"file": ("test.exe", b"fake exe content", "application/x-executable")}
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/",
-            headers=headers,
-            files=files
+            f"{settings.API_V1_PREFIX}/projects/1/documents/", headers=headers, files=files
         )
 
         if response.status_code == 404:
@@ -250,8 +226,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/?page=1&page_size=20",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/?page=1&page_size=20", headers=headers
         )
 
         if response.status_code == 404:
@@ -267,8 +242,7 @@ class TestProjectDocumentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/documents/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/documents/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -283,14 +257,12 @@ class TestProjectDocumentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        delete_data = {
-            "document_ids": [999, 998, 997]
-        }
+        delete_data = {"document_ids": [999, 998, 997]}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/documents/batch-delete",
             headers=headers,
-            json=delete_data
+            json=delete_data,
         )
 
         if response.status_code == 404:

@@ -9,15 +9,15 @@ dashboard_adapters/others.py 单元测试
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime
+from unittest.mock import MagicMock, PropertyMock, patch
 
+from app.schemas.dashboard import DashboardStatCard, DashboardWidget
 from app.services.dashboard_adapters.others import (
+    KitRateDashboardAdapter,
     OthersDashboardAdapter,
     StaffMatchingDashboardAdapter,
-    KitRateDashboardAdapter,
 )
-from app.schemas.dashboard import DashboardStatCard, DashboardWidget
 
 
 class TestOthersDashboardAdapter(unittest.TestCase):
@@ -46,9 +46,9 @@ class TestOthersDashboardAdapter(unittest.TestCase):
 
         # 配置 db.query 返回值
         def query_side_effect(model):
+            from app.models.alert import AlertRecord
             from app.models.project import Project
             from app.models.user import User
-            from app.models.alert import AlertRecord
 
             if model == Project:
                 return mock_project_query

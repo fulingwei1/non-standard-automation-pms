@@ -15,6 +15,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_assembly_stages():
     """测试装配阶段API"""
     print("\n=== 测试装配阶段API ===")
@@ -24,6 +25,7 @@ def test_assembly_stages():
         print("✓ 获取装配阶段列表成功")
     else:
         print(f"✗ 失败: {response.text}")
+
 
 def test_assembly_templates():
     """测试装配模板API"""
@@ -35,6 +37,7 @@ def test_assembly_templates():
     else:
         print(f"✗ 失败: {response.text}")
 
+
 def test_category_mappings():
     """测试物料分类映射API"""
     print("\n=== 测试物料分类映射API ===")
@@ -45,6 +48,7 @@ def test_category_mappings():
     else:
         print(f"✗ 失败: {response.text}")
 
+
 def test_alert_rules():
     """测试预警规则API"""
     print("\n=== 测试预警规则API ===")
@@ -54,6 +58,7 @@ def test_alert_rules():
         print("✓ 获取预警规则列表成功")
     else:
         print(f"✗ 失败: {response.text}")
+
 
 def test_wechat_config():
     """测试企业微信配置API"""
@@ -66,17 +71,19 @@ def test_wechat_config():
     else:
         print(f"✗ 失败: {response.text}")
 
+
 def test_api_routes():
     """测试API路由是否注册"""
     print("\n=== 测试API路由注册 ===")
     routes = [route.path for route in app.routes]
-    assembly_routes = [r for r in routes if '/assembly' in r]
+    assembly_routes = [r for r in routes if "/assembly" in r]
     print(f"找到 {len(assembly_routes)} 个装配相关路由:")
     for route in assembly_routes[:10]:  # 只显示前10个
         print(f"  - {route}")
     if len(assembly_routes) > 10:
         print(f"  ... 还有 {len(assembly_routes) - 10} 个路由")
     print("✓ API路由检查完成")
+
 
 if __name__ == "__main__":
     print("=" * 60)
@@ -97,4 +104,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ 测试失败: {str(e)}")
         import traceback
+
         traceback.print_exc()

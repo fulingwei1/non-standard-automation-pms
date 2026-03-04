@@ -10,47 +10,55 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def service(db_session):
     from app.services.ai_emotion_service import AIEmotionService
+
     svc = AIEmotionService(db_session)
     return svc
 
 
 # ─── _determine_sentiment ───────────────────────────────────────────────────
 
+
 class TestDetermineSentiment:
 
     def test_positive_score(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         result = service._determine_sentiment(50)
         assert result == SentimentType.POSITIVE
 
     def test_negative_score(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         result = service._determine_sentiment(-50)
         assert result == SentimentType.NEGATIVE
 
     def test_neutral_score_zero(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         result = service._determine_sentiment(0)
         assert result == SentimentType.NEUTRAL
 
     def test_boundary_positive(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         result = service._determine_sentiment(31)
         assert result == SentimentType.POSITIVE
 
     def test_boundary_negative(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         result = service._determine_sentiment(-31)
         assert result == SentimentType.NEGATIVE
 
     def test_neutral_range(self, service):
         from app.models.presale_ai_emotion_analysis import SentimentType
+
         for score in [0, 10, -10, 29, -29]:
             result = service._determine_sentiment(score)
             assert result == SentimentType.NEUTRAL
@@ -58,65 +66,78 @@ class TestDetermineSentiment:
 
 # ─── _determine_churn_risk ──────────────────────────────────────────────────
 
+
 class TestDetermineChurnRisk:
 
     def test_high_risk(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({"risk_score": 75})
         assert result == ChurnRiskLevel.HIGH
 
     def test_medium_risk(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({"risk_score": 50})
         assert result == ChurnRiskLevel.MEDIUM
 
     def test_low_risk(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({"risk_score": 20})
         assert result == ChurnRiskLevel.LOW
 
     def test_boundary_high(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({"risk_score": 70})
         assert result == ChurnRiskLevel.HIGH
 
     def test_boundary_medium(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({"risk_score": 40})
         assert result == ChurnRiskLevel.MEDIUM
 
     def test_default_score_when_missing(self, service):
         from app.models.presale_ai_emotion_analysis import ChurnRiskLevel
+
         result = service._determine_churn_risk({})
         assert result == ChurnRiskLevel.MEDIUM
 
 
 # ─── _determine_priority ────────────────────────────────────────────────────
 
+
 class TestDeterminePriority:
 
     def test_high_urgency(self, service):
         from app.models.presale_follow_up_reminder import ReminderPriority
+
         result = service._determine_priority("high")
         assert result == ReminderPriority.HIGH
 
     def test_low_urgency(self, service):
         from app.models.presale_follow_up_reminder import ReminderPriority
+
         result = service._determine_priority("low")
         assert result == ReminderPriority.LOW
 
     def test_medium_urgency(self, service):
         from app.models.presale_follow_up_reminder import ReminderPriority
+
         result = service._determine_priority("medium")
         assert result == ReminderPriority.MEDIUM
 
     def test_unknown_urgency_defaults_to_medium(self, service):
         from app.models.presale_follow_up_reminder import ReminderPriority
+
         result = service._determine_priority("unknown")
         assert result == ReminderPriority.MEDIUM
 
 
 # ─── _calculate_recommended_time ────────────────────────────────────────────
+
 
 class TestCalculateRecommendedTime:
 
@@ -141,6 +162,7 @@ class TestCalculateRecommendedTime:
 
 
 # ─── _identify_turning_points ───────────────────────────────────────────────
+
 
 class TestIdentifyTurningPoints:
 
@@ -177,12 +199,15 @@ class TestIdentifyTurningPoints:
         data = []
         for i in range(20):
             score = 90 if i % 2 == 0 else 30
-            data.append({"date": f"2025-01-{i+1:02d}", "sentiment": "positive", "intent_score": score})
+            data.append(
+                {"date": f"2025-01-{i+1:02d}", "sentiment": "positive", "intent_score": score}
+            )
         result = service._identify_turning_points(data)
         assert len(result) <= 5
 
 
 # ─── _needs_attention ───────────────────────────────────────────────────────
+
 
 class TestNeedsAttention:
 
@@ -204,6 +229,7 @@ class TestNeedsAttention:
 
 # ─── _recommend_action ──────────────────────────────────────────────────────
 
+
 class TestRecommendAction:
 
     def test_high_churn_urgent(self, service):
@@ -224,6 +250,7 @@ class TestRecommendAction:
 
 
 # ─── _get_default_* ─────────────────────────────────────────────────────────
+
 
 class TestDefaultResults:
 
@@ -247,6 +274,7 @@ class TestDefaultResults:
 
 # ─── batch_analyze_customers ────────────────────────────────────────────────
 
+
 class TestBatchAnalyzeCustomers:
 
     @pytest.mark.asyncio
@@ -258,10 +286,13 @@ class TestBatchAnalyzeCustomers:
     @pytest.mark.asyncio
     async def test_customers_without_analysis(self, db_session):
         from app.services.ai_emotion_service import AIEmotionService
+
         svc = AIEmotionService(db_session)
 
         # No existing analyses
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = await svc.batch_analyze_customers([1, 2, 3])
         assert result["total_analyzed"] == 3
@@ -269,8 +300,9 @@ class TestBatchAnalyzeCustomers:
 
     @pytest.mark.asyncio
     async def test_customer_with_existing_analysis(self, db_session):
+        from app.models.presale_ai_emotion_analysis import ChurnRiskLevel, SentimentType
         from app.services.ai_emotion_service import AIEmotionService
-        from app.models.presale_ai_emotion_analysis import SentimentType, ChurnRiskLevel
+
         svc = AIEmotionService(db_session)
 
         mock_analysis = MagicMock()
@@ -278,7 +310,9 @@ class TestBatchAnalyzeCustomers:
         mock_analysis.purchase_intent_score = Decimal("85.0")
         mock_analysis.churn_risk = ChurnRiskLevel.LOW
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_analysis
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_analysis
+        )
 
         result = await svc.batch_analyze_customers([42])
         assert result["success_count"] == 1
@@ -289,10 +323,12 @@ class TestBatchAnalyzeCustomers:
 
 # ─── get_follow_up_reminders ────────────────────────────────────────────────
 
+
 class TestGetFollowUpReminders:
 
     def test_get_reminders_no_filter(self, db_session):
         from app.services.ai_emotion_service import AIEmotionService
+
         svc = AIEmotionService(db_session)
 
         mock_reminders = [MagicMock(), MagicMock()]
@@ -304,6 +340,7 @@ class TestGetFollowUpReminders:
 
     def test_dismiss_reminder_not_found(self, db_session):
         from app.services.ai_emotion_service import AIEmotionService
+
         svc = AIEmotionService(db_session)
 
         db_session.query.return_value.filter.return_value.first.return_value = None
@@ -311,8 +348,9 @@ class TestGetFollowUpReminders:
         assert result is False
 
     def test_dismiss_reminder_success(self, db_session):
-        from app.services.ai_emotion_service import AIEmotionService
         from app.models.presale_follow_up_reminder import ReminderStatus
+        from app.services.ai_emotion_service import AIEmotionService
+
         svc = AIEmotionService(db_session)
 
         mock_reminder = MagicMock()
@@ -326,12 +364,15 @@ class TestGetFollowUpReminders:
 
 # ─── AI call fallback (network errors) ──────────────────────────────────────
 
+
 class TestOpenAIFallback:
 
     @pytest.mark.asyncio
     async def test_emotion_call_network_error_returns_default(self, service):
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post.side_effect = Exception("Network error")
+            mock_client.return_value.__aenter__.return_value.post.side_effect = Exception(
+                "Network error"
+            )
             result = await service._call_openai_for_emotion("test content")
         # Should return default
         assert "sentiment_score" in result
@@ -341,7 +382,9 @@ class TestOpenAIFallback:
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 500
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
             result = await service._call_openai_for_churn({"communications": []})
         assert "risk_score" in result
 
@@ -354,6 +397,8 @@ class TestOpenAIFallback:
             "choices": [{"message": {"content": json.dumps(response_data)}}]
         }
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
             result = await service._call_openai_for_follow_up({"sentiment": "positive"})
         assert result["urgency"] == "high"

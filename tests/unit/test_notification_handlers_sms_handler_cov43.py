@@ -7,8 +7,9 @@ import pytest
 pytest.importorskip("app.services.notification_handlers.sms_handler")
 
 from unittest.mock import MagicMock, patch
-from app.services.notification_handlers.sms_handler import SMSNotificationHandler
+
 from app.models.enums import AlertLevelEnum
+from app.services.notification_handlers.sms_handler import SMSNotificationHandler
 
 
 def make_handler():
@@ -76,6 +77,7 @@ def test_send_daily_limit_exceeded():
     notif = make_notification()
 
     import datetime
+
     today = datetime.date.today().isoformat()
     h._sms_count["today"][today] = 10
 
@@ -94,6 +96,7 @@ def test_send_hourly_limit_exceeded():
     notif = make_notification()
 
     import datetime
+
     hour_key = datetime.datetime.now().strftime("%Y-%m-%d-%H")
     h._sms_count["hour"][hour_key] = 5
 
@@ -111,14 +114,17 @@ def test_send_success_increments_count():
     alert = make_alert()
     notif = make_notification(target="13911112222")
 
-    with patch("app.services.notification_handlers.sms_handler.settings") as s, \
-         patch("app.services.notification_handlers.sms_handler.send_alert_via_unified") as mock_send:
+    with (
+        patch("app.services.notification_handlers.sms_handler.settings") as s,
+        patch("app.services.notification_handlers.sms_handler.send_alert_via_unified") as mock_send,
+    ):
         s.SMS_ENABLED = True
         s.SMS_MAX_PER_DAY = 100
         s.SMS_MAX_PER_HOUR = 20
         s.CORS_ORIGINS = ["http://localhost:3000"]
 
         import datetime
+
         today = datetime.date.today().isoformat()
         h.send(notif, alert)
         assert h._sms_count["today"][today] == 1
@@ -129,6 +135,7 @@ def test_send_success_increments_count():
 def test_send_aliyun_no_sdk():
     h = make_handler()
     import builtins
+
     original_import = builtins.__import__
 
     def mock_import(name, *args, **kwargs):
@@ -137,6 +144,7 @@ def test_send_aliyun_no_sdk():
         return original_import(name, *args, **kwargs)
 
     import builtins
+
     with patch("builtins.__import__", side_effect=mock_import):
         with pytest.raises(ValueError, match="SDK not installed"):
             h._send_aliyun("13800000000", "test message")

@@ -14,8 +14,7 @@ from app.services.alert_rule_engine import AlertRuleEngine
 
 
 def calculate_basic_metrics(
-    all_alerts: List[AlertRecord],
-    engine: AlertRuleEngine
+    all_alerts: List[AlertRecord], engine: AlertRuleEngine
 ) -> Dict[str, float]:
     """
     计算基础效率指标
@@ -27,14 +26,14 @@ def calculate_basic_metrics(
 
     if total_count == 0:
         return {
-            'processing_rate': 0,
-            'timely_processing_rate': 0,
-            'escalation_rate': 0,
-            'duplicate_rate': 0
+            "processing_rate": 0,
+            "timely_processing_rate": 0,
+            "escalation_rate": 0,
+            "duplicate_rate": 0,
         }
 
     # 已处理预警（状态为 RESOLVED 或 CLOSED）
-    processed_alerts = [a for a in all_alerts if a.status in ['RESOLVED', 'CLOSED']]
+    processed_alerts = [a for a in all_alerts if a.status in ["RESOLVED", "CLOSED"]]
     processed_count = len(processed_alerts)
 
     # 处理率
@@ -73,17 +72,15 @@ def calculate_basic_metrics(
     duplicate_rate = duplicate_count / total_count if total_count > 0 else 0
 
     return {
-        'processing_rate': processing_rate,
-        'timely_processing_rate': timely_processing_rate,
-        'escalation_rate': escalation_rate,
-        'duplicate_rate': duplicate_rate
+        "processing_rate": processing_rate,
+        "timely_processing_rate": timely_processing_rate,
+        "escalation_rate": escalation_rate,
+        "duplicate_rate": duplicate_rate,
     }
 
 
 def calculate_project_metrics(
-    all_alerts: List[AlertRecord],
-    db: Session,
-    engine: AlertRuleEngine
+    all_alerts: List[AlertRecord], db: Session, engine: AlertRuleEngine
 ) -> Dict[str, Dict[str, Any]]:
     """
     按项目统计处理效率
@@ -98,50 +95,53 @@ def calculate_project_metrics(
             project_name = project.project_name if project else f"项目{alert.project_id}"
             if project_name not in efficiency_by_project:
                 efficiency_by_project[project_name] = {
-                    'project_id': alert.project_id,
-                    'total': 0,
-                    'processed': 0,
-                    'timely_processed': 0,
-                    'escalated': 0,
-                    'duplicate': 0,
+                    "project_id": alert.project_id,
+                    "total": 0,
+                    "processed": 0,
+                    "timely_processed": 0,
+                    "escalated": 0,
+                    "duplicate": 0,
                 }
 
             data = efficiency_by_project[project_name]
-            data['total'] += 1
-            if alert.status in ['RESOLVED', 'CLOSED']:
-                data['processed'] += 1
+            data["total"] += 1
+            if alert.status in ["RESOLVED", "CLOSED"]:
+                data["processed"] += 1
                 # 检查是否及时处理
                 if alert.triggered_at and alert.acknowledged_at:
-                    response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
+                    response_time = (
+                        alert.acknowledged_at - alert.triggered_at
+                    ).total_seconds() / 3600
                     timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
                     if response_time <= timeout_hours:
-                        data['timely_processed'] += 1
+                        data["timely_processed"] += 1
             if alert.is_escalated:
-                data['escalated'] += 1
+                data["escalated"] += 1
 
     # 计算项目效率指标
     project_metrics = {}
     for project_name, data in efficiency_by_project.items():
         project_metrics[project_name] = {
-            'project_id': data['project_id'],
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-            'efficiency_score': (
-                (data['processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (data['timely_processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
-            ) * 100,  # 效率得分（0-100）
+            "project_id": data["project_id"],
+            "total": data["total"],
+            "processing_rate": data["processed"] / data["total"] if data["total"] > 0 else 0,
+            "timely_processing_rate": (
+                data["timely_processed"] / data["total"] if data["total"] > 0 else 0
+            ),
+            "escalation_rate": data["escalated"] / data["total"] if data["total"] > 0 else 0,
+            "efficiency_score": (
+                (data["processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (data["timely_processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (1 - data["escalated"] / data["total"] if data["total"] > 0 else 0) * 0.2
+            )
+            * 100,  # 效率得分（0-100）
         }
 
     return project_metrics
 
 
 def calculate_handler_metrics(
-    all_alerts: List[AlertRecord],
-    db: Session,
-    engine: AlertRuleEngine
+    all_alerts: List[AlertRecord], db: Session, engine: AlertRuleEngine
 ) -> Dict[str, Dict[str, Any]]:
     """
     按责任人统计处理效率
@@ -157,48 +157,52 @@ def calculate_handler_metrics(
             handler_name = handler.username if handler else f"用户{handler_id}"
             if handler_name not in efficiency_by_handler:
                 efficiency_by_handler[handler_name] = {
-                    'user_id': handler_id,
-                    'total': 0,
-                    'processed': 0,
-                    'timely_processed': 0,
-                    'escalated': 0,
+                    "user_id": handler_id,
+                    "total": 0,
+                    "processed": 0,
+                    "timely_processed": 0,
+                    "escalated": 0,
                 }
 
             data = efficiency_by_handler[handler_name]
-            data['total'] += 1
-            if alert.status in ['RESOLVED', 'CLOSED']:
-                data['processed'] += 1
+            data["total"] += 1
+            if alert.status in ["RESOLVED", "CLOSED"]:
+                data["processed"] += 1
                 # 检查是否及时处理
                 if alert.triggered_at and alert.acknowledged_at:
-                    response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
+                    response_time = (
+                        alert.acknowledged_at - alert.triggered_at
+                    ).total_seconds() / 3600
                     timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
                     if response_time <= timeout_hours:
-                        data['timely_processed'] += 1
+                        data["timely_processed"] += 1
             if alert.is_escalated:
-                data['escalated'] += 1
+                data["escalated"] += 1
 
     # 计算责任人效率指标
     handler_metrics = {}
     for handler_name, data in efficiency_by_handler.items():
         handler_metrics[handler_name] = {
-            'user_id': data['user_id'],
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-            'efficiency_score': (
-                (data['processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (data['timely_processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
-            ) * 100,  # 效率得分（0-100）
+            "user_id": data["user_id"],
+            "total": data["total"],
+            "processing_rate": data["processed"] / data["total"] if data["total"] > 0 else 0,
+            "timely_processing_rate": (
+                data["timely_processed"] / data["total"] if data["total"] > 0 else 0
+            ),
+            "escalation_rate": data["escalated"] / data["total"] if data["total"] > 0 else 0,
+            "efficiency_score": (
+                (data["processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (data["timely_processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (1 - data["escalated"] / data["total"] if data["total"] > 0 else 0) * 0.2
+            )
+            * 100,  # 效率得分（0-100）
         }
 
     return handler_metrics
 
 
 def calculate_type_metrics(
-    all_alerts: List[AlertRecord],
-    engine: AlertRuleEngine
+    all_alerts: List[AlertRecord], engine: AlertRuleEngine
 ) -> Dict[str, Dict[str, Any]]:
     """
     按类型统计处理效率
@@ -209,49 +213,51 @@ def calculate_type_metrics(
     efficiency_by_type = {}
     for alert in all_alerts:
         rule = alert.rule
-        rule_type = rule.rule_type if rule else 'UNKNOWN'
+        rule_type = rule.rule_type if rule else "UNKNOWN"
         if rule_type not in efficiency_by_type:
             efficiency_by_type[rule_type] = {
-                'total': 0,
-                'processed': 0,
-                'timely_processed': 0,
-                'escalated': 0,
+                "total": 0,
+                "processed": 0,
+                "timely_processed": 0,
+                "escalated": 0,
             }
 
         data = efficiency_by_type[rule_type]
-        data['total'] += 1
-        if alert.status in ['RESOLVED', 'CLOSED']:
-            data['processed'] += 1
+        data["total"] += 1
+        if alert.status in ["RESOLVED", "CLOSED"]:
+            data["processed"] += 1
             # 检查是否及时处理
             if alert.triggered_at and alert.acknowledged_at:
                 response_time = (alert.acknowledged_at - alert.triggered_at).total_seconds() / 3600
                 timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
                 if response_time <= timeout_hours:
-                    data['timely_processed'] += 1
+                    data["timely_processed"] += 1
         if alert.is_escalated:
-            data['escalated'] += 1
+            data["escalated"] += 1
 
     # 计算类型效率指标
     type_metrics = {}
     for rule_type, data in efficiency_by_type.items():
         type_metrics[rule_type] = {
-            'total': data['total'],
-            'processing_rate': data['processed'] / data['total'] if data['total'] > 0 else 0,
-            'timely_processing_rate': data['timely_processed'] / data['total'] if data['total'] > 0 else 0,
-            'escalation_rate': data['escalated'] / data['total'] if data['total'] > 0 else 0,
-            'efficiency_score': (
-                (data['processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (data['timely_processed'] / data['total'] if data['total'] > 0 else 0) * 0.4 +
-                (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
-            ) * 100,  # 效率得分（0-100）
+            "total": data["total"],
+            "processing_rate": data["processed"] / data["total"] if data["total"] > 0 else 0,
+            "timely_processing_rate": (
+                data["timely_processed"] / data["total"] if data["total"] > 0 else 0
+            ),
+            "escalation_rate": data["escalated"] / data["total"] if data["total"] > 0 else 0,
+            "efficiency_score": (
+                (data["processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (data["timely_processed"] / data["total"] if data["total"] > 0 else 0) * 0.4
+                + (1 - data["escalated"] / data["total"] if data["total"] > 0 else 0) * 0.2
+            )
+            * 100,  # 效率得分（0-100）
         }
 
     return type_metrics
 
 
 def generate_rankings(
-    project_metrics: Dict[str, Dict[str, Any]],
-    handler_metrics: Dict[str, Dict[str, Any]]
+    project_metrics: Dict[str, Dict[str, Any]], handler_metrics: Dict[str, Dict[str, Any]]
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     生成效率排行榜
@@ -261,72 +267,72 @@ def generate_rankings(
     """
     # 效率最高的项目（效率得分最高，至少5个预警）
     best_projects = sorted(
-        [(name, data) for name, data in project_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score'],
-        reverse=True
+        [(name, data) for name, data in project_metrics.items() if data["total"] >= 5],
+        key=lambda x: x[1]["efficiency_score"],
+        reverse=True,
     )[:5]
 
     # 效率最低的项目（效率得分最低，至少5个预警）
     worst_projects = sorted(
-        [(name, data) for name, data in project_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score']
+        [(name, data) for name, data in project_metrics.items() if data["total"] >= 5],
+        key=lambda x: x[1]["efficiency_score"],
     )[:5]
 
     # 效率最高的责任人（效率得分最高，至少5个预警）
     best_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score'],
-        reverse=True
+        [(name, data) for name, data in handler_metrics.items() if data["total"] >= 5],
+        key=lambda x: x[1]["efficiency_score"],
+        reverse=True,
     )[:5]
 
     # 效率最低的责任人（效率得分最低，至少5个预警）
     worst_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
-        key=lambda x: x[1]['efficiency_score']
+        [(name, data) for name, data in handler_metrics.items() if data["total"] >= 5],
+        key=lambda x: x[1]["efficiency_score"],
     )[:5]
 
     return {
-        'best_projects': [
+        "best_projects": [
             {
-                'project_name': name,
-                'project_id': data['project_id'],
-                'efficiency_score': data['efficiency_score'],
-                'processing_rate': data['processing_rate'],
-                'timely_processing_rate': data['timely_processing_rate'],
-                'total': data['total'],
+                "project_name": name,
+                "project_id": data["project_id"],
+                "efficiency_score": data["efficiency_score"],
+                "processing_rate": data["processing_rate"],
+                "timely_processing_rate": data["timely_processing_rate"],
+                "total": data["total"],
             }
             for name, data in best_projects
         ],
-        'worst_projects': [
+        "worst_projects": [
             {
-                'project_name': name,
-                'project_id': data['project_id'],
-                'efficiency_score': data['efficiency_score'],
-                'processing_rate': data['processing_rate'],
-                'timely_processing_rate': data['timely_processing_rate'],
-                'total': data['total'],
+                "project_name": name,
+                "project_id": data["project_id"],
+                "efficiency_score": data["efficiency_score"],
+                "processing_rate": data["processing_rate"],
+                "timely_processing_rate": data["timely_processing_rate"],
+                "total": data["total"],
             }
             for name, data in worst_projects
         ],
-        'best_handlers': [
+        "best_handlers": [
             {
-                'handler_name': name,
-                'user_id': data['user_id'],
-                'efficiency_score': data['efficiency_score'],
-                'processing_rate': data['processing_rate'],
-                'timely_processing_rate': data['timely_processing_rate'],
-                'total': data['total'],
+                "handler_name": name,
+                "user_id": data["user_id"],
+                "efficiency_score": data["efficiency_score"],
+                "processing_rate": data["processing_rate"],
+                "timely_processing_rate": data["timely_processing_rate"],
+                "total": data["total"],
             }
             for name, data in best_handlers
         ],
-        'worst_handlers': [
+        "worst_handlers": [
             {
-                'handler_name': name,
-                'user_id': data['user_id'],
-                'efficiency_score': data['efficiency_score'],
-                'processing_rate': data['processing_rate'],
-                'timely_processing_rate': data['timely_processing_rate'],
-                'total': data['total'],
+                "handler_name": name,
+                "user_id": data["user_id"],
+                "efficiency_score": data["efficiency_score"],
+                "processing_rate": data["processing_rate"],
+                "timely_processing_rate": data["timely_processing_rate"],
+                "total": data["total"],
             }
             for name, data in worst_handlers
         ],

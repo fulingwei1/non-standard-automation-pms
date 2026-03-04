@@ -10,6 +10,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 try:
     from reportlab.lib import colors
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -29,42 +30,38 @@ def get_pdf_styles():
 
     # 创建自定义样式
     title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
+        "CustomTitle",
+        parent=styles["Heading1"],
         fontSize=18,
-        textColor=colors.HexColor('#1e40af'),
+        textColor=colors.HexColor("#1e40af"),
         spaceAfter=30,
         alignment=1,  # 居中
-        fontName='Helvetica-Bold'
+        fontName="Helvetica-Bold",
     )
 
     heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
+        "CustomHeading",
+        parent=styles["Heading2"],
         fontSize=14,
-        textColor=colors.HexColor('#1e40af'),
+        textColor=colors.HexColor("#1e40af"),
         spaceAfter=12,
         spaceBefore=12,
-        fontName='Helvetica-Bold'
+        fontName="Helvetica-Bold",
     )
 
-    normal_style = styles['Normal']
+    normal_style = styles["Normal"]
     normal_style.fontSize = 10
     normal_style.leading = 14
 
     footer_style = ParagraphStyle(
-        'Footer',
-        parent=normal_style,
-        fontSize=9,
-        textColor=colors.grey,
-        alignment=2  # 右对齐
+        "Footer", parent=normal_style, fontSize=9, textColor=colors.grey, alignment=2  # 右对齐
     )
 
     return {
-        'title': title_style,
-        'heading': heading_style,
-        'normal': normal_style,
-        'footer': footer_style
+        "title": title_style,
+        "heading": heading_style,
+        "normal": normal_style,
+        "footer": footer_style,
     }
 
 
@@ -80,15 +77,17 @@ def get_table_style_base():
 
     from reportlab.platypus import TableStyle
 
-    return TableStyle([
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-    ])
+    return TableStyle(
+        [
+            ("TEXTCOLOR", (0, 0), (-1, -1), colors.black),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+            ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 1, colors.grey),
+        ]
+    )
 
 
 def get_info_table_style():
@@ -101,9 +100,8 @@ def get_info_table_style():
     if not REPORTLAB_AVAILABLE:
         return None
 
-
     base_style = get_table_style_base()
-    base_style.add('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6'))
+    base_style.add("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f3f4f6"))
     return base_style
 
 
@@ -119,19 +117,21 @@ def get_stats_table_style():
 
     from reportlab.platypus import TableStyle
 
-    return TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f3f4f6')),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-    ])
+    return TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 11),
+            ("FONTSIZE", (0, 1), (-1, -1), 9),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 1, colors.grey),
+            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ]
+    )
 
 
 def get_issue_table_style():
@@ -146,17 +146,19 @@ def get_issue_table_style():
 
     from reportlab.platypus import TableStyle
 
-    return TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-    ])
+    return TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 10),
+            ("FONTSIZE", (0, 1), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("GRID", (0, 0), (-1, -1), 1, colors.grey),
+        ]
+    )
 
 
 def get_signature_table_style():
@@ -171,14 +173,16 @@ def get_signature_table_style():
 
     from reportlab.platypus import TableStyle
 
-    return TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-    ])
+    return TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 10),
+            ("FONTSIZE", (0, 1), (-1, -1), 9),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 1, colors.grey),
+        ]
+    )

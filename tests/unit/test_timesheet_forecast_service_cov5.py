@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第五批：timesheet_forecast_service.py 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.timesheet_forecast_service import TimesheetForecastService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -109,6 +111,7 @@ class TestForecastWorkloadAlert:
 
     def test_signature_accepts_params(self):
         import inspect
+
         sig = inspect.signature(TimesheetForecastService.forecast_workload_alert)
         params = list(sig.parameters.keys())
         assert "self" in params
@@ -117,6 +120,7 @@ class TestForecastWorkloadAlert:
 class TestAnalyzeGap:
     def test_signature(self):
         import inspect
+
         sig = inspect.signature(TimesheetForecastService.analyze_gap)
         params = list(sig.parameters.keys())
         assert "period_type" in params

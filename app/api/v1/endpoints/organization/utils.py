@@ -32,7 +32,9 @@ def generate_employee_code(index: int, existing_codes: set) -> str:
     return code
 
 
-def build_department_tree(departments: List[Department], parent_id: Optional[int] = None) -> List[Dict]:
+def build_department_tree(
+    departments: List[Department], parent_id: Optional[int] = None
+) -> List[Dict]:
     """构建部门树结构（使用通用 build_tree 实现）"""
     return build_tree(
         departments,

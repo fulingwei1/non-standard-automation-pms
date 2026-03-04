@@ -72,7 +72,10 @@ def update_sales_ranking_config(
 def get_sales_team_ranking(
     *,
     db: Session = Depends(deps.get_db),
-    ranking_type: str = Query("score", description="排名类型：score 或具体指标（lead_count/opportunity_count/contract_amount/collection_amount 等）"),
+    ranking_type: str = Query(
+        "score",
+        description="排名类型：score 或具体指标（lead_count/opportunity_count/contract_amount/collection_amount 等）",
+    ),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
@@ -104,5 +107,5 @@ def get_sales_team_ranking(
             "total_count": total_count,
             "config": ranking_result.get("config"),
             "max_values": ranking_result.get("max_values"),
-        }
+        },
     )

@@ -4,17 +4,18 @@ N1组深度覆盖: QualityService
 补充 create_inspection, complete_rework_order, batch_tracing,
 _check_quality_alerts, generate_inspection_no 等核心分支
 """
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.services.quality_service import QualityService
-
 
 # ============================================================
 # Helper builders
 # ============================================================
+
 
 def _make_inspection(**kwargs):
     insp = MagicMock()
@@ -54,6 +55,7 @@ def _make_db_with_inspections(inspections):
 # 1. _generate_inspection_no
 # ============================================================
 
+
 class TestGenerateInspectionNo:
     def test_first_record_of_day(self):
         """当天无记录时序号从0001开始"""
@@ -77,6 +79,7 @@ class TestGenerateInspectionNo:
 # 2. create_inspection
 # ============================================================
 
+
 class TestCreateInspection:
     def test_defect_rate_calculated(self):
         """创建时自动计算不良率"""
@@ -85,6 +88,7 @@ class TestCreateInspection:
         db.query.return_value.filter.return_value.all.return_value = []  # no alert rules
 
         from app.schemas.production.quality import QualityInspectionCreate
+
         inspection_data = MagicMock(spec=QualityInspectionCreate)
         inspection_data.inspection_qty = 200
         inspection_data.defect_qty = 10
@@ -108,6 +112,7 @@ class TestCreateInspection:
         db.query.return_value.filter.return_value.all.return_value = []
 
         from app.schemas.production.quality import QualityInspectionCreate
+
         inspection_data = MagicMock(spec=QualityInspectionCreate)
         inspection_data.inspection_qty = 0
         inspection_data.defect_qty = 0
@@ -125,6 +130,7 @@ class TestCreateInspection:
 # ============================================================
 # 3. _generate_analysis_no / _generate_rework_order_no
 # ============================================================
+
 
 class TestGenerateOtherNos:
     def test_analysis_no_first_record(self):
@@ -162,6 +168,7 @@ class TestGenerateOtherNos:
 # 4. complete_rework_order
 # ============================================================
 
+
 class TestCompleteReworkOrder:
     def test_complete_success(self):
         """正常完成返工单"""
@@ -175,9 +182,11 @@ class TestCompleteReworkOrder:
             "scrap_qty": 1,
             "actual_hours": 2.0,
             "rework_cost": 500,
-            "completion_note": "完成"
+            "completion_note": "完成",
         }
-        result = QualityService.complete_rework_order(db, rework_order_id=1, completion_data=completion_data)
+        result = QualityService.complete_rework_order(
+            db, rework_order_id=1, completion_data=completion_data
+        )
         assert result.status == "COMPLETED"
         assert result.completed_qty == 10
 
@@ -201,6 +210,7 @@ class TestCompleteReworkOrder:
 # 5. batch_tracing
 # ============================================================
 
+
 class TestBatchTracing:
     def test_batch_found(self):
         """批次号存在时返回追溯数据"""
@@ -211,9 +221,9 @@ class TestBatchTracing:
         # 第二次 query...filter(in_)...all -> defect_analyses
         # 第三次 query...filter(in_)...all -> rework_orders
         db.query.return_value.filter.return_value.all.side_effect = [
-            [insp],      # inspections
-            [],          # defect_analyses
-            [],          # rework_orders
+            [insp],  # inspections
+            [],  # defect_analyses
+            [],  # rework_orders
         ]
 
         result = QualityService.batch_tracing(db, "BATCH001")
@@ -231,9 +241,7 @@ class TestBatchTracing:
         """批次不良率正确计算"""
         db = MagicMock()
         insp = _make_inspection(inspection_qty=100, defect_qty=5, batch_no="B002")
-        db.query.return_value.filter.return_value.all.side_effect = [
-            [insp], [], []
-        ]
+        db.query.return_value.filter.return_value.all.side_effect = [[insp], [], []]
         result = QualityService.batch_tracing(db, "B002")
         assert result["batch_defect_rate"] == pytest.approx(5.0)
 
@@ -241,9 +249,7 @@ class TestBatchTracing:
         """检验数量为0时不良率为0"""
         db = MagicMock()
         insp = _make_inspection(inspection_qty=0, defect_qty=0, batch_no="B003")
-        db.query.return_value.filter.return_value.all.side_effect = [
-            [insp], [], []
-        ]
+        db.query.return_value.filter.return_value.all.side_effect = [[insp], [], []]
         result = QualityService.batch_tracing(db, "B003")
         assert result["batch_defect_rate"] == pytest.approx(0.0)
 
@@ -251,6 +257,7 @@ class TestBatchTracing:
 # ============================================================
 # 6. _check_defect_rate_alert - 各操作符分支
 # ============================================================
+
 
 class TestCheckDefectRateAlert:
     def _make_rule(self, operator, threshold, min_sample=1, target_material=None):
@@ -339,6 +346,7 @@ class TestCheckDefectRateAlert:
 # 7. _check_spc_alert
 # ============================================================
 
+
 class TestCheckSPCAlert:
     def test_no_measured_value_returns_early(self):
         """检验记录无测量值时直接返回"""
@@ -402,6 +410,7 @@ class TestCheckSPCAlert:
 # 8. _aggregate_by_time - week 分支
 # ============================================================
 
+
 class TestAggregateByTimeWeek:
     def test_aggregate_by_week(self):
         inspections = []
@@ -422,6 +431,7 @@ class TestAggregateByTimeWeek:
 # 9. pareto_analysis
 # ============================================================
 
+
 class TestParetoAnalysis:
     def test_pareto_returns_structure(self):
         """帕累托分析返回正确结构"""
@@ -434,7 +444,10 @@ class TestParetoAnalysis:
         stat2.defect_type = "气泡"
         stat2.total_qty = 20
 
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [stat1, stat2]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            stat1,
+            stat2,
+        ]
 
         result = QualityService.pareto_analysis(
             db,
@@ -457,7 +470,10 @@ class TestParetoAnalysis:
         stat2.defect_type = "气泡"
         stat2.total_qty = 15  # 15%
 
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [stat1, stat2]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            stat1,
+            stat2,
+        ]
 
         result = QualityService.pareto_analysis(
             db,

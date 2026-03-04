@@ -7,14 +7,14 @@ Unit tests for app/utils/scheduler.py — L4组补充
 import json
 import time
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # job_listener
 # ---------------------------------------------------------------------------
+
 
 class TestJobListenerL4:
     """Tests for job_listener — supplemental L4."""
@@ -78,6 +78,7 @@ class TestJobListenerL4:
 # _wrap_job_callable
 # ---------------------------------------------------------------------------
 
+
 class TestWrapJobCallableL4:
     """Tests for _wrap_job_callable — direct invocation."""
 
@@ -98,8 +99,10 @@ class TestWrapJobCallableL4:
 
         task = self._make_task()
 
-        with patch("app.utils.scheduler.logger") as mock_logger, \
-             patch("app.utils.scheduler.record_job_success") as mock_success:
+        with (
+            patch("app.utils.scheduler.logger") as mock_logger,
+            patch("app.utils.scheduler.record_job_success") as mock_success,
+        ):
             wrapped = _wrap_job_callable(simple_func, task)
             result = wrapped()
 
@@ -120,8 +123,10 @@ class TestWrapJobCallableL4:
 
         task = self._make_task("failing_job")
 
-        with patch("app.utils.scheduler.logger") as mock_logger, \
-             patch("app.utils.scheduler.record_job_failure") as mock_fail:
+        with (
+            patch("app.utils.scheduler.logger") as mock_logger,
+            patch("app.utils.scheduler.record_job_failure") as mock_fail,
+        ):
             wrapped = _wrap_job_callable(failing_func, task)
             with pytest.raises(ValueError, match="something went wrong"):
                 wrapped()
@@ -141,8 +146,10 @@ class TestWrapJobCallableL4:
 
         task = self._make_task("metrics_job")
 
-        with patch("app.utils.scheduler.logger"), \
-             patch("app.utils.scheduler.record_job_success") as mock_success:
+        with (
+            patch("app.utils.scheduler.logger"),
+            patch("app.utils.scheduler.record_job_success") as mock_success,
+        ):
             wrapped = _wrap_job_callable(func, task)
             wrapped()
 
@@ -160,8 +167,10 @@ class TestWrapJobCallableL4:
 
         task = self._make_task("fail_metrics")
 
-        with patch("app.utils.scheduler.logger"), \
-             patch("app.utils.scheduler.record_job_failure") as mock_fail:
+        with (
+            patch("app.utils.scheduler.logger"),
+            patch("app.utils.scheduler.record_job_failure") as mock_fail,
+        ):
             wrapped = _wrap_job_callable(func, task)
             with pytest.raises(TypeError):
                 wrapped()
@@ -178,8 +187,10 @@ class TestWrapJobCallableL4:
 
         task = self._make_task()
 
-        with patch("app.utils.scheduler.logger") as mock_logger, \
-             patch("app.utils.scheduler.record_job_success"):
+        with (
+            patch("app.utils.scheduler.logger") as mock_logger,
+            patch("app.utils.scheduler.record_job_success"),
+        ):
             wrapped = _wrap_job_callable(func, task)
             wrapped()
 
@@ -193,6 +204,7 @@ class TestWrapJobCallableL4:
 # ---------------------------------------------------------------------------
 # _resolve_callable
 # ---------------------------------------------------------------------------
+
 
 class TestResolveCallableL4:
     """Tests for _resolve_callable."""
@@ -224,6 +236,7 @@ class TestResolveCallableL4:
 # shutdown_scheduler
 # ---------------------------------------------------------------------------
 
+
 class TestShutdownSchedulerL4:
     """Tests for shutdown_scheduler."""
 
@@ -231,8 +244,10 @@ class TestShutdownSchedulerL4:
         """Calls scheduler.shutdown() when scheduler is running."""
         from app.utils.scheduler import shutdown_scheduler
 
-        with patch("app.utils.scheduler.scheduler") as mock_sched, \
-             patch("app.utils.scheduler.logger") as mock_logger:
+        with (
+            patch("app.utils.scheduler.scheduler") as mock_sched,
+            patch("app.utils.scheduler.logger") as mock_logger,
+        ):
             mock_sched.running = True
             shutdown_scheduler()
 
@@ -243,8 +258,10 @@ class TestShutdownSchedulerL4:
         """Does not call shutdown() if scheduler is not running."""
         from app.utils.scheduler import shutdown_scheduler
 
-        with patch("app.utils.scheduler.scheduler") as mock_sched, \
-             patch("app.utils.scheduler.logger") as mock_logger:
+        with (
+            patch("app.utils.scheduler.scheduler") as mock_sched,
+            patch("app.utils.scheduler.logger") as mock_logger,
+        ):
             mock_sched.running = False
             shutdown_scheduler()
 
@@ -256,6 +273,7 @@ class TestShutdownSchedulerL4:
 # _load_task_config_from_db
 # ---------------------------------------------------------------------------
 
+
 class TestLoadTaskConfigFromDbL4:
     """Tests for _load_task_config_from_db."""
 
@@ -263,8 +281,10 @@ class TestLoadTaskConfigFromDbL4:
         """Returns None when an exception occurs."""
         from app.utils.scheduler import _load_task_config_from_db
 
-        with patch("app.utils.scheduler.get_db_session", side_effect=Exception("DB down")), \
-             patch("app.utils.scheduler.logger") as mock_logger:
+        with (
+            patch("app.utils.scheduler.get_db_session", side_effect=Exception("DB down")),
+            patch("app.utils.scheduler.logger") as mock_logger,
+        ):
             result = _load_task_config_from_db("some_task")
 
         assert result is None

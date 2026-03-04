@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.ai_service")
 
-from unittest.mock import AsyncMock, MagicMock, patch
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 @pytest.fixture
@@ -32,6 +32,7 @@ def test_ai_service_disabled_when_no_key():
         s.KIMI_ENABLED = True
         with patch("app.services.ai_service.httpx.AsyncClient"):
             from app.services.ai_service import AIService
+
             svc = AIService()
             assert svc.enabled is False
             assert svc.client is None
@@ -41,6 +42,7 @@ def test_ai_service_enabled_with_key(mock_settings):
     with patch("app.services.ai_service.httpx.AsyncClient") as MockClient:
         MockClient.return_value = MagicMock()
         from app.services.ai_service import AIService
+
         svc = AIService()
         assert svc.enabled is True
         assert svc.client is not None
@@ -57,8 +59,10 @@ async def test_chat_completion_raises_when_disabled():
         s.KIMI_TIMEOUT = 30
         s.KIMI_ENABLED = False
         with patch("app.services.ai_service.httpx.AsyncClient"):
-            from app.services.ai_service import AIService
             from fastapi import HTTPException
+
+            from app.services.ai_service import AIService
+
             svc = AIService()
             with pytest.raises(HTTPException) as exc_info:
                 await svc.chat_completion([{"role": "user", "content": "hello"}])
@@ -75,6 +79,7 @@ async def test_chat_completion_success(mock_settings):
         mock_client.post = AsyncMock(return_value=mock_response)
         MockClient.return_value = mock_client
         from app.services.ai_service import AIService
+
         svc = AIService()
         result = await svc.chat_completion([{"role": "user", "content": "hello"}])
         assert "choices" in result
@@ -90,6 +95,7 @@ async def test_simple_chat_extracts_content(mock_settings):
         mock_client.post = AsyncMock(return_value=mock_response)
         MockClient.return_value = mock_client
         from app.services.ai_service import AIService
+
         svc = AIService()
         result = await svc.simple_chat("test prompt")
         assert result == "AI response"
@@ -108,6 +114,7 @@ async def test_project_analysis_returns_dict(mock_settings):
         mock_client.post = AsyncMock(return_value=mock_response)
         MockClient.return_value = mock_client
         from app.services.ai_service import AIService
+
         svc = AIService()
         result = await svc.project_analysis({"project_name": "TestProject"})
         assert result["risk_level"] == "低"
@@ -118,13 +125,12 @@ async def test_project_analysis_handles_invalid_json(mock_settings):
     with patch("app.services.ai_service.httpx.AsyncClient") as MockClient:
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "not valid json"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "not valid json"}}]}
         mock_client = AsyncMock()
         mock_client.post = AsyncMock(return_value=mock_response)
         MockClient.return_value = mock_client
         from app.services.ai_service import AIService
+
         svc = AIService()
         result = await svc.project_analysis({"project_name": "test"})
         assert "raw_analysis" in result
@@ -133,6 +139,7 @@ async def test_project_analysis_handles_invalid_json(mock_settings):
 @pytest.mark.asyncio
 async def test_get_ai_service_returns_instance(mock_settings):
     with patch("app.services.ai_service.httpx.AsyncClient"):
-        from app.services.ai_service import get_ai_service, AIService
+        from app.services.ai_service import AIService, get_ai_service
+
         svc = await get_ai_service()
         assert isinstance(svc, AIService)

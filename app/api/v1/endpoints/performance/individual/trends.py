@@ -20,7 +20,9 @@ from .utils import _check_performance_view_permission
 router = APIRouter()
 
 
-@router.get("/trends/{user_id}", response_model=PerformanceTrendResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/trends/{user_id}", response_model=PerformanceTrendResponse, status_code=status.HTTP_200_OK
+)
 def get_performance_trends(
     *,
     db: Session = Depends(deps.get_db),
@@ -41,31 +43,39 @@ def get_performance_trends(
         raise HTTPException(status_code=404, detail="用户不存在")
 
     # 获取最近的几个周期
-    periods = db.query(PerformancePeriod).filter(
-        PerformancePeriod.period_type == period_type,
-        PerformancePeriod.status == "FINALIZED"
-    ).order_by(desc(PerformancePeriod.end_date)).limit(periods_count).all()
+    periods = (
+        db.query(PerformancePeriod)
+        .filter(
+            PerformancePeriod.period_type == period_type, PerformancePeriod.status == "FINALIZED"
+        )
+        .order_by(desc(PerformancePeriod.end_date))
+        .limit(periods_count)
+        .all()
+    )
 
     periods_data = []
     scores = []
 
     for period in periods:
-        result = db.query(PerformanceResult).filter(
-            PerformanceResult.period_id == period.id,
-            PerformanceResult.user_id == user_id
-        ).first()
+        result = (
+            db.query(PerformanceResult)
+            .filter(PerformanceResult.period_id == period.id, PerformanceResult.user_id == user_id)
+            .first()
+        )
 
         score = float(result.total_score) if result and result.total_score else 0
         scores.append(score)
 
-        periods_data.append({
-            "period_id": period.id,
-            "period_name": period.period_name,
-            "start_date": period.start_date.isoformat(),
-            "end_date": period.end_date.isoformat(),
-            "score": score,
-            "level": result.level if result else "QUALIFIED"
-        })
+        periods_data.append(
+            {
+                "period_id": period.id,
+                "period_name": period.period_name,
+                "start_date": period.start_date.isoformat(),
+                "end_date": period.end_date.isoformat(),
+                "score": score,
+                "level": result.level if result else "QUALIFIED",
+            }
+        )
 
     # 计算趋势
     if len(scores) >= 2:
@@ -91,5 +101,5 @@ def get_performance_trends(
         trend_direction=trend_direction,
         avg_score=avg_score,
         max_score=max_score,
-        min_score=min_score
+        min_score=min_score,
     )

@@ -24,6 +24,7 @@ class TestInvoiceAutoServiceImport:
     def test_import_module(self):
         """测试导入模块"""
         from app.services.invoice_auto_service import InvoiceAutoService
+
         assert InvoiceAutoService is not None
 
 
@@ -48,8 +49,7 @@ class TestCheckAndCreateInvoiceRequest:
 
         # 使用模拟数据测试
         result = check_and_create_invoice_request(
-            db_session,
-            acceptance_order_id=99999  # 不存在的订单
+            db_session, acceptance_order_id=99999  # 不存在的订单
         )
 
         # 不存在的订单应返回 False 或 None
@@ -62,17 +62,14 @@ class TestCheckDeliverablesComplete:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.checks import check_deliverables_complete
+
         assert check_deliverables_complete is not None
 
     def test_check_deliverables_no_milestones(self, db_session):
         """测试无里程碑情况"""
         from app.services.invoice_auto_service.checks import check_deliverables_complete
 
-        result = check_deliverables_complete(
-            db_session,
-            project_id=99999,
-            milestone_type="FAT"
-        )
+        result = check_deliverables_complete(db_session, project_id=99999, milestone_type="FAT")
 
         # 无里程碑应返回 False 或空列表
         assert result is False or result == []
@@ -84,16 +81,14 @@ class TestCheckAcceptanceIssuesResolved:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.checks import check_acceptance_issues_resolved
+
         assert check_acceptance_issues_resolved is not None
 
     def test_check_no_issues(self, db_session):
         """测试无问题情况"""
         from app.services.invoice_auto_service.checks import check_acceptance_issues_resolved
 
-        result = check_acceptance_issues_resolved(
-            db_session,
-            acceptance_order_id=99999
-        )
+        result = check_acceptance_issues_resolved(db_session, acceptance_order_id=99999)
 
         # 无问题应返回 True
         assert result is True
@@ -105,6 +100,7 @@ class TestCreateInvoiceDirectly:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.invoice_creation import create_invoice_directly
+
         assert create_invoice_directly is not None
 
 
@@ -114,6 +110,7 @@ class TestCreateInvoiceRequest:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.invoice_creation import create_invoice_request
+
         assert create_invoice_request is not None
 
 
@@ -123,6 +120,7 @@ class TestSendInvoiceNotifications:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.notifications import send_invoice_notifications
+
         assert send_invoice_notifications is not None
 
 
@@ -132,6 +130,7 @@ class TestLogAutoInvoice:
     def test_import_function(self):
         """测试导入函数"""
         from app.services.invoice_auto_service.logging import log_auto_invoice
+
         assert log_auto_invoice is not None
 
     def test_log_auto_invoice_basic(self, db_session):

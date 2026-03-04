@@ -11,17 +11,17 @@ from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
-from app.core import security
-from app.common.pagination import get_pagination_query, PaginationParams
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.project.customer import Customer
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
     CustomerCreate,
-    CustomerUpdate,
     CustomerResponse,
     CustomerStatsResponse,
+    CustomerUpdate,
 )
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
@@ -33,20 +33,20 @@ def generate_customer_code(db: Session) -> str:
     # 生成格式: CUS + 年月 + 4位序号 (例如: CUS202402150001)
     today = datetime.now()
     prefix = f"CUS{today.strftime('%Y%m%d')}"
-    
+
     last_customer = (
         db.query(Customer)
         .filter(Customer.customer_code.like(f"{prefix}%"))
         .order_by(desc(Customer.customer_code))
         .first()
     )
-    
+
     if last_customer:
         last_seq = int(last_customer.customer_code[-4:])
         new_seq = last_seq + 1
     else:
         new_seq = 1
-    
+
     return f"{prefix}{new_seq:04d}"
 
 
@@ -74,7 +74,7 @@ def read_customers(
     )
 
     # 应用数据权限过滤（销售人员只能看到自己负责的客户）
-    query = security.filter_sales_data_by_scope(query, current_user, db, Customer, 'sales_owner_id')
+    query = security.filter_sales_data_by_scope(query, current_user, db, Customer, "sales_owner_id")
 
     # 关键词搜索
     if keyword:
@@ -89,13 +89,13 @@ def read_customers(
     # 筛选条件
     if customer_level:
         query = query.filter(Customer.customer_level == customer_level)
-    
+
     if status:
         query = query.filter(Customer.status == status)
-    
+
     if industry:
         query = query.filter(Customer.industry == industry)
-    
+
     if sales_owner_id:
         query = query.filter(Customer.sales_owner_id == sales_owner_id)
 
@@ -132,9 +132,9 @@ def get_customer_stats(
     获取客户统计数据
     """
     query = db.query(Customer)
-    
+
     # 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Customer, 'sales_owner_id')
+    query = security.filter_sales_data_by_scope(query, current_user, db, Customer, "sales_owner_id")
 
     # 统计各状态客户数
     total_customers = query.count()
@@ -151,8 +151,7 @@ def get_customer_stats(
 
     # 统计年成交额和平均合作年限
     revenue_result = query.with_entities(
-        func.sum(Customer.annual_revenue),
-        func.avg(Customer.cooperation_years)
+        func.sum(Customer.annual_revenue), func.avg(Customer.cooperation_years)
     ).first()
 
     total_annual_revenue = revenue_result[0] or 0
@@ -182,17 +181,22 @@ def read_customer(
     """
     获取客户详情
     """
-    customer = db.query(Customer).options(
-        joinedload(Customer.sales_owner),
-        joinedload(Customer.tags),
-        joinedload(Customer.contacts),
-    ).filter(Customer.id == customer_id).first()
+    customer = (
+        db.query(Customer)
+        .options(
+            joinedload(Customer.sales_owner),
+            joinedload(Customer.tags),
+            joinedload(Customer.contacts),
+        )
+        .filter(Customer.id == customer_id)
+        .first()
+    )
 
     if not customer:
         raise HTTPException(status_code=404, detail="客户不存在")
 
     # 检查数据权限
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权访问该客户")
 
     customer_dict = {
@@ -220,7 +224,9 @@ def create_customer(
         customer_code = generate_customer_code(db)
     else:
         # 检查编码是否重复
-        existing = db.query(Customer).filter(Customer.customer_code == customer_in.customer_code).first()
+        existing = (
+            db.query(Customer).filter(Customer.customer_code == customer_in.customer_code).first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="客户编码已存在")
         customer_code = customer_in.customer_code
@@ -228,20 +234,20 @@ def create_customer(
     # 创建客户
     customer_data = customer_in.model_dump(exclude_unset=True)
     customer_data["customer_code"] = customer_code
-    
+
     # 如果没有指定负责人，默认为当前用户
     if not customer_data.get("sales_owner_id"):
         customer_data["sales_owner_id"] = current_user.id
 
     customer = Customer(**customer_data)
-    
+
     # 自动更新客户等级
     customer.update_level()
-    
+
     save_obj(db, customer)
 
     # 加载关联数据
-    db.refresh(customer, attribute_names=['sales_owner', 'tags', 'contacts'])
+    db.refresh(customer, attribute_names=["sales_owner", "tags", "contacts"])
 
     customer_dict = {
         **{c.name: getattr(customer, c.name) for c in customer.__table__.columns},
@@ -267,7 +273,7 @@ def update_customer(
     customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
     # 检查数据权限
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权修改该客户")
 
     # 更新字段
@@ -283,7 +289,7 @@ def update_customer(
     db.refresh(customer)
 
     # 加载关联数据
-    db.refresh(customer, attribute_names=['sales_owner', 'tags', 'contacts'])
+    db.refresh(customer, attribute_names=["sales_owner", "tags", "contacts"])
 
     customer_dict = {
         **{c.name: getattr(customer, c.name) for c in customer.__table__.columns},
@@ -307,7 +313,7 @@ def delete_customer(
     customer = get_or_404(db, Customer, customer_id, "客户不存在")
 
     # 检查数据权限（管理员或负责人可删除）
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该客户")
 

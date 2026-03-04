@@ -26,10 +26,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -43,8 +40,7 @@ class TestProjectTimesheetAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -62,10 +58,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -81,7 +74,7 @@ class TestProjectTimesheetAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             params={"status": "APPROVED", "page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -94,10 +87,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -111,8 +101,7 @@ class TestProjectTimesheetAPI:
 
         # 测试汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/summary", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -128,10 +117,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -145,8 +131,7 @@ class TestProjectTimesheetAPI:
 
         # 测试统计
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/statistics", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -163,10 +148,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -180,18 +162,19 @@ class TestProjectTimesheetAPI:
 
         # 创建工时记录
         from datetime import date
+
         timesheet_data = {
             "work_date": date.today().isoformat(),
             "work_hours": "8.0",
             "work_type": "NORMAL",
             "description": "测试工时记录",
-            "is_billable": True
+            "is_billable": True,
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             json=timesheet_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -210,10 +193,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -227,8 +207,7 @@ class TestProjectTimesheetAPI:
 
         # 先获取工时列表
         timesheets_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/", headers=headers
         )
 
         if timesheets_response.status_code != 200:
@@ -243,8 +222,7 @@ class TestProjectTimesheetAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/{ts_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/{ts_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -261,10 +239,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -278,17 +253,18 @@ class TestProjectTimesheetAPI:
 
         # 先创建一个工时记录
         from datetime import date
+
         timesheet_data = {
             "work_date": date.today().isoformat(),
             "work_hours": "4.0",
             "work_type": "NORMAL",
-            "description": "待更新的工时记录"
+            "description": "待更新的工时记录",
         }
 
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             json=timesheet_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -300,15 +276,12 @@ class TestProjectTimesheetAPI:
             pytest.skip("Failed to get timesheet ID")
 
         # 更新工时记录
-        update_data = {
-            "work_hours": "6.0",
-            "description": "已更新的工时记录"
-        }
+        update_data = {"work_hours": "6.0", "description": "已更新的工时记录"}
 
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/{ts_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -325,10 +298,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -342,17 +312,18 @@ class TestProjectTimesheetAPI:
 
         # 先创建一个工时记录
         from datetime import date
+
         timesheet_data = {
             "work_date": date.today().isoformat(),
             "work_hours": "2.0",
             "work_type": "NORMAL",
-            "description": "待删除的工时记录"
+            "description": "待删除的工时记录",
         }
 
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             json=timesheet_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -365,8 +336,7 @@ class TestProjectTimesheetAPI:
 
         # 删除工时记录
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/{ts_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/{ts_id}", headers=headers
         )
 
         if response.status_code == 404:
@@ -383,10 +353,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -400,6 +367,7 @@ class TestProjectTimesheetAPI:
 
         # 按日期范围筛选
         from datetime import date, timedelta
+
         today = date.today()
         start_date = (today - timedelta(days=30)).isoformat()
         end_date = today.isoformat()
@@ -407,7 +375,7 @@ class TestProjectTimesheetAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -423,10 +391,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -442,7 +407,7 @@ class TestProjectTimesheetAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/",
             params={"user_id": 1},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -455,10 +420,7 @@ class TestProjectTimesheetAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -472,8 +434,7 @@ class TestProjectTimesheetAPI:
 
         # 获取不存在的工时记录
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/timesheet/99999", headers=headers
         )
 
         assert response.status_code == 404

@@ -11,14 +11,12 @@ from sqlalchemy.orm import Session
 from app.common.query_filters import apply_keyword_filter
 from app.models.issue import SolutionTemplate
 from app.models.service import KnowledgeBase, ServiceTicket
-from app.utils.number_generator import generate_sequential_no
 from app.utils.db_helpers import save_obj
+from app.utils.number_generator import generate_sequential_no
 
 
 def auto_extract_knowledge_from_ticket(
-    db: Session,
-    ticket: ServiceTicket,
-    auto_publish: bool = True
+    db: Session, ticket: ServiceTicket, auto_publish: bool = True
 ) -> Optional[KnowledgeBase]:
     """
     从工单自动提取知识
@@ -58,11 +56,11 @@ def auto_extract_knowledge_from_ticket(
     article_no = generate_sequential_no(
         db=db,
         model_class=KnowledgeBase,
-        no_field='article_no',
-        prefix='KB',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="article_no",
+        prefix="KB",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
     # 构建知识库文章
@@ -97,7 +95,7 @@ def auto_extract_knowledge_from_ticket(
         "MECHANICAL": "机械问题",
         "ELECTRICAL": "电气问题",
         "OPERATION": "操作问题",
-        "OTHER": "其他问题"
+        "OTHER": "其他问题",
     }
     category = category_map.get(ticket.problem_type, "其他问题")
 
@@ -129,9 +127,7 @@ def auto_extract_knowledge_from_ticket(
 
 
 def create_solution_template_from_ticket(
-    db: Session,
-    ticket: ServiceTicket,
-    knowledge_article: Optional[KnowledgeBase] = None
+    db: Session, ticket: ServiceTicket, knowledge_article: Optional[KnowledgeBase] = None
 ) -> Optional[SolutionTemplate]:
     """
     从工单创建解决方案模板
@@ -159,16 +155,14 @@ def create_solution_template_from_ticket(
 
     # 构建解决方案步骤（简单拆分）
     solution_steps = []
-    solution_lines = ticket.solution.split('\n')
+    solution_lines = ticket.solution.split("\n")
     step_num = 1
     for line in solution_lines:
         line = line.strip()
-        if line and not line.startswith('#'):
-            solution_steps.append({
-                "step": step_num,
-                "description": line,
-                "expected_result": "问题解决"
-            })
+        if line and not line.startswith("#"):
+            solution_steps.append(
+                {"step": step_num, "description": line, "expected_result": "问题解决"}
+            )
             step_num += 1
 
     # 创建解决方案模板
@@ -183,8 +177,12 @@ def create_solution_template_from_ticket(
         applicable_scenarios=f"适用于{ticket.problem_type}类型的问题",
         prerequisites="需要确认问题描述准确",
         precautions=ticket.preventive_action or "注意预防措施",
-        tags=[ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else [],
-        keywords=[ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else [],
+        tags=(
+            [ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else []
+        ),
+        keywords=(
+            [ticket.problem_type, ticket.urgency] if ticket.problem_type and ticket.urgency else []
+        ),
         source_issue_id=None,  # 如果有关联问题可以设置
         created_by=ticket.assigned_to_id,
         created_by_name=ticket.assigned_to_name or "系统",
@@ -197,40 +195,35 @@ def create_solution_template_from_ticket(
     return template
 
 
-def recommend_knowledge_for_ticket(
-    db: Session,
-    ticket: ServiceTicket,
-    limit: int = 5
-) -> list:
+def recommend_knowledge_for_ticket(db: Session, ticket: ServiceTicket, limit: int = 5) -> list:
     """
     为工单推荐相关知识库文章
     """
     # 基于问题类型和紧急程度推荐
-    recommendations = db.query(KnowledgeBase).filter(
-        KnowledgeBase.status == "PUBLISHED"
-    )
+    recommendations = db.query(KnowledgeBase).filter(KnowledgeBase.status == "PUBLISHED")
 
     # 优先匹配问题类型
     if ticket.problem_type:
-        recommendations = recommendations.filter(
-            KnowledgeBase.tags.contains([ticket.problem_type])
-        )
+        recommendations = recommendations.filter(KnowledgeBase.tags.contains([ticket.problem_type]))
 
     # 限制数量并排序
-    recommendations = recommendations.order_by(
-        KnowledgeBase.view_count.desc(),
-        KnowledgeBase.created_at.desc()
-    ).limit(limit).all()
+    recommendations = (
+        recommendations.order_by(KnowledgeBase.view_count.desc(), KnowledgeBase.created_at.desc())
+        .limit(limit)
+        .all()
+    )
 
     result = []
     for article in recommendations:
-        result.append({
-            "id": article.id,
-            "article_no": article.article_no,
-            "title": article.title,
-            "category": article.category,
-            "view_count": article.view_count,
-            "like_count": article.like_count,
-        })
+        result.append(
+            {
+                "id": article.id,
+                "article_no": article.article_no,
+                "title": article.title,
+                "category": article.category,
+                "view_count": article.view_count,
+                "like_count": article.like_count,
+            }
+        )
 
     return result

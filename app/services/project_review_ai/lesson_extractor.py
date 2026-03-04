@@ -2,66 +2,58 @@
 项目经验教训AI提取服务
 从项目数据中自动识别和提取关键经验教训
 """
+
 import json
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from sqlalchemy.orm import Session
 
+from app.models.project_review import ProjectLesson, ProjectReview
 from app.services.ai_client_service import AIClientService
-from app.models.project_review import ProjectReview, ProjectLesson
 
 
 class ProjectLessonExtractor:
     """项目经验教训提取器"""
-    
+
     def __init__(self, db: Session):
         self.db = db
         self.ai_client = AIClientService()
-    
-    def extract_lessons(
-        self,
-        review_id: int,
-        min_confidence: float = 0.6
-    ) -> List[Dict[str, Any]]:
+
+    def extract_lessons(self, review_id: int, min_confidence: float = 0.6) -> List[Dict[str, Any]]:
         """
         从复盘报告中提取经验教训
-        
+
         Args:
             review_id: 复盘报告ID
             min_confidence: 最小置信度阈值
-            
+
         Returns:
             提取的经验教训列表
         """
         # 1. 获取复盘报告
-        review = self.db.query(ProjectReview).filter(
-            ProjectReview.id == review_id
-        ).first()
-        
+        review = self.db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
+
         if not review:
             raise ValueError(f"复盘报告 {review_id} 不存在")
-        
+
         # 2. 构建提示词
         prompt = self._build_extraction_prompt(review)
-        
+
         # 3. 调用AI提取
         ai_response = self.ai_client.generate_solution(
-            prompt=prompt,
-            model="glm-5",
-            temperature=0.5,
-            max_tokens=2000
+            prompt=prompt, model="glm-5", temperature=0.5, max_tokens=2000
         )
-        
+
         # 4. 解析响应
         lessons = self._parse_lessons(ai_response, review)
-        
+
         # 5. 过滤低置信度结果
         filtered_lessons = [
-            lesson for lesson in lessons
-            if lesson.get('ai_confidence', 0) >= min_confidence
+            lesson for lesson in lessons if lesson.get("ai_confidence", 0) >= min_confidence
         ]
-        
+
         return filtered_lessons
-    
+
     def _build_extraction_prompt(self, review: ProjectReview) -> str:
         """构建经验教训提取提示词"""
         prompt = f"""# 项目经验教训提取任务
@@ -130,121 +122,109 @@ class ProjectLessonExtractor:
 - confidence: AI置信度（0-1，表示该经验的可靠性）
 
 至少提取5条，最多10条，按重要性排序。"""
-        
+
         return prompt
-    
+
     def _parse_lessons(
-        self,
-        ai_response: Dict[str, Any],
-        review: ProjectReview
+        self, ai_response: Dict[str, Any], review: ProjectReview
     ) -> List[Dict[str, Any]]:
         """解析AI响应为经验教训列表"""
-        content = ai_response.get('content', '[]')
-        
+        content = ai_response.get("content", "[]")
+
         # 提取JSON数组
         try:
-            if '```json' in content:
-                start = content.find('```json') + 7
-                end = content.find('```', start)
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
                 content = content[start:end].strip()
-            elif '```' in content:
-                start = content.find('```') + 3
-                end = content.find('```', start)
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
                 content = content[start:end].strip()
-            
+
             lessons_data = json.loads(content)
             if not isinstance(lessons_data, list):
                 lessons_data = [lessons_data]
         except json.JSONDecodeError:
             return []
-        
+
         # 标准化每条经验
         lessons = []
         for lesson_data in lessons_data:
             lesson = {
-                'review_id': review.id,
-                'project_id': review.project_id,
-                'lesson_type': lesson_data.get('lesson_type', 'SUCCESS'),
-                'title': lesson_data.get('title', '')[:200],
-                'description': lesson_data.get('description', ''),
-                'root_cause': lesson_data.get('root_cause'),
-                'impact': lesson_data.get('impact'),
-                'improvement_action': lesson_data.get('improvement_action'),
-                'category': lesson_data.get('category', '管理'),
-                'tags': lesson_data.get('tags', []),
-                'priority': lesson_data.get('priority', 'MEDIUM'),
-                'ai_extracted': True,
-                'ai_confidence': float(lesson_data.get('confidence', 0.7)),
-                'status': 'OPEN',
+                "review_id": review.id,
+                "project_id": review.project_id,
+                "lesson_type": lesson_data.get("lesson_type", "SUCCESS"),
+                "title": lesson_data.get("title", "")[:200],
+                "description": lesson_data.get("description", ""),
+                "root_cause": lesson_data.get("root_cause"),
+                "impact": lesson_data.get("impact"),
+                "improvement_action": lesson_data.get("improvement_action"),
+                "category": lesson_data.get("category", "管理"),
+                "tags": lesson_data.get("tags", []),
+                "priority": lesson_data.get("priority", "MEDIUM"),
+                "ai_extracted": True,
+                "ai_confidence": float(lesson_data.get("confidence", 0.7)),
+                "status": "OPEN",
             }
             lessons.append(lesson)
-        
+
         return lessons
-    
-    def categorize_lessons(
-        self,
-        lessons: List[Dict[str, Any]]
-    ) -> Dict[str, List[Dict[str, Any]]]:
+
+    def categorize_lessons(self, lessons: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """按类别分组经验教训"""
         categorized = {
-            '进度': [],
-            '成本': [],
-            '质量': [],
-            '沟通': [],
-            '技术': [],
-            '管理': [],
+            "进度": [],
+            "成本": [],
+            "质量": [],
+            "沟通": [],
+            "技术": [],
+            "管理": [],
         }
-        
+
         for lesson in lessons:
-            category = lesson.get('category', '管理')
+            category = lesson.get("category", "管理")
             if category in categorized:
                 categorized[category].append(lesson)
-        
+
         return categorized
-    
-    def rank_lessons_by_priority(
-        self,
-        lessons: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+
+    def rank_lessons_by_priority(self, lessons: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """按优先级排序经验教训"""
-        priority_order = {'HIGH': 0, 'MEDIUM': 1, 'LOW': 2}
-        
+        priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+
         return sorted(
             lessons,
             key=lambda x: (
-                priority_order.get(x.get('priority', 'MEDIUM'), 1),
-                -x.get('ai_confidence', 0.5)
-            )
+                priority_order.get(x.get("priority", "MEDIUM"), 1),
+                -x.get("ai_confidence", 0.5),
+            ),
         )
-    
-    def find_similar_lessons(
-        self,
-        lesson_id: int,
-        limit: int = 5
-    ) -> List[Dict[str, Any]]:
+
+    def find_similar_lessons(self, lesson_id: int, limit: int = 5) -> List[Dict[str, Any]]:
         """查找相似的历史经验（基于标签和分类）"""
-        lesson = self.db.query(ProjectLesson).filter(
-            ProjectLesson.id == lesson_id
-        ).first()
-        
+        lesson = self.db.query(ProjectLesson).filter(ProjectLesson.id == lesson_id).first()
+
         if not lesson:
             return []
-        
+
         # 查找相同分类和标签的经验
-        similar_lessons = self.db.query(ProjectLesson).filter(
-            ProjectLesson.id != lesson_id,
-            ProjectLesson.category == lesson.category
-        ).limit(limit).all()
-        
+        similar_lessons = (
+            self.db.query(ProjectLesson)
+            .filter(ProjectLesson.id != lesson_id, ProjectLesson.category == lesson.category)
+            .limit(limit)
+            .all()
+        )
+
         return [
             {
-                'id': l.id,
-                'title': l.title,
-                'description': l.description,
-                'category': l.category,
-                'tags': l.tags,
-                'confidence': float(l.ai_confidence or 0),
-                'project_code': l.review.project_code if l.review else None,
+                "id": l.id,
+                "title": l.title,
+                "description": l.description,
+                "category": l.category,
+                "tags": l.tags,
+                "confidence": float(l.ai_confidence or 0),
+                "project_code": l.review.project_code if l.review else None,
             }
             for l in similar_lessons
         ]

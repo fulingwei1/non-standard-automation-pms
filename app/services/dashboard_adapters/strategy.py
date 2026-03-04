@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import List
 
-from app.models.strategy import AnnualKeyWork, CSF, KPI, Strategy
+from app.models.strategy import CSF, KPI, AnnualKeyWork, Strategy
 from app.schemas.dashboard import (
     DashboardStatCard,
     DashboardWidget,
@@ -34,9 +34,7 @@ class StrategyDashboardAdapter(DashboardAdapter):
     def get_stats(self) -> List[DashboardStatCard]:
         """获取统计卡片"""
         # 统计战略数量
-        strategy_count = (
-            self.db.query(Strategy).filter(Strategy.is_active).count()
-        )
+        strategy_count = self.db.query(Strategy).filter(Strategy.is_active).count()
 
         # 获取当前生效的战略
         from app.services import strategy as strategy_service

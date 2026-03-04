@@ -2,9 +2,10 @@
 """
 第十九批 - 工时质量检查服务单元测试
 """
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_quality_service")
 
@@ -17,10 +18,11 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.timesheet_quality_service import TimesheetQualityService
+
     return TimesheetQualityService(mock_db)
 
 
-def _make_timesheet(user_id=1, work_date=None, hours=8.0, status='APPROVED'):
+def _make_timesheet(user_id=1, work_date=None, hours=8.0, status="APPROVED"):
     ts = MagicMock()
     ts.user_id = user_id
     ts.work_date = work_date or date(2024, 3, 15)
@@ -57,7 +59,7 @@ def test_detect_anomalies_excessive_hours(service, mock_db):
 
     result = service.detect_anomalies()
     assert len(result) >= 1
-    assert any(r['type'] == 'EXCESSIVE_DAILY_HOURS' for r in result)
+    assert any(r["type"] == "EXCESSIVE_DAILY_HOURS" for r in result)
 
 
 def test_detect_anomalies_normal_hours(service, mock_db):
@@ -91,10 +93,7 @@ def test_detect_anomalies_with_date_range(service, mock_db):
     query_mock.filter.return_value = query_mock
     query_mock.all.return_value = []
 
-    result = service.detect_anomalies(
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 3, 31)
-    )
+    result = service.detect_anomalies(start_date=date(2024, 1, 1), end_date=date(2024, 3, 31))
     assert result == []
 
 
@@ -112,9 +111,9 @@ def test_detect_anomalies_multiple_entries_same_day(service, mock_db):
 
     result = service.detect_anomalies()
     assert len(result) >= 1
-    excessive = [r for r in result if r['type'] == 'EXCESSIVE_DAILY_HOURS']
+    excessive = [r for r in result if r["type"] == "EXCESSIVE_DAILY_HOURS"]
     assert len(excessive) >= 1
-    assert excessive[0]['hours'] == 18.0
+    assert excessive[0]["hours"] == 18.0
 
 
 def test_detect_anomalies_severity_high(service, mock_db):
@@ -130,7 +129,7 @@ def test_detect_anomalies_severity_high(service, mock_db):
 
     result = service.detect_anomalies()
     if result:
-        assert result[0]['severity'] == 'HIGH'
+        assert result[0]["severity"] == "HIGH"
 
 
 def test_max_daily_hours_constant(service):
@@ -141,5 +140,6 @@ def test_max_daily_hours_constant(service):
 def test_service_initialization(mock_db):
     """服务初始化正确"""
     from app.services.timesheet_quality_service import TimesheetQualityService
+
     svc = TimesheetQualityService(mock_db)
     assert svc.db is mock_db

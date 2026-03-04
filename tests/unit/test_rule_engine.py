@@ -5,16 +5,18 @@ rule_engine.py 单元测试
 测试工作日志规则引擎分析功能
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
+
+import pytest
 
 from app.services.work_log_ai.rule_engine import RuleEngineMixin
 
 
 class TestRuleEngine(RuleEngineMixin):
     """用于测试的规则引擎实例类"""
+
     pass
 
 
@@ -31,20 +33,20 @@ def sample_projects():
             "id": 1,
             "code": "PJ2401001",
             "name": "自动化测试设备项目",
-            "keywords": ["自动化", "测试设备", "AOI"]
+            "keywords": ["自动化", "测试设备", "AOI"],
         },
         {
             "id": 2,
             "code": "PJ2401002",
             "name": "视觉检测系统",
-            "keywords": ["视觉", "检测", "相机"]
+            "keywords": ["视觉", "检测", "相机"],
         },
         {
             "id": 3,
             "code": "PJ2401003",
             "name": "装配线体改造",
-            "keywords": ["装配", "产线", "改造"]
-        }
+            "keywords": ["装配", "产线", "改造"],
+        },
     ]
 
 
@@ -209,8 +211,7 @@ class TestAnalyzeWithRules:
         mock_work_type.return_value = "NORMAL"
         # 创建10个项目
         many_projects = [
-            {"id": i, "code": f"PJ{i}", "name": f"项目{i}", "keywords": []}
-            for i in range(10)
+            {"id": i, "code": f"PJ{i}", "name": f"项目{i}", "keywords": []} for i in range(10)
         ]
         content = "完成工作，4小时"
 

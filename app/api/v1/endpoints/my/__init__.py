@@ -42,7 +42,9 @@ def get_my_projects(
 ) -> Any:
     """我参与的项目列表"""
     service = ProjectCoreService(db)
-    data = service.list_user_projects(current_user, page=pagination.page, page_size=pagination.page_size)
+    data = service.list_user_projects(
+        current_user, page=pagination.page, page_size=pagination.page_size
+    )
     return ResponseModel(data=data)
 
 

@@ -24,7 +24,7 @@ def validate_excel_file(filename: str) -> None:
     Raises:
         HTTPException: 如果文件类型不支持
     """
-    if not filename.endswith(('.xlsx', '.xls')):
+    if not filename.endswith((".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="只支持Excel文件(.xlsx, .xls)")
 
 
@@ -55,19 +55,18 @@ def validate_project_columns(df: pd.DataFrame) -> None:
     Raises:
         HTTPException: 如果缺少必需的列
     """
-    required_columns = ['项目编码*', '项目名称*']
+    required_columns = ["项目编码*", "项目名称*"]
     missing_columns = []
 
     for col in required_columns:
         if col not in df.columns:
-            alt_col = col.replace('*', '')
+            alt_col = col.replace("*", "")
             if alt_col not in df.columns:
                 missing_columns.append(col)
 
     if missing_columns:
         raise HTTPException(
-            status_code=400,
-            detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
+            status_code=400, detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
         )
 
 
@@ -79,7 +78,7 @@ def get_column_value(row: pd.Series, primary_col: str, alt_col: str = None) -> O
         Optional[str]: 列值，如果为空则返回None
     """
     if alt_col is None:
-        alt_col = primary_col.replace('*', '')
+        alt_col = primary_col.replace("*", "")
 
     value = row.get(primary_col) or row.get(alt_col)
     if pd.isna(value):
@@ -87,10 +86,7 @@ def get_column_value(row: pd.Series, primary_col: str, alt_col: str = None) -> O
     return str(value).strip() if value else None
 
 
-def parse_project_row(
-    row: pd.Series,
-    index: int
-) -> Tuple[Optional[str], Optional[str], List[str]]:
+def parse_project_row(row: pd.Series, index: int) -> Tuple[Optional[str], Optional[str], List[str]]:
     """
     解析项目行数据
 
@@ -99,8 +95,8 @@ def parse_project_row(
     """
     errors = []
 
-    project_code = get_column_value(row, '项目编码*', '项目编码')
-    project_name = get_column_value(row, '项目名称*', '项目名称')
+    project_code = get_column_value(row, "项目编码*", "项目编码")
+    project_name = get_column_value(row, "项目名称*", "项目名称")
 
     if not project_code or not project_name:
         errors.append("项目编码和项目名称不能为空")
@@ -109,10 +105,7 @@ def parse_project_row(
     return project_code, project_name, []
 
 
-def find_or_create_customer(
-    db: Session,
-    customer_name: str
-) -> Optional[Customer]:
+def find_or_create_customer(db: Session, customer_name: str) -> Optional[Customer]:
     """
     查找或创建客户
 
@@ -122,17 +115,12 @@ def find_or_create_customer(
     if not customer_name:
         return None
 
-    customer = db.query(Customer).filter(
-        Customer.customer_name == customer_name
-    ).first()
+    customer = db.query(Customer).filter(Customer.customer_name == customer_name).first()
 
     return customer
 
 
-def find_project_manager(
-    db: Session,
-    pm_name: str
-) -> Optional[User]:
+def find_project_manager(db: Session, pm_name: str) -> Optional[User]:
     """
     查找项目经理
 
@@ -183,16 +171,12 @@ def parse_decimal_value(value: Any) -> Optional[Decimal]:
         return None
 
 
-def populate_project_from_row(
-    db: Session,
-    project: Project,
-    row: pd.Series
-) -> None:
+def populate_project_from_row(db: Session, project: Project, row: pd.Series) -> None:
     """
     从Excel行数据填充项目信息
     """
     # 客户信息
-    customer_name = get_column_value(row, '客户名称')
+    customer_name = get_column_value(row, "客户名称")
     if customer_name:
         customer = find_or_create_customer(db, customer_name)
         if customer:
@@ -202,34 +186,34 @@ def populate_project_from_row(
             project.customer_phone = customer.contact_phone
 
     # 合同信息
-    if pd.notna(row.get('合同编号')):
-        project.contract_no = str(row.get('合同编号')).strip()
+    if pd.notna(row.get("合同编号")):
+        project.contract_no = str(row.get("合同编号")).strip()
 
-    if pd.notna(row.get('项目类型')):
-        project.project_type = str(row.get('项目类型')).strip()
+    if pd.notna(row.get("项目类型")):
+        project.project_type = str(row.get("项目类型")).strip()
 
-    contract_date = parse_date_value(row.get('合同日期'))
+    contract_date = parse_date_value(row.get("合同日期"))
     if contract_date:
         project.contract_date = contract_date
 
-    contract_amount = parse_decimal_value(row.get('合同金额'))
+    contract_amount = parse_decimal_value(row.get("合同金额"))
     if contract_amount:
         project.contract_amount = contract_amount
 
-    budget_amount = parse_decimal_value(row.get('预算金额'))
+    budget_amount = parse_decimal_value(row.get("预算金额"))
     if budget_amount:
         project.budget_amount = budget_amount
 
-    planned_start = parse_date_value(row.get('计划开始日期'))
+    planned_start = parse_date_value(row.get("计划开始日期"))
     if planned_start:
         project.planned_start_date = planned_start
 
-    planned_end = parse_date_value(row.get('计划结束日期'))
+    planned_end = parse_date_value(row.get("计划结束日期"))
     if planned_end:
         project.planned_end_date = planned_end
 
     # 项目经理
-    pm_name = get_column_value(row, '项目经理')
+    pm_name = get_column_value(row, "项目经理")
     if pm_name:
         pm = find_project_manager(db, pm_name)
         if pm:
@@ -237,14 +221,12 @@ def populate_project_from_row(
             project.pm_name = pm.real_name or pm.username
 
     # 项目描述
-    if pd.notna(row.get('项目描述')):
-        project.description = str(row.get('项目描述')).strip()
+    if pd.notna(row.get("项目描述")):
+        project.description = str(row.get("项目描述")).strip()
 
 
 def import_projects_from_dataframe(
-    db: Session,
-    df: pd.DataFrame,
-    update_existing: bool
+    db: Session, df: pd.DataFrame, update_existing: bool
 ) -> Tuple[int, int, List[Dict[str, Any]]]:
     """
     从DataFrame导入项目
@@ -261,23 +243,19 @@ def import_projects_from_dataframe(
             project_code, project_name, errors = parse_project_row(row, index)
 
             if errors:
-                failed_rows.append({
-                    "row_index": index + 2,
-                    "error": errors[0]
-                })
+                failed_rows.append({"row_index": index + 2, "error": errors[0]})
                 continue
 
             # 检查项目是否已存在
-            existing_project = db.query(Project).filter(
-                Project.project_code == project_code
-            ).first()
+            existing_project = (
+                db.query(Project).filter(Project.project_code == project_code).first()
+            )
 
             if existing_project:
                 if not update_existing:
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": f"项目编码 {project_code} 已存在"
-                    })
+                    failed_rows.append(
+                        {"row_index": index + 2, "error": f"项目编码 {project_code} 已存在"}
+                    )
                     continue
 
                 # 更新现有项目
@@ -292,7 +270,7 @@ def import_projects_from_dataframe(
                     stage="S1",
                     status="ST01",
                     health="H1",
-                    is_active=True
+                    is_active=True,
                 )
 
                 populate_project_from_row(db, project, row)
@@ -304,9 +282,6 @@ def import_projects_from_dataframe(
                 imported_count += 1
 
         except Exception as e:
-            failed_rows.append({
-                "row_index": index + 2,
-                "error": str(e)
-            })
+            failed_rows.append({"row_index": index + 2, "error": str(e)})
 
     return imported_count, updated_count, failed_rows

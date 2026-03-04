@@ -23,9 +23,11 @@ with get_db_session() as session:
     for role_id in roles_to_delete:
         # 获取角色信息
         role_result = session.execute(
-            text("""
+            text(
+                """
             SELECT role_code, role_name FROM roles WHERE id = :role_id
-        """),
+        """
+            ),
             {"role_id": role_id},
         )
         role = role_result.fetchone()
@@ -37,9 +39,11 @@ with get_db_session() as session:
 
         # 检查用户角色关联
         user_roles_result = session.execute(
-            text("""
+            text(
+                """
             SELECT COUNT(*) FROM user_roles WHERE role_id = :role_id
-        """),
+        """
+            ),
             {"role_id": role_id},
         )
         user_roles_count = user_roles_result.scalar()
@@ -47,9 +51,11 @@ with get_db_session() as session:
 
         if user_roles_count > 0:
             user_roles = session.execute(
-                text("""
+                text(
+                    """
                 SELECT user_id FROM user_roles WHERE role_id = :role_id
-            """),
+            """
+                ),
                 {"role_id": role_id},
             )
             user_ids = [row[0] for row in user_roles]
@@ -57,9 +63,11 @@ with get_db_session() as session:
 
         # 检查角色权限关联
         permissions_result = session.execute(
-            text("""
+            text(
+                """
             SELECT COUNT(*) FROM role_permissions WHERE role_id = :role_id
-        """),
+        """
+            ),
             {"role_id": role_id},
         )
         permissions_count = permissions_result.scalar()
@@ -68,9 +76,11 @@ with get_db_session() as session:
         # 检查用户角色分配
         try:
             assignments_result = session.execute(
-                text("""
+                text(
+                    """
                 SELECT COUNT(*) FROM user_role_assignments WHERE role_id = :role_id
-            """),
+            """
+                ),
                 {"role_id": role_id},
             )
             assignments_count = assignments_result.scalar()
@@ -81,18 +91,22 @@ with get_db_session() as session:
         # 检查时薪配置
         try:
             hourly_rate_result = session.execute(
-                text("""
+                text(
+                    """
                 SELECT COUNT(*) FROM hourly_rates WHERE role_id = :role_id
-            """),
+            """
+                ),
                 {"role_id": role_id},
             )
             hourly_rate_count = hourly_rate_result.scalar()
             print(f"  时薪配置: {hourly_rate_count} 条")
             if hourly_rate_count > 0:
                 hourly_rates = session.execute(
-                    text("""
+                    text(
+                        """
                     SELECT id, config_type, role_id FROM hourly_rates WHERE role_id = :role_id
-                """),
+                """
+                    ),
                     {"role_id": role_id},
                 )
                 for hr in hourly_rates:

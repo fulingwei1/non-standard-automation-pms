@@ -2,11 +2,16 @@
 """
 第六批覆盖测试 - data_scope_service_enhanced.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced, SCOPE_TYPE_MAPPING
+    from app.services.data_scope_service_enhanced import (
+        SCOPE_TYPE_MAPPING,
+        DataScopeServiceEnhanced,
+    )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -60,13 +65,13 @@ class TestNormalizeScopeType:
 class TestApplyDataScope:
     def test_all_scope_returns_query_unfiltered(self, mock_db, mock_user):
         mock_query = MagicMock()
-        with patch.object(DataScopeServiceEnhanced, 'normalize_scope_type', return_value='all'):
+        with patch.object(DataScopeServiceEnhanced, "normalize_scope_type", return_value="all"):
             try:
                 result = DataScopeServiceEnhanced.apply_data_scope(
                     db=mock_db,
                     query=mock_query,
                     user=mock_user,
-                    scope_type='all',
+                    scope_type="all",
                 )
                 assert result is not None
             except Exception:
@@ -79,7 +84,7 @@ class TestApplyDataScope:
                 db=mock_db,
                 query=mock_query,
                 user=mock_user,
-                scope_type='own',
+                scope_type="own",
             )
             assert result is not None
         except Exception:

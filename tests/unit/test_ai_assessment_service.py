@@ -51,14 +51,14 @@ class TestBuildAnalysisPrompt:
             service = AIAssessmentService()
 
             requirement_data = {
-            "project_name": "测试自动化项目",
-            "industry": "新能源",
-            "customer_name": "测试客户",
-            "budget_value": 100,
-            "budget_status": "已确认",
-            "tech_requirements": "需要开发一套自动化测试系统",
-            "delivery_months": 6,
-            "requirement_maturity": 4,
+                "project_name": "测试自动化项目",
+                "industry": "新能源",
+                "customer_name": "测试客户",
+                "budget_value": 100,
+                "budget_status": "已确认",
+                "tech_requirements": "需要开发一套自动化测试系统",
+                "delivery_months": 6,
+                "requirement_maturity": 4,
             }
 
             prompt = service._build_analysis_prompt(requirement_data)
@@ -78,13 +78,13 @@ class TestBuildAnalysisPrompt:
             service = AIAssessmentService()
 
             requirement_data = {
-            "projectName": "ICT测试设备",
-            "customerName": "ABC公司",
-            "budgetValue": 50,
-            "budgetStatus": "待定",
-            "techRequirements": "自动ICT测试需求",
-            "deliveryMonths": 3,
-            "requirementMaturity": 3,
+                "projectName": "ICT测试设备",
+                "customerName": "ABC公司",
+                "budgetValue": 50,
+                "budgetStatus": "待定",
+                "techRequirements": "自动ICT测试需求",
+                "deliveryMonths": 3,
+                "requirementMaturity": 3,
             }
 
             prompt = service._build_analysis_prompt(requirement_data)
@@ -100,7 +100,7 @@ class TestBuildAnalysisPrompt:
             service = AIAssessmentService()
 
             requirement_data = {
-            "project_name": "简单项目",
+                "project_name": "简单项目",
             }
 
             prompt = service._build_analysis_prompt(requirement_data)
@@ -132,15 +132,15 @@ class TestBuildSimilarityPrompt:
             service = AIAssessmentService()
 
             current_project = {
-            "project_name": "当前项目",
-            "industry": "储能",
-            "product_type": "BMS系统",
-            "budget_value": 200,
+                "project_name": "当前项目",
+                "industry": "储能",
+                "product_type": "BMS系统",
+                "budget_value": 200,
             }
 
             historical_cases = [
-            {"project_name": "历史项目1", "core_failure_reason": "需求不清晰"},
-            {"project_name": "历史项目2", "core_failure_reason": "交付延期"},
+                {"project_name": "历史项目1", "core_failure_reason": "需求不清晰"},
+                {"project_name": "历史项目2", "core_failure_reason": "交付延期"},
             ]
 
             prompt = service._build_similarity_prompt(current_project, historical_cases)
@@ -161,13 +161,12 @@ class TestBuildSimilarityPrompt:
             current_project = {"project_name": "测试项目"}
             # 创建 10 个历史案例，但应该只取前 5 个
         historical_cases = [
-        {"project_name": f"案例{i}", "core_failure_reason": f"原因{i}"}
-        for i in range(10)
+            {"project_name": f"案例{i}", "core_failure_reason": f"原因{i}"} for i in range(10)
         ]
 
         prompt = service._build_similarity_prompt(current_project, historical_cases)
 
-            # 应该只包含前 5 个案例
+        # 应该只包含前 5 个案例
         assert "案例0" in prompt
         assert "案例4" in prompt
         assert "案例5" not in prompt
@@ -232,10 +231,11 @@ class TestAnalyzeCaseSimilarity:
             service.enabled = False
             service.api_key = ""
 
-            result = asyncio.run(service.analyze_case_similarity(
-            {"project_name": "测试"},
-            [{"project_name": "历史案例"}]
-            ))
+            result = asyncio.run(
+                service.analyze_case_similarity(
+                    {"project_name": "测试"}, [{"project_name": "历史案例"}]
+                )
+            )
 
             assert result is None
 
@@ -249,10 +249,11 @@ class TestAnalyzeCaseSimilarity:
 
             service._call_qwen = AsyncMock(return_value="相似度分析结果")
 
-            result = asyncio.run(service.analyze_case_similarity(
-            {"project_name": "当前项目"},
-            [{"project_name": "历史案例"}]
-            ))
+            result = asyncio.run(
+                service.analyze_case_similarity(
+                    {"project_name": "当前项目"}, [{"project_name": "历史案例"}]
+                )
+            )
 
             assert result == "相似度分析结果"
             service._call_qwen.assert_called_once()
@@ -267,10 +268,11 @@ class TestAnalyzeCaseSimilarity:
 
             service._call_qwen = AsyncMock(side_effect=Exception("网络错误"))
 
-            result = asyncio.run(service.analyze_case_similarity(
-            {"project_name": "当前项目"},
-            [{"project_name": "历史案例"}]
-            ))
+            result = asyncio.run(
+                service.analyze_case_similarity(
+                    {"project_name": "当前项目"}, [{"project_name": "历史案例"}]
+                )
+            )
 
             assert result is None
 
@@ -297,9 +299,7 @@ class TestCallQwen:
 
             mock_response = MagicMock()
             mock_response.json.return_value = {
-            "choices": [
-            {"message": {"content": "这是 AI 的回复"}}
-            ]
+                "choices": [{"message": {"content": "这是 AI 的回复"}}]
             }
             mock_response.raise_for_status = MagicMock()
 

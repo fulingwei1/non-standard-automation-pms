@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """仓储管理 API 模块"""
 from fastapi import APIRouter
-from .crud import router as crud_router
-from .locations import router as locations_router
+
 from .alerts import router as alerts_router
 from .count import router as count_router
+from .crud import router as crud_router
+from .locations import router as locations_router
 
 router = APIRouter()
 router.include_router(crud_router, tags=["仓储-出入库"])

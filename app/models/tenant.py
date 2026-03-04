@@ -8,7 +8,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, DateTime, Integer, String, JSON
+from sqlalchemy import JSON, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -16,16 +16,18 @@ from app.models.base import Base, TimestampMixin
 
 class TenantStatus(str, Enum):
     """租户状态"""
-    ACTIVE = "ACTIVE"           # 正常
-    SUSPENDED = "SUSPENDED"     # 暂停
-    DELETED = "DELETED"         # 已删除
+
+    ACTIVE = "ACTIVE"  # 正常
+    SUSPENDED = "SUSPENDED"  # 暂停
+    DELETED = "DELETED"  # 已删除
 
 
 class TenantPlan(str, Enum):
     """租户套餐"""
-    FREE = "FREE"               # 免费版
-    STANDARD = "STANDARD"       # 标准版
-    ENTERPRISE = "ENTERPRISE"   # 企业版
+
+    FREE = "FREE"  # 免费版
+    STANDARD = "STANDARD"  # 标准版
+    ENTERPRISE = "ENTERPRISE"  # 企业版
 
 
 class Tenant(Base, TimestampMixin):
@@ -59,7 +61,7 @@ class Tenant(Base, TimestampMixin):
     users = relationship("User", back_populates="tenant", lazy="dynamic")
     roles = relationship("Role", back_populates="tenant", lazy="dynamic")
     api_keys = relationship("APIKey", back_populates="tenant", lazy="dynamic")
-    
+
     # 权限相关关系（来自 permission.py 和 user.py）
     menu_permissions = relationship("MenuPermission", back_populates="tenant", lazy="dynamic")
     custom_permissions = relationship("ApiPermission", back_populates="tenant", lazy="dynamic")
@@ -85,6 +87,10 @@ class Tenant(Base, TimestampMixin):
         plan_limits = {
             TenantPlan.FREE.value: {"users": 5, "roles": 5, "storage_gb": 1},
             TenantPlan.STANDARD.value: {"users": 50, "roles": 20, "storage_gb": 10},
-            TenantPlan.ENTERPRISE.value: {"users": -1, "roles": -1, "storage_gb": 100},  # -1 表示无限
+            TenantPlan.ENTERPRISE.value: {
+                "users": -1,
+                "roles": -1,
+                "storage_gb": 100,
+            },  # -1 表示无限
         }
         return plan_limits.get(self.plan_type, plan_limits[TenantPlan.FREE.value])

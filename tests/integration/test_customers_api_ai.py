@@ -36,9 +36,7 @@ class TestCustomersCRUDAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/customers/", params=params, resource_type="customers_list"
-        )
+        response = self.helper.get("/customers/", params=params, resource_type="customers_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -63,9 +61,7 @@ class TestCustomersCRUDAPI:
             "remark": "重要客户",
         }
 
-        response = self.helper.post(
-            "/customers/", customer_data, resource_type="customer"
-        )
+        response = self.helper.post("/customers/", customer_data, resource_type="customer")
 
         result = self.helper.assert_success(response)
         if result:

@@ -5,28 +5,66 @@
 import re
 from pathlib import Path
 
+
 def read_file_lines(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
 
+
 def main():
-    source_file = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/outsourcing.py')
-    output_dir = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/outsourcing')
+    source_file = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/outsourcing.py")
+    output_dir = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/outsourcing")
 
     print("📖 读取 outsourcing.py (1498行)...")
     lines = read_file_lines(source_file)
 
     # 提取导入（行1-88，到第一个section之前）
-    imports = ''.join(lines[0:88])
+    imports = "".join(lines[0:88])
 
     # 根据章节注释定义模块
     modules = [
-        {'name': 'suppliers.py', 'start': 90, 'end': 303, 'prefix': '/outsourcing/suppliers', 'routes': '外协供应商'},
-        {'name': 'orders.py', 'start': 304, 'end': 652, 'prefix': '/outsourcing/orders', 'routes': '外协订单'},
-        {'name': 'deliveries.py', 'start': 653, 'end': 800, 'prefix': '/outsourcing/deliveries', 'routes': '外协交付'},
-        {'name': 'quality.py', 'start': 801, 'end': 1001, 'prefix': '/outsourcing/quality', 'routes': '外协质检'},
-        {'name': 'progress.py', 'start': 1002, 'end': 1089, 'prefix': '/outsourcing/progress', 'routes': '外协进度'},
-        {'name': 'payments.py', 'start': 1090, 'end': 1498, 'prefix': '/outsourcing/payments', 'routes': '外协付款'},
+        {
+            "name": "suppliers.py",
+            "start": 90,
+            "end": 303,
+            "prefix": "/outsourcing/suppliers",
+            "routes": "外协供应商",
+        },
+        {
+            "name": "orders.py",
+            "start": 304,
+            "end": 652,
+            "prefix": "/outsourcing/orders",
+            "routes": "外协订单",
+        },
+        {
+            "name": "deliveries.py",
+            "start": 653,
+            "end": 800,
+            "prefix": "/outsourcing/deliveries",
+            "routes": "外协交付",
+        },
+        {
+            "name": "quality.py",
+            "start": 801,
+            "end": 1001,
+            "prefix": "/outsourcing/quality",
+            "routes": "外协质检",
+        },
+        {
+            "name": "progress.py",
+            "start": 1002,
+            "end": 1089,
+            "prefix": "/outsourcing/progress",
+            "routes": "外协进度",
+        },
+        {
+            "name": "payments.py",
+            "start": 1090,
+            "end": 1498,
+            "prefix": "/outsourcing/payments",
+            "routes": "外协付款",
+        },
     ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -34,11 +72,11 @@ def main():
     for module in modules:
         print(f"📝 生成 {module['name']}...")
 
-        start = module['start'] - 1
-        end = min(module['end'], len(lines))
+        start = module["start"] - 1
+        end = min(module["end"], len(lines))
 
-        module_code = ''.join(lines[start:end])
-        routes = len(re.findall(r'@router\.', module_code))
+        module_code = "".join(lines[start:end])
+        routes = len(re.findall(r"@router\.", module_code))
 
         if routes == 0:
             print(f"  ⚠️ 跳过: 没有找到路由")
@@ -64,8 +102,8 @@ router = APIRouter(
 {module_code}
 '''
 
-        output_path = output_dir / module['name']
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = output_dir / module["name"]
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module['name']}: {routes} 个路由")
@@ -97,11 +135,12 @@ router.include_router(payments_router)
 __all__ = ['router']
 '''
 
-    with open(output_dir / '__init__.py', 'w', encoding='utf-8') as f:
+    with open(output_dir / "__init__.py", "w", encoding="utf-8") as f:
         f.write(init_content)
 
     print("\n✅ outsourcing.py 拆分完成！")
     print(f"总计: {len(modules)} 个模块")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

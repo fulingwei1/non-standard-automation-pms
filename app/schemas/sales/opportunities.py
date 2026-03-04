@@ -80,7 +80,9 @@ class OpportunityCreate(BaseModel):
     delivery_window: Optional[str] = Field(default=None, description="交付窗口")
     acceptance_basis: Optional[str] = Field(default=None, description="验收依据")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
-    requirement: Optional["OpportunityRequirementCreate"] = Field(default=None, description="需求详情")
+    requirement: Optional["OpportunityRequirementCreate"] = Field(
+        default=None, description="需求详情"
+    )
 
 
 class OpportunityUpdate(BaseModel):
@@ -106,7 +108,9 @@ class OpportunityUpdate(BaseModel):
     requirement_maturity: Optional[int] = Field(default=None, description="需求成熟度(1-5)")
     priority_score: Optional[int] = Field(default=None, description="优先级得分")
     assessment_status: Optional[str] = Field(default=None, description="技术评估状态")
-    requirement: Optional["OpportunityRequirementCreate"] = Field(default=None, description="需求详情")
+    requirement: Optional["OpportunityRequirementCreate"] = Field(
+        default=None, description="需求详情"
+    )
 
 
 class OpportunityResponse(TimestampSchema):
@@ -116,15 +120,21 @@ class OpportunityResponse(TimestampSchema):
 
     id: int = Field(description="机会ID")
     # 使用 validation_alias 接受 opp_code 或 opportunity_code
-    opp_code: str = Field(description="机会编码", validation_alias=AliasChoices("opp_code", "opportunity_code"))
+    opp_code: str = Field(
+        description="机会编码", validation_alias=AliasChoices("opp_code", "opportunity_code")
+    )
     lead_id: Optional[int] = Field(default=None, description="线索ID")
     customer_id: Optional[int] = Field(default=None, description="客户ID")
     # 使用 validation_alias 接受 opp_name 或 opportunity_name
-    opp_name: str = Field(description="机会名称", validation_alias=AliasChoices("opp_name", "opportunity_name"))
+    opp_name: str = Field(
+        description="机会名称", validation_alias=AliasChoices("opp_name", "opportunity_name")
+    )
     project_type: Optional[str] = Field(default=None, description="项目类型")
     equipment_type: Optional[str] = Field(default=None, description="设备类型")
     # 使用 validation_alias 接受 stage 或 status
-    stage: Optional[str] = Field(default=None, description="阶段", validation_alias=AliasChoices("stage", "status"))
+    stage: Optional[str] = Field(
+        default=None, description="阶段", validation_alias=AliasChoices("stage", "status")
+    )
     probability: Optional[int] = Field(default=None, description="成交概率(0-100)")
     est_amount: Optional[Decimal] = Field(default=None, description="预估金额")
     est_margin: Optional[Decimal] = Field(default=None, description="预估毛利率")
@@ -148,7 +158,9 @@ class OpportunityResponse(TimestampSchema):
     # 关联数据 (从 endpoint 手动添加)
     customer_name: Optional[str] = Field(default=None, description="客户名称")
     owner_name: Optional[str] = Field(default=None, description="负责人姓名")
-    requirement: Optional[OpportunityRequirementResponse] = Field(default=None, description="需求详情")
+    requirement: Optional[OpportunityRequirementResponse] = Field(
+        default=None, description="需求详情"
+    )
 
 
 class GateSubmitRequest(BaseModel):

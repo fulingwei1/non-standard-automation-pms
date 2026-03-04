@@ -55,10 +55,6 @@ def calculate_project_labor_cost(
         result = LaborCostService.calculate_project_labor_cost(
             db, project_id, start, end, recalculate
         )
-        return ResponseModel(
-            code=200,
-            message=result.get("message", "计算完成"),
-            data=result
-        )
+        return ResponseModel(code=200, message=result.get("message", "计算完成"), data=result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"计算失败：{str(e)}")

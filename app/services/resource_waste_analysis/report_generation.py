@@ -11,10 +11,7 @@ from typing import Any, Dict
 class ReportGenerationMixin:
     """报告生成功能混入类"""
 
-    def generate_waste_report(
-        self,
-        period: str  # 'YYYY' or 'YYYY-MM'
-    ) -> Dict[str, Any]:
+    def generate_waste_report(self, period: str) -> Dict[str, Any]:  # 'YYYY' or 'YYYY-MM'
         """生成资源浪费综合报告
 
         Returns:
@@ -48,21 +45,25 @@ class ReportGenerationMixin:
         department_comparison = self.get_department_comparison(start_date, end_date)
 
         return {
-            'report_period': period,
-            'generated_at': datetime.now().isoformat(),
-            'overall_statistics': overall_stats,
-            'top_resource_wasters': top_wasters,
-            'failure_pattern_analysis': failure_patterns,
-            'monthly_trend': monthly_trend,
-            'department_comparison': department_comparison,
-            'summary': {
-                'total_wasted_cost': overall_stats['wasted_cost'],
-                'waste_rate': overall_stats['waste_rate'],
-                'top_loss_reason': max(
-                    overall_stats['loss_reasons'].items(),
-                    key=lambda x: x[1]
-                )[0] if overall_stats['loss_reasons'] else 'N/A',
-                'key_recommendation': failure_patterns['recommendations'][0]
-                if failure_patterns['recommendations'] else '暂无建议'
-            }
+            "report_period": period,
+            "generated_at": datetime.now().isoformat(),
+            "overall_statistics": overall_stats,
+            "top_resource_wasters": top_wasters,
+            "failure_pattern_analysis": failure_patterns,
+            "monthly_trend": monthly_trend,
+            "department_comparison": department_comparison,
+            "summary": {
+                "total_wasted_cost": overall_stats["wasted_cost"],
+                "waste_rate": overall_stats["waste_rate"],
+                "top_loss_reason": (
+                    max(overall_stats["loss_reasons"].items(), key=lambda x: x[1])[0]
+                    if overall_stats["loss_reasons"]
+                    else "N/A"
+                ),
+                "key_recommendation": (
+                    failure_patterns["recommendations"][0]
+                    if failure_patterns["recommendations"]
+                    else "暂无建议"
+                ),
+            },
         }

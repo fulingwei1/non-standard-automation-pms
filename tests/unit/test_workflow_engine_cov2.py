@@ -2,13 +2,15 @@
 """
 approval_engine/workflow_engine.py 单元测试（第二批）
 """
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _make_engine(mock_db=None):
     from app.services.approval_engine.workflow_engine import WorkflowEngine
+
     if mock_db is None:
         mock_db = MagicMock()
     return WorkflowEngine(mock_db)
@@ -17,14 +19,17 @@ def _make_engine(mock_db=None):
 # ─── 1. _generate_instance_no ───────────────────────────────────────────────
 def test_generate_instance_no_format():
     from app.services.approval_engine.workflow_engine import WorkflowEngine
+
     no = WorkflowEngine._generate_instance_no()
     assert no.startswith("AP")
     assert len(no) == 14  # AP + 12 digits
 
 
 def test_generate_instance_no_unique():
-    from app.services.approval_engine.workflow_engine import WorkflowEngine
     import time
+
+    from app.services.approval_engine.workflow_engine import WorkflowEngine
+
     no1 = WorkflowEngine._generate_instance_no()
     time.sleep(1)
     no2 = WorkflowEngine._generate_instance_no()
@@ -78,7 +83,9 @@ def test_get_current_node_no_current_node_id():
     engine = _make_engine()
 
     mock_node = MagicMock()
-    engine.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
+    engine.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+        mock_node
+    )
 
     instance = MagicMock()
     instance.current_status = "PENDING"

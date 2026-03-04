@@ -2,21 +2,22 @@
 """
 N1组深度覆盖: LaborCostService / LaborCostCalculationService / LaborCostExpenseService
 """
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.labor_cost_service import (
-    LaborCostService,
     LaborCostCalculationService,
     LaborCostExpenseService,
+    LaborCostService,
 )
-
 
 # ============================================================
 # Helper builders
 # ============================================================
+
 
 def _make_project(**kwargs):
     p = MagicMock()
@@ -61,6 +62,7 @@ def _make_timesheet(**kwargs):
 # 1. LaborCostService.calculate_all_projects_labor_cost
 # ============================================================
 
+
 class TestCalculateAllProjectsLaborCost:
     def test_no_projects_returns_success(self):
         """没有项目时返回空结果"""
@@ -76,9 +78,7 @@ class TestCalculateAllProjectsLaborCost:
         """传入 project_ids 时只处理指定项目"""
         db = MagicMock()
         db.query.return_value.filter.return_value.distinct.return_value.all.return_value = []
-        result = LaborCostService.calculate_all_projects_labor_cost(
-            db, project_ids=[1, 2, 3]
-        )
+        result = LaborCostService.calculate_all_projects_labor_cost(db, project_ids=[1, 2, 3])
         assert result["total_projects"] == 0
 
     def test_error_counted_as_fail(self):
@@ -87,9 +87,7 @@ class TestCalculateAllProjectsLaborCost:
         db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,)]
 
         with patch.object(
-            LaborCostService,
-            "calculate_project_labor_cost",
-            side_effect=Exception("DB错误")
+            LaborCostService, "calculate_project_labor_cost", side_effect=Exception("DB错误")
         ):
             result = LaborCostService.calculate_all_projects_labor_cost(db)
 
@@ -100,6 +98,7 @@ class TestCalculateAllProjectsLaborCost:
 # ============================================================
 # 2. LaborCostService.calculate_monthly_labor_cost
 # ============================================================
+
 
 class TestCalculateMonthlyLaborCost:
     def test_monthly_delegates_to_all_projects(self):
@@ -114,6 +113,7 @@ class TestCalculateMonthlyLaborCost:
 # ============================================================
 # 3. LaborCostCalculationService.calculate_monthly_costs
 # ============================================================
+
 
 class TestLaborCostCalculationService:
     def _make_service(self):
@@ -142,6 +142,7 @@ class TestLaborCostCalculationService:
 # ============================================================
 # 4. LaborCostExpenseService - identify_lost_projects
 # ============================================================
+
 
 class TestIdentifyLostProjects:
     def _make_svc(self, projects):
@@ -189,6 +190,7 @@ class TestIdentifyLostProjects:
 # ============================================================
 # 5. LaborCostExpenseService - _has_detailed_design
 # ============================================================
+
 
 class TestHasDetailedDesign:
     def _make_svc(self):
@@ -243,6 +245,7 @@ class TestHasDetailedDesign:
 # 6. LaborCostExpenseService - _get_project_hours
 # ============================================================
 
+
 class TestGetProjectHours:
     def test_returns_float(self):
         with patch("app.services.labor_cost_service.HourlyRateService"):
@@ -264,6 +267,7 @@ class TestGetProjectHours:
 # ============================================================
 # 7. LaborCostExpenseService - _get_user_name
 # ============================================================
+
 
 class TestGetUserName:
     def _make_svc(self):
@@ -298,18 +302,21 @@ class TestGetUserName:
 # 8. LaborCostExpenseService - get_expense_statistics (group_by分支)
 # ============================================================
 
+
 class TestGetExpenseStatistics:
     def _make_svc_with_expenses(self, expenses):
         db = MagicMock()
         with patch("app.services.labor_cost_service.HourlyRateService"):
             svc = LaborCostExpenseService(db)
         # Mock get_lost_project_expenses
-        svc.get_lost_project_expenses = MagicMock(return_value={
-            "expenses": expenses,
-            "total_amount": sum(e["amount"] for e in expenses),
-            "total_hours": sum(e["labor_hours"] for e in expenses),
-            "total_expenses": len(expenses),
-        })
+        svc.get_lost_project_expenses = MagicMock(
+            return_value={
+                "expenses": expenses,
+                "total_amount": sum(e["amount"] for e in expenses),
+                "total_hours": sum(e["labor_hours"] for e in expenses),
+                "total_expenses": len(expenses),
+            }
+        )
         return svc, db
 
     def test_statistics_by_person(self):
@@ -324,7 +331,7 @@ class TestGetExpenseStatistics:
                 "expense_date": date(2025, 1, 1),
                 "salesperson_id": 1,
                 "salesperson_name": "张三",
-                "loss_reason": "价格"
+                "loss_reason": "价格",
             }
         ]
         svc, db = self._make_svc_with_expenses(expenses)
@@ -348,7 +355,7 @@ class TestGetExpenseStatistics:
                 "expense_date": date(2025, 1, 1),
                 "salesperson_id": 1,
                 "salesperson_name": "张三",
-                "loss_reason": "价格"
+                "loss_reason": "价格",
             }
         ]
         svc, db = self._make_svc_with_expenses(expenses)
@@ -369,7 +376,7 @@ class TestGetExpenseStatistics:
                 "expense_date": date(2025, 1, 1),
                 "salesperson_id": 1,
                 "salesperson_name": "张三",
-                "loss_reason": "价格"
+                "loss_reason": "价格",
             }
         ]
         svc, db = self._make_svc_with_expenses(expenses)
@@ -384,6 +391,7 @@ class TestGetExpenseStatistics:
 # ============================================================
 # 9. LaborCostExpenseService.get_lost_project_expenses - filters
 # ============================================================
+
 
 class TestGetLostProjectExpenses:
     def _make_svc(self):

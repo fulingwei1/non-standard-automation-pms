@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：ECN审批适配器单元测试"""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
     from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -72,6 +74,7 @@ class TestEcnApprovalAdapterGetEntityData:
         evaluations = [eval_completed, eval_pending]
 
         call_count = 0
+
         def query_side_effect(model):
             nonlocal call_count
             call_count += 1
@@ -87,7 +90,9 @@ class TestEcnApprovalAdapterGetEntityData:
         result = adapter.get_entity_data(1)
 
         assert result != {}
-        assert result.get("total_evaluations") == 2 or "ecn_type" in result or isinstance(result, dict)
+        assert (
+            result.get("total_evaluations") == 2 or "ecn_type" in result or isinstance(result, dict)
+        )
 
 
 class TestEcnApprovalAdapterEntityType:
@@ -121,6 +126,7 @@ class TestEcnApprovalAdapterIntegration:
         e2.status = "COMPLETED"
 
         call_count = 0
+
         def side_effect(model):
             nonlocal call_count
             call_count += 1
@@ -142,6 +148,7 @@ class TestEcnApprovalAdapterIntegration:
         mock_ecn = _mock_ecn()
 
         call_count = 0
+
         def side_effect(model):
             nonlocal call_count
             call_count += 1

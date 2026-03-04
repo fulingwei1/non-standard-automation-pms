@@ -12,6 +12,7 @@ def make_adapter():
     user = MagicMock()
     user.id = 1
     from app.services.dashboard_adapters.shortage import ShortageDashboardAdapter
+
     return ShortageDashboardAdapter(db, user), db
 
 
@@ -26,6 +27,7 @@ def make_mock_stats(n=6):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_module_id():
     adapter, _ = make_adapter()
@@ -54,8 +56,15 @@ def test_stat_keys():
     adapter, db = make_adapter()
     # Test the expected key names via module-level knowledge
     from app.services.dashboard_adapters.shortage import ShortageDashboardAdapter
-    expected_keys = {"total_reports", "urgent_reports", "unresolved_alerts",
-                     "pending_arrivals", "delayed_arrivals", "resolved_reports"}
+
+    expected_keys = {
+        "total_reports",
+        "urgent_reports",
+        "unresolved_alerts",
+        "pending_arrivals",
+        "delayed_arrivals",
+        "resolved_reports",
+    }
     # Verify expected roles are in the adapter
     assert "procurement" in adapter.supported_roles
     assert "production" in adapter.supported_roles

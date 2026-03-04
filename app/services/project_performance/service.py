@@ -4,10 +4,10 @@
 提取业务逻辑：权限检查、数据聚合、报告生成等
 """
 
+from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
-from collections import defaultdict
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -18,8 +18,8 @@ from app.models.performance import (
     PerformanceResult,
     ProjectContribution,
 )
-from app.models.project import Project
 from app.models.progress import Task
+from app.models.project import Project
 from app.models.user import User
 
 
@@ -35,9 +35,7 @@ class ProjectPerformanceService:
         """
         self.db = db
 
-    def check_performance_view_permission(
-        self, current_user: User, target_user_id: int
-    ) -> bool:
+    def check_performance_view_permission(self, current_user: User, target_user_id: int) -> bool:
         """
         检查用户是否有权限查看指定用户的绩效
 
@@ -81,12 +79,8 @@ class ProjectPerformanceService:
 
         has_manager_role = False
         for user_role in current_user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
             if role_code in manager_roles or role_name in manager_roles:
                 has_manager_role = True
                 break
@@ -95,21 +89,14 @@ class ProjectPerformanceService:
             return False
 
         # 检查是否是同一部门
-        if (
-            target_user.department_id
-            and current_user.department_id == target_user.department_id
-        ):
+        if target_user.department_id and current_user.department_id == target_user.department_id:
             return True
 
         # 检查是否管理同一项目
-        user_projects = (
-            self.db.query(Project).filter(Project.pm_id == current_user.id).all()
-        )
+        user_projects = self.db.query(Project).filter(Project.pm_id == current_user.id).all()
         project_ids = [p.id for p in user_projects]
 
-        target_projects = (
-            self.db.query(Project).filter(Project.id.in_(project_ids)).all()
-        )
+        target_projects = self.db.query(Project).filter(Project.id.in_(project_ids)).all()
         for project in target_projects:
             # 检查目标用户是否是项目成员
             member_task = (
@@ -133,11 +120,7 @@ class ProjectPerformanceService:
             List[int]: 成员ID列表
         """
         # 临时使用部门作为团队
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == team_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == team_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_department_members(self, dept_id: int) -> List[int]:
@@ -150,11 +133,7 @@ class ProjectPerformanceService:
         Returns:
             List[int]: 成员ID列表
         """
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == dept_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == dept_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_evaluator_type(self, user: User) -> str:
@@ -171,12 +150,8 @@ class ProjectPerformanceService:
         is_project_manager = False
 
         for user_role in user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
             if role_code in [
                 "dept_manager",
@@ -248,9 +223,7 @@ class ProjectPerformanceService:
 
         if period_id:
             period = (
-                self.db.query(PerformancePeriod)
-                .filter(PerformancePeriod.id == period_id)
-                .first()
+                self.db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
             )
         else:
             period = (
@@ -286,9 +259,7 @@ class ProjectPerformanceService:
                     "user_id": contrib.user_id,
                     "user_name": user.real_name or user.username if user else None,
                     "contribution_score": float(score),
-                    "work_hours": float(contrib.hours_spent)
-                    if contrib.hours_spent
-                    else 0,
+                    "work_hours": float(contrib.hours_spent) if contrib.hours_spent else 0,
                     "task_count": contrib.task_count or 0,
                 }
             )
@@ -334,9 +305,7 @@ class ProjectPerformanceService:
             report_date = datetime.now().date()
 
         # 从进度跟踪模块获取数据
-        project_tasks = (
-            self.db.query(Task).filter(Task.project_id == project_id).all()
-        )
+        project_tasks = self.db.query(Task).filter(Task.project_id == project_id).all()
 
         total_tasks = len(project_tasks)
         completed_tasks = len([t for t in project_tasks if t.status == "DONE"])
@@ -389,16 +358,12 @@ class ProjectPerformanceService:
         # 获取关键成果（最近完成的任务）
         key_achievements = []
         completed = [t for t in project_tasks if t.status == "DONE"]
-        completed.sort(
-            key=lambda x: x.updated_at or x.created_at or datetime.now(), reverse=True
-        )
+        completed.sort(key=lambda x: x.updated_at or x.created_at or datetime.now(), reverse=True)
         for task in completed[:5]:
             key_achievements.append(
                 {
                     "task_name": task.task_name,
-                    "completed_date": task.updated_at.isoformat()
-                    if task.updated_at
-                    else None,
+                    "completed_date": task.updated_at.isoformat() if task.updated_at else None,
                     "description": task.description[:100] if task.description else "",
                 }
             )
@@ -410,9 +375,9 @@ class ProjectPerformanceService:
                 {
                     "type": "DELAYED_TASK",
                     "description": f"任务 '{task.task_name}' 已逾期",
-                    "severity": "HIGH"
-                    if (datetime.now().date() - task.plan_end).days > 7
-                    else "MEDIUM",
+                    "severity": (
+                        "HIGH" if (datetime.now().date() - task.plan_end).days > 7 else "MEDIUM"
+                    ),
                     "task_id": task.id,
                     "task_name": task.task_name,
                     "due_date": task.plan_end.isoformat(),
@@ -448,9 +413,7 @@ class ProjectPerformanceService:
         """
         if period_id:
             period = (
-                self.db.query(PerformancePeriod)
-                .filter(PerformancePeriod.id == period_id)
-                .first()
+                self.db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
             )
         else:
             period = (
@@ -483,9 +446,7 @@ class ProjectPerformanceService:
                 {
                     "user_id": user_id,
                     "user_name": user.real_name or user.username,
-                    "score": float(result.total_score)
-                    if result and result.total_score
-                    else 0,
+                    "score": float(result.total_score) if result and result.total_score else 0,
                     "level": result.level if result else "QUALIFIED",
                     "department_name": result.department_name if result else None,
                 }

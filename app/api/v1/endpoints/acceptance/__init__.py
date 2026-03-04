@@ -49,5 +49,5 @@ __all__ = [
     "validate_completion_rules",
     "validate_edit_rules",
     "generate_order_no",
-    "generate_issue_no"
+    "generate_issue_no",
 ]

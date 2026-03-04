@@ -12,73 +12,6 @@
 - 同比分析
 """
 
-# Strategy 服务
-from .strategy_service import (
-    archive_strategy,
-    create_strategy,
-    delete_strategy,
-    get_active_strategy,
-    get_strategy,
-    get_strategy_by_code,
-    get_strategy_by_year,
-    get_strategy_detail,
-    get_strategy_map_data,
-    list_strategies,
-    publish_strategy,
-    update_strategy,
-)
-
-# CSF 服务
-from .csf_service import (
-    batch_create_csfs,
-    create_csf,
-    delete_csf,
-    get_csf,
-    get_csf_detail,
-    get_csfs_by_dimension,
-    list_csfs,
-    update_csf,
-)
-
-# KPI 服务
-from .kpi_service import (
-    create_kpi,
-    create_kpi_data_source,
-    create_kpi_snapshot,
-    delete_kpi,
-    get_kpi,
-    get_kpi_data_sources,
-    get_kpi_detail,
-    get_kpi_history,
-    get_kpi_with_history,
-    list_kpis,
-    update_kpi,
-    update_kpi_value,
-)
-
-# KPI 采集器
-from .kpi_collector import (
-    auto_collect_kpi,
-    batch_collect_kpis,
-    calculate_formula,
-    collect_kpi_value,
-    get_collection_status,
-    get_collector,
-    register_collector,
-)
-
-# 健康度计算
-from .health_calculator import (
-    calculate_csf_health,
-    calculate_dimension_health,
-    calculate_kpi_completion_rate,
-    calculate_kpi_health,
-    calculate_strategy_health,
-    get_dimension_health_details,
-    get_health_level,
-    get_health_trend,
-)
-
 # 年度重点工作服务
 from .annual_work_service import (
     calculate_progress_from_projects,
@@ -94,6 +27,29 @@ from .annual_work_service import (
     unlink_project,
     update_annual_work,
     update_progress,
+)
+
+# ��比分析服务
+from .comparison_service import (
+    create_strategy_comparison,
+    delete_strategy_comparison,
+    generate_yoy_report,
+    get_kpi_achievement_comparison,
+    get_multi_year_trend,
+    get_strategy_comparison,
+    list_strategy_comparisons,
+)
+
+# CSF 服务
+from .csf_service import (
+    batch_create_csfs,
+    create_csf,
+    delete_csf,
+    get_csf,
+    get_csf_detail,
+    get_csfs_by_dimension,
+    list_csfs,
+    update_csf,
 )
 
 # 目标分解服务（已拆分为 decomposition 模块）
@@ -117,6 +73,45 @@ from .decomposition import (
     update_personal_kpi,
 )
 
+# 健康度计算
+from .health_calculator import (
+    calculate_csf_health,
+    calculate_dimension_health,
+    calculate_kpi_completion_rate,
+    calculate_kpi_health,
+    calculate_strategy_health,
+    get_dimension_health_details,
+    get_health_level,
+    get_health_trend,
+)
+
+# KPI 采集器
+from .kpi_collector import (
+    auto_collect_kpi,
+    batch_collect_kpis,
+    calculate_formula,
+    collect_kpi_value,
+    get_collection_status,
+    get_collector,
+    register_collector,
+)
+
+# KPI 服务
+from .kpi_service import (
+    create_kpi,
+    create_kpi_data_source,
+    create_kpi_snapshot,
+    delete_kpi,
+    get_kpi,
+    get_kpi_data_sources,
+    get_kpi_detail,
+    get_kpi_history,
+    get_kpi_with_history,
+    list_kpis,
+    update_kpi,
+    update_kpi_value,
+)
+
 # 战略审视服务（已拆分为 review 模块）
 from .review import (
     create_calendar_event,
@@ -137,15 +132,20 @@ from .review import (
     update_strategy_review,
 )
 
-# ��比分析服务
-from .comparison_service import (
-    create_strategy_comparison,
-    delete_strategy_comparison,
-    generate_yoy_report,
-    get_kpi_achievement_comparison,
-    get_multi_year_trend,
-    get_strategy_comparison,
-    list_strategy_comparisons,
+# Strategy 服务
+from .strategy_service import (
+    archive_strategy,
+    create_strategy,
+    delete_strategy,
+    get_active_strategy,
+    get_strategy,
+    get_strategy_by_code,
+    get_strategy_by_year,
+    get_strategy_detail,
+    get_strategy_map_data,
+    list_strategies,
+    publish_strategy,
+    update_strategy,
 )
 
 __all__ = [

@@ -39,12 +39,16 @@ def _build_base_filter(start_date: date, end_date: date, department_id, project_
 
 def _report_summary(db: Session, filters):
     """汇总报表"""
-    result = db.query(
-        func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
-        func.count(func.distinct(Timesheet.user_id)).label("total_users"),
-        func.count(Timesheet.id).label("total_records"),
-        func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
-    ).filter(*filters).first()
+    result = (
+        db.query(
+            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+            func.count(func.distinct(Timesheet.user_id)).label("total_users"),
+            func.count(Timesheet.id).label("total_records"),
+            func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
+        )
+        .filter(*filters)
+        .first()
+    )
 
     return {
         "total_hours": float(result.total_hours) if result else 0,
@@ -56,9 +60,12 @@ def _report_summary(db: Session, filters):
 
 def _report_detail(db: Session, filters):
     """明细报表"""
-    records = db.query(Timesheet).filter(*filters).order_by(
-        Timesheet.work_date.desc(), Timesheet.user_id
-    ).all()
+    records = (
+        db.query(Timesheet)
+        .filter(*filters)
+        .order_by(Timesheet.work_date.desc(), Timesheet.user_id)
+        .all()
+    )
 
     return [
         {
@@ -78,15 +85,19 @@ def _report_detail(db: Session, filters):
 
 def _report_by_project(db: Session, filters):
     """按项目汇总"""
-    rows = db.query(
-        Timesheet.project_id,
-        Timesheet.project_name,
-        func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
-        func.count(func.distinct(Timesheet.user_id)).label("users"),
-        func.count(Timesheet.id).label("records"),
-    ).filter(*filters).group_by(
-        Timesheet.project_id, Timesheet.project_name
-    ).order_by(func.sum(Timesheet.hours).desc()).all()
+    rows = (
+        db.query(
+            Timesheet.project_id,
+            Timesheet.project_name,
+            func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
+            func.count(func.distinct(Timesheet.user_id)).label("users"),
+            func.count(Timesheet.id).label("records"),
+        )
+        .filter(*filters)
+        .group_by(Timesheet.project_id, Timesheet.project_name)
+        .order_by(func.sum(Timesheet.hours).desc())
+        .all()
+    )
 
     return [
         {
@@ -102,16 +113,20 @@ def _report_by_project(db: Session, filters):
 
 def _report_by_user(db: Session, filters):
     """按用户汇总"""
-    rows = db.query(
-        Timesheet.user_id,
-        Timesheet.user_name,
-        Timesheet.department_name,
-        func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
-        func.count(func.distinct(Timesheet.project_id)).label("projects"),
-        func.count(Timesheet.id).label("records"),
-    ).filter(*filters).group_by(
-        Timesheet.user_id, Timesheet.user_name, Timesheet.department_name
-    ).order_by(func.sum(Timesheet.hours).desc()).all()
+    rows = (
+        db.query(
+            Timesheet.user_id,
+            Timesheet.user_name,
+            Timesheet.department_name,
+            func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
+            func.count(func.distinct(Timesheet.project_id)).label("projects"),
+            func.count(Timesheet.id).label("records"),
+        )
+        .filter(*filters)
+        .group_by(Timesheet.user_id, Timesheet.user_name, Timesheet.department_name)
+        .order_by(func.sum(Timesheet.hours).desc())
+        .all()
+    )
 
     return [
         {
@@ -138,7 +153,9 @@ _REPORT_BUILDERS = {
 def get_unified_timesheet_report(
     start_date: date = Query(..., description="开始日期"),
     end_date: date = Query(..., description="结束日期"),
-    report_type: str = Query("summary", description="报表类型: summary, detail, by_project, by_user"),
+    report_type: str = Query(
+        "summary", description="报表类型: summary, detail, by_project, by_user"
+    ),
     department_id: Optional[int] = Query(None, description="部门ID"),
     project_id: Optional[int] = Query(None, description="项目ID"),
     user_id: Optional[int] = Query(None, description="用户ID"),

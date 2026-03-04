@@ -18,6 +18,7 @@ try:
     from docx.enum.text import WD_ALIGN_PARAGRAPH  # noqa: F401
     from docx.oxml.ns import qn
     from docx.shared import Cm, Inches, Pt, RGBColor  # noqa: F401
+
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
@@ -35,7 +36,7 @@ class MeetingReportDocxService:
         report_data: Dict[str, Any],
         report_title: str,
         period_year: int,
-        rhythm_level: Optional[str] = None
+        rhythm_level: Optional[str] = None,
     ) -> BytesIO:
         """
         生成年度会议报告Word文档
@@ -74,26 +75,24 @@ class MeetingReportDocxService:
             doc,
             report_title,
             f"报告周期：{period_year}年1月1日 - {period_year}年12月31日",
-            rhythm_level
+            rhythm_level,
         )
 
         # 添加各个部分
-        add_summary_section(doc, report_data.get('summary', {}))
+        add_summary_section(doc, report_data.get("summary", {}))
         add_level_statistics_section(
-            doc,
-            report_data.get('by_level', {}),
-            self._format_rhythm_level
+            doc, report_data.get("by_level", {}), self._format_rhythm_level
         )
-        add_action_items_section(doc, report_data.get('action_items_summary', {}))
-        add_key_decisions_section(doc, report_data.get('key_decisions', []), "本年度")
-        add_strategic_structures_section(doc, report_data.get('strategic_structures', []))
+        add_action_items_section(doc, report_data.get("action_items_summary", {}))
+        add_key_decisions_section(doc, report_data.get("key_decisions", []), "本年度")
+        add_strategic_structures_section(doc, report_data.get("strategic_structures", []))
         add_meetings_list_section(
             doc,
-            report_data.get('meetings', []),
+            report_data.get("meetings", []),
             self._format_rhythm_level,
             self._format_cycle_type,
             self._format_status,
-            "本年度"
+            "本年度",
         )
 
         # 添加页脚
@@ -113,7 +112,7 @@ class MeetingReportDocxService:
         report_title: str,
         period_year: int,
         period_month: int,
-        rhythm_level: Optional[str] = None
+        rhythm_level: Optional[str] = None,
     ) -> BytesIO:
         """
         生成月度会议报告Word文档（包含与上月对比）
@@ -151,29 +150,24 @@ class MeetingReportDocxService:
 
         # 添加标题和报告信息
         add_document_header(
-            doc,
-            report_title,
-            f"报告周期：{period_year}年{period_month}月",
-            rhythm_level
+            doc, report_title, f"报告周期：{period_year}年{period_month}月", rhythm_level
         )
 
         # 添加各个部分
-        add_summary_section(doc, report_data.get('summary', {}))
+        add_summary_section(doc, report_data.get("summary", {}))
         add_comparison_section(doc, comparison_data)
         add_level_statistics_section(
-            doc,
-            report_data.get('by_level', {}),
-            self._format_rhythm_level
+            doc, report_data.get("by_level", {}), self._format_rhythm_level
         )
-        add_action_items_section(doc, report_data.get('action_items_summary', {}))
-        add_key_decisions_section(doc, report_data.get('key_decisions', []), "本月")
+        add_action_items_section(doc, report_data.get("action_items_summary", {}))
+        add_key_decisions_section(doc, report_data.get("key_decisions", []), "本月")
         add_meetings_list_section(
             doc,
-            report_data.get('meetings', []),
+            report_data.get("meetings", []),
             self._format_rhythm_level,
             self._format_cycle_type,
             self._format_status,
-            "本月"
+            "本月",
         )
 
         # 添加页脚
@@ -190,14 +184,14 @@ class MeetingReportDocxService:
         """设置中文字体"""
         try:
             # 设置默认字体
-            doc.styles['Normal'].font.name = '微软雅黑'
-            doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), '微软雅黑')
+            doc.styles["Normal"].font.name = "微软雅黑"
+            doc.styles["Normal"]._element.rPr.rFonts.set(qn("w:eastAsia"), "微软雅黑")
 
             # 设置标题字体
             for i in range(1, 10):
-                heading_style = doc.styles[f'Heading {i}']
-                heading_style.font.name = '微软雅黑'
-                heading_style._element.rPr.rFonts.set(qn('w:eastAsia'), '微软雅黑')
+                heading_style = doc.styles[f"Heading {i}"]
+                heading_style.font.name = "微软雅黑"
+                heading_style._element.rPr.rFonts.set(qn("w:eastAsia"), "微软雅黑")
         except (KeyError, AttributeError):
             # 如果设置失败，使用默认字体
             pass
@@ -205,30 +199,25 @@ class MeetingReportDocxService:
     def _format_rhythm_level(self, level: str) -> str:
         """格式化节律层级"""
         level_map = {
-            'STRATEGIC': '战略层',
-            'OPERATIONAL': '经营层',
-            'OPERATION': '运营层',
-            'TASK': '任务层',
-            'ALL': '全部层级'
+            "STRATEGIC": "战略层",
+            "OPERATIONAL": "经营层",
+            "OPERATION": "运营层",
+            "TASK": "任务层",
+            "ALL": "全部层级",
         }
         return level_map.get(level, level)
 
     def _format_cycle_type(self, cycle_type: str) -> str:
         """格式化周期类型"""
-        cycle_map = {
-            'QUARTERLY': '季度',
-            'MONTHLY': '月度',
-            'WEEKLY': '周度',
-            'DAILY': '每日'
-        }
+        cycle_map = {"QUARTERLY": "季度", "MONTHLY": "月度", "WEEKLY": "周度", "DAILY": "每日"}
         return cycle_map.get(cycle_type, cycle_type)
 
     def _format_status(self, status: str) -> str:
         """格式化状态"""
         status_map = {
-            'SCHEDULED': '已安排',
-            'ONGOING': '进行中',
-            'COMPLETED': '已完成',
-            'CANCELLED': '已取消'
+            "SCHEDULED": "已安排",
+            "ONGOING": "进行中",
+            "COMPLETED": "已完成",
+            "CANCELLED": "已取消",
         }
         return status_map.get(status, status)

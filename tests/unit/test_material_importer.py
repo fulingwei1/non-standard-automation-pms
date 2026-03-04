@@ -21,20 +21,28 @@ class TestMaterialImporter(unittest.TestCase):
             MaterialImporter.import_material_data(self.db, df, 1)
 
     def test_empty_required_fields(self):
-        df = pd.DataFrame([{
-            "物料编码*": "",
-            "物料名称*": "",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "",
+                    "物料名称*": "",
+                }
+            ]
+        )
         imported, updated, failed = MaterialImporter.import_material_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertIn("必填项", failed[0]["error"])
 
     def test_new_material_happy_path(self):
         self.db.query.return_value.filter.return_value.first.return_value = None  # no existing
-        df = pd.DataFrame([{
-            "物料编码*": "M001",
-            "物料名称*": "物料A",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "M001",
+                    "物料名称*": "物料A",
+                }
+            ]
+        )
         imported, updated, failed = MaterialImporter.import_material_data(self.db, df, 1)
         self.assertEqual(imported, 1)
         self.assertEqual(len(failed), 0)
@@ -42,22 +50,34 @@ class TestMaterialImporter(unittest.TestCase):
     def test_existing_material_no_update(self):
         existing = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = existing
-        df = pd.DataFrame([{
-            "物料编码*": "M001",
-            "物料名称*": "物料A",
-        }])
-        imported, updated, failed = MaterialImporter.import_material_data(self.db, df, 1, update_existing=False)
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "M001",
+                    "物料名称*": "物料A",
+                }
+            ]
+        )
+        imported, updated, failed = MaterialImporter.import_material_data(
+            self.db, df, 1, update_existing=False
+        )
         self.assertEqual(imported, 0)
         self.assertIn("已存在", failed[0]["error"])
 
     def test_existing_material_with_update(self):
         existing = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = existing
-        df = pd.DataFrame([{
-            "物料编码*": "M001",
-            "物料名称*": "新名称",
-        }])
-        imported, updated, failed = MaterialImporter.import_material_data(self.db, df, 1, update_existing=True)
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "M001",
+                    "物料名称*": "新名称",
+                }
+            ]
+        )
+        imported, updated, failed = MaterialImporter.import_material_data(
+            self.db, df, 1, update_existing=True
+        )
         self.assertEqual(updated, 1)
 
     def test_with_supplier_creates_vendor(self):
@@ -67,11 +87,15 @@ class TestMaterialImporter(unittest.TestCase):
             None,  # material existing check — but this depends on call order
         ]
         # This test is simplified; the real call pattern is complex
-        df = pd.DataFrame([{
-            "物料编码*": "M001",
-            "物料名称*": "物料A",
-            "默认供应商": "供应商A",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "M001",
+                    "物料名称*": "物料A",
+                    "默认供应商": "供应商A",
+                }
+            ]
+        )
         # Just verify it doesn't crash
         try:
             MaterialImporter.import_material_data(self.db, df, 1)
@@ -80,11 +104,15 @@ class TestMaterialImporter(unittest.TestCase):
 
     def test_invalid_price_ignored(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
-        df = pd.DataFrame([{
-            "物料编码*": "M001",
-            "物料名称*": "物料A",
-            "参考价格": "invalid",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "物料编码*": "M001",
+                    "物料名称*": "物料A",
+                    "参考价格": "invalid",
+                }
+            ]
+        )
         imported, updated, failed = MaterialImporter.import_material_data(self.db, df, 1)
         self.assertEqual(imported, 1)
 

@@ -100,10 +100,7 @@ def update_template(
 ) -> Any:
     """更新模板"""
     service = StageTemplateService(db)
-    template = service.update_template(
-        template_id,
-        **template_in.model_dump(exclude_unset=True)
-    )
+    template = service.update_template(template_id, **template_in.model_dump(exclude_unset=True))
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
     db.commit()
@@ -182,7 +179,11 @@ def get_default_template(
 # ==================== 阶段定义管理 ====================
 
 
-@router.post("/{template_id}/stages", response_model=StageDefinitionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{template_id}/stages",
+    response_model=StageDefinitionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_stage(
     template_id: int,
     stage_in: StageDefinitionCreate,
@@ -258,7 +259,11 @@ def reorder_stages(
 # ==================== 节点定义管理 ====================
 
 
-@router.post("/stages/{stage_id}/nodes", response_model=NodeDefinitionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/stages/{stage_id}/nodes",
+    response_model=NodeDefinitionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_node(
     stage_id: int,
     node_in: NodeDefinitionCreate,

@@ -25,13 +25,14 @@ from app.schemas.rd_project import (
     RdProjectResponse,
     RdProjectUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import generate_project_no
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
 # ==================== 研发项目立项 ====================
+
 
 @router.get("/", response_model=PaginatedResponse)
 def get_rd_projects(
@@ -39,7 +40,9 @@ def get_rd_projects(
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（项目名称/编号）"),
     category_id: Optional[int] = Query(None, description="分类ID筛选"),
-    category_type: Optional[str] = Query(None, description="项目类型筛选：SELF/ENTRUST/COOPERATION"),
+    category_type: Optional[str] = Query(
+        None, description="项目类型筛选：SELF/ENTRUST/COOPERATION"
+    ),
     project_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
     project_manager_id: Optional[int] = Query(None, description="项目负责人ID筛选"),
@@ -69,7 +72,9 @@ def get_rd_projects(
     total = query.count()
 
     # 分页
-    projects = apply_pagination(query.order_by(desc(RdProject.created_at)), pagination.offset, pagination.limit).all()
+    projects = apply_pagination(
+        query.order_by(desc(RdProject.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [RdProjectResponse.model_validate(proj) for proj in projects]
 
@@ -78,7 +83,7 @@ def get_rd_projects(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -119,17 +124,15 @@ def create_rd_project(
         expected_result=project_in.expected_result,
         budget_amount=project_in.budget_amount,
         linked_project_id=project_in.linked_project_id,
-        status='DRAFT',
-        approval_status='PENDING',
+        status="DRAFT",
+        approval_status="PENDING",
         remark=project_in.remark,
     )
 
     save_obj(db, project)
 
     return ResponseModel(
-        code=201,
-        message="研发项目创建成功",
-        data=RdProjectResponse.model_validate(project)
+        code=201, message="研发项目创建成功", data=RdProjectResponse.model_validate(project)
     )
 
 
@@ -146,9 +149,7 @@ def get_rd_project(
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     return ResponseModel(
-        code=200,
-        message="success",
-        data=RdProjectResponse.model_validate(project)
+        code=200, message="success", data=RdProjectResponse.model_validate(project)
     )
 
 
@@ -166,17 +167,17 @@ def update_rd_project(
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 只有草稿状态才能更新
-    if project.status != 'DRAFT':
+    if project.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的研发项目才能更新")
 
     # 更新字段
     update_data = project_in.model_dump(exclude_unset=True)
 
     # 更新项目负责人姓名
-    if 'project_manager_id' in update_data and update_data['project_manager_id']:
-        manager = db.query(User).filter(User.id == update_data['project_manager_id']).first()
+    if "project_manager_id" in update_data and update_data["project_manager_id"]:
+        manager = db.query(User).filter(User.id == update_data["project_manager_id"]).first()
         if manager:
-            update_data['project_manager_name'] = manager.real_name or manager.username
+            update_data["project_manager_name"] = manager.real_name or manager.username
 
     for field, value in update_data.items():
         setattr(project, field, value)
@@ -184,9 +185,7 @@ def update_rd_project(
     save_obj(db, project)
 
     return ResponseModel(
-        code=200,
-        message="研发项目更新成功",
-        data=RdProjectResponse.model_validate(project)
+        code=200, message="研发项目更新成功", data=RdProjectResponse.model_validate(project)
     )
 
 
@@ -203,17 +202,17 @@ def approve_rd_project(
     """
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
-    if project.approval_status != 'PENDING':
+    if project.approval_status != "PENDING":
         raise HTTPException(status_code=400, detail="只有待审批状态的研发项目才能审批")
 
     if approve_request.approved:
-        project.approval_status = 'APPROVED'
-        project.status = 'APPROVED'
+        project.approval_status = "APPROVED"
+        project.status = "APPROVED"
         project.approved_by = current_user.id
         project.approved_at = datetime.now()
     else:
-        project.approval_status = 'REJECTED'
-        project.status = 'DRAFT'
+        project.approval_status = "REJECTED"
+        project.status = "DRAFT"
 
     project.approval_remark = approve_request.approval_remark
 
@@ -222,7 +221,7 @@ def approve_rd_project(
     return ResponseModel(
         code=200,
         message="研发项目审批成功" if approve_request.approved else "研发项目已驳回",
-        data=RdProjectResponse.model_validate(project)
+        data=RdProjectResponse.model_validate(project),
     )
 
 
@@ -239,10 +238,10 @@ def close_rd_project(
     """
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
-    if project.status in ['COMPLETED', 'CANCELLED']:
+    if project.status in ["COMPLETED", "CANCELLED"]:
         raise HTTPException(status_code=400, detail="项目已结项或已取消")
 
-    project.status = 'COMPLETED'
+    project.status = "COMPLETED"
     project.close_date = date.today()
     project.close_reason = close_request.close_reason
     project.close_result = close_request.close_result
@@ -251,9 +250,7 @@ def close_rd_project(
     save_obj(db, project)
 
     return ResponseModel(
-        code=200,
-        message="研发项目结项成功",
-        data=RdProjectResponse.model_validate(project)
+        code=200, message="研发项目结项成功", data=RdProjectResponse.model_validate(project)
     )
 
 
@@ -278,10 +275,5 @@ def link_rd_project(
     save_obj(db, project)
 
     return ResponseModel(
-        code=200,
-        message="关联非标项目成功",
-        data=RdProjectResponse.model_validate(project)
+        code=200, message="关联非标项目成功", data=RdProjectResponse.model_validate(project)
     )
-
-
-

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 from app.services.strategy.review.calendar_events import (
     create_calendar_event,
-    get_calendar_event,
     delete_calendar_event,
+    get_calendar_event,
 )
 
 

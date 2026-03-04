@@ -13,9 +13,9 @@ ContractEnhancedService 单元测试 - G2组覆盖率提升
 - ContractEnhancedService._create_approval_flow (金额分级)
 """
 
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import MagicMock, patch, call
+from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -138,10 +138,9 @@ class TestGetContract:
 
         db = MagicMock()
         mock_contract = MagicMock()
-        (db.query.return_value
-           .options.return_value
-           .filter.return_value
-           .first.return_value) = mock_contract
+        (db.query.return_value.options.return_value.filter.return_value.first.return_value) = (
+            mock_contract
+        )
 
         result = ContractEnhancedService.get_contract(db, 1)
         assert result == mock_contract
@@ -150,10 +149,7 @@ class TestGetContract:
         from app.services.sales.contract_enhanced import ContractEnhancedService
 
         db = MagicMock()
-        (db.query.return_value
-           .options.return_value
-           .filter.return_value
-           .first.return_value) = None
+        (db.query.return_value.options.return_value.filter.return_value.first.return_value) = None
 
         result = ContractEnhancedService.get_contract(db, 999)
         assert result is None
@@ -170,7 +166,9 @@ class TestGetContracts:
         # Simulate query chain
         q = MagicMock()
         q.count.return_value = 2
-        q.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_contracts
+        q.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_contracts
+        )
         # Also need filter to return chainable mock
         q.filter.return_value = q
         db.query.return_value = q

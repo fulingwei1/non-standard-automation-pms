@@ -3,8 +3,9 @@
 第四十五批覆盖：stage_transition_checks.py
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.stage_transition_checks")
 
@@ -13,8 +14,8 @@ from app.services.stage_transition_checks import (
     check_s4_to_s5_transition,
     check_s7_to_s8_transition,
     check_s8_to_s9_transition,
-    get_stage_status_mapping,
     execute_stage_transition,
+    get_stage_status_mapping,
 )
 
 
@@ -106,9 +107,10 @@ class TestExecuteStageTransition:
     def test_gate_failed_returns_false(self, mock_db):
         project = _make_project()
         mock_check_gate = MagicMock(return_value=(False, ["缺少合同"]))
-        with patch.dict("sys.modules", {
-            "app.api.v1.endpoints.projects.utils": MagicMock(check_gate=mock_check_gate)
-        }):
+        with patch.dict(
+            "sys.modules",
+            {"app.api.v1.endpoints.projects.utils": MagicMock(check_gate=mock_check_gate)},
+        ):
             ok, result = execute_stage_transition(mock_db, project, "S4", "测试")
         assert ok is False
         assert result["can_advance"] is False
@@ -117,9 +119,10 @@ class TestExecuteStageTransition:
     def test_gate_passed_updates_stage(self, mock_db):
         project = _make_project(stage="S3")
         mock_check_gate = MagicMock(return_value=(True, []))
-        with patch.dict("sys.modules", {
-            "app.api.v1.endpoints.projects.utils": MagicMock(check_gate=mock_check_gate)
-        }):
+        with patch.dict(
+            "sys.modules",
+            {"app.api.v1.endpoints.projects.utils": MagicMock(check_gate=mock_check_gate)},
+        ):
             ok, result = execute_stage_transition(mock_db, project, "S4", "测试")
         assert ok is True
         assert project.stage == "S4"
@@ -129,9 +132,7 @@ class TestExecuteStageTransition:
         project = _make_project()
         mock_utils = MagicMock()
         mock_utils.check_gate.side_effect = RuntimeError("DB error")
-        with patch.dict("sys.modules", {
-            "app.api.v1.endpoints.projects.utils": mock_utils
-        }):
+        with patch.dict("sys.modules", {"app.api.v1.endpoints.projects.utils": mock_utils}):
             ok, result = execute_stage_transition(mock_db, project, "S5", "测试")
         assert ok is False
         assert "失败" in result["message"]

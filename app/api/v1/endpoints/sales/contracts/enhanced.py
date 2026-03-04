@@ -66,7 +66,7 @@ def get_contracts(
         contract_type=contract_type,
         keyword=keyword,
     )
-    
+
     return {
         "items": contracts,
         "total": total,
@@ -161,7 +161,7 @@ def approve_contract(
     try:
         if approval_data and approval_data.approval_status != "approved":
             raise ValueError("此接口仅用于审批通过")
-        
+
         opinion = approval_data.approval_opinion if approval_data else None
         contract = ContractEnhancedService.approve_contract(
             db, contract_id, approval_id, current_user.id, opinion
@@ -183,7 +183,7 @@ def reject_contract(
     try:
         if not approval_data or not approval_data.approval_opinion:
             raise ValueError("驳回必须填写审批意见")
-        
+
         contract = ContractEnhancedService.reject_contract(
             db, contract_id, approval_id, current_user.id, approval_data.approval_opinion
         )
@@ -203,7 +203,9 @@ def get_pending_approvals(
 
 
 # ========== 合同条款管理 ==========
-@router.post("/{contract_id}/terms", response_model=ContractTermResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{contract_id}/terms", response_model=ContractTermResponse, status_code=status.HTTP_201_CREATED
+)
 def add_contract_term(
     contract_id: int,
     term_data: ContractTermCreate,
@@ -236,7 +238,7 @@ def update_contract_term(
     """更新条款"""
     if not term_data.term_content:
         raise HTTPException(status_code=400, detail="条款内容不能为空")
-    
+
     term = ContractEnhancedService.update_term(db, term_id, term_data.term_content)
     if not term:
         raise HTTPException(status_code=404, detail="条款不存在")
@@ -256,7 +258,11 @@ def delete_contract_term(
 
 
 # ========== 合同附件管理 ==========
-@router.post("/{contract_id}/attachments", response_model=ContractAttachmentResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{contract_id}/attachments",
+    response_model=ContractAttachmentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def upload_attachment(
     contract_id: int,
     attachment_data: ContractAttachmentCreate,
@@ -264,7 +270,9 @@ def upload_attachment(
     current_user: User = Depends(get_current_user),
 ):
     """上传附件"""
-    attachment = ContractEnhancedService.add_attachment(db, contract_id, attachment_data, current_user.id)
+    attachment = ContractEnhancedService.add_attachment(
+        db, contract_id, attachment_data, current_user.id
+    )
     return attachment
 
 

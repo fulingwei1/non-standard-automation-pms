@@ -3,12 +3,14 @@
 第八批覆盖率测试 - 排产建议服务（替代 material_transfer_service）
 SchedulingSuggestionService 实现优先级评分算法
 """
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.scheduling_suggestion_service import SchedulingSuggestionService
+
     HAS_SSS = True
 except Exception:
     HAS_SSS = False
@@ -21,7 +23,10 @@ class TestSchedulingSuggestionServiceConstants:
 
     def test_priority_scores(self):
         """优先级分数映射"""
-        assert SchedulingSuggestionService.PRIORITY_SCORES["P1"] > SchedulingSuggestionService.PRIORITY_SCORES["P5"]
+        assert (
+            SchedulingSuggestionService.PRIORITY_SCORES["P1"]
+            > SchedulingSuggestionService.PRIORITY_SCORES["P5"]
+        )
         assert SchedulingSuggestionService.PRIORITY_SCORES["P1"] == 30
 
     def test_customer_importance_scores(self):
@@ -77,10 +82,10 @@ class TestGetSuggestions:
         """无项目时返回空列表"""
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
-        if hasattr(SchedulingSuggestionService, 'get_scheduling_suggestions'):
+        if hasattr(SchedulingSuggestionService, "get_scheduling_suggestions"):
             result = SchedulingSuggestionService.get_scheduling_suggestions(db)
             assert isinstance(result, (list, dict))
-        elif hasattr(SchedulingSuggestionService, 'generate_suggestions'):
+        elif hasattr(SchedulingSuggestionService, "generate_suggestions"):
             result = SchedulingSuggestionService.generate_suggestions(db)
             assert isinstance(result, (list, dict))
         else:
@@ -88,8 +93,11 @@ class TestGetSuggestions:
 
     def test_suggestion_method_exists(self):
         """建议生成方法存在"""
-        method_names = [m for m in dir(SchedulingSuggestionService)
-                        if not m.startswith('_') and 'suggest' in m.lower() or 'score' in m.lower()]
+        method_names = [
+            m
+            for m in dir(SchedulingSuggestionService)
+            if not m.startswith("_") and "suggest" in m.lower() or "score" in m.lower()
+        ]
         assert len(method_names) > 0
 
 

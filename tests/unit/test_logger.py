@@ -125,7 +125,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_with_context(self):
         """测试记录带上下文的错误"""
-        from app.core.logging_config import log_error_with_context, get_logger
+        from app.core.logging_config import get_logger, log_error_with_context
 
         logger = get_logger("test")
 
@@ -142,7 +142,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_without_context(self):
         """测试记录不带上下文的错误"""
-        from app.core.logging_config import log_error_with_context, get_logger
+        from app.core.logging_config import get_logger, log_error_with_context
 
         logger = get_logger("test")
 
@@ -156,7 +156,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_with_none_error(self):
         """测试错误为 None 时不抛出异常"""
-        from app.core.logging_config import log_error_with_context, get_logger
+        from app.core.logging_config import get_logger, log_error_with_context
 
         logger = get_logger("test")
         log_error_with_context(logger, "Test message", None)
@@ -164,7 +164,7 @@ class TestLogErrorWithContext:
 
     def test_log_error_sets_extra_fields(self):
         """测试设置 extra 字段"""
-        from app.core.logging_config import log_error_with_context, get_logger
+        from app.core.logging_config import get_logger, log_error_with_context
 
         logger = get_logger("test")
 
@@ -185,7 +185,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_with_context(self):
         """测试记录带上下文的警告"""
-        from app.core.logging_config import log_warning_with_context, get_logger
+        from app.core.logging_config import get_logger, log_warning_with_context
 
         logger = get_logger("test")
         context = {"user_id": 123, "item_id": 456}
@@ -194,7 +194,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_without_context(self):
         """测试记录不带上下文的警告"""
-        from app.core.logging_config import log_warning_with_context, get_logger
+        from app.core.logging_config import get_logger, log_warning_with_context
 
         logger = get_logger("test")
         log_warning_with_context(logger, "Test warning")
@@ -202,7 +202,7 @@ class TestLogWarningWithContext:
 
     def test_log_warning_with_none_context(self):
         """测试上下文为 None 时不抛出异常"""
-        from app.core.logging_config import log_warning_with_context, get_logger
+        from app.core.logging_config import get_logger, log_warning_with_context
 
         logger = get_logger("test")
         log_warning_with_context(logger, "Test warning", None)
@@ -214,7 +214,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_with_context(self):
         """测试记录带上下文的信息"""
-        from app.core.logging_config import log_info_with_context, get_logger
+        from app.core.logging_config import get_logger, log_info_with_context
 
         logger = get_logger("test")
         context = {"user_id": 123, "item_id": 456}
@@ -223,7 +223,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_without_context(self):
         """测试记录不带上下文的信息"""
-        from app.core.logging_config import log_info_with_context, get_logger
+        from app.core.logging_config import get_logger, log_info_with_context
 
         logger = get_logger("test")
         log_info_with_context(logger, "Test info")
@@ -231,7 +231,7 @@ class TestLogInfoWithContext:
 
     def test_log_info_with_none_context(self):
         """测试上下文为 None 时不抛出异常"""
-        from app.core.logging_config import log_info_with_context, get_logger
+        from app.core.logging_config import get_logger, log_info_with_context
 
         logger = get_logger("test")
         log_info_with_context(logger, "Test info", None)

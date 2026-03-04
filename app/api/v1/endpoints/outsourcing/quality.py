@@ -21,8 +21,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.core import security
 from app.models.outsourcing import (
     OutsourcingDeliveryItem,
     OutsourcingInspection,
@@ -37,9 +37,10 @@ from app.schemas.outsourcing import (
 
 router = APIRouter()
 
+from app.common.query_filters import apply_pagination
+
 # 使用统一的编码生成工具
 from app.utils.domain_codes import outsourcing as outsourcing_codes
-from app.common.query_filters import apply_pagination
 
 generate_order_no = outsourcing_codes.generate_order_no
 generate_delivery_no = outsourcing_codes.generate_delivery_no
@@ -51,7 +52,10 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 # ==================== 外协质检 ====================
 
-@router.get("/outsourcing-inspections", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/outsourcing-inspections", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_outsourcing_inspections(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -71,35 +75,47 @@ def read_outsourcing_inspections(
         query = query.filter(OutsourcingInspection.inspect_result == inspect_result)
 
     total = query.count()
-    inspections = apply_pagination(query.order_by(desc(OutsourcingInspection.inspect_date)), pagination.offset, pagination.limit).all()
+    inspections = apply_pagination(
+        query.order_by(desc(OutsourcingInspection.inspect_date)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for inspection in inspections:
         pass_rate = Decimal("0")
         if inspection.inspect_quantity and inspection.inspect_quantity > 0:
-            pass_rate = (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+            pass_rate = (
+                (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+            )
 
-        items.append(OutsourcingInspectionResponse(
-            id=inspection.id,
-            inspection_no=inspection.inspection_no,
-            delivery_id=inspection.delivery_id,
-            inspect_type=inspection.inspect_type,
-            inspect_date=inspection.inspect_date,
-            inspector_name=inspection.inspector_name,
-            inspect_quantity=inspection.inspect_quantity,
-            qualified_quantity=inspection.qualified_quantity or Decimal("0"),
-            rejected_quantity=inspection.rejected_quantity or Decimal("0"),
-            inspect_result=inspection.inspect_result,
-            pass_rate=pass_rate,
-            disposition=inspection.disposition,
-            created_at=inspection.created_at,
-            updated_at=inspection.updated_at
-        ))
+        items.append(
+            OutsourcingInspectionResponse(
+                id=inspection.id,
+                inspection_no=inspection.inspection_no,
+                delivery_id=inspection.delivery_id,
+                inspect_type=inspection.inspect_type,
+                inspect_date=inspection.inspect_date,
+                inspector_name=inspection.inspector_name,
+                inspect_quantity=inspection.inspect_quantity,
+                qualified_quantity=inspection.qualified_quantity or Decimal("0"),
+                rejected_quantity=inspection.rejected_quantity or Decimal("0"),
+                inspect_result=inspection.inspect_result,
+                pass_rate=pass_rate,
+                disposition=inspection.disposition,
+                created_at=inspection.created_at,
+                updated_at=inspection.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.post("/outsourcing-inspections", response_model=OutsourcingInspectionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/outsourcing-inspections",
+    response_model=OutsourcingInspectionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_outsourcing_inspection(
     *,
     db: Session = Depends(deps.get_db),
@@ -110,7 +126,11 @@ def create_outsourcing_inspection(
     创建质检记录
     """
     # 验证交付明细
-    delivery_item = db.query(OutsourcingDeliveryItem).filter(OutsourcingDeliveryItem.id == inspection_in.delivery_item_id).first()
+    delivery_item = (
+        db.query(OutsourcingDeliveryItem)
+        .filter(OutsourcingDeliveryItem.id == inspection_in.delivery_item_id)
+        .first()
+    )
     if not delivery_item:
         raise HTTPException(status_code=404, detail="交付明细不存在")
 
@@ -120,7 +140,10 @@ def create_outsourcing_inspection(
     if inspection_in.inspect_quantity > delivery_item.delivery_quantity:
         raise HTTPException(status_code=400, detail="送检数量不能大于交付数量")
 
-    if inspection_in.qualified_quantity + inspection_in.rejected_quantity > inspection_in.inspect_quantity:
+    if (
+        inspection_in.qualified_quantity + inspection_in.rejected_quantity
+        > inspection_in.inspect_quantity
+    ):
         raise HTTPException(status_code=400, detail="合格数量+不合格数量不能大于送检数量")
 
     inspection_no = generate_inspection_no(db)
@@ -148,7 +171,7 @@ def create_outsourcing_inspection(
         defect_type=inspection_in.defect_type,
         disposition=inspection_in.disposition,
         disposition_note=inspection_in.disposition_note,
-        remark=inspection_in.remark
+        remark=inspection_in.remark,
     )
 
     # 更新交付明细的质检结果
@@ -157,10 +180,18 @@ def create_outsourcing_inspection(
     delivery_item.rejected_quantity = inspection_in.rejected_quantity
 
     # 更新订单明细的合格数量和不合格数量
-    order_item = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.id == delivery_item.order_item_id).first()
+    order_item = (
+        db.query(OutsourcingOrderItem)
+        .filter(OutsourcingOrderItem.id == delivery_item.order_item_id)
+        .first()
+    )
     if order_item:
-        order_item.qualified_quantity = (order_item.qualified_quantity or Decimal("0")) + inspection_in.qualified_quantity
-        order_item.rejected_quantity = (order_item.rejected_quantity or Decimal("0")) + inspection_in.rejected_quantity
+        order_item.qualified_quantity = (
+            order_item.qualified_quantity or Decimal("0")
+        ) + inspection_in.qualified_quantity
+        order_item.rejected_quantity = (
+            order_item.rejected_quantity or Decimal("0")
+        ) + inspection_in.rejected_quantity
         db.add(order_item)
 
     db.add(inspection)
@@ -170,7 +201,9 @@ def create_outsourcing_inspection(
 
     pass_rate = Decimal("0")
     if inspection.inspect_quantity and inspection.inspect_quantity > 0:
-        pass_rate = (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+        pass_rate = (
+            (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+        )
 
     return OutsourcingInspectionResponse(
         id=inspection.id,
@@ -186,11 +219,15 @@ def create_outsourcing_inspection(
         pass_rate=pass_rate,
         disposition=inspection.disposition,
         created_at=inspection.created_at,
-        updated_at=inspection.updated_at
+        updated_at=inspection.updated_at,
     )
 
 
-@router.put("/outsourcing-inspections/{inspection_id}", response_model=OutsourcingInspectionResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/outsourcing-inspections/{inspection_id}",
+    response_model=OutsourcingInspectionResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_outsourcing_inspection(
     *,
     db: Session = Depends(deps.get_db),
@@ -203,7 +240,9 @@ def update_outsourcing_inspection(
     """
     更新质检结果
     """
-    inspection = db.query(OutsourcingInspection).filter(OutsourcingInspection.id == inspection_id).first()
+    inspection = (
+        db.query(OutsourcingInspection).filter(OutsourcingInspection.id == inspection_id).first()
+    )
     if not inspection:
         raise HTTPException(status_code=404, detail="质检记录不存在")
 
@@ -222,7 +261,9 @@ def update_outsourcing_inspection(
 
     pass_rate = Decimal("0")
     if inspection.inspect_quantity and inspection.inspect_quantity > 0:
-        pass_rate = (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+        pass_rate = (
+            (inspection.qualified_quantity or Decimal("0")) / inspection.inspect_quantity * 100
+        )
 
     return OutsourcingInspectionResponse(
         id=inspection.id,
@@ -238,7 +279,5 @@ def update_outsourcing_inspection(
         pass_rate=pass_rate,
         disposition=inspection.disposition,
         created_at=inspection.created_at,
-        updated_at=inspection.updated_at
+        updated_at=inspection.updated_at,
     )
-
-

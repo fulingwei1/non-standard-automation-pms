@@ -18,10 +18,13 @@ router = APIRouter()
 
 # ==================== 研发项目分类 ====================
 
+
 @router.get("/categories", response_model=ResponseModel)
 def get_rd_project_categories(
     db: Session = Depends(deps.get_db),
-    category_type: Optional[str] = Query(None, description="分类类型筛选：SELF/ENTRUST/COOPERATION"),
+    category_type: Optional[str] = Query(
+        None, description="分类类型筛选：SELF/ENTRUST/COOPERATION"
+    ),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
@@ -40,8 +43,5 @@ def get_rd_project_categories(
     return ResponseModel(
         code=200,
         message="success",
-        data=[RdProjectCategoryResponse.model_validate(cat) for cat in categories]
+        data=[RdProjectCategoryResponse.model_validate(cat) for cat in categories],
     )
-
-
-

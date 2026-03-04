@@ -10,10 +10,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import paginated_response, success_response
 from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTask
 from app.schemas.approval.instance import ApprovalInstanceResponse
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.approval.task import (
     ApprovalTaskResponse,
     CarbonCopyResponse,
@@ -75,10 +75,7 @@ def get_my_pending_tasks(
 
     # 使用统一响应格式（paginated_response 内部会计算 pages）
     return paginated_response(
-        items=items,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=items, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -119,7 +116,7 @@ def get_my_initiated(
         items=[ApprovalInstanceResponse.model_validate(i) for i in items],
         total=total,
         page=pagination.page,
-        page_size=pagination.page_size
+        page_size=pagination.page_size,
     )
 
 
@@ -164,10 +161,7 @@ def get_my_cc(
 
     # 使用统一响应格式
     return paginated_response(
-        items=items,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=items, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -185,12 +179,10 @@ def mark_cc_as_read(
 
     if success:
         # 使用统一响应格式
-        return success_response(
-            data=None,
-            message="标记成功"
-        )
+        return success_response(data=None, message="标记成功")
     else:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="记录不存在或无权操作")
 
 
@@ -245,10 +237,7 @@ def get_my_processed(
 
     # 使用统一响应格式
     return paginated_response(
-        items=items,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=items, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -313,5 +302,5 @@ def get_pending_counts(
             "urgent": urgent_count,
             "total": pending_count + unread_cc_count,
         },
-        message="获取待办数量统计成功"
+        message="获取待办数量统计成功",
     )

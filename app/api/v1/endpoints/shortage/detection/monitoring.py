@@ -34,6 +34,7 @@ router = APIRouter()
 # 库存预警
 # ============================================================
 
+
 @router.get("/inventory-warnings", response_model=PaginatedResponse)
 def list_inventory_warnings(
     db: Session = Depends(deps.get_db),
@@ -59,9 +60,9 @@ def list_inventory_warnings(
     warnings = []
     for material in materials:
         # 获取当前库存（如果有库存字段）
-        current_stock = getattr(material, 'current_stock', None) or Decimal("0")
-        safety_stock = getattr(material, 'safety_stock', None) or Decimal("0")
-        max_stock = getattr(material, 'max_stock', None)
+        current_stock = getattr(material, "current_stock", None) or Decimal("0")
+        safety_stock = getattr(material, "safety_stock", None) or Decimal("0")
+        max_stock = getattr(material, "max_stock", None)
 
         warning_item = None
 
@@ -100,14 +101,14 @@ def list_inventory_warnings(
 
     # 分页
     total = len(warnings)
-    items = warnings[pagination.offset:pagination.offset + pagination.limit]
+    items = warnings[pagination.offset : pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -128,9 +129,9 @@ def run_inventory_check(
     total_checked = len(materials)
 
     for material in materials:
-        current_stock = getattr(material, 'current_stock', None) or Decimal("0")
-        safety_stock = getattr(material, 'safety_stock', None) or Decimal("0")
-        max_stock = getattr(material, 'max_stock', None)
+        current_stock = getattr(material, "current_stock", None) or Decimal("0")
+        safety_stock = getattr(material, "safety_stock", None) or Decimal("0")
+        max_stock = getattr(material, "max_stock", None)
 
         if safety_stock > 0 and current_stock < safety_stock:
             low_stock_count += 1
@@ -145,8 +146,8 @@ def run_inventory_check(
             "low_stock_count": low_stock_count,
             "overstock_count": overstock_count,
             "warning_count": low_stock_count + overstock_count,
-            "check_time": __import__("datetime").datetime.now().isoformat()
-        }
+            "check_time": __import__("datetime").datetime.now().isoformat(),
+        },
     )
 
 

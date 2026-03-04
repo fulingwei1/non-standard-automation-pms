@@ -3,11 +3,12 @@
 G3组 - 权限服务单元测试（扩展）
 目标文件: app/services/permission_service.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from app.models.user import Role, User, UserRole
 from app.services.permission_service import PermissionService
-from app.models.user import User, Role, UserRole
 
 
 class TestGetUserEffectiveRoles:
@@ -70,7 +71,9 @@ class TestCheckPermission:
         user = MagicMock(spec=User)
         user.is_superuser = True
 
-        result = PermissionService.check_permission(db, user_id=1, permission_code="anything:read", user=user)
+        result = PermissionService.check_permission(
+            db, user_id=1, permission_code="anything:read", user=user
+        )
         assert result is True
 
     def test_user_without_permission_returns_false(self):
@@ -80,7 +83,9 @@ class TestCheckPermission:
         user.tenant_id = None
 
         with patch.object(PermissionService, "get_user_permissions", return_value=[]):
-            result = PermissionService.check_permission(db, user_id=2, permission_code="project:delete", user=user)
+            result = PermissionService.check_permission(
+                db, user_id=2, permission_code="project:delete", user=user
+            )
 
         assert result is False
 
@@ -90,8 +95,12 @@ class TestCheckPermission:
         user.is_superuser = False
         user.tenant_id = None
 
-        with patch.object(PermissionService, "get_user_permissions", return_value=["project:read", "project:edit"]):
-            result = PermissionService.check_permission(db, user_id=3, permission_code="project:read", user=user)
+        with patch.object(
+            PermissionService, "get_user_permissions", return_value=["project:read", "project:edit"]
+        ):
+            result = PermissionService.check_permission(
+                db, user_id=3, permission_code="project:read", user=user
+            )
 
         assert result is True
 
@@ -160,7 +169,9 @@ class TestCheckAllPermissions:
         user.is_superuser = False
         user.tenant_id = None
 
-        with patch.object(PermissionService, "get_user_permissions", return_value=["perm:a", "perm:b", "perm:c"]):
+        with patch.object(
+            PermissionService, "get_user_permissions", return_value=["perm:a", "perm:b", "perm:c"]
+        ):
             result = PermissionService.check_all_permissions(db, 2, ["perm:a", "perm:b"], user=user)
 
         assert result is True
@@ -185,7 +196,9 @@ class TestGetUserPermissions:
         mock_cache = MagicMock()
         mock_cache.get_user_permissions.return_value = ["cached:perm"]
 
-        with patch("app.services.permission_service.get_permission_cache_service", return_value=mock_cache):
+        with patch(
+            "app.services.permission_service.get_permission_cache_service", return_value=mock_cache
+        ):
             result = PermissionService.get_user_permissions(db, user_id=1)
 
         assert "cached:perm" in result
@@ -207,7 +220,9 @@ class TestGetUserPermissions:
         mock_row.__getitem__ = lambda _, i: "project:read"
         db.execute.return_value = [mock_row]
 
-        with patch("app.services.permission_service.get_permission_cache_service", return_value=mock_cache):
+        with patch(
+            "app.services.permission_service.get_permission_cache_service", return_value=mock_cache
+        ):
             result = PermissionService.get_user_permissions(db, user_id=1)
 
         db.execute.assert_called()
@@ -222,7 +237,9 @@ class TestGetUserPermissions:
         db.query.return_value.filter.return_value.first.return_value = mock_user
         db.execute.side_effect = Exception("DB error")
 
-        with patch("app.services.permission_service.get_permission_cache_service", return_value=mock_cache):
+        with patch(
+            "app.services.permission_service.get_permission_cache_service", return_value=mock_cache
+        ):
             result = PermissionService.get_user_permissions(db, user_id=1)
 
         assert isinstance(result, list)
@@ -242,7 +259,8 @@ class TestGetUserDataScopes:
         role = MagicMock()
         role.id = 1
 
-        from app.models.permission import RoleDataScope, DataScopeRule
+        from app.models.permission import DataScopeRule, RoleDataScope
+
         rds1 = MagicMock(spec=RoleDataScope)
         rds1.resource_type = "project"
         rds1.scope_rule_id = 1
@@ -278,12 +296,9 @@ class TestGetUserMenus:
 
         mock_menu = MagicMock()
         mock_menu.to_dict.return_value = {"id": 1, "name": "项目管理"}
-        (db.query.return_value
-            .filter.return_value
-            .filter.return_value
-            .filter.return_value
-            .order_by.return_value
-            .all.return_value) = [mock_menu]
+        (
+            db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value
+        ) = [mock_menu]
 
         result = PermissionService.get_user_menus(db, user_id=1, user=user)
         assert len(result) >= 1

@@ -136,9 +136,7 @@ def get_project_cost_alerts(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    auto_create: bool = Query(
-        True, description="是否自动创建预警记录（检测到新预警时）"
-    ),
+    auto_create: bool = Query(True, description="是否自动创建预警记录（检测到新预警时）"),
     current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """
@@ -196,15 +194,11 @@ def get_forecast_history(
                 "id": forecast.id,
                 "forecast_date": forecast.forecast_date.isoformat(),
                 "forecast_method": forecast.forecast_method,
-                "forecasted_completion_cost": float(
-                    forecast.forecasted_completion_cost
-                ),
+                "forecasted_completion_cost": float(forecast.forecasted_completion_cost),
                 "current_progress_pct": float(forecast.current_progress_pct or 0),
                 "current_actual_cost": float(forecast.current_actual_cost or 0),
                 "forecast_accuracy": (
-                    float(forecast.forecast_accuracy)
-                    if forecast.forecast_accuracy
-                    else None
+                    float(forecast.forecast_accuracy) if forecast.forecast_accuracy else None
                 ),
                 "trend_data": forecast.trend_data,
             }
@@ -236,12 +230,8 @@ def compare_forecast_methods(
     # 处理错误情况
     results = {
         "LINEAR": linear_result if not linear_result.get("error") else None,
-        "EXPONENTIAL": (
-            exponential_result if not exponential_result.get("error") else None
-        ),
-        "HISTORICAL_AVERAGE": (
-            historical_result if not historical_result.get("error") else None
-        ),
+        "EXPONENTIAL": (exponential_result if not exponential_result.get("error") else None),
+        "HISTORICAL_AVERAGE": (historical_result if not historical_result.get("error") else None),
     }
 
     # 过滤掉错误的结果
@@ -253,16 +243,13 @@ def compare_forecast_methods(
     # 对比汇总
     comparison = {
         "forecasted_costs": {
-            method: result["forecasted_completion_cost"]
-            for method, result in valid_results.items()
+            method: result["forecasted_completion_cost"] for method, result in valid_results.items()
         },
         "data_points": {
-            method: result.get("data_points", 0)
-            for method, result in valid_results.items()
+            method: result.get("data_points", 0) for method, result in valid_results.items()
         },
         "is_over_budget": {
-            method: result.get("is_over_budget", False)
-            for method, result in valid_results.items()
+            method: result.get("is_over_budget", False) for method, result in valid_results.items()
         },
     }
 

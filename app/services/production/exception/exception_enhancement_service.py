@@ -9,27 +9,27 @@ from fastapi import HTTPException
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.query_filters import apply_pagination
 from app.models.production import (
+    EscalationLevel,
     ExceptionHandlingFlow,
     ExceptionKnowledge,
     ExceptionPDCA,
     FlowStatus,
-    EscalationLevel,
     PDCAStage,
     ProductionException,
 )
 from app.models.user import User
 from app.schemas.production.exception_enhancement import (
     ExceptionEscalateResponse,
-    FlowTrackingResponse,
-    KnowledgeResponse,
-    KnowledgeListResponse,
     ExceptionStatisticsResponse,
+    FlowTrackingResponse,
+    KnowledgeListResponse,
+    KnowledgeResponse,
     PDCAResponse,
     RecurrenceAnalysisResponse,
 )
 from app.utils.db_helpers import get_or_404, save_obj
-from app.common.query_filters import apply_pagination
 
 
 class ExceptionEnhancementService:
@@ -49,9 +49,11 @@ class ExceptionEnhancementService:
         exception = get_or_404(self.db, ProductionException, exception_id, "异常不存在")
 
         # 查询或创建处理流程
-        flow = self.db.query(ExceptionHandlingFlow).filter(
-            ExceptionHandlingFlow.exception_id == exception_id
-        ).first()
+        flow = (
+            self.db.query(ExceptionHandlingFlow)
+            .filter(ExceptionHandlingFlow.exception_id == exception_id)
+            .first()
+        )
 
         if not flow:
             flow = ExceptionHandlingFlow(
@@ -68,10 +70,7 @@ class ExceptionEnhancementService:
             "LEVEL_3": EscalationLevel.LEVEL_3,
         }
 
-        flow.escalation_level = escalation_level_map.get(
-            escalation_level,
-            EscalationLevel.LEVEL_1
-        )
+        flow.escalation_level = escalation_level_map.get(escalation_level, EscalationLevel.LEVEL_1)
         flow.escalation_reason = reason
         flow.escalated_at = datetime.now()
         flow.escalated_to_id = escalated_to_id
@@ -110,13 +109,16 @@ class ExceptionEnhancementService:
 
     def get_exception_flow(self, exception_id: int) -> FlowTrackingResponse:
         """获取异常处理流程跟踪"""
-        flow = self.db.query(ExceptionHandlingFlow).options(
-            joinedload(ExceptionHandlingFlow.exception),
-            joinedload(ExceptionHandlingFlow.escalated_to),
-            joinedload(ExceptionHandlingFlow.verifier),
-        ).filter(
-            ExceptionHandlingFlow.exception_id == exception_id
-        ).first()
+        flow = (
+            self.db.query(ExceptionHandlingFlow)
+            .options(
+                joinedload(ExceptionHandlingFlow.exception),
+                joinedload(ExceptionHandlingFlow.escalated_to),
+                joinedload(ExceptionHandlingFlow.verifier),
+            )
+            .filter(ExceptionHandlingFlow.exception_id == exception_id)
+            .first()
+        )
 
         if not flow:
             raise HTTPException(status_code=404, detail="未找到处理流程")
@@ -158,9 +160,7 @@ class ExceptionEnhancementService:
         # 待处理时长
         if flow.pending_at:
             end_time = flow.processing_at or now
-            flow.pending_duration_minutes = int(
-                (end_time - flow.pending_at).total_seconds() / 60
-            )
+            flow.pending_duration_minutes = int((end_time - flow.pending_at).total_seconds() / 60)
 
         # 处理中时长
         if flow.processing_at:
@@ -172,9 +172,7 @@ class ExceptionEnhancementService:
         # 总时长
         if flow.pending_at:
             end_time = flow.closed_at or now
-            flow.total_duration_minutes = int(
-                (end_time - flow.pending_at).total_seconds() / 60
-            )
+            flow.total_duration_minutes = int((end_time - flow.pending_at).total_seconds() / 60)
 
     # ==================== 异常知识库 ====================
 
@@ -238,8 +236,7 @@ class ExceptionEnhancementService:
 
         # 按引用次数和创建时间排序
         query = query.order_by(
-            desc(ExceptionKnowledge.reference_count),
-            desc(ExceptionKnowledge.created_at)
+            desc(ExceptionKnowledge.reference_count), desc(ExceptionKnowledge.created_at)
         )
 
         # 分页
@@ -315,52 +312,68 @@ class ExceptionEnhancementService:
 
         # 按类型统计
         by_type = {}
-        type_stats = self.db.query(
-            ProductionException.exception_type,
-            func.count(ProductionException.id).label('count')
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end
-        ).group_by(ProductionException.exception_type).all()
+        type_stats = (
+            self.db.query(
+                ProductionException.exception_type,
+                func.count(ProductionException.id).label("count"),
+            )
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+            )
+            .group_by(ProductionException.exception_type)
+            .all()
+        )
 
         for type_name, count in type_stats:
             by_type[type_name] = count
 
         # 按级别统计
         by_level = {}
-        level_stats = self.db.query(
-            ProductionException.exception_level,
-            func.count(ProductionException.id).label('count')
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end
-        ).group_by(ProductionException.exception_level).all()
+        level_stats = (
+            self.db.query(
+                ProductionException.exception_level,
+                func.count(ProductionException.id).label("count"),
+            )
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+            )
+            .group_by(ProductionException.exception_level)
+            .all()
+        )
 
         for level_name, count in level_stats:
             by_level[level_name] = count
 
         # 按状态统计
         by_status = {}
-        status_stats = self.db.query(
-            ProductionException.status,
-            func.count(ProductionException.id).label('count')
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end
-        ).group_by(ProductionException.status).all()
+        status_stats = (
+            self.db.query(
+                ProductionException.status, func.count(ProductionException.id).label("count")
+            )
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+            )
+            .group_by(ProductionException.status)
+            .all()
+        )
 
         for status_name, count in status_stats:
             by_status[status_name] = count
 
         # 平均解决时长
-        flows = self.db.query(ExceptionHandlingFlow).join(
-            ProductionException,
-            ExceptionHandlingFlow.exception_id == ProductionException.id
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end,
-            ExceptionHandlingFlow.total_duration_minutes.isnot(None)
-        ).all()
+        flows = (
+            self.db.query(ExceptionHandlingFlow)
+            .join(ProductionException, ExceptionHandlingFlow.exception_id == ProductionException.id)
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+                ExceptionHandlingFlow.total_duration_minutes.isnot(None),
+            )
+            .all()
+        )
 
         avg_resolution_time = None
         if flows:
@@ -368,14 +381,16 @@ class ExceptionEnhancementService:
             avg_resolution_time = total_minutes / len(flows)
 
         # 升级率
-        escalated_count = self.db.query(ExceptionHandlingFlow).join(
-            ProductionException,
-            ExceptionHandlingFlow.exception_id == ProductionException.id
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end,
-            ExceptionHandlingFlow.escalation_level != EscalationLevel.NONE
-        ).count()
+        escalated_count = (
+            self.db.query(ExceptionHandlingFlow)
+            .join(ProductionException, ExceptionHandlingFlow.exception_id == ProductionException.id)
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+                ExceptionHandlingFlow.escalation_level != EscalationLevel.NONE,
+            )
+            .count()
+        )
 
         escalation_rate = (escalated_count / total_count * 100) if total_count > 0 else 0
 
@@ -383,24 +398,24 @@ class ExceptionEnhancementService:
         recurrence_rate = 0.0
 
         # 高频异常TOP10
-        top_exceptions = self.db.query(
-            ProductionException.exception_type,
-            ProductionException.title,
-            func.count(ProductionException.id).label('count')
-        ).filter(
-            ProductionException.report_time >= effective_start,
-            ProductionException.report_time <= effective_end
-        ).group_by(
-            ProductionException.exception_type,
-            ProductionException.title
-        ).order_by(desc('count')).limit(10).all()
+        top_exceptions = (
+            self.db.query(
+                ProductionException.exception_type,
+                ProductionException.title,
+                func.count(ProductionException.id).label("count"),
+            )
+            .filter(
+                ProductionException.report_time >= effective_start,
+                ProductionException.report_time <= effective_end,
+            )
+            .group_by(ProductionException.exception_type, ProductionException.title)
+            .order_by(desc("count"))
+            .limit(10)
+            .all()
+        )
 
         top_exceptions_list = [
-            {
-                "type": exc_type,
-                "title": title,
-                "count": count
-            }
+            {"type": exc_type, "title": title, "count": count}
             for exc_type, title, count in top_exceptions
         ]
 
@@ -467,7 +482,7 @@ class ExceptionEnhancementService:
         if target_stage not in valid_transitions.get(pdca.current_stage, []):
             raise HTTPException(
                 status_code=400,
-                detail=f"不能从 {pdca.current_stage.value} 推进到 {target_stage.value}"
+                detail=f"不能从 {pdca.current_stage.value} 推进到 {target_stage.value}",
             )
 
         # 更新对应阶段的数据
@@ -511,9 +526,11 @@ class ExceptionEnhancementService:
         """构建PDCA响应"""
         exception_no = None
         if pdca.exception_id:
-            exception = self.db.query(ProductionException).filter(
-                ProductionException.id == pdca.exception_id
-            ).first()
+            exception = (
+                self.db.query(ProductionException)
+                .filter(ProductionException.id == pdca.exception_id)
+                .first()
+            )
             if exception:
                 exception_no = exception.exception_no
 
@@ -596,23 +613,23 @@ class ExceptionEnhancementService:
             time_trend = self.analyze_time_trend(exc_list, days)
 
             # 常见根因（从PDCA记录中提取）
-            common_root_causes = self.extract_common_root_causes(
-                [e.id for e in exc_list]
-            )
+            common_root_causes = self.extract_common_root_causes([e.id for e in exc_list])
 
-            results.append(RecurrenceAnalysisResponse(
-                exception_type=exc_type,
-                total_occurrences=len(exc_list),
-                similar_exceptions=similar_groups,
-                time_trend=time_trend,
-                common_root_causes=common_root_causes,
-                recommended_actions=[
-                    "建立标准作业程序",
-                    "加强人员培训",
-                    "优化设备维护计划",
-                    "建立预警机制",
-                ],
-            ))
+            results.append(
+                RecurrenceAnalysisResponse(
+                    exception_type=exc_type,
+                    total_occurrences=len(exc_list),
+                    similar_exceptions=similar_groups,
+                    time_trend=time_trend,
+                    common_root_causes=common_root_causes,
+                    recommended_actions=[
+                        "建立标准作业程序",
+                        "加强人员培训",
+                        "优化设备维护计划",
+                        "建立预警机制",
+                    ],
+                )
+            )
 
         return results
 
@@ -644,20 +661,22 @@ class ExceptionEnhancementService:
         similar = []
         for title, group in title_groups.items():
             if len(group) >= 2:
-                similar.append({
-                    "pattern": title,
-                    "count": len(group),
-                    "exception_ids": [e.id for e in group],
-                })
+                similar.append(
+                    {
+                        "pattern": title,
+                        "count": len(group),
+                        "exception_ids": [e.id for e in group],
+                    }
+                )
 
-        return sorted(similar, key=lambda x: x['count'], reverse=True)[:10]
+        return sorted(similar, key=lambda x: x["count"], reverse=True)[:10]
 
     def analyze_time_trend(self, exceptions: list, days: int) -> List[dict]:
         """分析时间趋势"""
         # 按日期分组统计
         date_counts = {}
         for exc in exceptions:
-            date_key = exc.report_time.strftime('%Y-%m-%d')
+            date_key = exc.report_time.strftime("%Y-%m-%d")
             date_counts[date_key] = date_counts.get(date_key, 0) + 1
 
         # 生成趋势数据
@@ -665,20 +684,26 @@ class ExceptionEnhancementService:
         start_date = datetime.now() - timedelta(days=days)
         for i in range(days):
             date = start_date + timedelta(days=i)
-            date_key = date.strftime('%Y-%m-%d')
-            trend.append({
-                "date": date_key,
-                "count": date_counts.get(date_key, 0),
-            })
+            date_key = date.strftime("%Y-%m-%d")
+            trend.append(
+                {
+                    "date": date_key,
+                    "count": date_counts.get(date_key, 0),
+                }
+            )
 
         return trend
 
     def extract_common_root_causes(self, exception_ids: List[int]) -> List[str]:
         """提取常见根因"""
-        pdca_records = self.db.query(ExceptionPDCA).filter(
-            ExceptionPDCA.exception_id.in_(exception_ids),
-            ExceptionPDCA.plan_root_cause.isnot(None)
-        ).all()
+        pdca_records = (
+            self.db.query(ExceptionPDCA)
+            .filter(
+                ExceptionPDCA.exception_id.in_(exception_ids),
+                ExceptionPDCA.plan_root_cause.isnot(None),
+            )
+            .all()
+        )
 
         root_causes = [p.plan_root_cause for p in pdca_records if p.plan_root_cause]
 

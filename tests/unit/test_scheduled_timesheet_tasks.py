@@ -20,6 +20,7 @@ def _make_db():
 #  daily_timesheet_reminder_task
 # ================================================================
 
+
 class TestDailyTimesheetReminderTask:
 
     @patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session")
@@ -34,6 +35,7 @@ class TestDailyTimesheetReminderTask:
             return_value=5,
         ) as mock_notify:
             from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_reminder_task
+
             result = daily_timesheet_reminder_task()
 
         assert result["reminder_count"] == 5
@@ -51,6 +53,7 @@ class TestDailyTimesheetReminderTask:
             side_effect=Exception("DB error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_reminder_task
+
             result = daily_timesheet_reminder_task()
 
         assert "error" in result
@@ -67,6 +70,7 @@ class TestDailyTimesheetReminderTask:
             return_value=0,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_reminder_task
+
             result = daily_timesheet_reminder_task()
 
         assert result["reminder_count"] == 0
@@ -75,6 +79,7 @@ class TestDailyTimesheetReminderTask:
 # ================================================================
 #  weekly_timesheet_reminder_task
 # ================================================================
+
 
 class TestWeeklyTimesheetReminderTask:
 
@@ -89,6 +94,7 @@ class TestWeeklyTimesheetReminderTask:
             return_value=3,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import weekly_timesheet_reminder_task
+
             result = weekly_timesheet_reminder_task()
 
         assert result["reminder_count"] == 3
@@ -104,6 +110,7 @@ class TestWeeklyTimesheetReminderTask:
             side_effect=RuntimeError("weekly error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import weekly_timesheet_reminder_task
+
             result = weekly_timesheet_reminder_task()
 
         assert "error" in result
@@ -112,6 +119,7 @@ class TestWeeklyTimesheetReminderTask:
 # ================================================================
 #  timesheet_approval_timeout_reminder_task
 # ================================================================
+
 
 class TestTimesheetApprovalTimeoutReminderTask:
 
@@ -125,7 +133,10 @@ class TestTimesheetApprovalTimeoutReminderTask:
             "app.services.timesheet_reminder.notify_approval_timeout",
             return_value=7,
         ):
-            from app.utils.scheduled_tasks.timesheet_tasks import timesheet_approval_timeout_reminder_task
+            from app.utils.scheduled_tasks.timesheet_tasks import (
+                timesheet_approval_timeout_reminder_task,
+            )
+
             result = timesheet_approval_timeout_reminder_task()
 
         assert result["reminder_count"] == 7
@@ -140,7 +151,10 @@ class TestTimesheetApprovalTimeoutReminderTask:
             "app.services.timesheet_reminder.notify_approval_timeout",
             side_effect=Exception("approval error"),
         ):
-            from app.utils.scheduled_tasks.timesheet_tasks import timesheet_approval_timeout_reminder_task
+            from app.utils.scheduled_tasks.timesheet_tasks import (
+                timesheet_approval_timeout_reminder_task,
+            )
+
             result = timesheet_approval_timeout_reminder_task()
 
         assert "error" in result
@@ -149,6 +163,7 @@ class TestTimesheetApprovalTimeoutReminderTask:
 # ================================================================
 #  timesheet_sync_failure_alert_task
 # ================================================================
+
 
 class TestTimesheetSyncFailureAlertTask:
 
@@ -163,6 +178,7 @@ class TestTimesheetSyncFailureAlertTask:
             return_value=2,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import timesheet_sync_failure_alert_task
+
             result = timesheet_sync_failure_alert_task()
 
         assert result["alert_count"] == 2
@@ -178,6 +194,7 @@ class TestTimesheetSyncFailureAlertTask:
             side_effect=Exception("sync error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import timesheet_sync_failure_alert_task
+
             result = timesheet_sync_failure_alert_task()
 
         assert "error" in result
@@ -186,6 +203,7 @@ class TestTimesheetSyncFailureAlertTask:
 # ================================================================
 #  daily_timesheet_aggregation_task
 # ================================================================
+
 
 class TestDailyTimesheetAggregationTask:
 
@@ -206,6 +224,7 @@ class TestDailyTimesheetAggregationTask:
             return_value=mock_service,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_aggregation_task
+
             result = daily_timesheet_aggregation_task()
 
         assert result.get("message") == "汇总完成"
@@ -221,6 +240,7 @@ class TestDailyTimesheetAggregationTask:
             side_effect=Exception("agg error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_aggregation_task
+
             result = daily_timesheet_aggregation_task()
 
         assert "error" in result
@@ -229,6 +249,7 @@ class TestDailyTimesheetAggregationTask:
 # ================================================================
 #  monthly_timesheet_aggregation_task
 # ================================================================
+
 
 class TestMonthlyTimesheetAggregationTask:
 
@@ -247,6 +268,7 @@ class TestMonthlyTimesheetAggregationTask:
             return_value=mock_service,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import monthly_timesheet_aggregation_task
+
             result = monthly_timesheet_aggregation_task()
 
         assert mock_service.aggregate_monthly_timesheet.called
@@ -262,6 +284,7 @@ class TestMonthlyTimesheetAggregationTask:
             side_effect=Exception("month error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import monthly_timesheet_aggregation_task
+
             result = monthly_timesheet_aggregation_task()
 
         assert "error" in result
@@ -270,6 +293,7 @@ class TestMonthlyTimesheetAggregationTask:
 # ================================================================
 #  calculate_monthly_labor_cost_task
 # ================================================================
+
 
 class TestCalculateMonthlyLaborCostTask:
 
@@ -290,6 +314,7 @@ class TestCalculateMonthlyLaborCostTask:
             return_value=mock_service,
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import calculate_monthly_labor_cost_task
+
             result = calculate_monthly_labor_cost_task()
 
         assert mock_service.calculate_monthly_costs.called
@@ -305,6 +330,7 @@ class TestCalculateMonthlyLaborCostTask:
             side_effect=Exception("cost error"),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import calculate_monthly_labor_cost_task
+
             result = calculate_monthly_labor_cost_task()
 
         assert "error" in result
@@ -313,6 +339,7 @@ class TestCalculateMonthlyLaborCostTask:
 # ================================================================
 #  timesheet_anomaly_alert_task
 # ================================================================
+
 
 class TestTimesheetAnomalyAlertTask:
 
@@ -329,20 +356,26 @@ class TestTimesheetAnomalyAlertTask:
         mock_sender = MagicMock()
         mock_reminder_type = MagicMock()
 
-        with patch(
-            "app.services.timesheet_reminder.anomaly_detector.TimesheetAnomalyDetector",
-            return_value=mock_detector,
-        ), patch(
-            "app.services.timesheet_reminder.notification_sender.NotificationSender",
-            return_value=mock_sender,
-        ), patch(
-            "app.services.timesheet_reminder.reminder_manager.TimesheetReminderManager",
-            return_value=mock_manager,
-        ), patch(
-            "app.models.timesheet_reminder.ReminderTypeEnum",
-            mock_reminder_type,
+        with (
+            patch(
+                "app.services.timesheet_reminder.anomaly_detector.TimesheetAnomalyDetector",
+                return_value=mock_detector,
+            ),
+            patch(
+                "app.services.timesheet_reminder.notification_sender.NotificationSender",
+                return_value=mock_sender,
+            ),
+            patch(
+                "app.services.timesheet_reminder.reminder_manager.TimesheetReminderManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "app.models.timesheet_reminder.ReminderTypeEnum",
+                mock_reminder_type,
+            ),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import timesheet_anomaly_alert_task
+
             result = timesheet_anomaly_alert_task()
 
         assert result["anomaly_count"] == 0
@@ -370,20 +403,26 @@ class TestTimesheetAnomalyAlertTask:
         mock_sender = MagicMock()
         mock_reminder_type = MagicMock()
 
-        with patch(
-            "app.services.timesheet_reminder.anomaly_detector.TimesheetAnomalyDetector",
-            return_value=mock_detector,
-        ), patch(
-            "app.services.timesheet_reminder.notification_sender.NotificationSender",
-            return_value=mock_sender,
-        ), patch(
-            "app.services.timesheet_reminder.reminder_manager.TimesheetReminderManager",
-            return_value=mock_manager,
-        ), patch(
-            "app.models.timesheet_reminder.ReminderTypeEnum",
-            mock_reminder_type,
+        with (
+            patch(
+                "app.services.timesheet_reminder.anomaly_detector.TimesheetAnomalyDetector",
+                return_value=mock_detector,
+            ),
+            patch(
+                "app.services.timesheet_reminder.notification_sender.NotificationSender",
+                return_value=mock_sender,
+            ),
+            patch(
+                "app.services.timesheet_reminder.reminder_manager.TimesheetReminderManager",
+                return_value=mock_manager,
+            ),
+            patch(
+                "app.models.timesheet_reminder.ReminderTypeEnum",
+                mock_reminder_type,
+            ),
         ):
             from app.utils.scheduled_tasks.timesheet_tasks import timesheet_anomaly_alert_task
+
             result = timesheet_anomaly_alert_task()
 
         assert result["anomaly_count"] == 1
@@ -394,6 +433,7 @@ class TestTimesheetAnomalyAlertTask:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("异常检测失败")
 
         from app.utils.scheduled_tasks.timesheet_tasks import timesheet_anomaly_alert_task
+
         result = timesheet_anomaly_alert_task()
 
         assert "error" in result

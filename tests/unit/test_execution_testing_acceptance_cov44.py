@@ -7,6 +7,7 @@ try:
     from app.services.preset_stage_templates.templates.execution.testing_acceptance import (
         TESTING_ACCEPTANCE_STAGES,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

@@ -13,8 +13,8 @@ AIService 综合单元测试
 - chat_with_ai: 便捷聊天函数
 """
 
-from unittest.mock import MagicMock, patch, AsyncMock
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -33,8 +33,8 @@ class TestAIServiceInit:
         mock_settings.KIMI_TIMEOUT = 30
         mock_settings.KIMI_ENABLED = True
 
-        with patch('app.services.ai_service.settings', mock_settings):
-            with patch('app.services.ai_service.httpx.AsyncClient') as mock_client:
+        with patch("app.services.ai_service.settings", mock_settings):
+            with patch("app.services.ai_service.httpx.AsyncClient") as mock_client:
                 from app.services.ai_service import AIService
 
                 # 需要重新创建实例
@@ -50,7 +50,7 @@ class TestAIServiceInit:
         mock_settings.KIMI_API_KEY = None
         mock_settings.KIMI_ENABLED = True
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             from app.services.ai_service import AIService
 
             service = AIService()
@@ -64,7 +64,7 @@ class TestAIServiceInit:
         mock_settings.KIMI_API_KEY = "test-key"
         mock_settings.KIMI_ENABLED = False
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             from app.services.ai_service import AIService
 
             service = AIService()
@@ -78,14 +78,15 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_raises_when_disabled(self):
         """测试服务禁用时抛出异常"""
-        from app.services.ai_service import AIService
         from fastapi import HTTPException
+
+        from app.services.ai_service import AIService
 
         mock_settings = MagicMock()
         mock_settings.KIMI_API_KEY = None
         mock_settings.KIMI_ENABLED = False
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
 
             with pytest.raises(HTTPException) as exc_info:
@@ -96,14 +97,15 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_raises_when_client_not_initialized(self):
         """测试客户端未初始化时抛出异常"""
-        from app.services.ai_service import AIService
         from fastapi import HTTPException
+
+        from app.services.ai_service import AIService
 
         mock_settings = MagicMock()
         mock_settings.KIMI_API_KEY = "key"
         mock_settings.KIMI_ENABLED = True
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
             service.client = None
@@ -129,30 +131,27 @@ class TestChatCompletion:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "Hello!"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "Hello!"}}]}
 
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_response)
 
-        with patch('app.services.ai_service.settings', mock_settings):
-            with patch('app.services.ai_service.httpx.AsyncClient', return_value=mock_client):
+        with patch("app.services.ai_service.settings", mock_settings):
+            with patch("app.services.ai_service.httpx.AsyncClient", return_value=mock_client):
                 service = AIService()
                 service.client = mock_client
                 service.enabled = True
 
-                result = await service.chat_completion(
-                    [{"role": "user", "content": "Hi"}]
-                )
+                result = await service.chat_completion([{"role": "user", "content": "Hi"}])
 
                 assert result["choices"][0]["message"]["content"] == "Hello!"
 
     @pytest.mark.asyncio
     async def test_handles_api_error(self):
         """测试处理 API 错误"""
-        from app.services.ai_service import AIService
         from fastapi import HTTPException
+
+        from app.services.ai_service import AIService
 
         mock_settings = MagicMock()
         mock_settings.KIMI_API_KEY = "key"
@@ -171,8 +170,8 @@ class TestChatCompletion:
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_response)
 
-        with patch('app.services.ai_service.settings', mock_settings):
-            with patch('app.services.ai_service.httpx.AsyncClient', return_value=mock_client):
+        with patch("app.services.ai_service.settings", mock_settings):
+            with patch("app.services.ai_service.httpx.AsyncClient", return_value=mock_client):
                 service = AIService()
                 service.client = mock_client
                 service.enabled = True
@@ -185,9 +184,10 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_handles_timeout(self):
         """测试处理超时"""
-        from app.services.ai_service import AIService
-        from fastapi import HTTPException
         import httpx
+        from fastapi import HTTPException
+
+        from app.services.ai_service import AIService
 
         mock_settings = MagicMock()
         mock_settings.KIMI_API_KEY = "key"
@@ -201,8 +201,8 @@ class TestChatCompletion:
         mock_client = MagicMock()
         mock_client.post = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
 
-        with patch('app.services.ai_service.settings', mock_settings):
-            with patch('app.services.ai_service.httpx.AsyncClient', return_value=mock_client):
+        with patch("app.services.ai_service.settings", mock_settings):
+            with patch("app.services.ai_service.httpx.AsyncClient", return_value=mock_client):
                 service = AIService()
                 service.client = mock_client
                 service.enabled = True
@@ -230,14 +230,12 @@ class TestSimpleChat:
         mock_settings.KIMI_TEMPERATURE = 0.7
         mock_settings.KIMI_TIMEOUT = 30
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
 
-            with patch.object(service, 'chat_completion', new_callable=AsyncMock) as mock_chat:
-                mock_chat.return_value = {
-                    "choices": [{"message": {"content": "测试响应"}}]
-                }
+            with patch.object(service, "chat_completion", new_callable=AsyncMock) as mock_chat:
+                mock_chat.return_value = {"choices": [{"message": {"content": "测试响应"}}]}
 
                 result = await service.simple_chat("测试问题")
 
@@ -257,14 +255,12 @@ class TestSimpleChat:
         mock_settings.KIMI_TEMPERATURE = 0.7
         mock_settings.KIMI_TIMEOUT = 30
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
 
-            with patch.object(service, 'chat_completion', new_callable=AsyncMock) as mock_chat:
-                mock_chat.return_value = {
-                    "choices": [{"message": {"content": "响应"}}]
-                }
+            with patch.object(service, "chat_completion", new_callable=AsyncMock) as mock_chat:
+                mock_chat.return_value = {"choices": [{"message": {"content": "响应"}}]}
 
                 await service.simple_chat("问题", context="你是专家")
 
@@ -276,8 +272,9 @@ class TestSimpleChat:
     @pytest.mark.asyncio
     async def test_handles_parse_error(self):
         """测试处理解析错误"""
-        from app.services.ai_service import AIService
         from fastapi import HTTPException
+
+        from app.services.ai_service import AIService
 
         mock_settings = MagicMock()
         mock_settings.KIMI_API_KEY = "key"
@@ -288,11 +285,11 @@ class TestSimpleChat:
         mock_settings.KIMI_TEMPERATURE = 0.7
         mock_settings.KIMI_TIMEOUT = 30
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
 
-            with patch.object(service, 'chat_completion', new_callable=AsyncMock) as mock_chat:
+            with patch.object(service, "chat_completion", new_callable=AsyncMock) as mock_chat:
                 mock_chat.return_value = {"choices": []}  # 空的 choices
 
                 with pytest.raises(HTTPException) as exc_info:
@@ -318,17 +315,13 @@ class TestProjectAnalysis:
         mock_settings.KIMI_TEMPERATURE = 0.7
         mock_settings.KIMI_TIMEOUT = 30
 
-        analysis_result = {
-            "risk_level": "中",
-            "main_risks": ["风险1"],
-            "overall_summary": "总结"
-        }
+        analysis_result = {"risk_level": "中", "main_risks": ["风险1"], "overall_summary": "总结"}
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
 
-            with patch.object(service, 'simple_chat', new_callable=AsyncMock) as mock_chat:
+            with patch.object(service, "simple_chat", new_callable=AsyncMock) as mock_chat:
                 mock_chat.return_value = json.dumps(analysis_result)
 
                 result = await service.project_analysis({"name": "测试项目"})
@@ -350,11 +343,11 @@ class TestProjectAnalysis:
         mock_settings.KIMI_TEMPERATURE = 0.7
         mock_settings.KIMI_TIMEOUT = 30
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.enabled = True
 
-            with patch.object(service, 'simple_chat', new_callable=AsyncMock) as mock_chat:
+            with patch.object(service, "simple_chat", new_callable=AsyncMock) as mock_chat:
                 mock_chat.return_value = "这不是有效的JSON"
 
                 result = await service.project_analysis({"name": "测试项目"})
@@ -383,7 +376,7 @@ class TestClose:
         mock_client = MagicMock()
         mock_client.aclose = AsyncMock()
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
             service.client = mock_client
 
@@ -400,7 +393,7 @@ class TestClose:
         mock_settings.KIMI_API_KEY = None
         mock_settings.KIMI_ENABLED = False
 
-        with patch('app.services.ai_service.settings', mock_settings):
+        with patch("app.services.ai_service.settings", mock_settings):
             service = AIService()
 
             # 应该不抛出异常
@@ -424,7 +417,7 @@ class TestHelperFunctions:
         """测试项目分析便捷函数"""
         from app.services.ai_service import analyze_project_with_ai
 
-        with patch('app.services.ai_service.get_ai_service', new_callable=AsyncMock) as mock_get:
+        with patch("app.services.ai_service.get_ai_service", new_callable=AsyncMock) as mock_get:
             mock_service = MagicMock()
             mock_service.project_analysis = AsyncMock(return_value={"result": "ok"})
             mock_get.return_value = mock_service
@@ -438,7 +431,7 @@ class TestHelperFunctions:
         """测试聊天便捷函数"""
         from app.services.ai_service import chat_with_ai
 
-        with patch('app.services.ai_service.get_ai_service', new_callable=AsyncMock) as mock_get:
+        with patch("app.services.ai_service.get_ai_service", new_callable=AsyncMock) as mock_get:
             mock_service = MagicMock()
             mock_service.simple_chat = AsyncMock(return_value="响应")
             mock_get.return_value = mock_service

@@ -149,8 +149,9 @@ class TestIsRuleApplicable:
 
     def test_returns_false_when_rule_not_effective_yet(self):
         """测试规则未生效时返回 False"""
-        from app.services.project_bonus_service import ProjectBonusService
         from datetime import timedelta
+
+        from app.services.project_bonus_service import ProjectBonusService
 
         mock_db = MagicMock()
         service = ProjectBonusService(mock_db)
@@ -168,8 +169,9 @@ class TestIsRuleApplicable:
 
     def test_returns_false_when_rule_expired(self):
         """测试规则已过期时返回 False"""
-        from app.services.project_bonus_service import ProjectBonusService
         from datetime import timedelta
+
+        from app.services.project_bonus_service import ProjectBonusService
 
         mock_db = MagicMock()
         service = ProjectBonusService(mock_db)
@@ -224,22 +226,25 @@ class TestGetProjectBonusCalculations:
         from app.services.project_bonus_service import ProjectBonusService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         service = ProjectBonusService(mock_db)
-        result = service.get_project_bonus_calculations(
-            project_id=1, status="APPROVED"
-        )
+        result = service.get_project_bonus_calculations(project_id=1, status="APPROVED")
 
         assert result == []
 
     def test_filters_by_date_range(self):
         """测试按日期范围筛选"""
-        from app.services.project_bonus_service import ProjectBonusService
         from datetime import timedelta
 
+        from app.services.project_bonus_service import ProjectBonusService
+
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         service = ProjectBonusService(mock_db)
         result = service.get_project_bonus_calculations(
@@ -276,7 +281,9 @@ class TestGetProjectBonusDistributions:
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.subquery.return_value = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         service = ProjectBonusService(mock_db)
         result = service.get_project_bonus_distributions(project_id=1, user_id=5)
@@ -289,7 +296,9 @@ class TestGetProjectBonusDistributions:
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.subquery.return_value = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         service = ProjectBonusService(mock_db)
         result = service.get_project_bonus_distributions(project_id=1, status="PAID")
@@ -307,12 +316,8 @@ class TestGetProjectMemberBonusSummary:
         mock_db = MagicMock()
         service = ProjectBonusService(mock_db)
 
-        with patch.object(
-            service, "get_project_bonus_calculations", return_value=[]
-        ):
-            with patch.object(
-                service, "get_project_bonus_distributions", return_value=[]
-            ):
+        with patch.object(service, "get_project_bonus_calculations", return_value=[]):
+            with patch.object(service, "get_project_bonus_distributions", return_value=[]):
                 result = service.get_project_member_bonus_summary(project_id=1)
 
         assert result == []
@@ -357,9 +362,7 @@ class TestGetProjectMemberBonusSummary:
             "get_project_bonus_calculations",
             return_value=[mock_calc1, mock_calc2, mock_calc3],
         ):
-            with patch.object(
-                service, "get_project_bonus_distributions", return_value=[]
-            ):
+            with patch.object(service, "get_project_bonus_distributions", return_value=[]):
                 result = service.get_project_member_bonus_summary(project_id=1)
 
         assert len(result) == 2
@@ -390,12 +393,8 @@ class TestGetProjectBonusStatistics:
 
         service = ProjectBonusService(mock_db)
 
-        with patch.object(
-            service, "get_project_bonus_calculations", return_value=[mock_calc]
-        ):
-            with patch.object(
-                service, "get_project_bonus_distributions", return_value=[mock_dist]
-            ):
+        with patch.object(service, "get_project_bonus_calculations", return_value=[mock_calc]):
+            with patch.object(service, "get_project_bonus_distributions", return_value=[mock_dist]):
                 result = service.get_project_bonus_statistics(project_id=1)
 
         assert result["total_calculated"] == 1000.0
@@ -412,12 +411,8 @@ class TestGetProjectBonusStatistics:
         mock_db = MagicMock()
         service = ProjectBonusService(mock_db)
 
-        with patch.object(
-            service, "get_project_bonus_calculations", return_value=[]
-        ):
-            with patch.object(
-                service, "get_project_bonus_distributions", return_value=[]
-            ):
+        with patch.object(service, "get_project_bonus_calculations", return_value=[]):
+            with patch.object(service, "get_project_bonus_distributions", return_value=[]):
                 result = service.get_project_bonus_statistics(project_id=1)
 
         assert result["total_calculated"] == 0.0
@@ -443,12 +438,8 @@ class TestGetProjectBonusStatistics:
 
         service = ProjectBonusService(mock_db)
 
-        with patch.object(
-            service, "get_project_bonus_calculations", return_value=[mock_calc]
-        ):
-            with patch.object(
-                service, "get_project_bonus_distributions", return_value=[mock_dist]
-            ):
+        with patch.object(service, "get_project_bonus_calculations", return_value=[mock_calc]):
+            with patch.object(service, "get_project_bonus_distributions", return_value=[mock_dist]):
                 result = service.get_project_bonus_statistics(project_id=1)
 
         assert result["total_calculated"] == 0.0

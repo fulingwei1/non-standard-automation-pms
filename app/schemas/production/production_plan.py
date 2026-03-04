@@ -15,11 +15,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 生产计划 ====================
+
 
 class ProductionPlanCreate(BaseModel):
     """创建生产计划"""
+
     plan_name: str = Field(max_length=200, description="计划名称")
     plan_type: str = Field(description="计划类型：MASTER/WORKSHOP")
     project_id: Optional[int] = Field(default=None, description="关联项目ID")
@@ -32,6 +33,7 @@ class ProductionPlanCreate(BaseModel):
 
 class ProductionPlanUpdate(BaseModel):
     """更新生产计划"""
+
     plan_name: Optional[str] = None
     plan_start_date: Optional[date] = None
     plan_end_date: Optional[date] = None
@@ -41,6 +43,7 @@ class ProductionPlanUpdate(BaseModel):
 
 class ProductionPlanResponse(TimestampSchema):
     """生产计划响应"""
+
     id: int
     plan_no: str
     plan_name: str
@@ -62,6 +65,5 @@ class ProductionPlanResponse(TimestampSchema):
 
 class ProductionPlanListResponse(PaginatedResponse):
     """生产计划列表响应"""
+
     items: List[ProductionPlanResponse]
-
-

@@ -14,10 +14,7 @@ from .crud import get_annual_work
 
 
 def link_project(
-    db: Session,
-    work_id: int,
-    project_id: int,
-    contribution_weight: Decimal = Decimal("1.0")
+    db: Session, work_id: int, project_id: int, contribution_weight: Decimal = Decimal("1.0")
 ) -> Optional[AnnualKeyWorkProjectLink]:
     """
     关联项目
@@ -36,10 +33,14 @@ def link_project(
         return None
 
     # 检查是否已关联
-    existing = db.query(AnnualKeyWorkProjectLink).filter(
-        AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.project_id == project_id
-    ).first()
+    existing = (
+        db.query(AnnualKeyWorkProjectLink)
+        .filter(
+            AnnualKeyWorkProjectLink.annual_work_id == work_id,
+            AnnualKeyWorkProjectLink.project_id == project_id,
+        )
+        .first()
+    )
 
     if existing:
         # 重新激活
@@ -73,11 +74,15 @@ def unlink_project(db: Session, work_id: int, project_id: int) -> bool:
     Returns:
         bool: 是否成功
     """
-    link = db.query(AnnualKeyWorkProjectLink).filter(
-        AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.project_id == project_id,
-        AnnualKeyWorkProjectLink.is_active
-    ).first()
+    link = (
+        db.query(AnnualKeyWorkProjectLink)
+        .filter(
+            AnnualKeyWorkProjectLink.annual_work_id == work_id,
+            AnnualKeyWorkProjectLink.project_id == project_id,
+            AnnualKeyWorkProjectLink.is_active,
+        )
+        .first()
+    )
 
     if not link:
         return False
@@ -98,21 +103,27 @@ def get_linked_projects(db: Session, work_id: int) -> List[ProjectLinkItem]:
     Returns:
         List[ProjectLinkItem]: 关联项目列表
     """
-    links = db.query(AnnualKeyWorkProjectLink).filter(
-        AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active
-    ).all()
+    links = (
+        db.query(AnnualKeyWorkProjectLink)
+        .filter(
+            AnnualKeyWorkProjectLink.annual_work_id == work_id, AnnualKeyWorkProjectLink.is_active
+        )
+        .all()
+    )
 
     result = []
     for link in links:
         from app.models.project import Project
+
         project = db.query(Project).filter(Project.id == link.project_id).first()
         if project:
-            result.append(ProjectLinkItem(
-                project_id=project.id,
-                project_code=project.code,
-                project_name=project.name,
-                contribution_weight=link.contribution_weight,
-            ))
+            result.append(
+                ProjectLinkItem(
+                    project_id=project.id,
+                    project_code=project.code,
+                    project_name=project.name,
+                    contribution_weight=link.contribution_weight,
+                )
+            )
 
     return result

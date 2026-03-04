@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/renderers/base.py"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
-    from app.services.report_framework.renderers.base import (
-        Renderer, ReportResult, RenderError
-    )
+    from app.services.report_framework.renderers.base import Renderer, RenderError, ReportResult
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

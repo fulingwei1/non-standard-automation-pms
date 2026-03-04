@@ -2,14 +2,16 @@
 """
 第十四批：奖金分配表解析服务 单元测试
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 
 try:
     from app.services import bonus_allocation_parser as parser
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -23,6 +25,7 @@ class TestBonusAllocationParser:
 
     def test_validate_file_type_invalid(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             parser.validate_file_type("sheet.csv")
 
@@ -45,12 +48,14 @@ class TestBonusAllocationParser:
 
     def test_parse_date_datetime(self):
         from datetime import datetime
+
         dt = datetime(2025, 6, 15, 12, 0)
         d = parser.parse_date(dt)
         assert d == date(2025, 6, 15)
 
     def test_validate_required_columns_missing_id(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"受益人ID*": [], "发放金额*": [], "发放日期*": []})
         with pytest.raises(HTTPException) as exc_info:
             parser.validate_required_columns(df)
@@ -63,8 +68,14 @@ class TestBonusAllocationParser:
     def test_validate_row_data_missing_user(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
-        errors = parser.validate_row_data(db, calc_id=1, team_allocation_id=None, user_id=999,
-                                           calc_amount=Decimal("1000"), dist_amount=Decimal("900"))
+        errors = parser.validate_row_data(
+            db,
+            calc_id=1,
+            team_allocation_id=None,
+            user_id=999,
+            calc_amount=Decimal("1000"),
+            dist_amount=Decimal("900"),
+        )
         assert any("受益人ID" in e for e in errors)
 
     def test_parse_allocation_sheet_empty(self):

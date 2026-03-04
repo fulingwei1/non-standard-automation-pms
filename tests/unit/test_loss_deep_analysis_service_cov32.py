@@ -2,12 +2,14 @@
 """
 第三十二批覆盖率测试 - 未中标深度原因分析服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.loss_deep_analysis_service import LossDeepAnalysisService
+
     HAS_LDAS = True
 except Exception:
     HAS_LDAS = False
@@ -53,10 +55,7 @@ class TestAnalyzeLostProjects:
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = []
 
-        result = svc.analyze_lost_projects(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
-        )
+        result = svc.analyze_lost_projects(start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
         assert result["analysis_period"]["start_date"] == "2024-01-01"
         assert result["analysis_period"]["end_date"] == "2024-12-31"
 
@@ -132,9 +131,11 @@ class TestAnalyzeInvestmentStage:
         project.loss_reason = "PRICE"
         project.loss_reason_detail = "价格太高"
 
-        with patch.object(svc, "_determine_investment_stage", return_value="detailed_design"), \
-             patch.object(svc, "_get_project_hours", return_value=100), \
-             patch.object(svc, "_calculate_project_cost", return_value=5000):
+        with (
+            patch.object(svc, "_determine_investment_stage", return_value="detailed_design"),
+            patch.object(svc, "_get_project_hours", return_value=100),
+            patch.object(svc, "_calculate_project_cost", return_value=5000),
+        ):
             result = svc._analyze_investment_stage([project])
 
         assert result["statistics"]["detailed_design"] == 1

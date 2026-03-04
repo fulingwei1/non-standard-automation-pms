@@ -19,7 +19,9 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.put("/ecns/{ecn_id}/rca-analysis", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecns/{ecn_id}/rca-analysis", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def update_rca_analysis(
     ecn_id: int,
     root_cause: Optional[str] = Body(None, description="根本原因类型"),
@@ -51,12 +53,14 @@ def update_rca_analysis(
             "ecn_id": ecn_id,
             "root_cause": ecn.root_cause,
             "root_cause_analysis": ecn.root_cause_analysis,
-            "root_cause_category": ecn.root_cause_category
-        }
+            "root_cause_category": ecn.root_cause_category,
+        },
     )
 
 
-@router.get("/ecns/{ecn_id}/rca-analysis", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/rca-analysis", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_rca_analysis(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -76,6 +80,6 @@ def get_rca_analysis(
             "ecn_id": ecn_id,
             "root_cause": ecn.root_cause,
             "root_cause_analysis": ecn.root_cause_analysis,
-            "root_cause_category": ecn.root_cause_category
-        }
+            "root_cause_category": ecn.root_cause_category,
+        },
     )

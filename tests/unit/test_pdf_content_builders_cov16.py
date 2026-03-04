@@ -2,12 +2,14 @@
 """
 第十六批：PDF内容构建工具函数 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services import pdf_content_builders
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -44,6 +46,7 @@ def make_real_styles():
     """使用真实的 reportlab 样式"""
     try:
         from reportlab.lib.styles import getSampleStyleSheet
+
         ss = getSampleStyleSheet()
         return {
             "title": ss["Title"],
@@ -106,7 +109,5 @@ class TestBuildBasicInfoSection:
             pytest.skip("reportlab 未安装")
         order = make_order()
         styles = make_real_styles()
-        result = pdf_content_builders.build_basic_info_section(
-            order, None, None, "R999", 1, styles
-        )
+        result = pdf_content_builders.build_basic_info_section(order, None, None, "R999", 1, styles)
         assert isinstance(result, list)

@@ -157,6 +157,7 @@ class TestPerformanceCalculator(unittest.TestCase):
     # --- calculate_total_score ---
     def test_calculate_total_score_normal(self):
         from app.schemas.engineer_performance import EngineerDimensionScore
+
         scores = EngineerDimensionScore(
             technical_score=Decimal("80"),
             execution_score=Decimal("70"),
@@ -177,6 +178,7 @@ class TestPerformanceCalculator(unittest.TestCase):
 
     def test_calculate_total_score_solution(self):
         from app.schemas.engineer_performance import EngineerDimensionScore
+
         scores = EngineerDimensionScore(
             technical_score=Decimal("80"),
             execution_score=Decimal("70"),

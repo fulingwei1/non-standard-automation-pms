@@ -5,16 +5,15 @@
 """
 
 from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
 from app.models.material import Material, MaterialCategory
-from app.schemas.material import MaterialCreate, MaterialUpdate, MaterialResponse
+from app.schemas.material import MaterialCreate, MaterialResponse, MaterialUpdate
 
 
-class MaterialService(
-    BaseService[Material, MaterialCreate, MaterialUpdate, MaterialResponse]
-):
+class MaterialService(BaseService[Material, MaterialCreate, MaterialUpdate, MaterialResponse]):
     """
     物料服务类
     """
@@ -98,9 +97,7 @@ class MaterialService(
         category_code = None
         if category_id:
             category = (
-                self.db.query(MaterialCategory)
-                .filter(MaterialCategory.id == category_id)
-                .first()
+                self.db.query(MaterialCategory).filter(MaterialCategory.id == category_id).first()
             )
             if category:
                 category_code = category.category_code

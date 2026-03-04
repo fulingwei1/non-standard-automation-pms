@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy.orm import Session
 
 # 添加项目路径
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
 from app.models.base import get_db_session
 from app.models.project import Project
@@ -28,6 +28,7 @@ from app.models.user import User
 def generate_review_no(db: Session, review_type: str) -> str:
     """生成评审编号"""
     from sqlalchemy import desc
+
     today = datetime.now().strftime("%y%m%d")
     prefix = f"RV-{review_type}-{today}-"
     max_review = (
@@ -46,6 +47,7 @@ def generate_review_no(db: Session, review_type: str) -> str:
 def generate_issue_no(db: Session) -> str:
     """生成问题编号"""
     from sqlalchemy import desc
+
     today = datetime.now().strftime("%y%m%d")
     prefix = f"RV-ISSUE-{today}-"
     max_issue = (
@@ -138,7 +140,9 @@ def main():
             )
             db.add(participant)
             participants.append(participant)
-            print(f"✓ 添加参与人: {p_data['user'].real_name or p_data['user'].username} ({p_data['role']})")
+            print(
+                f"✓ 添加参与人: {p_data['user'].real_name or p_data['user'].username} ({p_data['role']})"
+            )
 
         db.commit()
         print(f"✓ 共添加 {len(participants)} 位参与人")
@@ -250,7 +254,11 @@ def main():
             db.flush()  # 获取ID
 
             # 如果不通过，自动创建问题
-            if c_data["result"] == "FAIL" and c_data.get("issue_level") and c_data.get("issue_desc"):
+            if (
+                c_data["result"] == "FAIL"
+                and c_data.get("issue_level")
+                and c_data.get("issue_desc")
+            ):
                 issue_no = generate_issue_no(db)
                 issue = ReviewIssue(
                     review_id=review.id,
@@ -300,10 +308,10 @@ def main():
         # 7. 更新问题统计
         print("\n[步骤7] 更新问题统计...")
         issues = db.query(ReviewIssue).filter(ReviewIssue.review_id == review.id).all()
-        review.issue_count_a = sum(1 for i in issues if i.issue_level == 'A')
-        review.issue_count_b = sum(1 for i in issues if i.issue_level == 'B')
-        review.issue_count_c = sum(1 for i in issues if i.issue_level == 'C')
-        review.issue_count_d = sum(1 for i in issues if i.issue_level == 'D')
+        review.issue_count_a = sum(1 for i in issues if i.issue_level == "A")
+        review.issue_count_b = sum(1 for i in issues if i.issue_level == "B")
+        review.issue_count_c = sum(1 for i in issues if i.issue_level == "C")
+        review.issue_count_d = sum(1 for i in issues if i.issue_level == "D")
         db.commit()
         print(f"✓ 问题统计更新:")
         print(f"  - A类: {review.issue_count_a} 个")
@@ -314,7 +322,7 @@ def main():
         # 8. 模拟问题处理流程
         print("\n[步骤8] 模拟问题处理流程...")
         # 处理B类问题
-        b_issues = [i for i in issues if i.issue_level == 'B']
+        b_issues = [i for i in issues if i.issue_level == "B"]
         if b_issues:
             issue = b_issues[0]
             issue.status = "PROCESSING"
@@ -374,11 +382,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
-
-
-
-
-
-

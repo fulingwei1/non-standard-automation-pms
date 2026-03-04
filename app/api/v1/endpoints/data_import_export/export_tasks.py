@@ -30,9 +30,7 @@ def export_task_list(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportTaskListRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出任务列表（Excel）
@@ -54,9 +52,7 @@ def export_task_list(
 
     scoped_project_query = db.query(Project.id)
     if filters.get("project_id"):
-        scoped_project_query = scoped_project_query.filter(
-            Project.id == filters["project_id"]
-        )
+        scoped_project_query = scoped_project_query.filter(Project.id == filters["project_id"])
     scoped_project_query = DataScopeService.filter_projects_by_scope(
         db, scoped_project_query, current_user
     )
@@ -76,11 +72,7 @@ def export_task_list(
     data = []
     for task in tasks:
         project = db.query(Project).filter(Project.id == task.project_id).first()
-        owner = (
-            db.query(User).filter(User.id == task.owner_id).first()
-            if task.owner_id
-            else None
-        )
+        owner = db.query(User).filter(User.id == task.owner_id).first() if task.owner_id else None
 
         data.append(
             {
@@ -92,27 +84,19 @@ def export_task_list(
                 "状态": task.status or "",
                 "状态名称": status_names.get(task.status, task.status or ""),
                 "负责人": owner.real_name or owner.username if owner else "",
-                "计划开始日期": task.plan_start.strftime("%Y-%m-%d")
-                if task.plan_start
-                else "",
-                "计划结束日期": task.plan_end.strftime("%Y-%m-%d")
-                if task.plan_end
-                else "",
-                "实际开始日期": task.actual_start.strftime("%Y-%m-%d")
-                if task.actual_start
-                else "",
-                "实际结束日期": task.actual_end.strftime("%Y-%m-%d")
-                if task.actual_end
-                else "",
+                "计划开始日期": task.plan_start.strftime("%Y-%m-%d") if task.plan_start else "",
+                "计划结束日期": task.plan_end.strftime("%Y-%m-%d") if task.plan_end else "",
+                "实际开始日期": task.actual_start.strftime("%Y-%m-%d") if task.actual_start else "",
+                "实际结束日期": task.actual_end.strftime("%Y-%m-%d") if task.actual_end else "",
                 "进度(%)": task.progress_percent or 0,
                 "权重": float(task.weight or 0),
                 "阻塞原因": task.block_reason or "",
-                "创建时间": task.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                if task.created_at
-                else "",
-                "更新时间": task.updated_at.strftime("%Y-%m-%d %H:%M:%S")
-                if task.updated_at
-                else "",
+                "创建时间": (
+                    task.created_at.strftime("%Y-%m-%d %H:%M:%S") if task.created_at else ""
+                ),
+                "更新时间": (
+                    task.updated_at.strftime("%Y-%m-%d %H:%M:%S") if task.updated_at else ""
+                ),
             }
         )
 

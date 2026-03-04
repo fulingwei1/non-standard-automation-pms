@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第十一批：work_log_service 单元测试"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.work_log_service import WorkLogService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

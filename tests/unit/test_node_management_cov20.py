@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十批 - node_management 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.stage_template.node_management")
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
 from app.services.stage_template.node_management import NodeManagementMixin
 
 
 class ConcreteNodeMgmt(NodeManagementMixin):
     """具体测试类"""
+
     def __init__(self, db):
         self.db = db
 

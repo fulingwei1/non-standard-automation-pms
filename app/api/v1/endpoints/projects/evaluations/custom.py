@@ -6,6 +6,7 @@
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 
@@ -17,8 +18,8 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.project_evaluation import ProjectEvaluationResponse
 from app.services.project_evaluation_service import ProjectEvaluationService
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -31,15 +32,15 @@ def get_project_latest_evaluation(
 ) -> Any:
     """获取项目最新评价"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     get_or_404(db, Project, project_id, detail="项目不存在")
-    
+
     eval_service = ProjectEvaluationService(db)
     evaluation = eval_service.get_latest_evaluation(project_id)
-    
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="项目暂无评价记录")
-    
+
     return ResponseModel(code=200, data=evaluation)
 
 
@@ -52,17 +53,21 @@ def confirm_project_evaluation(
 ) -> Any:
     """确认项目评价（将状态改为CONFIRMED）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    evaluation = db.query(ProjectEvaluation).filter(
-        ProjectEvaluation.id == eval_id,
-        ProjectEvaluation.project_id == project_id,
-    ).first()
-    
+
+    evaluation = (
+        db.query(ProjectEvaluation)
+        .filter(
+            ProjectEvaluation.id == eval_id,
+            ProjectEvaluation.project_id == project_id,
+        )
+        .first()
+    )
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     evaluation.status = "CONFIRMED"
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="确认成功", data=evaluation)

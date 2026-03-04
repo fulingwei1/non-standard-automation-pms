@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - channel_handlers/webhook_handler.py 单元测试（WebhookChannelHandler）"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.channel_handlers.webhook_handler")
 
-from app.services.channel_handlers.webhook_handler import WebhookChannelHandler
 from app.services.channel_handlers.base import (
-    NotificationRequest,
-    NotificationPriority,
     NotificationChannel,
+    NotificationPriority,
+    NotificationRequest,
 )
-
+from app.services.channel_handlers.webhook_handler import WebhookChannelHandler
 
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -33,6 +34,7 @@ def _make_request(**kwargs):
 
 
 # ─── 测试：is_enabled ─────────────────────────────────────────────────────────
+
 
 class TestWebhookHandlerIsEnabled:
     """测试 is_enabled 方法"""
@@ -61,6 +63,7 @@ class TestWebhookHandlerIsEnabled:
 
 # ─── 测试：_build_message ─────────────────────────────────────────────────────
 
+
 class TestWebhookHandlerBuildMessage:
     """测试消息构建"""
 
@@ -87,6 +90,7 @@ class TestWebhookHandlerBuildMessage:
 
 
 # ─── 测试：send ───────────────────────────────────────────────────────────────
+
 
 class TestWebhookHandlerSend:
     """测试 send 方法"""

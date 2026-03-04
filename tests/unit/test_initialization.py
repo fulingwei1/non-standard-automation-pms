@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """InitializationMixin 单元测试"""
 from datetime import date
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
 
 from app.services.stage_instance.initialization import InitializationMixin
@@ -23,11 +24,15 @@ class TestInitializationMixin:
             self.svc.initialize_project_stages(999, 1)
 
     def test_template_not_found(self):
-        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            None
+        )
         project = MagicMock()
         # first call returns project, second returns None for template
         self.db.query.return_value.filter.return_value.first.return_value = project
-        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            None
+        )
         with pytest.raises(ValueError, match="不存在"):
             self.svc.initialize_project_stages(1, 999)
 

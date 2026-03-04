@@ -89,9 +89,7 @@ def update_node_instance(
     current_user: User = Depends(security.get_current_user),
 ) -> Any:
     """更新节点实例信息"""
-    node = db.query(ProjectNodeInstance).filter(
-        ProjectNodeInstance.id == node_instance_id
-    ).first()
+    node = db.query(ProjectNodeInstance).filter(ProjectNodeInstance.id == node_instance_id).first()
 
     if not node:
         raise HTTPException(status_code=404, detail="节点实例不存在")

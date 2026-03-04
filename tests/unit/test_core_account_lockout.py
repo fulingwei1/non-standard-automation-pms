@@ -3,8 +3,9 @@
 Tests for app/core/account_lockout.py (in-memory AccountLockout)
 Standalone unit tests – no DB, no Redis, no fixtures needed.
 """
-import time
 import threading
+import time
+
 import pytest
 
 from app.core.account_lockout import AccountLockout, account_lockout

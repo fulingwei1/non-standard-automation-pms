@@ -52,9 +52,7 @@ def start_invoice_approval(
         raise HTTPException(status_code=400, detail="只有已申请状态的发票才能启动审批流程")
 
     # 获取发票金额用于路由
-    routing_params = {
-        "amount": float(invoice.amount or 0)
-    }
+    routing_params = {"amount": float(invoice.amount or 0)}
 
     # 启动审批流程
     workflow_service = ApprovalWorkflowService(db)
@@ -65,7 +63,7 @@ def start_invoice_approval(
             initiator_id=current_user.id,
             workflow_id=approval_request.workflow_id,
             routing_params=routing_params,
-            comment=approval_request.comment
+            comment=approval_request.comment,
         )
 
         # 更新发票状态
@@ -74,9 +72,7 @@ def start_invoice_approval(
         db.commit()
 
         return ResponseModel(
-            code=200,
-            message="审批流程已启动",
-            data={"approval_record_id": record.id}
+            code=200, message="审批流程已启动", data={"approval_record_id": record.id}
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -94,8 +90,7 @@ def get_invoice_approval_status(
     """
     workflow_service = ApprovalWorkflowService(db)
     record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE,
-        entity_id=invoice_id
+        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
     )
 
     if not record:
@@ -105,7 +100,7 @@ def get_invoice_approval_status(
             can_approve=False,
             can_reject=False,
             can_delegate=False,
-            can_withdraw=False
+            can_withdraw=False,
         )
 
     current_step_info = workflow_service.get_current_step(record.id)
@@ -130,7 +125,7 @@ def get_invoice_approval_status(
         **{c.name: getattr(record, c.name) for c in record.__table__.columns},
         "workflow_name": record.workflow.workflow_name if record.workflow else None,
         "initiator_name": record.initiator.real_name if record.initiator else None,
-        "history": []
+        "history": [],
     }
 
     history_list = workflow_service.get_approval_history(record.id)
@@ -138,7 +133,7 @@ def get_invoice_approval_status(
         history_dict = {
             **{c.name: getattr(h, c.name) for c in h.__table__.columns},
             "approver_name": h.approver.real_name if h.approver else None,
-            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None,
         }
         record_dict["history"].append(ApprovalHistoryResponse(**history_dict))
 
@@ -148,7 +143,7 @@ def get_invoice_approval_status(
         can_approve=can_approve,
         can_reject=can_reject,
         can_delegate=can_delegate,
-        can_withdraw=can_withdraw
+        can_withdraw=can_withdraw,
     )
 
 
@@ -165,8 +160,7 @@ def invoice_approval_action(
     """
     workflow_service = ApprovalWorkflowService(db)
     record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE,
-        entity_id=invoice_id
+        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
     )
 
     if not record:
@@ -177,9 +171,7 @@ def invoice_approval_action(
     try:
         if action_request.action == ApprovalActionEnum.APPROVE:
             record = workflow_service.approve_step(
-                record_id=record.id,
-                approver_id=current_user.id,
-                comment=action_request.comment
+                record_id=record.id, approver_id=current_user.id, comment=action_request.comment
             )
 
             if record.status == ApprovalRecordStatusEnum.APPROVED:
@@ -191,7 +183,7 @@ def invoice_approval_action(
             record = workflow_service.reject_step(
                 record_id=record.id,
                 approver_id=current_user.id,
-                comment=action_request.comment or "审批驳回"
+                comment=action_request.comment or "审批驳回",
             )
             invoice.status = InvoiceStatusEnum.REJECTED
             message = "审批已驳回"
@@ -204,28 +196,28 @@ def invoice_approval_action(
                 record_id=record.id,
                 approver_id=current_user.id,
                 delegate_to_id=action_request.delegate_to_id,
-                comment=action_request.comment
+                comment=action_request.comment,
             )
             message = "审批已委托"
 
         elif action_request.action == ApprovalActionEnum.WITHDRAW:
             record = workflow_service.withdraw_approval(
-                record_id=record.id,
-                initiator_id=current_user.id,
-                comment=action_request.comment
+                record_id=record.id, initiator_id=current_user.id, comment=action_request.comment
             )
             invoice.status = InvoiceStatusEnum.APPLIED
             message = "审批已撤回"
 
         else:
-            raise HTTPException(status_code=400, detail=f"不支持的审批操作: {action_request.action}")
+            raise HTTPException(
+                status_code=400, detail=f"不支持的审批操作: {action_request.action}"
+            )
 
         db.commit()
 
         return ResponseModel(
             code=200,
             message=message,
-            data={"approval_record_id": record.id, "status": record.status}
+            data={"approval_record_id": record.id, "status": record.status},
         )
 
     except ValueError as e:
@@ -244,8 +236,7 @@ def get_invoice_approval_history(
     """
     workflow_service = ApprovalWorkflowService(db)
     record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE,
-        entity_id=invoice_id
+        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
     )
 
     if not record:
@@ -257,7 +248,7 @@ def get_invoice_approval_history(
         history_dict = {
             **{c.name: getattr(h, c.name) for c in h.__table__.columns},
             "approver_name": h.approver.real_name if h.approver else None,
-            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None
+            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None,
         }
         result.append(ApprovalHistoryResponse(**history_dict))
 

@@ -31,20 +31,17 @@ from .detail import get_task_detail
 
 router = APIRouter()
 
+from fastapi import APIRouter
+
 # 使用统一的编码生成工具和日志工具
 from .batch_helpers import generate_task_code, log_task_operation
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="",
-    tags=["create"]
-)
+router = APIRouter(prefix="", tags=["create"])
 
 # 共 1 个路由
 
 # ==================== 创建个人任务 ====================
+
 
 @router.post("/tasks", response_model=TaskUnifiedResponse, status_code=status.HTTP_201_CREATED)
 def create_personal_task(
@@ -85,7 +82,7 @@ def create_personal_task(
         reminder_enabled=task_in.reminder_enabled,
         reminder_before_hours=task_in.reminder_before_hours,
         status="ACCEPTED",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     if task_in.project_id:
@@ -99,10 +96,12 @@ def create_personal_task(
     db.refresh(task)
 
     log_task_operation(
-        db, task.id, "CREATE", f"创建个人任务：{task.title}",
-        current_user.id, current_user.real_name or current_user.username
+        db,
+        task.id,
+        "CREATE",
+        f"创建个人任务：{task.title}",
+        current_user.id,
+        current_user.real_name or current_user.username,
     )
 
     return get_task_detail(task.id, db, current_user)
-
-

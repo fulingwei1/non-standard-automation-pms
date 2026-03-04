@@ -3,9 +3,10 @@
 Tests for app/services/template_report/core.py
 """
 import sys
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 try:
     from app.services.template_report.core import TemplateReportCore
@@ -27,8 +28,13 @@ def _make_template(report_type, template_id=1):
 def _inject_mock_mixins():
     """Inject mock submodules into sys.modules so inner imports resolve"""
     mocks = {}
-    for name in ["project_reports", "dept_reports", "analysis_reports",
-                 "company_reports", "generic_report"]:
+    for name in [
+        "project_reports",
+        "dept_reports",
+        "analysis_reports",
+        "company_reports",
+        "generic_report",
+    ]:
         mod = MagicMock()
         full = f"app.services.template_report.{name}"
         sys.modules[full] = mod

@@ -4,20 +4,21 @@ I1组: PresaleAIService 单元测试
 直接实例化类，AIClientService 用 MagicMock 替代
 """
 import json
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.presale_ai_service import PresaleAIService
-from app.schemas.presale_ai_solution import (
-    TemplateMatchRequest,
-    SolutionGenerationRequest,
-)
+import pytest
 
+from app.schemas.presale_ai_solution import (
+    SolutionGenerationRequest,
+    TemplateMatchRequest,
+)
+from app.services.presale_ai_service import PresaleAIService
 
 # ============================================================
 # Helper factory
 # ============================================================
+
 
 def _make_service():
     db = MagicMock()
@@ -53,6 +54,7 @@ def _make_solution(**kwargs):
 # TestCalculateSimilarity
 # ============================================================
 
+
 class TestCalculateSimilarity:
     def test_identical_texts(self):
         svc, db, _ = _make_service()
@@ -78,6 +80,7 @@ class TestCalculateSimilarity:
 # ============================================================
 # TestMatchTemplates
 # ============================================================
+
 
 class TestMatchTemplates:
     def test_match_templates_no_templates(self):
@@ -119,7 +122,9 @@ class TestMatchTemplates:
     def test_match_templates_with_industry_filter(self):
         """行业和设备类型过滤"""
         svc, db, _ = _make_service()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         req = TemplateMatchRequest(
             presale_ticket_id=1,
@@ -134,20 +139,23 @@ class TestMatchTemplates:
 # TestGenerateSolution
 # ============================================================
 
+
 class TestGenerateSolution:
     def test_generate_solution_basic(self):
         """基本方案生成"""
         svc, db, mock_ai = _make_service()
 
         mock_ai.generate_solution.return_value = {
-            "content": json.dumps({
-                "description": "自动装配方案",
-                "technical_parameters": {"speed": "10件/分钟"},
-                "equipment_list": [{"name": "机器人", "quantity": 2}],
-                "process_flow": "上料->装配->下料",
-                "key_features": ["高精度"],
-                "technical_advantages": ["稳定性高"],
-            }),
+            "content": json.dumps(
+                {
+                    "description": "自动装配方案",
+                    "technical_parameters": {"speed": "10件/分钟"},
+                    "equipment_list": [{"name": "机器人", "quantity": 2}],
+                    "process_flow": "上料->装配->下料",
+                    "key_features": ["高精度"],
+                    "technical_advantages": ["稳定性高"],
+                }
+            ),
             "usage": {"prompt_tokens": 100, "completion_tokens": 200, "total_tokens": 300},
         }
         mock_ai.generate_architecture.return_value = {
@@ -199,6 +207,7 @@ class TestGenerateSolution:
 # TestParseSolutionResponse
 # ============================================================
 
+
 class TestParseSolutionResponse:
     def test_parse_json_content(self):
         svc, _, _ = _make_service()
@@ -221,7 +230,7 @@ class TestParseSolutionResponse:
 
     def test_parse_triple_backtick(self):
         svc, _, _ = _make_service()
-        resp = {"content": "```\n{\"a\": 1}\n```"}
+        resp = {"content": '```\n{"a": 1}\n```'}
         result = svc._parse_solution_response(resp)
         assert result.get("a") == 1 or "description" in result
 
@@ -229,6 +238,7 @@ class TestParseSolutionResponse:
 # ============================================================
 # TestCalculateConfidence
 # ============================================================
+
 
 class TestCalculateConfidence:
     def test_base_score_no_extras(self):
@@ -255,6 +265,7 @@ class TestCalculateConfidence:
 # ============================================================
 # TestGenerateArchitecture
 # ============================================================
+
 
 class TestGenerateArchitecture:
     def test_generate_architecture_mermaid(self):
@@ -292,6 +303,7 @@ class TestGenerateArchitecture:
 # TestGenerateBOM
 # ============================================================
 
+
 class TestGenerateBOM:
     def test_generate_bom_basic(self):
         svc, _, _ = _make_service()
@@ -326,6 +338,7 @@ class TestGenerateBOM:
 # TestGetSolutionAndUpdate
 # ============================================================
 
+
 class TestGetSolutionAndUpdate:
     def test_get_solution_found(self):
         svc, db, _ = _make_service()
@@ -359,6 +372,7 @@ class TestGetSolutionAndUpdate:
 # TestReviewSolution
 # ============================================================
 
+
 class TestReviewSolution:
     def test_review_solution_approved(self):
         svc, db, _ = _make_service()
@@ -384,10 +398,13 @@ class TestReviewSolution:
 # TestGetTemplateLibrary
 # ============================================================
 
+
 class TestGetTemplateLibrary:
     def test_get_all_templates(self):
         svc, db, _ = _make_service()
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [_make_template()]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            _make_template()
+        ]
         result = svc.get_template_library()
         assert len(result) == 1
 

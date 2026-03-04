@@ -36,7 +36,9 @@ PREDEFINED_METRICS = [
         "category": "项目管理",
         "description": "本月/年新增项目数",
         "data_source": "Project",
-        "filter_conditions": {"filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]},
+        "filter_conditions": {
+            "filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]
+        },
         "calculation_type": "COUNT",
         "support_mom": True,
         "support_yoy": True,
@@ -51,7 +53,12 @@ PREDEFINED_METRICS = [
         "category": "项目管理",
         "description": "本月/年完成项目数（actual_end_date在周期内）",
         "data_source": "Project",
-        "filter_conditions": {"filters": [{"field": "actual_end_date", "operator": ">=", "value": "period_start"}, {"field": "actual_end_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "actual_end_date", "operator": ">=", "value": "period_start"},
+                {"field": "actual_end_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "COUNT",
         "support_mom": True,
         "support_yoy": True,
@@ -97,7 +104,12 @@ PREDEFINED_METRICS = [
         "description": "本月/年新签合同额（contract_date在周期内）",
         "data_source": "Project",
         "data_field": "contract_amount",
-        "filter_conditions": {"filters": [{"field": "contract_date", "operator": ">=", "value": "period_start"}, {"field": "contract_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "contract_date", "operator": ">=", "value": "period_start"},
+                {"field": "contract_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -142,7 +154,9 @@ PREDEFINED_METRICS = [
         "category": "项目管理",
         "description": "健康度为H2或H3的项目数",
         "data_source": "Project",
-        "filter_conditions": {"filters": [{"field": "health", "operator": "IN", "value": ["H2", "H3"]}]},
+        "filter_conditions": {
+            "filters": [{"field": "health", "operator": "IN", "value": ["H2", "H3"]}]
+        },
         "calculation_type": "COUNT",
         "support_mom": True,
         "support_yoy": True,
@@ -172,7 +186,9 @@ PREDEFINED_METRICS = [
         "category": "销售管理",
         "description": "本月/年新增线索",
         "data_source": "Lead",
-        "filter_conditions": {"filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]},
+        "filter_conditions": {
+            "filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]
+        },
         "calculation_type": "COUNT",
         "support_mom": True,
         "support_yoy": True,
@@ -216,7 +232,12 @@ PREDEFINED_METRICS = [
         "description": "本月/年新签合同额",
         "data_source": "Contract",
         "data_field": "contract_amount",
-        "filter_conditions": {"filters": [{"field": "contract_date", "operator": ">=", "value": "period_start"}, {"field": "contract_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "contract_date", "operator": ">=", "value": "period_start"},
+                {"field": "contract_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -247,7 +268,12 @@ PREDEFINED_METRICS = [
         "description": "本月回款金额",
         "data_source": "ContractPayment",
         "data_field": "actual_amount",
-        "filter_conditions": {"filters": [{"field": "payment_date", "operator": ">=", "value": "period_start"}, {"field": "payment_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "payment_date", "operator": ">=", "value": "period_start"},
+                {"field": "payment_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -293,7 +319,12 @@ PREDEFINED_METRICS = [
         "description": "本月采购金额",
         "data_source": "PurchaseOrder",
         "data_field": "total_amount",
-        "filter_conditions": {"filters": [{"field": "order_date", "operator": ">=", "value": "period_start"}, {"field": "order_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "order_date", "operator": ">=", "value": "period_start"},
+                {"field": "order_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -400,7 +431,12 @@ PREDEFINED_METRICS = [
         "description": "所有工时汇总",
         "data_source": "Timesheet",
         "data_field": "hours",
-        "filter_conditions": {"filters": [{"field": "work_date", "operator": ">=", "value": "period_start"}, {"field": "work_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "work_date", "operator": ">=", "value": "period_start"},
+                {"field": "work_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -416,7 +452,13 @@ PREDEFINED_METRICS = [
         "description": "加班工时汇总",
         "data_source": "Timesheet",
         "data_field": "hours",
-        "filter_conditions": {"filters": [{"field": "overtime_type", "operator": "!=", "value": "NORMAL"}, {"field": "work_date", "operator": ">=", "value": "period_start"}, {"field": "work_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "overtime_type", "operator": "!=", "value": "NORMAL"},
+                {"field": "work_date", "operator": ">=", "value": "period_start"},
+                {"field": "work_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "SUM",
         "support_mom": True,
         "support_yoy": True,
@@ -462,7 +504,12 @@ PREDEFINED_METRICS = [
         "category": "管理节律",
         "description": "会议数量",
         "data_source": "StrategicMeeting",
-        "filter_conditions": {"filters": [{"field": "meeting_date", "operator": ">=", "value": "period_start"}, {"field": "meeting_date", "operator": "<=", "value": "period_end"}]},
+        "filter_conditions": {
+            "filters": [
+                {"field": "meeting_date", "operator": ">=", "value": "period_start"},
+                {"field": "meeting_date", "operator": "<=", "value": "period_end"},
+            ]
+        },
         "calculation_type": "COUNT",
         "support_mom": True,
         "support_yoy": True,
@@ -517,9 +564,11 @@ def init_report_metrics():
         created_count = 0
         for metric_data in PREDEFINED_METRICS:
             # 检查是否已存在
-            existing = db.query(ReportMetricDefinition).filter(
-                ReportMetricDefinition.metric_code == metric_data["metric_code"]
-            ).first()
+            existing = (
+                db.query(ReportMetricDefinition)
+                .filter(ReportMetricDefinition.metric_code == metric_data["metric_code"])
+                .first()
+            )
 
             if not existing:
                 metric = ReportMetricDefinition(**metric_data)

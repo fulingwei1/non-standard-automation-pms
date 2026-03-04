@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - timesheet_quality_service 单元测试"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_quality_service")
 

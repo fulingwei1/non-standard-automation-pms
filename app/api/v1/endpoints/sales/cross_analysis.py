@@ -35,39 +35,30 @@ def get_cross_dimension_analysis(
 
     result = {}
 
-    if dimensions in ['delay_cost', 'all']:
+    if dimensions in ["delay_cost", "all"]:
         # 延期+成本交叉分析
         delay_analysis = delay_service.analyze_impact(start_date, end_date)
         cost_analysis = cost_service.analyze_reasons(start_date, end_date)
-        result['delay_cost'] = {
-            'delay_impact': delay_analysis,
-            'cost_overrun': cost_analysis
-        }
+        result["delay_cost"] = {"delay_impact": delay_analysis, "cost_overrun": cost_analysis}
 
-    if dimensions in ['delay_info', 'all']:
+    if dimensions in ["delay_info", "all"]:
         # 延期+信息交叉分析
         delay_analysis = delay_service.analyze_root_cause(start_date, end_date)
         info_analysis = info_service.analyze_impact(start_date, end_date)
-        result['delay_info'] = {
-            'delay_reasons': delay_analysis,
-            'info_quality': info_analysis
-        }
+        result["delay_info"] = {"delay_reasons": delay_analysis, "info_quality": info_analysis}
 
-    if dimensions in ['cost_info', 'all']:
+    if dimensions in ["cost_info", "all"]:
         # 成本+信息交叉分析
         cost_analysis = cost_service.analyze_reasons(start_date, end_date)
         info_analysis = info_service.analyze_impact(start_date, end_date)
-        result['cost_info'] = {
-            'cost_overrun': cost_analysis,
-            'info_quality': info_analysis
-        }
+        result["cost_info"] = {"cost_overrun": cost_analysis, "info_quality": info_analysis}
 
-    if dimensions == 'all':
+    if dimensions == "all":
         # 全维度综合分析
-        result['comprehensive'] = {
-            'delay': delay_service.analyze_root_cause(start_date, end_date),
-            'cost': cost_service.analyze_reasons(start_date, end_date),
-            'info': info_service.analyze_impact(start_date, end_date)
+        result["comprehensive"] = {
+            "delay": delay_service.analyze_root_cause(start_date, end_date),
+            "cost": cost_service.analyze_reasons(start_date, end_date),
+            "info": info_service.analyze_impact(start_date, end_date),
         }
 
     return ResponseModel(code=200, message="分析成功", data=result)

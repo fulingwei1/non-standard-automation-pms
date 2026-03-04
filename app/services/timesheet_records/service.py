@@ -152,15 +152,9 @@ class TimesheetRecordsService:
             try:
                 # 验证项目
                 if ts_in.project_id:
-                    project = (
-                        self.db.query(Project)
-                        .filter(Project.id == ts_in.project_id)
-                        .first()
-                    )
+                    project = self.db.query(Project).filter(Project.id == ts_in.project_id).first()
                     if not project:
-                        errors.append(
-                            {"date": ts_in.work_date.isoformat(), "error": "项目不存在"}
-                        )
+                        errors.append({"date": ts_in.work_date.isoformat(), "error": "项目不存在"})
                         failed_count += 1
                         continue
 
@@ -177,9 +171,7 @@ class TimesheetRecordsService:
                 )
 
                 if existing:
-                    errors.append(
-                        {"date": ts_in.work_date.isoformat(), "error": "该日期已有记录"}
-                    )
+                    errors.append({"date": ts_in.work_date.isoformat(), "error": "该日期已有记录"})
                     failed_count += 1
                     continue
 
@@ -207,9 +199,7 @@ class TimesheetRecordsService:
             except Exception as e:
                 errors.append(
                     {
-                        "date": (
-                            ts_in.work_date.isoformat() if ts_in.work_date else None
-                        ),
+                        "date": (ts_in.work_date.isoformat() if ts_in.work_date else None),
                         "error": str(e),
                     }
                 )
@@ -223,9 +213,7 @@ class TimesheetRecordsService:
             "errors": errors,
         }
 
-    def get_timesheet_detail(
-        self, timesheet_id: int, current_user: User
-    ) -> TimesheetResponse:
+    def get_timesheet_detail(self, timesheet_id: int, current_user: User) -> TimesheetResponse:
         """
         获取工时记录详情
 
@@ -312,9 +300,7 @@ class TimesheetRecordsService:
 
     # ==================== 私有辅助方法 ====================
 
-    def _validate_projects(
-        self, project_id: Optional[int], rd_project_id: Optional[int]
-    ) -> None:
+    def _validate_projects(self, project_id: Optional[int], rd_project_id: Optional[int]) -> None:
         """验证项目ID"""
         if not project_id and not rd_project_id:
             raise HTTPException(status_code=400, detail="必须指定项目ID或研发项目ID")
@@ -325,9 +311,7 @@ class TimesheetRecordsService:
         if rd_project_id:
             from app.models.rd_project import RdProject
 
-            rd_project = (
-                self.db.query(RdProject).filter(RdProject.id == rd_project_id).first()
-            )
+            rd_project = self.db.query(RdProject).filter(RdProject.id == rd_project_id).first()
             if not rd_project:
                 raise HTTPException(status_code=404, detail="研发项目不存在")
 
@@ -352,9 +336,7 @@ class TimesheetRecordsService:
         existing = self.db.query(Timesheet).filter(*query_filter).first()
 
         if existing:
-            raise HTTPException(
-                status_code=400, detail="该日期已有工时记录，请更新或删除后重试"
-            )
+            raise HTTPException(status_code=400, detail="该日期已有工时记录，请更新或删除后重试")
 
     def _get_user_info(self, user_id: int) -> Dict[str, Any]:
         """获取用户和部门信息"""
@@ -364,9 +346,7 @@ class TimesheetRecordsService:
 
         if user and hasattr(user, "department_id") and user.department_id:
             department = (
-                self.db.query(Department)
-                .filter(Department.id == user.department_id)
-                .first()
+                self.db.query(Department).filter(Department.id == user.department_id).first()
             )
             if department:
                 department_id = department.id
@@ -384,9 +364,7 @@ class TimesheetRecordsService:
         project_name = None
 
         if project_id:
-            project = (
-                self.db.query(Project).filter(Project.id == project_id).first()
-            )
+            project = self.db.query(Project).filter(Project.id == project_id).first()
             if project:
                 project_code = project.project_code
                 project_name = project.project_name
@@ -438,18 +416,14 @@ class TimesheetRecordsService:
         user = self.db.query(User).filter(User.id == timesheet.user_id).first()
         project = None
         if timesheet.project_id:
-            project = (
-                self.db.query(Project).filter(Project.id == timesheet.project_id).first()
-            )
+            project = self.db.query(Project).filter(Project.id == timesheet.project_id).first()
 
         rd_project = None
         if timesheet.rd_project_id:
             from app.models.rd_project import RdProject
 
             rd_project = (
-                self.db.query(RdProject)
-                .filter(RdProject.id == timesheet.rd_project_id)
-                .first()
+                self.db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
             )
 
         return TimesheetResponse(

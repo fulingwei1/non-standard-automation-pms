@@ -2,7 +2,7 @@
 """Tests for invoice_auto_service/creation.py"""
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ class TestCreateInvoiceRequest:
 
     def _setup(self):
         from app.services.invoice_auto_service.creation import create_invoice_request
+
         service = MagicMock()
         plan = MagicMock()
         plan.id = 1
@@ -49,11 +50,15 @@ class TestCreateInvoiceRequest:
         fn, service, plan, order, milestone, contract = self._setup()
         # No existing request
         service.db.query.return_value.filter.return_value.first.side_effect = [None, contract, None]
-        service.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        service.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         service.db.flush = MagicMock()
+
         # Mock the added invoice_request
         def capture_add(obj):
             obj.id = 42
+
         service.db.add.side_effect = capture_add
 
         result = fn(service, plan, order, milestone)
@@ -65,6 +70,7 @@ class TestCreateInvoiceDirectly:
 
     def test_already_invoiced(self):
         from app.services.invoice_auto_service.creation import create_invoice_directly
+
         service = MagicMock()
         plan = MagicMock()
         plan.invoice_id = 1
@@ -74,6 +80,7 @@ class TestCreateInvoiceDirectly:
 
     def test_no_contract(self):
         from app.services.invoice_auto_service.creation import create_invoice_directly
+
         service = MagicMock()
         plan = MagicMock()
         plan.invoice_id = None
@@ -83,10 +90,14 @@ class TestCreateInvoiceDirectly:
         assert result["success"] is False
 
     @patch("app.services.invoice_auto_service.creation.desc")
-    @patch("app.services.invoice_auto_service.creation.apply_like_filter", side_effect=lambda q, *a, **kw: q)
+    @patch(
+        "app.services.invoice_auto_service.creation.apply_like_filter",
+        side_effect=lambda q, *a, **kw: q,
+    )
     @patch("app.services.invoice_auto_service.creation.Invoice")
     def test_happy_path(self, mock_invoice_cls, mock_like, mock_desc):
         from app.services.invoice_auto_service.creation import create_invoice_directly
+
         service = MagicMock()
         plan = MagicMock()
         plan.invoice_id = None
@@ -100,7 +111,9 @@ class TestCreateInvoiceDirectly:
         contract.customer.tax_no = "123456"
         contract.owner_id = 2
         service.db.query.return_value.filter.return_value.first.return_value = contract
-        service.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        service.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_inv = MagicMock()
         mock_inv.id = 55
         mock_invoice_cls.return_value = mock_inv

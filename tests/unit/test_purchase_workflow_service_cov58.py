@@ -216,8 +216,12 @@ class TestPurchaseWorkflowService(unittest.TestCase):
         mock_task.assignee = mock_assignee
 
         with patch("app.services.purchase_workflow.service.get_or_404", return_value=mock_order):
-            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_instance
-            self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_task]
+            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                mock_instance
+            )
+            self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+                mock_task
+            ]
 
             result = self.service.get_approval_status(order_id=1)
 
@@ -233,7 +237,9 @@ class TestPurchaseWorkflowService(unittest.TestCase):
         mock_order.status = "DRAFT"
 
         with patch("app.services.purchase_workflow.service.get_or_404", return_value=mock_order):
-            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             result = self.service.get_approval_status(order_id=1)
 

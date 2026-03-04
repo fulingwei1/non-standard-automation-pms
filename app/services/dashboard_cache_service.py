@@ -23,7 +23,7 @@ class DashboardCacheService:
         self.ttl = ttl
         self._cache = CacheService()
         # 向后兼容：暴露 redis_client 属性
-        self.redis_client = getattr(self._cache, 'redis_client', None)
+        self.redis_client = getattr(self._cache, "redis_client", None)
         self.cache_enabled = self.redis_client is not None
 
     def _get_cache_key(self, key_prefix: str, **kwargs) -> str:
@@ -48,9 +48,7 @@ class DashboardCacheService:
             return False
         try:
             self.redis_client.setex(
-                key,
-                timedelta(seconds=self.ttl),
-                json.dumps(data, ensure_ascii=False, default=str)
+                key, timedelta(seconds=self.ttl), json.dumps(data, ensure_ascii=False, default=str)
             )
             return True
         except Exception as e:
@@ -79,10 +77,7 @@ class DashboardCacheService:
         return 0
 
     def get_or_set(
-        self,
-        key: str,
-        fetch_func: Callable[[], Dict[str, Any]],
-        force_refresh: bool = False
+        self, key: str, fetch_func: Callable[[], Dict[str, Any]], force_refresh: bool = False
     ) -> Dict[str, Any]:
         if not force_refresh:
             cached = self.get(key)
@@ -97,10 +92,7 @@ class DashboardCacheService:
 _cache_instance: Optional[DashboardCacheService] = None
 
 
-def get_cache_service(
-    redis_url: Optional[str] = None,
-    ttl: int = 300
-) -> DashboardCacheService:
+def get_cache_service(redis_url: Optional[str] = None, ttl: int = 300) -> DashboardCacheService:
     global _cache_instance
     if _cache_instance is None:
         _cache_instance = DashboardCacheService(redis_url=redis_url, ttl=ttl)
@@ -112,7 +104,8 @@ def invalidate_dashboard_cache(pattern: str = "dashboard:*") -> int:
     return cache.clear_pattern(pattern)
 
 
+from app.services.cache.redis_cache import RedisCache, RedisCacheManager  # noqa: F401, E402
+
 # ── Re-exports for unified cache access (#30) ────────────────────────
 from app.services.cache_service import CacheService as UnifiedCacheService  # noqa: F401, E402
-from app.services.cache.redis_cache import RedisCache, RedisCacheManager  # noqa: F401, E402
 from app.utils.cache_decorator import cache_response  # noqa: F401, E402

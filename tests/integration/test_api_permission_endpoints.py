@@ -14,6 +14,7 @@ API端点权限集成测试
 """
 
 import json
+import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -27,10 +28,7 @@ from app.models.project import Customer, Project, ProjectMember
 from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 from tests.integration.api_test_helper import APITestHelper
 
-import uuid
-
 _PJ_PM_TEST = f"PJ-PM-TEST-{uuid.uuid4().hex[:8]}"
-
 
 
 class PermissionTestReport:
@@ -109,7 +107,11 @@ class PermissionTestReport:
             f"- **总测试数**: {self.summary['total']}",
             f"- **通过数**: {self.summary['passed']}",
             f"- **失败数**: {self.summary['failed']}",
-            f"- **通过率**: {self.summary['passed'] / self.summary['total'] * 100:.2f}%" if self.summary['total'] > 0 else "- **通过率**: 0%",
+            (
+                f"- **通过率**: {self.summary['passed'] / self.summary['total'] * 100:.2f}%"
+                if self.summary["total"] > 0
+                else "- **通过率**: 0%"
+            ),
             "",
             "## 按角色统计",
             "",
@@ -119,9 +121,7 @@ class PermissionTestReport:
 
         for role, stats in sorted(self.summary["by_role"].items()):
             pass_rate = (
-                f"{stats['passed'] / stats['total'] * 100:.2f}%"
-                if stats['total'] > 0
-                else "0%"
+                f"{stats['passed'] / stats['total'] * 100:.2f}%" if stats["total"] > 0 else "0%"
             )
             report_lines.append(
                 f"| {role} | {stats['total']} | {stats['passed']} | {stats['failed']} | {pass_rate} |"
@@ -139,9 +139,7 @@ class PermissionTestReport:
 
         for endpoint, stats in sorted(self.summary["by_endpoint"].items()):
             pass_rate = (
-                f"{stats['passed'] / stats['total'] * 100:.2f}%"
-                if stats['total'] > 0
-                else "0%"
+                f"{stats['passed'] / stats['total'] * 100:.2f}%" if stats["total"] > 0 else "0%"
             )
             report_lines.append(
                 f"| {endpoint} | {stats['total']} | {stats['passed']} | {stats['failed']} | {pass_rate} |"
@@ -512,9 +510,7 @@ class TestUserManagementPermissions:
     def test_admin_can_list_users(self, client: TestClient, setup_test_data):
         """测试管理员可以访问用户列表"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/users", username="test_admin", password="admin123"
-        )
+        response = helper.get("/users", username="test_admin", password="admin123")
 
         passed = response["status_code"] == 200
         test_report.add_result(
@@ -525,16 +521,16 @@ class TestUserManagementPermissions:
             expected_status=200,
             actual_status=response["status_code"],
             passed=passed,
-            message="管理员应该可以访问用户列表" if passed else f"访问失败: {response.get('text', '')}",
+            message=(
+                "管理员应该可以访问用户列表" if passed else f"访问失败: {response.get('text', '')}"
+            ),
         )
         assert passed
 
     def test_pm_cannot_list_users(self, client: TestClient, setup_test_data):
         """测试PM不能访问用户列表"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/users", username="test_pm", password="pm123"
-        )
+        response = helper.get("/users", username="test_pm", password="pm123")
 
         # PM没有user:list权限，应该返回403
         passed = response["status_code"] == 403
@@ -546,16 +542,18 @@ class TestUserManagementPermissions:
             expected_status=403,
             actual_status=response["status_code"],
             passed=passed,
-            message="PM不应该有访问用户列表的权限" if passed else f"期望403但得到{response['status_code']}",
+            message=(
+                "PM不应该有访问用户列表的权限"
+                if passed
+                else f"期望403但得到{response['status_code']}"
+            ),
         )
         assert passed
 
     def test_engineer_cannot_list_users(self, client: TestClient, setup_test_data):
         """测试工程师不能访问用户列表"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/users", username="test_engineer", password="engineer123"
-        )
+        response = helper.get("/users", username="test_engineer", password="engineer123")
 
         passed = response["status_code"] == 403
         test_report.add_result(
@@ -566,7 +564,11 @@ class TestUserManagementPermissions:
             expected_status=403,
             actual_status=response["status_code"],
             passed=passed,
-            message="工程师不应该有访问用户列表的权限" if passed else f"期望403但得到{response['status_code']}",
+            message=(
+                "工程师不应该有访问用户列表的权限"
+                if passed
+                else f"期望403但得到{response['status_code']}"
+            ),
         )
         assert passed
 
@@ -580,9 +582,7 @@ class TestUserManagementPermissions:
             "email": f"new_user_{datetime.now().timestamp()}@test.com",
         }
 
-        response = helper.post(
-            "/users", data=user_data, username="test_admin", password="admin123"
-        )
+        response = helper.post("/users", data=user_data, username="test_admin", password="admin123")
 
         passed = response["status_code"] in [200, 201]
         test_report.add_result(
@@ -607,9 +607,7 @@ class TestUserManagementPermissions:
             "email": f"new_user_pm_{datetime.now().timestamp()}@test.com",
         }
 
-        response = helper.post(
-            "/users", data=user_data, username="test_pm", password="pm123"
-        )
+        response = helper.post("/users", data=user_data, username="test_pm", password="pm123")
 
         passed = response["status_code"] == 403
         test_report.add_result(
@@ -620,7 +618,9 @@ class TestUserManagementPermissions:
             expected_status=403,
             actual_status=response["status_code"],
             passed=passed,
-            message="PM不应该有创建用户的权限" if passed else f"期望403但得到{response['status_code']}",
+            message=(
+                "PM不应该有创建用户的权限" if passed else f"期望403但得到{response['status_code']}"
+            ),
         )
         assert passed
 
@@ -632,9 +632,7 @@ class TestProjectManagementPermissions:
     def test_admin_can_list_projects(self, client: TestClient, setup_test_data):
         """测试管理员可以访问所有项目"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/projects", username="test_admin", password="admin123"
-        )
+        response = helper.get("/projects", username="test_admin", password="admin123")
 
         passed = response["status_code"] == 200
         test_report.add_result(
@@ -645,16 +643,16 @@ class TestProjectManagementPermissions:
             expected_status=200,
             actual_status=response["status_code"],
             passed=passed,
-            message="管理员应该可以访问所有项目" if passed else f"访问失败: {response.get('text', '')}",
+            message=(
+                "管理员应该可以访问所有项目" if passed else f"访问失败: {response.get('text', '')}"
+            ),
         )
         assert passed
 
     def test_pm_can_list_projects(self, client: TestClient, setup_test_data):
         """测试PM可以访问项目列表"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/projects", username="test_pm", password="pm123"
-        )
+        response = helper.get("/projects", username="test_pm", password="pm123")
 
         passed = response["status_code"] == 200
         test_report.add_result(
@@ -672,9 +670,7 @@ class TestProjectManagementPermissions:
     def test_engineer_can_list_projects(self, client: TestClient, setup_test_data):
         """测试工程师可以访问项目列表"""
         helper = APITestHelper(client)
-        response = helper.get(
-            "/projects", username="test_engineer", password="engineer123"
-        )
+        response = helper.get("/projects", username="test_engineer", password="engineer123")
 
         passed = response["status_code"] == 200
         test_report.add_result(
@@ -685,7 +681,9 @@ class TestProjectManagementPermissions:
             expected_status=200,
             actual_status=response["status_code"],
             passed=passed,
-            message="工程师应该可以访问项目列表" if passed else f"访问失败: {response.get('text', '')}",
+            message=(
+                "工程师应该可以访问项目列表" if passed else f"访问失败: {response.get('text', '')}"
+            ),
         )
         assert passed
 
@@ -732,9 +730,7 @@ class TestProjectManagementPermissions:
             "health": "H1",
         }
 
-        response = helper.post(
-            "/projects", data=project_data, username="test_pm", password="pm123"
-        )
+        response = helper.post("/projects", data=project_data, username="test_pm", password="pm123")
 
         passed = response["status_code"] in [200, 201]
         test_report.add_result(
@@ -775,7 +771,11 @@ class TestProjectManagementPermissions:
             expected_status=403,
             actual_status=response["status_code"],
             passed=passed,
-            message="工程师不应该有创建项目的权限" if passed else f"期望403但得到{response['status_code']}",
+            message=(
+                "工程师不应该有创建项目的权限"
+                if passed
+                else f"期望403但得到{response['status_code']}"
+            ),
         )
         assert passed
 
@@ -789,18 +789,14 @@ class TestDataScopeFiltering:
         helper = APITestHelper(client)
         test_data = setup_test_data
 
-        response = helper.get(
-            "/projects", username="test_pm", password="pm123"
-        )
+        response = helper.get("/projects", username="test_pm", password="pm123")
 
         if response["status_code"] == 200:
             data = response.get("data", {})
             items = data.get("items", []) if isinstance(data, dict) else data
 
             # PM应该能看到自己负责的项目
-            pm_project_visible = any(
-                p.get("project_code") == _PJ_PM_TEST for p in items
-            )
+            pm_project_visible = any(p.get("project_code") == _PJ_PM_TEST for p in items)
 
             passed = pm_project_visible
             test_report.add_result(
@@ -832,18 +828,14 @@ class TestDataScopeFiltering:
         helper = APITestHelper(client)
         test_data = setup_test_data
 
-        response = helper.get(
-            "/projects", username="test_engineer", password="engineer123"
-        )
+        response = helper.get("/projects", username="test_engineer", password="engineer123")
 
         if response["status_code"] == 200:
             data = response.get("data", {})
             items = data.get("items", []) if isinstance(data, dict) else data
 
             # 工程师应该能看到自己参与的项目
-            project_visible = any(
-                p.get("project_code") == _PJ_PM_TEST for p in items
-            )
+            project_visible = any(p.get("project_code") == _PJ_PM_TEST for p in items)
 
             passed = project_visible
             test_report.add_result(
@@ -916,9 +908,11 @@ class TestRoleBasedAccessControl:
                     expected_status=expected,
                     actual_status=response["status_code"],
                     passed=passed,
-                    message=f"角色{role}访问{endpoint}应该返回{expected}"
-                    if passed
-                    else f"期望{expected}但得到{response['status_code']}",
+                    message=(
+                        f"角色{role}访问{endpoint}应该返回{expected}"
+                        if passed
+                        else f"期望{expected}但得到{response['status_code']}"
+                    ),
                 )
 
 

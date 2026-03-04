@@ -12,6 +12,7 @@ from .common import PaginatedResponse, TimestampSchema
 
 class NotificationResponse(TimestampSchema):
     """通知响应"""
+
     id: int
     user_id: int
     notification_type: str
@@ -29,11 +30,13 @@ class NotificationResponse(TimestampSchema):
 
 class NotificationListResponse(PaginatedResponse):
     """通知列表响应"""
+
     items: List[NotificationResponse]
 
 
 class NotificationSettingsResponse(TimestampSchema):
     """通知设置响应"""
+
     id: int
     user_id: int
     email_enabled: bool = True
@@ -51,6 +54,7 @@ class NotificationSettingsResponse(TimestampSchema):
 
 class NotificationSettingsUpdate(BaseModel):
     """更新通知设置"""
+
     email_enabled: Optional[bool] = None
     sms_enabled: Optional[bool] = None
     wechat_enabled: Optional[bool] = None
@@ -66,7 +70,5 @@ class NotificationSettingsUpdate(BaseModel):
 
 class BatchReadRequest(BaseModel):
     """批量标记已读请求"""
+
     notification_ids: List[int] = Field(description="通知ID列表")
-
-
-

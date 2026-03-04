@@ -8,21 +8,21 @@ import pytest
 pytest.importorskip("app.services.report_framework.models")
 
 from app.services.report_framework.models import (
-    DataSourceType,
-    SectionType,
-    ChartType,
-    ParameterType,
-    ReportMeta,
-    PermissionConfig,
-    ParameterConfig,
     CacheConfig,
-    ScheduleConfig,
+    ChartType,
     DataSourceConfig,
-    SectionConfig,
-    MetricItem,
-    TableColumn,
+    DataSourceType,
     ExportConfig,
+    MetricItem,
+    ParameterConfig,
+    ParameterType,
+    PermissionConfig,
     ReportConfig,
+    ReportMeta,
+    ScheduleConfig,
+    SectionConfig,
+    SectionType,
+    TableColumn,
 )
 
 

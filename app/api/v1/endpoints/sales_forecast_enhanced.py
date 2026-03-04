@@ -4,8 +4,9 @@
 考虑多维度因素，提高预测准确性，倒逼数据填写
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 增强版预测模型 ==========
 
+
 @router.get("/forecast/enhanced-prediction", summary="增强版销售预测")
 def get_enhanced_prediction(
     period: str = Query("quarterly", description="周期"),
@@ -26,7 +28,7 @@ def get_enhanced_prediction(
 ) -> Any:
     """
     增强版销售预测模型
-    
+
     考虑因素：
     1. 基础漏斗数据（金额 × 赢单率）
     2. 数据质量系数（填写完整度）
@@ -36,18 +38,17 @@ def get_enhanced_prediction(
     6. 季节性因素
     7. 竞争态势
     8. 客户质量评分
-    
+
     返回：
     - 基础预测（仅漏斗）
     - 数据质量调整
     - 最终预测（调整后）
     - 各因素影响分析
     """
-    
+
     prediction = {
         "period": "2026-Q1",
         "generated_at": date.today().isoformat(),
-        
         # ========== 基础预测（仅漏斗） ==========
         "base_prediction": {
             "formula": "已完成 + Σ(漏斗金额 × 阶段赢单率)",
@@ -56,12 +57,10 @@ def get_enhanced_prediction(
             "base_predicted": 50075000,
             "base_completion_rate": 100.15,
         },
-        
         # ========== 数据质量系数 ==========
         "data_quality_factor": {
             "overall_score": 78,
             "impact": -0.05,  # 数据质量差，预测下调 5%
-            
             "dimensions": [
                 {
                     "name": "线索完整度",
@@ -100,12 +99,10 @@ def get_enhanced_prediction(
                 },
             ],
         },
-        
         # ========== 销售动作完成度 ==========
         "activity_factor": {
             "overall_score": 82,
             "impact": 0.02,  # 动作完成好，预测上调 2%
-            
             "metrics": {
                 "visits_target": 120,
                 "visits_actual": 98,
@@ -120,19 +117,16 @@ def get_enhanced_prediction(
                 "proposals_actual": 28,
                 "proposals_completion": 93.3,
             },
-            
             "correlation_analysis": {
                 "high_activity_win_rate": 72,  # 高频跟进的商机赢单率
-                "low_activity_win_rate": 35,   # 低频跟进的商机赢单率
+                "low_activity_win_rate": 35,  # 低频跟进的商机赢单率
                 "insight": "高频跟进的商机赢单率是低频的 2 倍",
             },
         },
-        
         # ========== 商机健康度 ==========
         "opportunity_health_factor": {
             "overall_score": 75,
             "impact": -0.03,  # 商机健康度一般，下调 3%
-            
             "healthy_opportunities": {
                 "count": 45,
                 "total_amount": 32000000,
@@ -149,19 +143,16 @@ def get_enhanced_prediction(
                 ],
             },
         },
-        
         # ========== 历史预测准确性 ==========
         "historical_accuracy_factor": {
             "avg_accuracy": 94.5,
             "impact": 0,  # 历史准确，不调整
-            
             "recent_predictions": [
                 {"period": "2025-12", "predicted": 51000000, "actual": 51200000, "accuracy": 99.6},
                 {"period": "2026-01", "predicted": 38000000, "actual": 39200000, "accuracy": 96.8},
                 {"period": "2026-02", "predicted": 42000000, "actual": 44500000, "accuracy": 94.0},
             ],
         },
-        
         # ========== 季节性因素 ==========
         "seasonality_factor": {
             "current_month": "3 月",
@@ -169,26 +160,24 @@ def get_enhanced_prediction(
             "impact": 0.03,
             "historical_pattern": "Q1 末月通常比前 2 个月增长 30-50%",
         },
-        
         # ========== 最终预测 ==========
         "final_prediction": {
             "base": 50075000,
             "adjustments": {
                 "data_quality": -2503750,  # -5%
-                "activity": 1001500,       # +2%
-                "health": -1502250,        # -3%
-                "seasonality": 1502250,    # +3%
+                "activity": 1001500,  # +2%
+                "health": -1502250,  # -3%
+                "seasonality": 1502250,  # +3%
             },
             "total_adjustment": -1502250,
             "final_predicted": 48572750,
             "final_completion_rate": 97.15,
             "confidence_level": 82,
             "confidence_interval": {
-                "optimistic": 53000000,   # 110%
-                "pessimistic": 44000000,   # 88%
+                "optimistic": 53000000,  # 110%
+                "pessimistic": 44000000,  # 88%
             },
         },
-        
         # ========== 关键发现 ==========
         "key_insights": [
             {
@@ -213,7 +202,6 @@ def get_enhanced_prediction(
                 "impact": 1000000,
             },
         ],
-        
         # ========== 改进建议 ==========
         "improvement_recommendations": [
             {
@@ -242,11 +230,12 @@ def get_enhanced_prediction(
             },
         ],
     }
-    
+
     return prediction
 
 
 # ========== 2. 数据质量评分 ==========
+
 
 @router.get("/forecast/data-quality-score", summary="数据质量评分")
 def get_data_quality_score(
@@ -256,13 +245,13 @@ def get_data_quality_score(
 ) -> Any:
     """
     销售数据质量评分
-    
+
     用于倒逼销售认真填写：
     - 评分公开排名
     - 影响预测准确性
     - 与绩效挂钩
     """
-    
+
     # 团队数据质量排名
     team_scores = [
         {
@@ -318,7 +307,7 @@ def get_data_quality_score(
             "alerts": ["5 个商机超过 14 天未跟进", "3 个商机缺少决策链信息"],
         },
     ]
-    
+
     return {
         "assessment_date": date.today().isoformat(),
         "team_average": 83,
@@ -326,7 +315,6 @@ def get_data_quality_score(
         "top_performer": {"name": "张三", "score": 92},
         "needs_improvement": {"name": "王五", "score": 72},
         "rankings": team_scores,
-        
         "scoring_rules": {
             "lead_completeness": {
                 "name": "线索完整度",
@@ -354,7 +342,6 @@ def get_data_quality_score(
                 "criteria": "关闭商机时详细填写原因",
             },
         },
-        
         "impact_explanation": {
             "on_prediction": "数据质量分每低 10 分，预测准确率下降约 5%",
             "on_performance": "数据质量纳入绩效考核，占比 15%",
@@ -365,6 +352,7 @@ def get_data_quality_score(
 
 # ========== 3. 销售动作追踪 ==========
 
+
 @router.get("/forecast/activity-tracking", summary="销售动作追踪")
 def get_activity_tracking(
     sales_id: Optional[int] = Query(None, description="销售 ID"),
@@ -374,19 +362,19 @@ def get_activity_tracking(
 ) -> Any:
     """
     销售动作完成度追踪
-    
+
     追踪：
     - 拜访次数（打卡）
     - 电话/微信沟通
     - 会议/演示
     - 方案/报价提交
     - 商机阶段推进
-    
+
     关联分析：
     - 动作频率 vs 赢单率
     - 响应速度 vs 转化率
     """
-    
+
     tracking = {
         "period": "2026-02",
         "team_summary": {
@@ -396,7 +384,6 @@ def get_activity_tracking(
             "proposals": {"target": 30, "actual": 28, "completion": 93.3},
             "stage_advances": {"target": 40, "actual": 35, "completion": 87.5},
         },
-        
         "individual_tracking": [
             {
                 "sales_id": 101,
@@ -436,7 +423,6 @@ def get_activity_tracking(
                 "alerts": ["拜访完成率仅 66.7%", "平均响应时间 8.5 小时（团队平均 3 小时）"],
             },
         ],
-        
         "insights": [
             {
                 "insight": "高频跟进的商机赢单率是低频的 3 倍",
@@ -450,11 +436,12 @@ def get_activity_tracking(
             },
         ],
     }
-    
+
     return tracking
 
 
 # ========== 4. 预测准确性对比 ==========
+
 
 @router.get("/forecast/accuracy-comparison", summary="预测准确性对比")
 def get_accuracy_comparison(
@@ -463,10 +450,10 @@ def get_accuracy_comparison(
 ) -> Any:
     """
     对比不同数据质量下的预测准确性
-    
+
     用于证明：认真填写数据 = 更准确的预测 = 更好的决策
     """
-    
+
     comparison = {
         "high_data_quality": {
             "description": "数据质量≥90 分的销售",
@@ -504,14 +491,12 @@ def get_accuracy_comparison(
                 "拜访记录不完整",
             ],
         },
-        
         "key_findings": [
             "数据质量高的销售，预测准确率高 21.5%",
             "数据质量高的销售，赢单率高 33%",
             "数据质量高的销售，成交周期短 48%",
         ],
-        
         "conclusion": "认真填写数据不仅提高预测准确性，还直接提升销售业绩",
     }
-    
+
     return comparison

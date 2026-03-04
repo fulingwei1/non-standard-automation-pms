@@ -11,9 +11,9 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.culture_wall import CultureWallContent, CultureWallReadRecord
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -46,44 +46,52 @@ def read_culture_wall_contents(
     if is_published is not None:
         query = query.filter(CultureWallContent.is_published == is_published)
 
-    query = apply_keyword_filter(query, CultureWallContent, keyword, ["title", "content", "summary"])
+    query = apply_keyword_filter(
+        query, CultureWallContent, keyword, ["title", "content", "summary"]
+    )
 
     total = query.count()
-    contents = apply_pagination(query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)), pagination.offset, pagination.limit).all()
+    contents = apply_pagination(
+        query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for content in contents:
-        items.append(CultureWallContentResponse(
-            id=content.id,
-            content_type=content.content_type,
-            title=content.title,
-            content=content.content,
-            summary=content.summary,
-            images=content.images if content.images else [],
-            videos=content.videos if content.videos else [],
-            attachments=content.attachments if content.attachments else [],
-            is_published=content.is_published,
-            publish_date=content.publish_date,
-            expire_date=content.expire_date,
-            priority=content.priority,
-            display_order=content.display_order,
-            view_count=content.view_count,
-            related_project_id=content.related_project_id,
-            related_department_id=content.related_department_id,
-            published_by=content.published_by,
-            published_by_name=content.published_by_name,
-            created_by=content.created_by,
-            created_at=content.created_at,
-            updated_at=content.updated_at,
-            is_read=False,
-        ))
+        items.append(
+            CultureWallContentResponse(
+                id=content.id,
+                content_type=content.content_type,
+                title=content.title,
+                content=content.content,
+                summary=content.summary,
+                images=content.images if content.images else [],
+                videos=content.videos if content.videos else [],
+                attachments=content.attachments if content.attachments else [],
+                is_published=content.is_published,
+                publish_date=content.publish_date,
+                expire_date=content.expire_date,
+                priority=content.priority,
+                display_order=content.display_order,
+                view_count=content.view_count,
+                related_project_id=content.related_project_id,
+                related_department_id=content.related_department_id,
+                published_by=content.published_by,
+                published_by_name=content.published_by_name,
+                created_by=content.created_by,
+                created_at=content.created_at,
+                updated_at=content.updated_at,
+                is_read=False,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -161,12 +169,16 @@ def read_culture_wall_content(
     content.view_count = (content.view_count or 0) + 1
 
     # 记录阅读
-    read_record = db.query(CultureWallReadRecord).filter(
-        and_(
-            CultureWallReadRecord.content_id == content_id,
-            CultureWallReadRecord.user_id == current_user.id
+    read_record = (
+        db.query(CultureWallReadRecord)
+        .filter(
+            and_(
+                CultureWallReadRecord.content_id == content_id,
+                CultureWallReadRecord.user_id == current_user.id,
+            )
         )
-    ).first()
+        .first()
+    )
 
     if not read_record:
         read_record = CultureWallReadRecord(

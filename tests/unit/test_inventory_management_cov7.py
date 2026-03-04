@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - inventory_management_service"""
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.inventory_management_service import (
-        InventoryManagementService,
         InsufficientStockError,
+        InventoryManagementService,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

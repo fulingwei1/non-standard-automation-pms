@@ -6,70 +6,71 @@ FRONTEND_DIR = Path("frontend/src/pages")
 
 # 中优先级页面（列表、管理、表单、详情）
 MEDIUM_PRIORITY_FILES = [
-    'LeaveManagement.jsx',
-    'OvertimeManagement.jsx',
-    'InvoiceManagement.jsx',
-    'BudgetApproval.jsx',
-    'CostAccounting.jsx',
-    'MaterialStock.jsx',
-    'MaterialInbound.jsx',
-    'MaterialOutbound.jsx',
-    'WarehouseManagement.jsx',
-    'ShippingManagement.jsx',
-    'ReturnManagement.jsx',
-    'SupplierEvaluation.jsx',
-    'SupplierList.jsx',
-    'SupplierQuotation.jsx',
-    'SupplierContract.jsx',
-    'CustomerList.jsx',
-    'CustomerOrderHistory.jsx',
-    'CustomerFeedback.jsx',
-    'PurchaseRequisition.jsx',
-    'MaterialRequest.jsx',
-    'MachineMaintenanceList.jsx',
-    'MachineMaintenanceDetail.jsx',
-    'ProductionPlanList.jsx',
-    'ProductionPlanDetail.jsx',
-    'QualityInspectionList.jsx',
-    'QualityInspectionDetail.jsx',
+    "LeaveManagement.jsx",
+    "OvertimeManagement.jsx",
+    "InvoiceManagement.jsx",
+    "BudgetApproval.jsx",
+    "CostAccounting.jsx",
+    "MaterialStock.jsx",
+    "MaterialInbound.jsx",
+    "MaterialOutbound.jsx",
+    "WarehouseManagement.jsx",
+    "ShippingManagement.jsx",
+    "ReturnManagement.jsx",
+    "SupplierEvaluation.jsx",
+    "SupplierList.jsx",
+    "SupplierQuotation.jsx",
+    "SupplierContract.jsx",
+    "CustomerList.jsx",
+    "CustomerOrderHistory.jsx",
+    "CustomerFeedback.jsx",
+    "PurchaseRequisition.jsx",
+    "MaterialRequest.jsx",
+    "MachineMaintenanceList.jsx",
+    "MachineMaintenanceDetail.jsx",
+    "ProductionPlanList.jsx",
+    "ProductionPlanDetail.jsx",
+    "QualityInspectionList.jsx",
+    "QualityInspectionDetail.jsx",
 ]
 
 # 低优先级页面（辅助功能、配置）
 LOW_PRIORITY_FILES = [
-    'About.jsx',
-    'Help.jsx',
-    'Settings.jsx',
-    'Profile.jsx',
-    'ChangePassword.jsx',
-    'NotificationsSettings.jsx',
-    'LanguageSettings.jsx',
-    'ThemeSettings.jsx',
-    'SystemInfo.jsx',
-    'Logs.jsx',
-    'Backup.jsx',
-    'Restore.jsx',
-    'IntegrationSettings.jsx',
-    'SecuritySettings.jsx',
-    'PrivacyPolicy.jsx',
-    'TermsOfService.jsx',
-    'ContactSupport.jsx',
-    'FAQ.jsx',
-    'UserGuide.jsx',
-    'VersionHistory.jsx',
-    'DashboardSettings.jsx',
-    'RoleManagement.jsx',
-    'UserManagement.jsx',
-    'DepartmentManagement.jsx',
-    'PositionManagement.jsx',
-    'PermissionManagement.jsx',
-    'MenuManagement.jsx',
-    'DictionaryManagement.jsx',
-    'WorkflowManagement.jsx',
+    "About.jsx",
+    "Help.jsx",
+    "Settings.jsx",
+    "Profile.jsx",
+    "ChangePassword.jsx",
+    "NotificationsSettings.jsx",
+    "LanguageSettings.jsx",
+    "ThemeSettings.jsx",
+    "SystemInfo.jsx",
+    "Logs.jsx",
+    "Backup.jsx",
+    "Restore.jsx",
+    "IntegrationSettings.jsx",
+    "SecuritySettings.jsx",
+    "PrivacyPolicy.jsx",
+    "TermsOfService.jsx",
+    "ContactSupport.jsx",
+    "FAQ.jsx",
+    "UserGuide.jsx",
+    "VersionHistory.jsx",
+    "DashboardSettings.jsx",
+    "RoleManagement.jsx",
+    "UserManagement.jsx",
+    "DepartmentManagement.jsx",
+    "PositionManagement.jsx",
+    "PermissionManagement.jsx",
+    "MenuManagement.jsx",
+    "DictionaryManagement.jsx",
+    "WorkflowManagement.jsx",
 ]
+
 
 def quick_fix_file(file_path: Path) -> dict:
     """快速修复文件"""
-    content = file_path.read_text(encoding='utf-8')
+    content = file_path.read_text(encoding="utf-8")
     original_content = content
     changes = []
 
@@ -79,14 +80,18 @@ def quick_fix_file(file_path: Path) -> dict:
         match = re.search(import_pattern, content)
         if match:
             existing_imports = match.group(1)
-            if 'services/api' not in existing_imports:
+            if "services/api" not in existing_imports:
                 # 在现有导入后添加api导入
                 api_import = "import { api } from '../services/api'\n"
                 content = re.sub(import_pattern, f"\\1\\n{api_import}", content)
                 changes.append("添加API导入")
 
     # 修复2：添加基础状态定义（如果缺失）
-    if 'useState([])' not in content and 'useState({})' not in content and 'useState(null)' not in content:
+    if (
+        "useState([])" not in content
+        and "useState({})" not in content
+        and "useState(null)" not in content
+    ):
         # 在组件函数开始处添加状态
         function_start = r"(export default function \w+\(\) \{)"
         state_declarations = """
@@ -106,15 +111,16 @@ def quick_fix_file(file_path: Path) -> dict:
 
     for pattern in mock_patterns:
         if re.search(pattern, content):
-            content = re.sub(pattern, '', content, flags=re.MULTILINE)
+            content = re.sub(pattern, "", content, flags=re.MULTILINE)
             changes.append("移除Mock数据定义")
             break
 
     if content != original_content:
-        file_path.write_text(content, encoding='utf-8')
-        return {'file': file_path.name, 'changes': changes, 'success': True}
+        file_path.write_text(content, encoding="utf-8")
+        return {"file": file_path.name, "changes": changes, "success": True}
 
-    return {'file': file_path.name, 'changes': [], 'success': False}
+    return {"file": file_path.name, "changes": [], "success": False}
+
 
 def batch_fix_files(files_list, batch_name):
     """批量修复文件"""
@@ -133,17 +139,17 @@ def batch_fix_files(files_list, batch_name):
         print(f"处理: {filename}")
         result = quick_fix_file(file_path)
 
-        if result['success']:
+        if result["success"]:
             print(f"  ✅ 成功 - 修改: {len(result['changes'])} 项")
-            for change in result['changes']:
+            for change in result["changes"]:
                 print(f"     - {change}")
         else:
             print(f"  ⏭️  无需修改")
         print()
 
     # 统计
-    successful = [r for r in results if r['success']]
-    total_changes = sum(len(r['changes']) for r in successful)
+    successful = [r for r in results if r["success"]]
+    total_changes = sum(len(r["changes"]) for r in successful)
 
     print("=" * 80)
     print(f"批量修复：{batch_name}完成")
@@ -154,6 +160,7 @@ def batch_fix_files(files_list, batch_name):
     print()
 
     return results
+
 
 def main():
     print("=" * 80)
@@ -174,8 +181,8 @@ def main():
 
     # 汇总统计
     all_results = medium_results + low_results
-    successful = [r for r in all_results if r['success']]
-    total_changes = sum(len(r['changes']) for r in successful)
+    successful = [r for r in all_results if r["success"]]
+    total_changes = sum(len(r["changes"]) for r in successful)
 
     print("=" * 80)
     print("批量修复总结")
@@ -187,5 +194,6 @@ def main():
 
     return all_results
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

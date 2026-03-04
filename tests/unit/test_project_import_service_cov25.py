@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - project_import_service 单元测试"""
 
-import pytest
-import pandas as pd
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from datetime import date
+
+import pandas as pd
+import pytest
 
 pytest.importorskip("app.services.project_import_service")
 
 from app.services.project_import_service import (
-    validate_excel_file,
-    validate_project_columns,
-    get_column_value,
-    parse_project_row,
     find_or_create_customer,
     find_project_manager,
+    get_column_value,
     parse_date_value,
     parse_decimal_value,
+    parse_project_row,
+    validate_excel_file,
+    validate_project_columns,
 )
 
-
 # ── validate_excel_file ───────────────────────────────────────────────────────
+
 
 class TestValidateExcelFile:
     def test_accepts_xlsx_extension(self):
@@ -33,22 +34,26 @@ class TestValidateExcelFile:
 
     def test_raises_for_csv_extension(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc_info:
             validate_excel_file("projects.csv")
         assert exc_info.value.status_code == 400
 
     def test_raises_for_txt_extension(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("data.txt")
 
     def test_raises_for_no_extension(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("datafile")
 
 
 # ── validate_project_columns ──────────────────────────────────────────────────
+
 
 class TestValidateProjectColumns:
     def test_accepts_starred_columns(self):
@@ -61,6 +66,7 @@ class TestValidateProjectColumns:
 
     def test_raises_when_project_code_missing(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"项目名称*": ["测试"]})
         with pytest.raises(HTTPException) as exc_info:
             validate_project_columns(df)
@@ -68,18 +74,21 @@ class TestValidateProjectColumns:
 
     def test_raises_when_project_name_missing(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"项目编码*": ["P001"]})
         with pytest.raises(HTTPException):
             validate_project_columns(df)
 
     def test_raises_when_both_columns_missing(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"其他列": ["值"]})
         with pytest.raises(HTTPException):
             validate_project_columns(df)
 
 
 # ── get_column_value ──────────────────────────────────────────────────────────
+
 
 class TestGetColumnValue:
     def test_returns_primary_col_value(self):
@@ -109,6 +118,7 @@ class TestGetColumnValue:
 
 
 # ── parse_project_row ─────────────────────────────────────────────────────────
+
 
 class TestParseProjectRow:
     def test_returns_code_and_name(self):
@@ -140,6 +150,7 @@ class TestParseProjectRow:
 
 # ── find_or_create_customer ───────────────────────────────────────────────────
 
+
 class TestFindOrCreateCustomer:
     def test_returns_none_when_no_name(self):
         db = MagicMock()
@@ -166,6 +177,7 @@ class TestFindOrCreateCustomer:
 
 
 # ── find_project_manager ──────────────────────────────────────────────────────
+
 
 class TestFindProjectManager:
     def test_returns_none_when_no_name(self):
@@ -196,6 +208,7 @@ class TestFindProjectManager:
 
 # ── parse_date_value ──────────────────────────────────────────────────────────
 
+
 class TestParseDateValue:
     def test_parses_valid_date_string(self):
         result = parse_date_value("2025-06-01")
@@ -220,6 +233,7 @@ class TestParseDateValue:
 
 
 # ── parse_decimal_value ───────────────────────────────────────────────────────
+
 
 class TestParseDecimalValue:
     def test_parses_integer_string(self):

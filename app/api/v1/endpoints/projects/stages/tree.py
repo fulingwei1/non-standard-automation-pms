@@ -140,9 +140,7 @@ def get_tree_view(
             )
         )
 
-    overall_progress = (
-        (completed_stages / total_stages * 100) if total_stages > 0 else 0
-    )
+    overall_progress = (completed_stages / total_stages * 100) if total_stages > 0 else 0
 
     return TreeViewResponse(
         project_id=project.id,

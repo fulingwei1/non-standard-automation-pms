@@ -39,6 +39,7 @@ def test_distribution_empty():
 
 def test_distribution_very_high():
     from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum
+
     p = _make_project(0.85, LeadOutcomeEnum.WON.value)
     svc = _make_service([p])
     result = get_win_rate_distribution(svc)
@@ -48,6 +49,7 @@ def test_distribution_very_high():
 
 def test_distribution_actual_win_rate_calculation():
     from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum
+
     won_p = _make_project(0.65, LeadOutcomeEnum.WON.value)
     lost_p = _make_project(0.61, LeadOutcomeEnum.LOST.value)
     svc = _make_service([won_p, lost_p])
@@ -68,6 +70,7 @@ def test_validate_model_no_data():
 
 def test_validate_model_accuracy_correct():
     from app.models.enums import LeadOutcomeEnum
+
     p_won = _make_project(0.75, LeadOutcomeEnum.WON.value)
     p_lost = _make_project(0.30, LeadOutcomeEnum.LOST.value)
     svc = MagicMock()
@@ -82,6 +85,7 @@ def test_validate_model_accuracy_correct():
 
 def test_validate_brier_score():
     from app.models.enums import LeadOutcomeEnum
+
     # 完美预测：predicted=1.0, actual=WON → error=0
     p = _make_project(1.0, LeadOutcomeEnum.WON.value)
     svc = MagicMock()

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十三批 - 部门经理评价服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.manager_evaluation_service import ManagerEvaluationService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -37,7 +39,7 @@ class TestCheckManagerPermission:
 
         def side_effect(*args, **kwargs):
             m = MagicMock()
-            if 'User' in str(args):
+            if "User" in str(args):
                 m.filter.return_value.first.return_value = mock_manager
             else:
                 m.filter.return_value.first.return_value = None
@@ -87,11 +89,11 @@ class TestCheckManagerPermission:
 class TestAdjustPerformance:
     def test_adjust_performance_exists(self, service):
         """adjust_performance方法存在"""
-        assert hasattr(service, 'adjust_performance')
+        assert hasattr(service, "adjust_performance")
 
     def test_get_adjustment_history_exists(self, service):
         """历史查询方法存在"""
-        assert hasattr(service, 'get_adjustment_history') or True  # 宽松检查
+        assert hasattr(service, "get_adjustment_history") or True  # 宽松检查
 
 
 class TestManagerEvaluationInit:

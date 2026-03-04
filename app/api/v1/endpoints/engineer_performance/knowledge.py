@@ -30,7 +30,7 @@ async def list_contributions(
     status: Optional[str] = Query(None, description="状态"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取知识贡献列表"""
     service = KnowledgeContributionService(db)
@@ -41,59 +41,50 @@ async def list_contributions(
         contribution_type=contribution_type,
         status=status,
         limit=pagination.limit,
-        offset=pagination.offset
+        offset=pagination.offset,
     )
 
     items = []
     for c in contributions:
         contributor = db.query(User).filter(User.id == c.contributor_id).first()
-        items.append({
-            "id": c.id,
-            "contributor_id": c.contributor_id,
-            "contributor_name": contributor.name if contributor else None,
-            "contribution_type": c.contribution_type,
-            "job_type": c.job_type,
-            "title": c.title,
-            "description": c.description,
-            "tags": c.tags,
-            "reuse_count": c.reuse_count,
-            "rating_score": float(c.rating_score) if c.rating_score else None,
-            "status": c.status,
-            "created_at": c.created_at.isoformat() if c.created_at else None
-        })
+        items.append(
+            {
+                "id": c.id,
+                "contributor_id": c.contributor_id,
+                "contributor_name": contributor.name if contributor else None,
+                "contribution_type": c.contribution_type,
+                "job_type": c.job_type,
+                "title": c.title,
+                "description": c.description,
+                "tags": c.tags,
+                "reuse_count": c.reuse_count,
+                "rating_score": float(c.rating_score) if c.rating_score else None,
+                "status": c.status,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+        )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "total": total,
-            "items": items
-        }
-    )
+    return ResponseModel(code=200, message="success", data={"total": total, "items": items})
 
 
 @router.post("", summary="创建知识贡献")
 async def create_contribution(
     data: KnowledgeContributionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """创建知识贡献"""
     service = KnowledgeContributionService(db)
     contribution = service.create_contribution(data, current_user.id)
 
-    return ResponseModel(
-        code=200,
-        message="创建成功",
-        data={"id": contribution.id}
-    )
+    return ResponseModel(code=200, message="创建成功", data={"id": contribution.id})
 
 
 @router.get("/{contribution_id}", summary="获取知识贡献详情")
 async def get_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取知识贡献详情"""
     service = KnowledgeContributionService(db)
@@ -122,9 +113,11 @@ async def get_contribution(
             "rating_count": contribution.rating_count,
             "status": contribution.status,
             "approved_by": contribution.approved_by,
-            "approved_at": contribution.approved_at.isoformat() if contribution.approved_at else None,
-            "created_at": contribution.created_at.isoformat() if contribution.created_at else None
-        }
+            "approved_at": (
+                contribution.approved_at.isoformat() if contribution.approved_at else None
+            ),
+            "created_at": contribution.created_at.isoformat() if contribution.created_at else None,
+        },
     )
 
 
@@ -133,7 +126,7 @@ async def update_contribution(
     contribution_id: int,
     data: KnowledgeContributionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """更新知识贡献"""
     service = KnowledgeContributionService(db)
@@ -142,11 +135,7 @@ async def update_contribution(
         contribution = service.update_contribution(contribution_id, data, current_user.id)
         if not contribution:
             raise HTTPException(status_code=404, detail="贡献不存在")
-        return ResponseModel(
-            code=200,
-            message="更新成功",
-            data={"id": contribution.id}
-        )
+        return ResponseModel(code=200, message="更新成功", data={"id": contribution.id})
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -155,7 +144,7 @@ async def update_contribution(
 async def submit_for_review(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """提交知识贡献进行审核"""
     service = KnowledgeContributionService(db)
@@ -165,7 +154,7 @@ async def submit_for_review(
         return ResponseModel(
             code=200,
             message="已提交审核",
-            data={"id": contribution.id, "status": contribution.status}
+            data={"id": contribution.id, "status": contribution.status},
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -177,7 +166,7 @@ async def submit_for_review(
 async def approve_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """审核通过知识贡献"""
     service = KnowledgeContributionService(db)
@@ -187,7 +176,7 @@ async def approve_contribution(
         return ResponseModel(
             code=200,
             message="审核通过",
-            data={"id": contribution.id, "status": contribution.status}
+            data={"id": contribution.id, "status": contribution.status},
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -197,7 +186,7 @@ async def approve_contribution(
 async def reject_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """拒绝知识贡献"""
     service = KnowledgeContributionService(db)
@@ -205,9 +194,7 @@ async def reject_contribution(
     try:
         contribution = service.approve_contribution(contribution_id, current_user.id, False)
         return ResponseModel(
-            code=200,
-            message="已拒绝",
-            data={"id": contribution.id, "status": contribution.status}
+            code=200, message="已拒绝", data={"id": contribution.id, "status": contribution.status}
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -218,7 +205,7 @@ async def record_reuse(
     contribution_id: int,
     data: KnowledgeReuseCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """记录知识复用"""
     service = KnowledgeContributionService(db)
@@ -228,11 +215,7 @@ async def record_reuse(
 
     try:
         reuse_log = service.record_reuse(data, current_user.id)
-        return ResponseModel(
-            code=200,
-            message="复用已记录",
-            data={"id": reuse_log.id}
-        )
+        return ResponseModel(code=200, message="复用已记录", data={"id": reuse_log.id})
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -241,7 +224,7 @@ async def record_reuse(
 async def delete_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """删除知识贡献"""
     service = KnowledgeContributionService(db)
@@ -250,11 +233,7 @@ async def delete_contribution(
         success = service.delete_contribution(contribution_id, current_user.id)
         if not success:
             raise HTTPException(status_code=404, detail="贡献不存在")
-        return ResponseModel(
-            code=200,
-            message="删除成功",
-            data=None
-        )
+        return ResponseModel(code=200, message="删除成功", data=None)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
@@ -267,35 +246,24 @@ async def get_contribution_ranking(
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     limit: int = Query(20, ge=1, le=50),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取知识贡献排行榜"""
     service = KnowledgeContributionService(db)
 
     ranking = service.get_contribution_ranking(
-        job_type=job_type,
-        contribution_type=contribution_type,
-        limit=limit
+        job_type=job_type, contribution_type=contribution_type, limit=limit
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=ranking
-    )
+    return ResponseModel(code=200, message="success", data=ranking)
 
 
 @router.get("/stats/me", summary="获取我的贡献统计")
 async def get_my_contribution_stats(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取当前用户的贡献统计"""
     service = KnowledgeContributionService(db)
     stats = service.get_contributor_stats(current_user.id)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=stats
-    )
+    return ResponseModel(code=200, message="success", data=stats)

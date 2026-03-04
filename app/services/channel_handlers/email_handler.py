@@ -17,8 +17,6 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
-
-
 from app.services.notification_handlers.email_handler import EmailNotificationHandler
 
 __all__ = ["EmailChannelHandler", "EmailNotificationHandler"]

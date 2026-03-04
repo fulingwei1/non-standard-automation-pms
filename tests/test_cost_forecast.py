@@ -30,7 +30,6 @@ from app.models.project import (
 from app.models.user import User
 from app.services.cost_forecast_service import CostForecastService
 
-
 # ============================================================================
 # 测试夹具（Fixtures）
 # ============================================================================
@@ -58,9 +57,7 @@ def test_project(db: Session, test_user: User) -> Project:
 
 
 @pytest.fixture
-def test_project_with_costs(
-    db: Session, test_project: Project, test_user: User
-) -> Project:
+def test_project_with_costs(db: Session, test_project: Project, test_user: User) -> Project:
     """创建带有成本数据的测试项目"""
     # 创建6个月的成本数据
     base_date = date.today() - timedelta(days=180)
@@ -114,9 +111,7 @@ def cost_forecast_service(db: Session) -> CostForecastService:
 # ============================================================================
 
 
-def test_cost_forecast_model_creation(
-    db: Session, test_project: Project, test_user: User
-):
+def test_cost_forecast_model_creation(db: Session, test_project: Project, test_user: User):
     """测试成本预测模型创建"""
     forecast = CostForecast(
         project_id=test_project.id,
@@ -144,9 +139,7 @@ def test_cost_forecast_model_creation(
     assert forecast.forecasted_completion_cost == Decimal("950000.00")
 
 
-def test_cost_alert_model_creation(
-    db: Session, test_project: Project, test_user: User
-):
+def test_cost_alert_model_creation(db: Session, test_project: Project, test_user: User):
     """测试成本预警模型创建"""
     alert = CostAlert(
         project_id=test_project.id,
@@ -181,7 +174,7 @@ def test_cost_alert_rule_model_creation(db: Session, test_user: User):
         is_enabled=True,
         priority=10,
         created_by=test_user.id,
-        target_type="PROJECT"
+        target_type="PROJECT",
     )
 
     db.add(rule)
@@ -258,9 +251,7 @@ def test_historical_average_forecast(
     cost_forecast_service: CostForecastService,
 ):
     """测试历史平均法预测"""
-    result = cost_forecast_service.historical_average_forecast(
-        test_project_with_costs.id
-    )
+    result = cost_forecast_service.historical_average_forecast(test_project_with_costs.id)
 
     assert "error" not in result
     assert result["method"] == "HISTORICAL_AVERAGE"
@@ -386,9 +377,7 @@ def test_check_overspend_alert(
     test_project_with_costs.actual_cost = Decimal("850000.00")
     db.commit()
 
-    alerts = cost_forecast_service.check_cost_alerts(
-        test_project_with_costs.id, auto_create=False
-    )
+    alerts = cost_forecast_service.check_cost_alerts(test_project_with_costs.id, auto_create=False)
 
     # 应该检测到超支预警
     overspend_alerts = [a for a in alerts if a["alert_type"] == "OVERSPEND"]
@@ -407,9 +396,7 @@ def test_check_progress_mismatch_alert(
     test_project_with_costs.progress_pct = Decimal("40.00")  # 40%
     db.commit()
 
-    alerts = cost_forecast_service.check_cost_alerts(
-        test_project_with_costs.id, auto_create=False
-    )
+    alerts = cost_forecast_service.check_cost_alerts(test_project_with_costs.id, auto_create=False)
 
     # 应该检测到进度不匹配预警
     progress_alerts = [a for a in alerts if a["alert_type"] == "PROGRESS_MISMATCH"]
@@ -439,9 +426,7 @@ def test_check_trend_anomaly_alert(
 
     db.commit()
 
-    alerts = cost_forecast_service.check_cost_alerts(
-        test_project_with_costs.id, auto_create=False
-    )
+    alerts = cost_forecast_service.check_cost_alerts(test_project_with_costs.id, auto_create=False)
 
     # 可能检测到趋势异常预警（取决于数据）
     # 这个测试主要验证逻辑不报错
@@ -459,22 +444,14 @@ def test_alert_auto_creation(
     db.commit()
 
     # 清空之前的预警
-    db.query(CostAlert).filter(
-        CostAlert.project_id == test_project_with_costs.id
-    ).delete()
+    db.query(CostAlert).filter(CostAlert.project_id == test_project_with_costs.id).delete()
     db.commit()
 
     # 检测预警并自动创建记录
-    alerts = cost_forecast_service.check_cost_alerts(
-        test_project_with_costs.id, auto_create=True
-    )
+    alerts = cost_forecast_service.check_cost_alerts(test_project_with_costs.id, auto_create=True)
 
     # 验证数据库中创建了预警记录
-    db_alerts = (
-        db.query(CostAlert)
-        .filter(CostAlert.project_id == test_project_with_costs.id)
-        .all()
-    )
+    db_alerts = db.query(CostAlert).filter(CostAlert.project_id == test_project_with_costs.id).all()
     assert len(db_alerts) > 0
 
 
@@ -490,7 +467,7 @@ def test_alert_rules_loading(
         alert_type="OVERSPEND",
         rule_config={"warning_threshold": 70, "critical_threshold": 90},
         is_enabled=True,
-        target_type="PROJECT"
+        target_type="PROJECT",
     )
     db.add(rule)
     db.commit()
@@ -508,9 +485,7 @@ def test_alert_rules_loading(
 # ============================================================================
 
 
-def test_api_get_forecast_linear(
-    client, test_project_with_costs: Project, auth_headers
-):
+def test_api_get_forecast_linear(client, test_project_with_costs: Project, auth_headers):
     """测试获取线性预测API"""
     response = client.get(
         f"/api/v1/projects/{test_project_with_costs.id}/costs/forecast?method=LINEAR",
@@ -524,9 +499,7 @@ def test_api_get_forecast_linear(
     assert data["data"]["method"] == "LINEAR"
 
 
-def test_api_get_forecast_exponential(
-    client, test_project_with_costs: Project, auth_headers
-):
+def test_api_get_forecast_exponential(client, test_project_with_costs: Project, auth_headers):
     """测试获取指数预测API"""
     response = client.get(
         f"/api/v1/projects/{test_project_with_costs.id}/costs/forecast?method=EXPONENTIAL",
@@ -616,9 +589,7 @@ def test_full_forecast_workflow(
     assert forecast.id is not None
 
     # 3. 检查预警
-    alerts = cost_forecast_service.check_cost_alerts(
-        test_project_with_costs.id, auto_create=True
-    )
+    alerts = cost_forecast_service.check_cost_alerts(test_project_with_costs.id, auto_create=True)
     assert isinstance(alerts, list)
 
     # 4. 获取趋势

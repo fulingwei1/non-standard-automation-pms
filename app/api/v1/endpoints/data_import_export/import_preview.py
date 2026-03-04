@@ -19,17 +19,13 @@ from .validators import _validate_import_row
 router = APIRouter()
 
 
-@router.post(
-    "/preview", response_model=ImportPreviewResponse, status_code=status.HTTP_200_OK
-)
+@router.post("/preview", response_model=ImportPreviewResponse, status_code=status.HTTP_200_OK)
 def preview_import_data(
     *,
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
     template_type: str = Query(..., description="模板类型"),
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     预览导入数据（上传预览）
@@ -83,11 +79,10 @@ def preview_import_data(
         valid_rows = 0
 
         import pandas as pd
+
         for idx, row in df.iterrows():
             row_num = idx + 2
-            is_valid = _validate_import_row(
-                row, row_num, template_type_upper, errors, pd
-            )
+            is_valid = _validate_import_row(row, row_num, template_type_upper, errors, pd)
             if is_valid:
                 valid_rows += 1
 

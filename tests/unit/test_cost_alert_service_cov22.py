@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第二十二批：cost_alert_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.cost_alert_service import CostAlertService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -51,8 +53,7 @@ class TestCheckBudgetExecution:
         """调用子服务检查预算"""
         db.query.return_value.filter.return_value.first.return_value = mock_project
         with patch(
-            "app.services.budget_execution_check_service.get_project_budget",
-            return_value=0
+            "app.services.budget_execution_check_service.get_project_budget", return_value=0
         ):
             result = CostAlertService.check_budget_execution(db, 1)
             assert result is None
@@ -61,21 +62,26 @@ class TestCheckBudgetExecution:
         """已存在预警时更新而不创建新的"""
         db.query.return_value.filter.return_value.first.return_value = mock_project
         existing_alert = MagicMock()
-        with patch(
-            "app.services.budget_execution_check_service.get_project_budget",
-            return_value=100000
-        ), patch(
-            "app.services.budget_execution_check_service.get_actual_cost",
-            return_value=95000
-        ), patch(
-            "app.services.budget_execution_check_service.get_or_create_alert_rule",
-            return_value=MagicMock()
-        ), patch(
-            "app.services.budget_execution_check_service.determine_alert_level",
-            return_value=("WARNING", "预警标题", "预警内容")
-        ), patch(
-            "app.services.budget_execution_check_service.find_existing_alert",
-            return_value=existing_alert
+        with (
+            patch(
+                "app.services.budget_execution_check_service.get_project_budget",
+                return_value=100000,
+            ),
+            patch(
+                "app.services.budget_execution_check_service.get_actual_cost", return_value=95000
+            ),
+            patch(
+                "app.services.budget_execution_check_service.get_or_create_alert_rule",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "app.services.budget_execution_check_service.determine_alert_level",
+                return_value=("WARNING", "预警标题", "预警内容"),
+            ),
+            patch(
+                "app.services.budget_execution_check_service.find_existing_alert",
+                return_value=existing_alert,
+            ),
         ):
             result = CostAlertService.check_budget_execution(db, 1)
             assert result == existing_alert
@@ -86,9 +92,7 @@ class TestCheckAllProjectsBudget:
     def test_specific_project_ids(self, db, mock_project):
         """传入特定项目ID列表时只查询那些项目"""
         db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        with patch.object(
-            CostAlertService, "check_budget_execution", return_value=None
-        ):
+        with patch.object(CostAlertService, "check_budget_execution", return_value=None):
             result = CostAlertService.check_all_projects_budget(db, project_ids=[1])
             assert result["checked_count"] == 1
             assert result["alert_count"] == 0
@@ -96,9 +100,7 @@ class TestCheckAllProjectsBudget:
     def test_all_active_projects_when_no_ids(self, db, mock_project):
         """不传ID时查询所有活跃项目"""
         db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        with patch.object(
-            CostAlertService, "check_budget_execution", return_value=None
-        ):
+        with patch.object(CostAlertService, "check_budget_execution", return_value=None):
             result = CostAlertService.check_all_projects_budget(db)
             assert result["checked_count"] == 1
 
@@ -108,9 +110,7 @@ class TestCheckAllProjectsBudget:
         mock_alert = MagicMock()
         mock_alert.id = 100
         mock_alert.alert_level = "WARNING"
-        with patch.object(
-            CostAlertService, "check_budget_execution", return_value=mock_alert
-        ):
+        with patch.object(CostAlertService, "check_budget_execution", return_value=mock_alert):
             result = CostAlertService.check_all_projects_budget(db)
             assert result["alert_count"] == 1
             assert len(result["projects"]) == 1

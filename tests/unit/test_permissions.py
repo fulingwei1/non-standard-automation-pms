@@ -9,8 +9,9 @@
 - app/core/sales_permissions.py 中的销售权限函数
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class MockUser:
@@ -49,6 +50,7 @@ class MockUserRole:
 # PermissionService 测试
 # ============================================================================
 
+
 @pytest.mark.unit
 class TestPermissionService:
     """权限服务测试"""
@@ -58,13 +60,9 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
 
-        result = PermissionService.check_permission(
-            db, user.id, "any:permission", user=user
-        )
+        result = PermissionService.check_permission(db, user.id, "any:permission", user=user)
         assert result is True
 
     def test_check_permission_normal_user(self):
@@ -72,21 +70,13 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=False,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, password_hash="test_hash_123")
 
-        with patch.object(
-            PermissionService, 'get_user_permissions', return_value=["project:read"]
-        ):
-            result = PermissionService.check_permission(
-                db, user.id, "project:read", user=user
-            )
+        with patch.object(PermissionService, "get_user_permissions", return_value=["project:read"]):
+            result = PermissionService.check_permission(db, user.id, "project:read", user=user)
             assert result is True
 
-            result = PermissionService.check_permission(
-                db, user.id, "project:write", user=user
-            )
+            result = PermissionService.check_permission(db, user.id, "project:write", user=user)
             assert result is False
 
     def test_check_any_permission_superuser(self):
@@ -94,13 +84,9 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
 
-        result = PermissionService.check_any_permission(
-            db, user.id, ["perm1", "perm2"], user=user
-        )
+        result = PermissionService.check_any_permission(db, user.id, ["perm1", "perm2"], user=user)
         assert result is True
 
     def test_check_any_permission_normal_user(self):
@@ -108,12 +94,10 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=False,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, password_hash="test_hash_123")
 
         with patch.object(
-            PermissionService, 'get_user_permissions', return_value=["perm2", "perm3"]
+            PermissionService, "get_user_permissions", return_value=["perm2", "perm3"]
         ):
             result = PermissionService.check_any_permission(
                 db, user.id, ["perm1", "perm2"], user=user
@@ -130,13 +114,9 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
 
-        result = PermissionService.check_all_permissions(
-            db, user.id, ["perm1", "perm2"], user=user
-        )
+        result = PermissionService.check_all_permissions(db, user.id, ["perm1", "perm2"], user=user)
         assert result is True
 
     def test_check_all_permissions_normal_user(self):
@@ -144,12 +124,10 @@ class TestPermissionService:
         from app.services.permission_service import PermissionService
 
         db = MagicMock()
-        user = MockUser(is_superuser=False,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, password_hash="test_hash_123")
 
         with patch.object(
-            PermissionService, 'get_user_permissions', return_value=["perm1", "perm2", "perm3"]
+            PermissionService, "get_user_permissions", return_value=["perm1", "perm2", "perm3"]
         ):
             result = PermissionService.check_all_permissions(
                 db, user.id, ["perm1", "perm2"], user=user
@@ -166,9 +144,7 @@ class TestPermissionService:
         from app.services.permission_service import has_module_permission
 
         db = MagicMock()
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
 
         result = has_module_permission(user, "finance", db)
         assert result is True
@@ -178,6 +154,7 @@ class TestPermissionService:
 # Timesheet 权限测试（保留的业务逻辑函数）
 # ============================================================================
 
+
 @pytest.mark.unit
 class TestTimesheetPermissions:
     """工时审批权限测试"""
@@ -186,9 +163,7 @@ class TestTimesheetPermissions:
         """测试超级用户有工时审批权限"""
         from app.core.permissions.timesheet import has_timesheet_approval_access
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
         assert has_timesheet_approval_access(user, db) is True
 
@@ -196,9 +171,7 @@ class TestTimesheetPermissions:
         """测试管理项目的用户有工时审批权限"""
         from app.core.permissions.timesheet import has_timesheet_approval_access
 
-        user = MockUser(user_id=100,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(user_id=100, password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock: 用户管理一个项目
@@ -214,7 +187,7 @@ class TestTimesheetPermissions:
                 "rd_project_ids": set(),
                 "department_ids": set(),
                 "subordinate_user_ids": set(),
-            }
+            },
         ):
             assert has_timesheet_approval_access(user, db) is True
 
@@ -222,9 +195,7 @@ class TestTimesheetPermissions:
         """测试有下属的用户有工时审批权限"""
         from app.core.permissions.timesheet import has_timesheet_approval_access
 
-        user = MockUser(user_id=100,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(user_id=100, password_hash="test_hash_123")
         db = MagicMock()
 
         with patch(
@@ -235,7 +206,7 @@ class TestTimesheetPermissions:
                 "rd_project_ids": set(),
                 "department_ids": set(),
                 "subordinate_user_ids": {200, 201},
-            }
+            },
         ):
             assert has_timesheet_approval_access(user, db) is True
 
@@ -243,9 +214,9 @@ class TestTimesheetPermissions:
         """测试人事管理员有工时审批权限"""
         from app.core.permissions.timesheet import has_timesheet_approval_access
 
-        user = MockUser(roles=[MockUserRole("hr_admin", "人事管理员")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(
+            roles=[MockUserRole("hr_admin", "人事管理员")], password_hash="test_hash_123"
+        )
         db = MagicMock()
         assert has_timesheet_approval_access(user, db) is True
 
@@ -253,9 +224,7 @@ class TestTimesheetPermissions:
         """测试普通用户无工时审批权限"""
         from app.core.permissions.timesheet import has_timesheet_approval_access
 
-        user = MockUser(roles=[MockUserRole("engineer", "工程师")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("engineer", "工程师")], password_hash="test_hash_123")
         db = MagicMock()
 
         with patch(
@@ -266,7 +235,7 @@ class TestTimesheetPermissions:
                 "rd_project_ids": set(),
                 "department_ids": set(),
                 "subordinate_user_ids": set(),
-            }
+            },
         ):
             assert has_timesheet_approval_access(user, db) is False
 
@@ -274,9 +243,7 @@ class TestTimesheetPermissions:
         """测试超级用户审批权限"""
         from app.core.permissions.timesheet import check_timesheet_approval_permission
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
         timesheet = MagicMock()
         timesheet.user_id = 2
@@ -297,6 +264,7 @@ class TestTimesheetPermissions:
 # ============================================================================
 # Auth 模块测试
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestPasswordHashing:
@@ -368,9 +336,7 @@ class TestTokenCreation:
 
         from app.core.auth import create_access_token
 
-        token = create_access_token(
-            data={"sub": "456"}, expires_delta=timedelta(hours=2)
-        )
+        token = create_access_token(data={"sub": "456"}, expires_delta=timedelta(hours=2))
 
         assert token is not None
         assert isinstance(token, str)
@@ -460,9 +426,7 @@ class TestCheckPermission:
         """测试超级管理员始终有权限"""
         from app.core.auth import check_permission
 
-        user = MockUser(is_superuser=True, username="admin",
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, username="admin", password_hash="test_hash_123")
         result = check_permission(user, "any:permission")
         assert result is True
 
@@ -470,13 +434,15 @@ class TestCheckPermission:
         """测试没有角色的用户无权限"""
         from app.core.auth import check_permission
 
-        user = MockUser(is_superuser=False, roles=[], username="test_user",
-        password_hash="test_hash_123"
-    )
+        user = MockUser(
+            is_superuser=False, roles=[], username="test_user", password_hash="test_hash_123"
+        )
 
         # Mock 缓存服务返回空权限列表
         # 注意：import 在函数内部，需要 patch 源模块
-        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+        with patch(
+            "app.services.permission_cache_service.get_permission_cache_service"
+        ) as mock_cache:
             mock_cache.return_value.get_user_permissions.return_value = []
             result = check_permission(user, "test:permission")
             assert result is False
@@ -493,6 +459,7 @@ class TestCheckPermission:
 # Sales Permissions 测试
 # ============================================================================
 
+
 @pytest.mark.unit
 class TestSalesDataScope:
     """测试销售数据范围"""
@@ -501,9 +468,7 @@ class TestSalesDataScope:
         """测试超级管理员获取ALL范围"""
         from app.core.sales_permissions import get_sales_data_scope
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         scope = get_sales_data_scope(user, db)
@@ -513,9 +478,7 @@ class TestSalesDataScope:
         """测试销售获取OWN范围"""
         from app.core.sales_permissions import get_sales_data_scope
 
-        user = MockUser(roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123")
         db = MagicMock()
 
         scope = get_sales_data_scope(user, db)
@@ -525,9 +488,7 @@ class TestSalesDataScope:
         """测试售前获取OWN范围"""
         from app.core.sales_permissions import get_sales_data_scope
 
-        user = MockUser(roles=[MockUserRole("PRESALES", "售前")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("PRESALES", "售前")], password_hash="test_hash_123")
         db = MagicMock()
 
         scope = get_sales_data_scope(user, db)
@@ -542,9 +503,7 @@ class TestSalesCreatePermission:
         """测试超级管理员可以创建"""
         from app.core.sales_permissions import check_sales_create_permission
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         assert check_sales_create_permission(user, db) is True
@@ -553,9 +512,7 @@ class TestSalesCreatePermission:
         """测试销售可以创建"""
         from app.core.sales_permissions import check_sales_create_permission
 
-        user = MockUser(roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123")
         db = MagicMock()
 
         assert check_sales_create_permission(user, db) is True
@@ -569,9 +526,7 @@ class TestSalesEditPermission:
         """测试超级管理员可以编辑所有"""
         from app.core.sales_permissions import check_sales_edit_permission
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         assert check_sales_edit_permission(user, db, 999, 888) is True
@@ -581,10 +536,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+            user_id=100, roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123"
+        )
         db = MagicMock()
 
         # 自己创建的
@@ -595,10 +548,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+            user_id=100, roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123"
+        )
         db = MagicMock()
 
         # 自己负责的
@@ -609,10 +560,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+            user_id=100, roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123"
+        )
         db = MagicMock()
 
         # 别人的
@@ -627,9 +576,7 @@ class TestSalesDeletePermission:
         """测试超级管理员可以删除"""
         from app.core.sales_permissions import check_sales_delete_permission
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         assert check_sales_delete_permission(user, db, 999) is True
@@ -639,10 +586,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")],
-        password_hash="test_hash_123"
-    )
+            user_id=100, roles=[MockUserRole("SALES", "销售")], password_hash="test_hash_123"
+        )
         db = MagicMock()
 
         # 自己创建的可以删除
@@ -656,10 +601,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("FINANCE", "财务")],
-        password_hash="test_hash_123"
-    )
+            user_id=1, roles=[MockUserRole("FINANCE", "财务")], password_hash="test_hash_123"
+        )
         db = MagicMock()
 
         # 可以删除自己创建的
@@ -674,27 +617,25 @@ class TestSalesAssessmentAccess:
         """测试超级管理员有技术评估权限"""
         from app.core.sales_permissions import has_sales_assessment_access
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         assert has_sales_assessment_access(user) is True
 
     def test_sales_engineer_has_access(self):
         """测试销售工程师有技术评估权限"""
         from app.core.sales_permissions import has_sales_assessment_access
 
-        user = MockUser(roles=[MockUserRole("sales_engineer", "销售工程师")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(
+            roles=[MockUserRole("sales_engineer", "销售工程师")], password_hash="test_hash_123"
+        )
         assert has_sales_assessment_access(user) is True
 
     def test_presales_engineer_has_access(self):
         """测试售前工程师有技术评估权限"""
         from app.core.sales_permissions import has_sales_assessment_access
 
-        user = MockUser(roles=[MockUserRole("presales_engineer", "售前工程师")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(
+            roles=[MockUserRole("presales_engineer", "售前工程师")], password_hash="test_hash_123"
+        )
         assert has_sales_assessment_access(user) is True
 
 
@@ -706,9 +647,7 @@ class TestSalesApprovalAccess:
         """测试超级管理员有审批权限"""
         from app.core.sales_permissions import has_sales_approval_access
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         assert has_sales_approval_access(user, db) is True
@@ -717,9 +656,7 @@ class TestSalesApprovalAccess:
         """测试普通销售无审批权限"""
         from app.core.sales_permissions import has_sales_approval_access
 
-        user = MockUser(roles=[MockUserRole("sales", "销售")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("sales", "销售")], password_hash="test_hash_123")
         db = MagicMock()
 
         assert has_sales_approval_access(user, db) is False
@@ -733,9 +670,7 @@ class TestCheckSalesApprovalPermission:
         """测试超级管理员可以审批所有"""
         from app.core.sales_permissions import check_sales_approval_permission
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         approval = MagicMock()
@@ -748,9 +683,7 @@ class TestCheckSalesApprovalPermission:
         """测试无审批角色返回False"""
         from app.core.sales_permissions import check_sales_approval_permission
 
-        user = MockUser(roles=[MockUserRole("sales", "销售")],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(roles=[MockUserRole("sales", "销售")], password_hash="test_hash_123")
         db = MagicMock()
 
         approval = MagicMock()
@@ -879,9 +812,7 @@ class TestPermissionsIntegration:
         )
         from app.services.permission_service import PermissionService
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         # 所有权限检查都应该返回 True 或 ALL
@@ -903,9 +834,7 @@ class TestPermissionsIntegration:
             has_sales_assessment_access,
         )
 
-        user = MockUser(is_superuser=False, roles=[],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, roles=[], password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock get_user_manageable_dimensions 返回空
@@ -917,7 +846,7 @@ class TestPermissionsIntegration:
                 "rd_project_ids": set(),
                 "department_ids": set(),
                 "subordinate_user_ids": set(),
-            }
+            },
         ):
             # 无管理维度的用户没有工时审批权限
             assert has_timesheet_approval_access(user, db) is False

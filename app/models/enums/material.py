@@ -5,7 +5,6 @@
 from enum import Enum
 
 
-
 class PerformanceLevelEnum(str, Enum):
     EXCELLENT = "EXCELLENT"
     GOOD = "GOOD"

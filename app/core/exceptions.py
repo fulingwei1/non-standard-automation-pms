@@ -11,7 +11,7 @@ from fastapi import HTTPException
 
 class BusinessException(HTTPException):
     """业务异常基类"""
-    
+
     def __init__(self, message: str, code: int = 400):
         super().__init__(status_code=code, detail=message)
         self.message = message

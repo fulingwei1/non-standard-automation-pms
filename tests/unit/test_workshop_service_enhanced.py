@@ -5,16 +5,17 @@
 测试 app/services/production/workshop_service.py
 目标覆盖率: 60%+
 """
-import pytest
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, PropertyMock
-from fastapi import HTTPException
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.production.workshop_service import WorkshopService
-from app.models.production import Workshop, WorkOrder, ProductionDailyReport
+import pytest
+from fastapi import HTTPException
+
+from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
 from app.schemas.production import WorkshopResponse
+from app.services.production.workshop_service import WorkshopService
 
 
 @pytest.fixture
@@ -60,7 +61,9 @@ def sample_user():
 class TestBuildWorkshopResponse:
     """测试 _build_workshop_response 方法"""
 
-    def test_build_response_with_manager(self, workshop_service, mock_db, sample_workshop, sample_user):
+    def test_build_response_with_manager(
+        self, workshop_service, mock_db, sample_workshop, sample_user
+    ):
         """测试构建响应时包含主管信息"""
         # 配置 mock
         mock_query = MagicMock()
@@ -305,7 +308,7 @@ class TestUpdateWorkshop:
             # 第一次调用返回车间，第二次调用抛出异常
             mock_get.side_effect = [
                 sample_workshop,
-                HTTPException(status_code=404, detail="车间主管不存在")
+                HTTPException(status_code=404, detail="车间主管不存在"),
             ]
 
             with pytest.raises(HTTPException) as exc_info:
@@ -422,7 +425,9 @@ class TestGetCapacity:
             assert result["capacity_hours"] == 0.0
             assert result["worker_count"] == 10
 
-    def test_get_capacity_various_work_order_status(self, workshop_service, mock_db, sample_workshop):
+    def test_get_capacity_various_work_order_status(
+        self, workshop_service, mock_db, sample_workshop
+    ):
         """测试不同工单状态的统计"""
         with patch("app.services.production.workshop_service.get_or_404") as mock_get:
             mock_get.return_value = sample_workshop
@@ -444,7 +449,11 @@ class TestGetCapacity:
             wo_completed.actual_hours = Decimal("7.0")
 
             mock_wo_query = MagicMock()
-            mock_wo_query.filter.return_value.all.return_value = [wo_pending, wo_started, wo_completed]
+            mock_wo_query.filter.return_value.all.return_value = [
+                wo_pending,
+                wo_started,
+                wo_completed,
+            ]
 
             mock_dr_query = MagicMock()
             mock_dr_query.filter.return_value.all.return_value = []

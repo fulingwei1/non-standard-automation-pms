@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
 
-
 # ---------- 辅助函数 ----------
+
 
 def run(coro):
     return asyncio.get_event_loop().run_until_complete(coro)
@@ -25,6 +25,7 @@ def make_service(**env):
 
 
 # ---------- 测试 ----------
+
 
 def test_fallback_prediction_repeat_customer():
     svc = AIWinRatePredictionService()
@@ -62,7 +63,7 @@ def test_parse_ai_response_valid_json():
         "influencing_factors": [],
         "competitor_analysis": {},
         "improvement_suggestions": {},
-        "analysis_summary": "看起来不错"
+        "analysis_summary": "看起来不错",
     }
     ai_text = f"分析结果如下：\n{json.dumps(data)}"
     result = svc._parse_ai_response(ai_text, {})

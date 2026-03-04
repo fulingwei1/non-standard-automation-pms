@@ -4,9 +4,10 @@ Unit tests for app/services/bonus/calculator.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.bonus.calculator import BonusCalculator
@@ -16,12 +17,14 @@ except ImportError as e:
 
 def _make_calculator():
     db = MagicMock()
-    with patch("app.services.bonus.calculator.PerformanceBonusCalculator"), \
-         patch("app.services.bonus.calculator.ProjectBonusCalculator"), \
-         patch("app.services.bonus.calculator.SalesBonusCalculator"), \
-         patch("app.services.bonus.calculator.TeamBonusCalculator"), \
-         patch("app.services.bonus.calculator.PresaleBonusCalculator"), \
-         patch("app.services.bonus.calculator.AcceptanceBonusTrigger"):
+    with (
+        patch("app.services.bonus.calculator.PerformanceBonusCalculator"),
+        patch("app.services.bonus.calculator.ProjectBonusCalculator"),
+        patch("app.services.bonus.calculator.SalesBonusCalculator"),
+        patch("app.services.bonus.calculator.TeamBonusCalculator"),
+        patch("app.services.bonus.calculator.PresaleBonusCalculator"),
+        patch("app.services.bonus.calculator.AcceptanceBonusTrigger"),
+    ):
         return BonusCalculator(db=db)
 
 
@@ -29,10 +32,10 @@ def test_bonus_calculator_instantiation():
     """BonusCalculator 应能正常实例化"""
     calc = _make_calculator()
     assert calc is not None
-    assert hasattr(calc, 'performance_calculator')
-    assert hasattr(calc, 'project_calculator')
-    assert hasattr(calc, 'sales_calculator')
-    assert hasattr(calc, 'team_calculator')
+    assert hasattr(calc, "performance_calculator")
+    assert hasattr(calc, "project_calculator")
+    assert hasattr(calc, "sales_calculator")
+    assert hasattr(calc, "team_calculator")
 
 
 def test_calculate_performance_bonus_delegates():
@@ -60,7 +63,9 @@ def test_calculate_project_bonus_delegates():
     rule = MagicMock()
     result = calc.calculate_project_bonus(contrib, project, rule)
 
-    calc.project_calculator.calculate_by_contribution.assert_called_once_with(contrib, project, rule)
+    calc.project_calculator.calculate_by_contribution.assert_called_once_with(
+        contrib, project, rule
+    )
     assert result is mock_result
 
 

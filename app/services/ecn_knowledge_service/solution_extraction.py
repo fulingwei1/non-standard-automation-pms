@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 
 
 def extract_solution(
-    service: "EcnKnowledgeService",
-    ecn_id: int,
-    auto_extract: bool = True
+    service: "EcnKnowledgeService", ecn_id: int, auto_extract: bool = True
 ) -> Dict[str, Any]:
     """
     从ECN中提取解决方案
@@ -61,7 +59,7 @@ def extract_solution(
         "estimated_days": estimated_days,
         "ecn_type": ecn.ecn_type,
         "root_cause_category": ecn.root_cause_category,
-        "extracted_at": datetime.now().isoformat()
+        "extracted_at": datetime.now().isoformat(),
     }
 
 
@@ -78,7 +76,7 @@ def _auto_extract_solution(ecn: Ecn) -> str:
     # 从变更描述中提取
     if ecn.change_description:
         # 尝试提取解决方案部分
-        solution_keywords = ['解决方案', '解决方法', '处理方式', '解决', '处理']
+        solution_keywords = ["解决方案", "解决方法", "处理方式", "解决", "处理"]
         for keyword in solution_keywords:
             if keyword in ecn.change_description:
                 # 提取包含关键词的段落
@@ -105,15 +103,18 @@ def _extract_keywords(service: "EcnKnowledgeService", ecn: Ecn) -> List[str]:
     if ecn.change_description:
         # 简单的关键词提取（可以后续优化为NLP）
         text = ecn.change_description.lower()
-        common_keywords = ['物料', '设计', '工艺', '测试', '质量', '成本', '交期']
+        common_keywords = ["物料", "设计", "工艺", "测试", "质量", "成本", "交期"]
         for kw in common_keywords:
             if kw in text:
                 keywords.append(kw)
 
     # 从受影响物料中提取
-    affected_materials = service.db.query(EcnAffectedMaterial).filter(
-        EcnAffectedMaterial.ecn_id == ecn.id
-    ).limit(5).all()
+    affected_materials = (
+        service.db.query(EcnAffectedMaterial)
+        .filter(EcnAffectedMaterial.ecn_id == ecn.id)
+        .limit(5)
+        .all()
+    )
 
     for mat in affected_materials:
         if mat.material_name:
@@ -151,22 +152,26 @@ def _extract_solution_steps(service: "EcnKnowledgeService", ecn: Ecn, solution: 
 
     if solution:
         # 尝试从解决方案中提取步骤（按序号或换行）
-        lines = solution.split('\n')
+        lines = solution.split("\n")
         for line in lines:
             line = line.strip()
             # 匹配序号格式：1. 2. 3. 或 一、 二、 三、
-            if re.match(r'^[\d一二三四五六七八九十]+[\.、]', line):
+            if re.match(r"^[\d一二三四五六七八九十]+[\.、]", line):
                 steps.append(line)
-            elif line.startswith('-') or line.startswith('•'):
+            elif line.startswith("-") or line.startswith("•"):
                 steps.append(line)
 
     # 如果没有提取到步骤，从执行任务中提取
     if not steps:
         from app.models.ecn import EcnTask
-        tasks = service.db.query(EcnTask).filter(
-            EcnTask.ecn_id == ecn.id,
-            EcnTask.status.in_(['COMPLETED', 'IN_PROGRESS'])
-        ).order_by(EcnTask.planned_start).limit(10).all()
+
+        tasks = (
+            service.db.query(EcnTask)
+            .filter(EcnTask.ecn_id == ecn.id, EcnTask.status.in_(["COMPLETED", "IN_PROGRESS"]))
+            .order_by(EcnTask.planned_start)
+            .limit(10)
+            .all()
+        )
 
         for task in tasks:
             steps.append(f"{task.task_name}: {task.task_description or ''}")

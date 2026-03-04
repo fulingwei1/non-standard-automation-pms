@@ -20,9 +20,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.models.approval import ApprovalInstance, ApprovalTask
 from app.schemas.common import ResponseModel
 from app.services.approval_engine import ApprovalEngineService
 from app.utils.db_helpers import get_or_404
@@ -35,18 +35,21 @@ router = APIRouter(prefix="/workflow", tags=["timesheet-workflow"])
 
 class TimesheetSubmitRequest(BaseModel):
     """工时提交审批请求"""
+
     timesheet_ids: List[int] = Field(..., description="要提交的工时记录ID列表")
     comment: Optional[str] = Field(None, description="提交说明")
 
 
 class TimesheetApprovalActionRequest(BaseModel):
     """工时审批操作请求"""
+
     action: str = Field(..., description="操作类型: APPROVE/REJECT")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
 class TimesheetBatchApprovalRequest(BaseModel):
     """批量审批请求"""
+
     task_ids: List[int] = Field(..., description="要审批的任务ID列表")
     action: str = Field(..., description="操作类型: APPROVE/REJECT")
     comment: Optional[str] = Field(None, description="审批意见")
@@ -54,6 +57,7 @@ class TimesheetBatchApprovalRequest(BaseModel):
 
 class ApprovalTaskResponse(BaseModel):
     """审批任务响应"""
+
     id: int
     instance_id: int
     instance_no: Optional[str] = None
@@ -71,6 +75,7 @@ class ApprovalTaskResponse(BaseModel):
 
 class ApprovalStatusResponse(BaseModel):
     """审批状态响应"""
+
     instance_id: Optional[int] = None
     instance_no: Optional[str] = None
     status: Optional[str] = None
@@ -118,10 +123,9 @@ def submit_timesheets_for_approval(
 
         # 验证状态
         if timesheet.status not in ("DRAFT", "REJECTED"):
-            failed_items.append({
-                "id": timesheet_id,
-                "error": f"当前状态({timesheet.status})不允许提交审批"
-            })
+            failed_items.append(
+                {"id": timesheet_id, "error": f"当前状态({timesheet.status})不允许提交审批"}
+            )
             continue
 
         try:
@@ -144,21 +148,17 @@ def submit_timesheets_for_approval(
             failed_items.append({"id": timesheet_id, "error": f"提交失败: {str(e)}"})
 
     if success_count == 0 and failed_items:
-        raise HTTPException(
-            status_code=400,
-            detail=f"提交失败: {failed_items[0]['error']}"
-        )
+        raise HTTPException(status_code=400, detail=f"提交失败: {failed_items[0]['error']}")
 
     return ResponseModel(
         code=200,
-        message=f"提交完成：成功 {success_count} 条" + (
-            f"，失败 {len(failed_items)} 条" if failed_items else ""
-        ),
+        message=f"提交完成：成功 {success_count} 条"
+        + (f"，失败 {len(failed_items)} 条" if failed_items else ""),
         data={
             "success_count": success_count,
             "failed_count": len(failed_items),
             "failed_items": failed_items,
-        }
+        },
     )
 
 
@@ -188,28 +188,34 @@ def get_pending_approval_tasks(
         instance = task.instance
         if instance and instance.entity_type == "TIMESHEET":
             # 获取工时详情
-            timesheet = db.query(Timesheet).filter(
-                Timesheet.id == instance.entity_id
-            ).first()
+            timesheet = db.query(Timesheet).filter(Timesheet.id == instance.entity_id).first()
 
-            timesheet_tasks.append({
-                "task_id": task.id,
-                "instance_id": instance.id,
-                "instance_no": instance.instance_no,
-                "title": instance.title,
-                "entity_id": instance.entity_id,
-                "initiator_name": instance.initiator_name,
-                "submitted_at": instance.submitted_at,
-                "timesheet": {
-                    "id": timesheet.id,
-                    "user_name": timesheet.user_name,
-                    "project_name": timesheet.project_name,
-                    "work_date": timesheet.work_date.isoformat() if timesheet.work_date else None,
-                    "hours": float(timesheet.hours) if timesheet.hours else 0,
-                    "overtime_type": timesheet.overtime_type,
-                    "work_content": timesheet.work_content,
-                } if timesheet else None,
-            })
+            timesheet_tasks.append(
+                {
+                    "task_id": task.id,
+                    "instance_id": instance.id,
+                    "instance_no": instance.instance_no,
+                    "title": instance.title,
+                    "entity_id": instance.entity_id,
+                    "initiator_name": instance.initiator_name,
+                    "submitted_at": instance.submitted_at,
+                    "timesheet": (
+                        {
+                            "id": timesheet.id,
+                            "user_name": timesheet.user_name,
+                            "project_name": timesheet.project_name,
+                            "work_date": (
+                                timesheet.work_date.isoformat() if timesheet.work_date else None
+                            ),
+                            "hours": float(timesheet.hours) if timesheet.hours else 0,
+                            "overtime_type": timesheet.overtime_type,
+                            "work_content": timesheet.work_content,
+                        }
+                        if timesheet
+                        else None
+                    ),
+                }
+            )
 
     return ResponseModel(
         code=200,
@@ -219,7 +225,7 @@ def get_pending_approval_tasks(
             "page": pagination.page,
             "page_size": pagination.page_size,
             "items": timesheet_tasks,
-        }
+        },
     )
 
 
@@ -277,16 +283,9 @@ def process_approval_action(
             message = "审批已驳回"
 
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"不支持的操作类型: {request.action}"
-            )
+            raise HTTPException(status_code=400, detail=f"不支持的操作类型: {request.action}")
 
-        return ResponseModel(
-            code=200,
-            message=message,
-            data={"task_id": task_id}
-        )
+        return ResponseModel(code=200, message=message, data={"task_id": task_id})
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -325,10 +324,7 @@ def batch_process_approval(
             continue
 
         if task.status != "PENDING":
-            failed_items.append({
-                "task_id": task_id,
-                "error": f"任务状态({task.status})不允许操作"
-            })
+            failed_items.append({"task_id": task_id, "error": f"任务状态({task.status})不允许操作"})
             continue
 
         if task.assignee_id != current_user.id:
@@ -360,14 +356,13 @@ def batch_process_approval(
     action_name = "通过" if request.action == "APPROVE" else "驳回"
     return ResponseModel(
         code=200,
-        message=f"批量{action_name}完成：成功 {success_count} 条" + (
-            f"，失败 {len(failed_items)} 条" if failed_items else ""
-        ),
+        message=f"批量{action_name}完成：成功 {success_count} 条"
+        + (f"，失败 {len(failed_items)} 条" if failed_items else ""),
         data={
             "success_count": success_count,
             "failed_count": len(failed_items),
             "failed_items": failed_items,
-        }
+        },
     )
 
 
@@ -405,22 +400,22 @@ def get_timesheet_approval_status(
                 "timesheet_id": timesheet_id,
                 "timesheet_status": timesheet.status,
                 "approval": None,
-            }
+            },
         )
 
     # 判断是否可以撤回
-    can_withdraw = (
-        instance.status == "PENDING" and
-        instance.initiator_id == current_user.id
-    )
+    can_withdraw = instance.status == "PENDING" and instance.initiator_id == current_user.id
 
     # 获取当前节点名称
     current_node_name = None
     if instance.current_node_id:
         from app.models.approval import ApprovalNodeDefinition
-        node = db.query(ApprovalNodeDefinition).filter(
-            ApprovalNodeDefinition.id == instance.current_node_id
-        ).first()
+
+        node = (
+            db.query(ApprovalNodeDefinition)
+            .filter(ApprovalNodeDefinition.id == instance.current_node_id)
+            .first()
+        )
         if node:
             current_node_name = node.node_name
 
@@ -436,11 +431,15 @@ def get_timesheet_approval_status(
                 "status": instance.status,
                 "current_node_name": current_node_name,
                 "initiator_name": instance.initiator_name,
-                "submitted_at": instance.submitted_at.isoformat() if instance.submitted_at else None,
-                "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
+                "submitted_at": (
+                    instance.submitted_at.isoformat() if instance.submitted_at else None
+                ),
+                "completed_at": (
+                    instance.completed_at.isoformat() if instance.completed_at else None
+                ),
                 "can_withdraw": can_withdraw,
-            }
-        }
+            },
+        },
     )
 
 
@@ -487,11 +486,7 @@ def withdraw_timesheet_approval(
             comment=comment,
         )
 
-        return ResponseModel(
-            code=200,
-            message="审批已撤回",
-            data={"timesheet_id": timesheet_id}
-        )
+        return ResponseModel(code=200, message="审批已撤回", data={"timesheet_id": timesheet_id})
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -524,14 +519,11 @@ def get_timesheet_approval_history(
     )
 
     if not instance:
-        return ResponseModel(
-            code=200,
-            message="success",
-            data={"history": []}
-        )
+        return ResponseModel(code=200, message="success", data={"history": []})
 
     # 获取审批日志
     from app.models.approval import ApprovalActionLog
+
     logs = (
         db.query(ApprovalActionLog)
         .filter(ApprovalActionLog.instance_id == instance.id)
@@ -541,16 +533,14 @@ def get_timesheet_approval_history(
 
     history = []
     for log in logs:
-        history.append({
-            "id": log.id,
-            "action": log.action,
-            "operator_name": log.operator_name,
-            "comment": log.comment,
-            "created_at": log.created_at.isoformat() if log.created_at else None,
-        })
+        history.append(
+            {
+                "id": log.id,
+                "action": log.action,
+                "operator_name": log.operator_name,
+                "comment": log.comment,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+        )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={"history": history}
-    )
+    return ResponseModel(code=200, message="success", data={"history": history})

@@ -208,17 +208,10 @@ class TestPredictWinProbability(unittest.TestCase):
         q.all.return_value = []
         self.db.query.return_value = q
 
-        result_normal = self.svc.predict_win_probability(
-            stage="PROPOSAL", amount=Decimal("100000")
-        )
-        result_large = self.svc.predict_win_probability(
-            stage="PROPOSAL", amount=Decimal("2000000")
-        )
+        result_normal = self.svc.predict_win_probability(stage="PROPOSAL", amount=Decimal("100000"))
+        result_large = self.svc.predict_win_probability(stage="PROPOSAL", amount=Decimal("2000000"))
         # 大金额应低于或等于普通金额
-        self.assertLessEqual(
-            result_large["win_probability"],
-            result_normal["win_probability"]
-        )
+        self.assertLessEqual(result_large["win_probability"], result_normal["win_probability"])
 
     def test_probability_within_bounds(self):
         """最终概率应在 [0.1, 0.95] 范围内"""
@@ -252,6 +245,7 @@ class TestPredictWinProbability(unittest.TestCase):
         opp_lost = MagicMock(stage="LOST")
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -360,6 +354,7 @@ class TestEvaluatePredictionAccuracy(unittest.TestCase):
         c = _make_contract(date.today() - timedelta(days=10), 500000)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -367,7 +362,7 @@ class TestEvaluatePredictionAccuracy(unittest.TestCase):
             if call_count[0] == 1:
                 q.all.return_value = [c]  # actual contracts
             else:
-                q.all.return_value = []   # historical opps
+                q.all.return_value = []  # historical opps
             return q
 
         self.db.query.side_effect = make_query

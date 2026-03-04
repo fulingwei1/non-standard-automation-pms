@@ -164,9 +164,7 @@ def create_project_members(db, project, users):
             joined_at=datetime.now(),
         )
         db.add(member)
-        print(
-            f"✅ 添加成员: {member_data['user'].real_name} - {', '.join(member_data['roles'])}"
-        )
+        print(f"✅ 添加成员: {member_data['user'].real_name} - {', '.join(member_data['roles'])}")
 
     print(f"\n共添加 {len(members_data)} 个项目成员")
 
@@ -370,9 +368,7 @@ def create_test_tasks(db, project, users):
 
     print(f"\n共创建 {len(created_tasks)} 个测试任务")
     print(f"   ✅ 已完成: {len([t for t in created_tasks if t.status == 'COMPLETED'])}")
-    print(
-        f"   🔄 进行中: {len([t for t in created_tasks if t.status == 'IN_PROGRESS'])}"
-    )
+    print(f"   🔄 进行中: {len([t for t in created_tasks if t.status == 'IN_PROGRESS'])}")
     print(f"   📝 已接收: {len([t for t in created_tasks if t.status == 'ACCEPTED'])}")
     print(f"   ⏳ 待接收: {len([t for t in created_tasks if t.status == 'PENDING'])}")
     print(f"   ⚠️  延期: {len([t for t in created_tasks if t.is_delayed])}")

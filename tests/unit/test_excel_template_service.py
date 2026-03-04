@@ -8,13 +8,13 @@ File Size: 36 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
 import app.services.excel_template_service
-
-
 
 
 class TestExcelTemplateService:
@@ -24,22 +24,22 @@ class TestExcelTemplateService:
         """测试 create_template_excel 函数"""
         # TODO: 实现测试逻辑
         from app.services.excel_template_service import create_template_excel
-        pass
 
+        pass
 
     def test_apply_template_styles(self):
         """测试 apply_template_styles 函数"""
         # TODO: 实现测试逻辑
         from app.services.excel_template_service import apply_template_styles
-        pass
 
+        pass
 
     def test_get_template_config(self):
         """测试 get_template_config 函数"""
         # TODO: 实现测试逻辑
         from app.services.excel_template_service import get_template_config
-        pass
 
+        pass
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第二十批 - pipeline_accountability_service 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.pipeline_accountability_service")
 
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
 from app.services.pipeline_accountability_service import PipelineAccountabilityService
 
 
@@ -22,10 +24,7 @@ def make_service(db=None):
 
 
 def make_empty_breaks_analysis():
-    return {
-        "breaks": {},
-        "summary": {"total_breaks": 0}
-    }
+    return {"breaks": {}, "summary": {"total_breaks": 0}}
 
 
 class TestPipelineAccountabilityServiceInit:
@@ -73,7 +72,7 @@ class TestAnalyzeByStage:
                     "break_count": 1,
                     "break_records": [
                         {"responsible_person_id": 1, "pipeline_id": 10},
-                    ]
+                    ],
                 }
             }
         }

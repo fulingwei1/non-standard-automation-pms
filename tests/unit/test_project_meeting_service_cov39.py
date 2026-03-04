@@ -2,12 +2,12 @@
 """
 第三十九批覆盖率测试 - project_meeting_service.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
-pytest.importorskip("app.services.project_meeting_service",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.project_meeting_service", reason="import failed, skip")
 
 
 @pytest.fixture
@@ -18,11 +18,18 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.project_meeting_service import ProjectMeetingService
+
     return ProjectMeetingService(mock_db)
 
 
-def _make_meeting(mid, status="COMPLETED", level="WEEKLY", project_id=None,
-                  related_project_ids=None, meeting_date=None):
+def _make_meeting(
+    mid,
+    status="COMPLETED",
+    level="WEEKLY",
+    project_id=None,
+    related_project_ids=None,
+    meeting_date=None,
+):
     m = MagicMock()
     m.id = mid
     m.status = status

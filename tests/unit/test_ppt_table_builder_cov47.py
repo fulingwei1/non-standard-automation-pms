@@ -101,5 +101,6 @@ def test_add_table_slide_with_page_number():
 
 def test_inherits_base_builder():
     from app.services.ppt_generator.base_builder import BaseSlideBuilder
+
     builder, _, _ = _make_builder()
     assert isinstance(builder, BaseSlideBuilder)

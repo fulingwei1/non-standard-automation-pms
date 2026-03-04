@@ -3,9 +3,10 @@
 tests/unit/test_pc_bom_collector_cov51.py
 Unit tests for app/services/performance_collector/bom_collector.py
 """
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.performance_collector.bom_collector import BomCollector
@@ -117,7 +118,8 @@ def test_standard_part_rate_computed():
             m.filter.return_value.all.return_value = [bom]
         else:
             m.join.return_value.filter.return_value.all.return_value = [
-                item_standard, item_non_standard
+                item_standard,
+                item_non_standard,
             ]
         return m
 

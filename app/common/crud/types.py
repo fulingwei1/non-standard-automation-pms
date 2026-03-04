@@ -31,9 +31,7 @@ class QueryParams(BaseModel):
     """
 
     page: int = Field(default=1, ge=1, description="Current page number")
-    page_size: int = Field(
-        default=20, ge=1, le=10000, description="Items per page (max 10000)"
-    )
+    page_size: int = Field(default=20, ge=1, le=10000, description="Items per page (max 10000)")
     filters: Optional[Dict[str, Any]] = Field(
         default=None, description="Structured filter definition"
     )
@@ -44,9 +42,7 @@ class QueryParams(BaseModel):
     sort_by: Optional[str] = Field(
         default=None, description="Sort field, falls back to service defaults"
     )
-    sort_order: SortOrder = Field(
-        default=SortOrder.DESC, description="Sort order (asc/desc)"
-    )
+    sort_order: SortOrder = Field(default=SortOrder.DESC, description="Sort order (asc/desc)")
     load_relationships: Optional[List[str]] = Field(
         default=None, description="Relationships to eager load"
     )

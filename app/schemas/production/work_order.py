@@ -16,11 +16,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 生产工单 ====================
+
 
 class WorkOrderCreate(BaseModel):
     """创建工单"""
+
     task_name: str = Field(max_length=200, description="任务名称")
     task_type: str = Field(description="工单类型：MACHINING/ASSEMBLY/DEBUGGING等")
     project_id: Optional[int] = Field(default=None, description="项目ID")
@@ -44,6 +45,7 @@ class WorkOrderCreate(BaseModel):
 
 class WorkOrderUpdate(BaseModel):
     """更新工单"""
+
     task_name: Optional[str] = None
     plan_qty: Optional[int] = None
     plan_start_date: Optional[date] = None
@@ -55,12 +57,14 @@ class WorkOrderUpdate(BaseModel):
 
 class WorkOrderAssignRequest(BaseModel):
     """工单派工请求"""
+
     worker_id: Optional[int] = Field(default=None, description="指派给(工人ID)")
     workstation_id: Optional[int] = Field(default=None, description="工位ID")
 
 
 class WorkOrderResponse(TimestampSchema):
     """工单响应"""
+
     id: int
     work_order_no: str
     task_name: str
@@ -99,11 +103,13 @@ class WorkOrderResponse(TimestampSchema):
 
 class WorkOrderListResponse(PaginatedResponse):
     """工单列表响应"""
+
     items: List[WorkOrderResponse]
 
 
 class WorkReportItem(BaseModel):
     """报工记录项"""
+
     id: int
     report_no: str
     report_type: str
@@ -116,6 +122,7 @@ class WorkReportItem(BaseModel):
 
 class WorkOrderProgressResponse(BaseModel):
     """工单进度响应"""
+
     work_order_id: int
     work_order_no: str
     progress: int
@@ -126,5 +133,3 @@ class WorkOrderProgressResponse(BaseModel):
     standard_hours: Optional[float] = None
     actual_hours: float
     reports: Optional[List[WorkReportItem]] = Field(default=[], description="报工记录列表")
-
-

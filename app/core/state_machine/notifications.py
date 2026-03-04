@@ -13,11 +13,11 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.unified_notification_service import get_notification_service
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationPriority,
+    NotificationRequest,
 )
+from app.services.unified_notification_service import get_notification_service
 
 logger = logging.getLogger(__name__)
 
@@ -75,61 +75,61 @@ class StateMachineNotifier:
             try:
                 if user_type in ["creator", "created_by"]:
                     # 方式1: created_by_id 字段
-                    if hasattr(entity, 'created_by_id') and entity.created_by_id:
+                    if hasattr(entity, "created_by_id") and entity.created_by_id:
                         recipient_ids.add(entity.created_by_id)
                     # 方式2: creator_id 字段
-                    elif hasattr(entity, 'creator_id') and entity.creator_id:
+                    elif hasattr(entity, "creator_id") and entity.creator_id:
                         recipient_ids.add(entity.creator_id)
                     # 方式3: created_by 关系
-                    elif hasattr(entity, 'created_by') and entity.created_by:
+                    elif hasattr(entity, "created_by") and entity.created_by:
                         recipient_ids.add(entity.created_by.id)
 
                 elif user_type == "assignee":
                     # 方式1: assignee_id 字段
-                    if hasattr(entity, 'assignee_id') and entity.assignee_id:
+                    if hasattr(entity, "assignee_id") and entity.assignee_id:
                         recipient_ids.add(entity.assignee_id)
                     # 方式2: assigned_to_id 字段
-                    elif hasattr(entity, 'assigned_to_id') and entity.assigned_to_id:
+                    elif hasattr(entity, "assigned_to_id") and entity.assigned_to_id:
                         recipient_ids.add(entity.assigned_to_id)
                     # 方式3: assignee 关系
-                    elif hasattr(entity, 'assignee') and entity.assignee:
+                    elif hasattr(entity, "assignee") and entity.assignee:
                         recipient_ids.add(entity.assignee.id)
 
                 elif user_type == "reporter":
                     # Issue模块的报告人
-                    if hasattr(entity, 'reporter_id') and entity.reporter_id:
+                    if hasattr(entity, "reporter_id") and entity.reporter_id:
                         recipient_ids.add(entity.reporter_id)
-                    elif hasattr(entity, 'reporter') and entity.reporter:
+                    elif hasattr(entity, "reporter") and entity.reporter:
                         recipient_ids.add(entity.reporter.id)
 
                 elif user_type == "approvers":
                     # 获取审批人列表
-                    if hasattr(entity, 'approvers') and entity.approvers:
+                    if hasattr(entity, "approvers") and entity.approvers:
                         for approver in entity.approvers:
-                            if hasattr(approver, 'id'):
+                            if hasattr(approver, "id"):
                                 recipient_ids.add(approver.id)
                             elif isinstance(approver, int):
                                 recipient_ids.add(approver)
                     # 或者从approver_ids字段
-                    elif hasattr(entity, 'approver_ids') and entity.approver_ids:
+                    elif hasattr(entity, "approver_ids") and entity.approver_ids:
                         if isinstance(entity.approver_ids, list):
                             recipient_ids.update(entity.approver_ids)
 
                 elif user_type == "project_manager":
                     # 关联项目的经理
-                    if hasattr(entity, 'project') and entity.project:
-                        if hasattr(entity.project, 'manager_id') and entity.project.manager_id:
+                    if hasattr(entity, "project") and entity.project:
+                        if hasattr(entity.project, "manager_id") and entity.project.manager_id:
                             recipient_ids.add(entity.project.manager_id)
-                        elif hasattr(entity.project, 'manager') and entity.project.manager:
+                        elif hasattr(entity.project, "manager") and entity.project.manager:
                             recipient_ids.add(entity.project.manager.id)
 
                 elif user_type == "team_members":
                     # 团队成员列表
-                    if hasattr(entity, 'team_members') and entity.team_members:
+                    if hasattr(entity, "team_members") and entity.team_members:
                         for member in entity.team_members:
-                            if hasattr(member, 'user_id'):
+                            if hasattr(member, "user_id"):
                                 recipient_ids.add(member.user_id)
-                            elif hasattr(member, 'id'):
+                            elif hasattr(member, "id"):
                                 recipient_ids.add(member.id)
 
             except Exception as e:
@@ -185,7 +185,7 @@ class StateMachineNotifier:
     def _get_entity_name(self, entity: Any) -> str:
         """获取实体名称"""
         # 尝试多种命名字段
-        for attr in ['title', 'name', 'code', 'number', 'id']:
+        for attr in ["title", "name", "code", "number", "id"]:
             if hasattr(entity, attr):
                 value = getattr(entity, attr)
                 if value:
@@ -198,7 +198,7 @@ class StateMachineNotifier:
             return None
 
         # 尝试多种姓名字段
-        for attr in ['name', 'username', 'nickname', 'real_name']:
+        for attr in ["name", "username", "nickname", "real_name"]:
             if hasattr(operator, attr):
                 value = getattr(operator, attr)
                 if value:

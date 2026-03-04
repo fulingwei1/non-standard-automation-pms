@@ -8,13 +8,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.project import Project
 from app.models.stage_instance import ProjectStageInstance
 from app.models.stage_template import StageDefinition, StageTemplate
 from app.models.user import User
-from app.common.query_filters import apply_pagination
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.stage_template import (
     PipelineStatistics,
     PipelineViewResponse,
@@ -47,8 +47,7 @@ def get_pipeline_view(
     # 获取所有可用模板（用于筛选下拉框）
     all_templates = db.query(StageTemplate).filter(StageTemplate.is_active).all()
     available_templates = [
-        {"id": t.id, "code": t.template_code, "name": t.template_name}
-        for t in all_templates
+        {"id": t.id, "code": t.template_code, "name": t.template_name} for t in all_templates
     ]
 
     # 查询所有活跃项目
@@ -100,12 +99,8 @@ def get_pipeline_view(
 
             # 计算节点完成数
             total_nodes = len(stage.nodes) if stage.nodes else 0
-            completed_nodes = sum(
-                1 for n in (stage.nodes or []) if n.status == "COMPLETED"
-            )
-            progress_pct = (
-                (completed_nodes / total_nodes * 100) if total_nodes > 0 else 0
-            )
+            completed_nodes = sum(1 for n in (stage.nodes or []) if n.status == "COMPLETED")
+            progress_pct = (completed_nodes / total_nodes * 100) if total_nodes > 0 else 0
 
             stage_progress = StageProgress(
                 id=stage.id,
@@ -120,24 +115,16 @@ def get_pipeline_view(
                 completed_nodes=completed_nodes,
                 progress_pct=progress_pct,
                 planned_start_date=(
-                    stage.planned_start_date.isoformat()
-                    if stage.planned_start_date
-                    else None
+                    stage.planned_start_date.isoformat() if stage.planned_start_date else None
                 ),
                 planned_end_date=(
-                    stage.planned_end_date.isoformat()
-                    if stage.planned_end_date
-                    else None
+                    stage.planned_end_date.isoformat() if stage.planned_end_date else None
                 ),
                 actual_start_date=(
-                    stage.actual_start_date.isoformat()
-                    if stage.actual_start_date
-                    else None
+                    stage.actual_start_date.isoformat() if stage.actual_start_date else None
                 ),
                 actual_end_date=(
-                    stage.actual_end_date.isoformat()
-                    if stage.actual_end_date
-                    else None
+                    stage.actual_end_date.isoformat() if stage.actual_end_date else None
                 ),
             )
             stage_progress_list.append(stage_progress)
@@ -158,9 +145,7 @@ def get_pipeline_view(
 
         # 计算整体进度
         total_stages = len(stage_progress_list)
-        overall_progress = (
-            (completed_stages / total_stages * 100) if total_stages > 0 else 0
-        )
+        overall_progress = (completed_stages / total_stages * 100) if total_stages > 0 else 0
 
         # 更新统计
         if has_blocked:
@@ -180,9 +165,11 @@ def get_pipeline_view(
         # 获取项目的模板信息
         project_template = None
         if hasattr(project, "stage_template_id") and project.stage_template_id:
-            project_template = db.query(StageTemplate).filter(
-                StageTemplate.id == project.stage_template_id
-            ).first()
+            project_template = (
+                db.query(StageTemplate)
+                .filter(StageTemplate.id == project.stage_template_id)
+                .first()
+            )
 
         project_overviews.append(
             ProjectStageOverview(
@@ -190,15 +177,13 @@ def get_pipeline_view(
                 project_code=project.project_code,
                 project_name=project.project_name,
                 customer_name=getattr(project, "customer_name", None),
-                template_id=project.stage_template_id if hasattr(project, "stage_template_id") else None,
+                template_id=(
+                    project.stage_template_id if hasattr(project, "stage_template_id") else None
+                ),
                 template_code=project_template.template_code if project_template else None,
                 template_name=project_template.template_name if project_template else None,
-                current_stage_code=(
-                    current_stage.stage_code if current_stage else None
-                ),
-                current_stage_name=(
-                    current_stage.stage_name if current_stage else None
-                ),
+                current_stage_code=(current_stage.stage_code if current_stage else None),
+                current_stage_name=(current_stage.stage_name if current_stage else None),
                 progress_pct=overall_progress,
                 health_status=project.health or "H1",
                 stages=stage_progress_list,
@@ -206,9 +191,7 @@ def get_pipeline_view(
         )
 
     # 获取阶段定义（用于表头）
-    default_template = (
-        db.query(StageTemplate).filter(StageTemplate.is_default).first()
-    )
+    default_template = db.query(StageTemplate).filter(StageTemplate.is_default).first()
     stage_definitions = []
     if default_template:
         definitions = (
@@ -240,7 +223,9 @@ def get_pipeline_view(
                         "template_id": tid,
                         "template_code": template.template_code if template else "UNKNOWN",
                         "template_name": template.template_name if template else "未知模板",
-                        "stage_definitions": [StageDefinitionResponse.model_validate(d) for d in template_defs],
+                        "stage_definitions": [
+                            StageDefinitionResponse.model_validate(d) for d in template_defs
+                        ],
                         "projects": [],
                     }
                 else:
@@ -255,14 +240,16 @@ def get_pipeline_view(
 
         # 转换为列表并添加项目数量
         for tid, group_data in groups_map.items():
-            template_groups.append(TemplateGroup(
-                template_id=group_data["template_id"],
-                template_code=group_data["template_code"],
-                template_name=group_data["template_name"],
-                project_count=len(group_data["projects"]),
-                stage_definitions=group_data["stage_definitions"],
-                projects=group_data["projects"],
-            ))
+            template_groups.append(
+                TemplateGroup(
+                    template_id=group_data["template_id"],
+                    template_code=group_data["template_code"],
+                    template_name=group_data["template_name"],
+                    project_count=len(group_data["projects"]),
+                    stage_definitions=group_data["stage_definitions"],
+                    projects=group_data["projects"],
+                )
+            )
 
     return PipelineViewResponse(
         statistics=stats,

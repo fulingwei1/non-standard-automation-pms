@@ -7,12 +7,13 @@ Current Coverage: 0%
 File Size: 153 lines
 """
 
-import pytest
 from datetime import date, timedelta
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.services.resource_allocation_service import ResourceAllocationService
 from app.models.project import Project
+from app.services.resource_allocation_service import ResourceAllocationService
 from tests.factories import ProjectFactory
 
 
@@ -22,10 +23,10 @@ class TestResourceAllocationService:
     def test_check_workstation_availability_not_found(self, db_session):
         """测试检查工位可用性 - 工位不存在"""
         is_available, reason = ResourceAllocationService.check_workstation_availability(
-        db_session,
-        workstation_id=99999,
-        start_date=date.today(),
-        end_date=date.today() + timedelta(days=7),
+            db_session,
+            workstation_id=99999,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=7),
         )
 
         assert is_available is False
@@ -43,26 +44,24 @@ class TestResourceAllocationService:
         end_date = date.today() + timedelta(days=7)
 
         result = ResourceAllocationService.find_available_workstations(
-        db_session, start_date=start_date, end_date=end_date
+            db_session, start_date=start_date, end_date=end_date
         )
 
         assert isinstance(result, list)
 
     def test_find_available_workstations_with_workshop(self, db_session):
         """测试查找可用工位 - 指定车间"""
-        result = ResourceAllocationService.find_available_workstations(
-        db_session, workshop_id=1
-        )
+        result = ResourceAllocationService.find_available_workstations(db_session, workshop_id=1)
 
         assert isinstance(result, list)
 
     def test_check_worker_availability_not_found(self, db_session):
         """测试检查人员可用性 - 人员不存在"""
         is_available, reason, available_hours = ResourceAllocationService.check_worker_availability(
-        db_session,
-        worker_id=99999,
-        start_date=date.today(),
-        end_date=date.today() + timedelta(days=7),
+            db_session,
+            worker_id=99999,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=7),
         )
 
         assert is_available is False
@@ -78,22 +77,19 @@ class TestResourceAllocationService:
     def test_detect_resource_conflicts_no_conflicts(self, db_session):
         """测试检测资源冲突 - 无冲突"""
         from app.models.project import Project
+
         project = Project(
-        project_code="PJ-TEST",
-        project_name="测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1"
+            project_code="PJ-TEST", project_name="测试项目", stage="S1", status="ST01", health="H1"
         )
         db_session.add(project)
         db_session.flush()
 
         result = ResourceAllocationService.detect_resource_conflicts(
-        db_session,
-        project_id=project.id,
-        machine_id=None,
-        start_date=date.today(),
-        end_date=date.today() + timedelta(days=7),
+            db_session,
+            project_id=project.id,
+            machine_id=None,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=7),
         )
 
         assert isinstance(result, list)
@@ -101,22 +97,23 @@ class TestResourceAllocationService:
     def test_allocate_resources_success(self, db_session):
         """测试分配资源 - 成功场景"""
         from app.models.project import Project
+
         project = Project(
-        project_code="PJ-TEST2",
-        project_name="测试项目2",
-        stage="S1",
-        status="ST01",
-        health="H1"
+            project_code="PJ-TEST2",
+            project_name="测试项目2",
+            stage="S1",
+            status="ST01",
+            health="H1",
         )
         db_session.add(project)
         db_session.flush()
 
         result = ResourceAllocationService.allocate_resources(
-        db_session,
-        project_id=project.id,
-        machine_id=None,
-        suggested_start_date=date.today(),
-        suggested_end_date=date.today() + timedelta(days=7),
+            db_session,
+            project_id=project.id,
+            machine_id=None,
+            suggested_start_date=date.today(),
+            suggested_end_date=date.today() + timedelta(days=7),
         )
 
         assert result is not None
@@ -128,7 +125,7 @@ class TestResourceAllocationService:
     def test_calculate_workdays(self, db_session):
         """测试计算工作日"""
         start_date = date(2024, 1, 1)  # 周一
-        end_date = date(2024, 1, 7)    # 周日
+        end_date = date(2024, 1, 7)  # 周日
 
         workdays = ResourceAllocationService._calculate_workdays(start_date, end_date)
         assert workdays >= 1
@@ -137,14 +134,12 @@ class TestResourceAllocationService:
         """测试计算重叠天数"""
         # 完全重叠
         days = ResourceAllocationService._calculate_overlap_days(
-        date(2024, 1, 1), date(2024, 1, 5),
-        date(2024, 1, 2), date(2024, 1, 4)
+            date(2024, 1, 1), date(2024, 1, 5), date(2024, 1, 2), date(2024, 1, 4)
         )
         assert days == 3
 
         # 无重叠
         days = ResourceAllocationService._calculate_overlap_days(
-        date(2024, 1, 1), date(2024, 1, 5),
-        date(2024, 1, 6), date(2024, 1, 10)
+            date(2024, 1, 1), date(2024, 1, 5), date(2024, 1, 6), date(2024, 1, 10)
         )
         assert days == 0

@@ -23,7 +23,9 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/contracts/{contract_id}/payment-plans", response_model=List[ProjectPaymentPlanResponse])
+@router.get(
+    "/contracts/{contract_id}/payment-plans", response_model=List[ProjectPaymentPlanResponse]
+)
 def get_contract_payment_plans(
     *,
     db: Session = Depends(deps.get_db),
@@ -37,12 +39,13 @@ def get_contract_payment_plans(
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 查询收款计划
-    payment_plans = db.query(ProjectPaymentPlan).filter(
-        ProjectPaymentPlan.contract_id == contract_id
-    ).options(
-        joinedload(ProjectPaymentPlan.milestone),
-        joinedload(ProjectPaymentPlan.project)
-    ).order_by(ProjectPaymentPlan.payment_no).all()
+    payment_plans = (
+        db.query(ProjectPaymentPlan)
+        .filter(ProjectPaymentPlan.contract_id == contract_id)
+        .options(joinedload(ProjectPaymentPlan.milestone), joinedload(ProjectPaymentPlan.project))
+        .order_by(ProjectPaymentPlan.payment_no)
+        .all()
+    )
 
     result = []
     for plan in payment_plans:

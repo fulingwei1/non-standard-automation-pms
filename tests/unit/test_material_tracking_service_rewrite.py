@@ -9,9 +9,9 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from app.services.production.material_tracking.material_tracking_service import (
     MaterialTrackingService,
@@ -199,7 +199,7 @@ class TestGetRealtimeStock(unittest.TestCase):
             status="ACTIVE",
             low_stock_only=True,
             page=1,
-            page_size=10
+            page_size=10,
         )
 
         self.assertEqual(result["total"], 0)
@@ -225,7 +225,9 @@ class TestCreateConsumption(unittest.TestCase):
         material.current_stock = Decimal("100")
 
         # Mock get_or_404
-        with patch('app.services.production.material_tracking.material_tracking_service.get_or_404') as mock_get_or_404:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get_or_404:
             mock_get_or_404.return_value = material
 
             captured_consumption = None
@@ -287,7 +289,9 @@ class TestCreateConsumption(unittest.TestCase):
 
         self.db_mock.query.return_value = batch_query_mock
 
-        with patch('app.services.production.material_tracking.material_tracking_service.get_or_404') as mock_get_or_404:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get_or_404:
             mock_get_or_404.return_value = material
 
             consumption_data = {
@@ -312,7 +316,9 @@ class TestCreateConsumption(unittest.TestCase):
         material.standard_price = Decimal("100")
         material.current_stock = Decimal("100")
 
-        with patch('app.services.production.material_tracking.material_tracking_service.get_or_404') as mock_get_or_404:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get_or_404:
             mock_get_or_404.return_value = material
 
             # 实际消耗15，标准10，差异50%，应标记为浪费
@@ -350,7 +356,9 @@ class TestCreateConsumption(unittest.TestCase):
 
         self.db_mock.query.return_value = batch_query_mock
 
-        with patch('app.services.production.material_tracking.material_tracking_service.get_or_404') as mock_get_or_404:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get_or_404:
             mock_get_or_404.return_value = material
 
             consumption_data = {
@@ -455,7 +463,7 @@ class TestGetConsumptionAnalysis(unittest.TestCase):
         # 验证分组数据
         grouped = result["grouped_data"]
         self.assertEqual(len(grouped), 1)
-        
+
         group = grouped[0]
         self.assertEqual(group["material_code"], "MAT001")
         self.assertEqual(group["total_qty"], 15)
@@ -562,10 +570,7 @@ class TestListAlerts(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         result = self.service.list_alerts(
-            alert_type="LOW_STOCK",
-            alert_level="CRITICAL",
-            status="ACTIVE",
-            material_id=1
+            alert_type="LOW_STOCK", alert_level="CRITICAL", status="ACTIVE", material_id=1
         )
 
         self.assertEqual(result["total"], 0)
@@ -580,7 +585,9 @@ class TestCreateAlertRule(unittest.TestCase):
 
     def test_create_alert_rule_basic(self):
         """测试创建基本预警规则"""
-        with patch('app.services.production.material_tracking.material_tracking_service.save_obj') as mock_save:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
+        ) as mock_save:
             # Mock save_obj to set the id on the object
             def side_effect_save_obj(db, obj):
                 obj.id = 1
@@ -646,7 +653,7 @@ class TestGetWasteRecords(unittest.TestCase):
 
         item = result["items"][0]
         self.assertEqual(item["variance_rate"], 50)
-        
+
         # 验证汇总
         summary = result["summary"]
         self.assertEqual(summary["total_waste_qty"], 5)

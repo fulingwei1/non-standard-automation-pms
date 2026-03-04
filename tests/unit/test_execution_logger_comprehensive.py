@@ -11,9 +11,9 @@ ExecutionLogger (审批引擎执行日志) 综合单元测试
 - get_approval_logs: 获取审批日志
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -46,10 +46,7 @@ class TestLogExecution:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_execution(
-            instance_id=1,
-            action="SUBMIT",
-            actor_id=1,
-            details={"key": "value"}
+            instance_id=1, action="SUBMIT", actor_id=1, details={"key": "value"}
         )
 
         mock_db.add.assert_called_once()
@@ -65,11 +62,7 @@ class TestLogExecution:
 
         logger = ExecutionLogger(mock_db)
 
-        result = logger.log_execution(
-            instance_id=1,
-            action="APPROVE",
-            actor_id=2
-        )
+        result = logger.log_execution(instance_id=1, action="APPROVE", actor_id=2)
 
         # 验证 add 被调用
         mock_db.add.assert_called_once()
@@ -84,12 +77,7 @@ class TestLogExecution:
 
         logger = ExecutionLogger(mock_db)
 
-        result = logger.log_execution(
-            instance_id=1,
-            action="REJECT",
-            actor_id=1,
-            details=None
-        )
+        result = logger.log_execution(instance_id=1, action="REJECT", actor_id=1, details=None)
 
         mock_db.add.assert_called_once()
 
@@ -108,11 +96,7 @@ class TestLogApprovalAction:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_approval_action(
-            instance_id=1,
-            node_id=1,
-            approver_id=5,
-            action="APPROVE",
-            comment="同意"
+            instance_id=1, node_id=1, approver_id=5, action="APPROVE", comment="同意"
         )
 
         mock_db.add.assert_called_once()
@@ -129,11 +113,7 @@ class TestLogApprovalAction:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_approval_action(
-            instance_id=1,
-            node_id=1,
-            approver_id=5,
-            action="REJECT",
-            comment="不同意，需要修改"
+            instance_id=1, node_id=1, approver_id=5, action="REJECT", comment="不同意，需要修改"
         )
 
         mock_db.add.assert_called_once()
@@ -154,7 +134,7 @@ class TestLogApprovalAction:
             approver_id=5,
             action="DELEGATE",
             comment="委托给张三",
-            delegate_to=10
+            delegate_to=10,
         )
 
         mock_db.add.assert_called_once()
@@ -174,10 +154,7 @@ class TestLogNodeTransition:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_node_transition(
-            instance_id=1,
-            from_node_id=1,
-            to_node_id=2,
-            trigger="AUTO"
+            instance_id=1, from_node_id=1, to_node_id=2, trigger="AUTO"
         )
 
         mock_db.add.assert_called_once()
@@ -194,10 +171,7 @@ class TestLogNodeTransition:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_node_transition(
-            instance_id=1,
-            from_node_id=None,
-            to_node_id=1,
-            trigger="SUBMIT"
+            instance_id=1, from_node_id=None, to_node_id=1, trigger="SUBMIT"
         )
 
         mock_db.add.assert_called_once()
@@ -213,10 +187,7 @@ class TestLogNodeTransition:
         logger = ExecutionLogger(mock_db)
 
         result = logger.log_node_transition(
-            instance_id=1,
-            from_node_id=5,
-            to_node_id=None,
-            trigger="COMPLETE"
+            instance_id=1, from_node_id=5, to_node_id=None, trigger="COMPLETE"
         )
 
         mock_db.add.assert_called_once()

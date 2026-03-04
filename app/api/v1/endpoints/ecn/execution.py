@@ -23,7 +23,9 @@ from .utils import build_ecn_response
 router = APIRouter()
 
 
-@router.put("/ecns/{ecn_id}/start-execution", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecns/{ecn_id}/start-execution", response_model=EcnResponse, status_code=status.HTTP_200_OK
+)
 def start_ecn_execution(
     *,
     db: Session = Depends(deps.get_db),
@@ -51,7 +53,7 @@ def start_ecn_execution(
         old_status="APPROVED",
         new_status="EXECUTING",
         log_content=execution_in.remark or "开始执行ECN",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(log)
     db.add(ecn)
@@ -78,10 +80,9 @@ def verify_ecn(
         raise HTTPException(status_code=400, detail="只能验证执行中的ECN")
 
     # 检查是否所有任务都已完成
-    pending_tasks = db.query(EcnTask).filter(
-        EcnTask.ecn_id == ecn_id,
-        EcnTask.status != "COMPLETED"
-    ).count()
+    pending_tasks = (
+        db.query(EcnTask).filter(EcnTask.ecn_id == ecn_id, EcnTask.status != "COMPLETED").count()
+    )
 
     if pending_tasks > 0:
         raise HTTPException(status_code=400, detail="还有未完成的任务，无法验证")
@@ -103,7 +104,7 @@ def verify_ecn(
         old_status=old_status,
         new_status=ecn.status,
         log_content=verify_in.verify_note or f"验证结果: {verify_in.verify_result}",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(log)
     db.add(ecn)
@@ -142,7 +143,7 @@ def close_ecn(
         old_status="COMPLETED",
         new_status="CLOSED",
         log_content=close_in.close_note or "ECN已关闭",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(log)
     db.add(ecn)

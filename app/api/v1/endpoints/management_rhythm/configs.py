@@ -16,9 +16,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
 )
@@ -34,17 +34,14 @@ from app.schemas.management_rhythm import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/configs",
-    tags=["configs"]
-)
+router = APIRouter(prefix="/configs", tags=["configs"])
 
 # 共 5 个路由
 
 # ==================== 管理节律配置 ====================
+
 
 @router.get("/", response_model=PaginatedResponse)
 def read_rhythm_configs(
@@ -73,31 +70,35 @@ def read_rhythm_configs(
     query = apply_keyword_filter(query, ManagementRhythmConfig, keyword, ["config_name"])
 
     total = query.count()
-    configs = apply_pagination(query.order_by(desc(ManagementRhythmConfig.created_at)), pagination.offset, pagination.limit).all()
+    configs = apply_pagination(
+        query.order_by(desc(ManagementRhythmConfig.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for config in configs:
-        items.append(RhythmConfigResponse(
-            id=config.id,
-            rhythm_level=config.rhythm_level,
-            cycle_type=config.cycle_type,
-            config_name=config.config_name,
-            description=config.description,
-            meeting_template=config.meeting_template if config.meeting_template else {},
-            key_metrics=config.key_metrics if config.key_metrics else [],
-            output_artifacts=config.output_artifacts if config.output_artifacts else [],
-            is_active=config.is_active,
-            created_by=config.created_by,
-            created_at=config.created_at,
-            updated_at=config.updated_at,
-        ))
+        items.append(
+            RhythmConfigResponse(
+                id=config.id,
+                rhythm_level=config.rhythm_level,
+                cycle_type=config.cycle_type,
+                config_name=config.config_name,
+                description=config.description,
+                meeting_template=config.meeting_template if config.meeting_template else {},
+                key_metrics=config.key_metrics if config.key_metrics else [],
+                output_artifacts=config.output_artifacts if config.output_artifacts else [],
+                is_active=config.is_active,
+                created_by=config.created_by,
+                created_at=config.created_at,
+                updated_at=config.updated_at,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -222,7 +223,7 @@ def get_strategic_structure_template(
             "why_exist": "存在的意义",
             "three_years_later": "三年后希望被怎么记住",
             "long_term_value": "为谁创造长期价值",
-            "standard_expression": "我们希望通过（核心使命或创新方式），让（核心客户群体或社会群体）在（关键领域）获得（理想的未来状态），并最终成为一家怎样的公司（愿景）"
+            "standard_expression": "我们希望通过（核心使命或创新方式），让（核心客户群体或社会群体）在（关键领域）获得（理想的未来状态），并最终成为一家怎样的公司（愿景）",
         },
         opportunity={
             "market_trend": "未来三年的行业关键趋势",
@@ -233,10 +234,10 @@ def get_strategic_structure_template(
                 "industry_growth": "行业是否有增长",
                 "competitive_gap": "竞争是否有空隙",
                 "customer_demand": "客户是否有需求",
-                "our_advantage": "我们是否有优势"
+                "our_advantage": "我们是否有优势",
             },
             "why_we_win": "凭什么能赢的逻辑",
-            "standard_expression": "我们认为未来（时间周期）内，（关键趋势或结构性变化）将成为行业增长的决定力量，我们将通过（关键能力或资源杠杆），抓住（结构性机会），满足（什么本质需求），瞄准（什么竞争空位），从而建立（长期竞争势能）"
+            "standard_expression": "我们认为未来（时间周期）内，（关键趋势或结构性变化）将成为行业增长的决定力量，我们将通过（关键能力或资源杠杆），抓住（结构性机会），满足（什么本质需求），瞄准（什么竞争空位），从而建立（长期竞争势能）",
         },
         positioning={
             "market_segment": "聚焦的赛道/细分市场",
@@ -244,7 +245,7 @@ def get_strategic_structure_template(
             "target_customers": "核心客户群体",
             "value_proposition": "独特价值主张",
             "competitive_barrier": "竞争壁垒",
-            "standard_expression": "我们选择聚焦（核心赛道/细分市场），以（核心打法/差异化路径）形成竞争壁垒，为（核心客户群体）提供（独特价值主张）"
+            "standard_expression": "我们选择聚焦（核心赛道/细分市场），以（核心打法/差异化路径）形成竞争壁垒，为（核心客户群体）提供（独特价值主张）",
         },
         goals={
             "strategic_hypothesis": "战略假设",
@@ -252,7 +253,7 @@ def get_strategic_structure_template(
             "annual_goals": "年度目标",
             "quarterly_goals": "季度目标",
             "monthly_goals": "月度目标",
-            "standard_expression": "围绕上述战略机会，我们设定以下关键验证目标：通过（关键指标/OKR/KPI）衡量（假设是否成立），确保（战略成果）在（时间周期）内得到验证"
+            "standard_expression": "围绕上述战略机会，我们设定以下关键验证目标：通过（关键指标/OKR/KPI）衡量（假设是否成立），确保（战略成果）在（时间周期）内得到验证",
         },
         path={
             "value_chain": "价值流路径(客户需求→产品方案→交付体验→复购机制)",
@@ -264,9 +265,6 @@ def get_strategic_structure_template(
             "rhythm": "节奏(周执行/月验证/季校准/年复盘)",
             "resources": "兵力投入",
             "campaigns": "战役系统",
-            "standard_expression": "我们将通过（核心路径结构），实现战略目标，并以（经营节奏、次序、兵力、战役机制）保障战略持续运行与动态优化"
-        }
+            "standard_expression": "我们将通过（核心路径结构），实现战略目标，并以（经营节奏、次序、兵力、战役机制）保障战略持续运行与动态优化",
+        },
     )
-
-
-

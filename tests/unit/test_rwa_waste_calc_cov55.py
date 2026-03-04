@@ -2,20 +2,22 @@
 """
 Tests for app/services/resource_waste_analysis/waste_calculation.py
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.resource_waste_analysis.waste_calculation import WasteCalculationMixin
     from app.models.enums import LeadOutcomeEnum
+    from app.services.resource_waste_analysis.waste_calculation import WasteCalculationMixin
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
 
 class ConcreteWasteCalc(WasteCalculationMixin):
     """用于测试的具体实现"""
+
     def __init__(self, db):
         self.db = db
         self.hourly_rate = Decimal("100")
@@ -42,7 +44,9 @@ def test_calculate_waste_no_projects(calc, mock_db):
     assert result["win_rate"] == 0
 
 
-@pytest.mark.skip(reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用")
+@pytest.mark.skip(
+    reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用"
+)
 def test_calculate_waste_with_won_project(calc, mock_db):
     """中标项目的工时计入 productive_hours"""
     project = MagicMock()
@@ -52,7 +56,9 @@ def test_calculate_waste_with_won_project(calc, mock_db):
 
     mock_db.query.return_value.filter.return_value.all.return_value = [project]
     # work hours map
-    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [(1, 8.0)]
+    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+        (1, 8.0)
+    ]
 
     start = date(2024, 1, 1)
     end = date(2024, 2, 1)
@@ -61,7 +67,9 @@ def test_calculate_waste_with_won_project(calc, mock_db):
     assert result["lost_leads"] == 0
 
 
-@pytest.mark.skip(reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用")
+@pytest.mark.skip(
+    reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用"
+)
 def test_calculate_waste_win_rate(calc, mock_db):
     """中标率计算正确"""
     won = MagicMock()
@@ -80,7 +88,9 @@ def test_calculate_waste_win_rate(calc, mock_db):
     assert result["win_rate"] == 0.5
 
 
-@pytest.mark.skip(reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用")
+@pytest.mark.skip(
+    reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用"
+)
 def test_calculate_waste_rate(calc, mock_db):
     """浪费率 = 浪费工时 / 总工时"""
     lost = MagicMock()
@@ -88,12 +98,16 @@ def test_calculate_waste_rate(calc, mock_db):
     lost.outcome = LeadOutcomeEnum.LOST.value
     lost.loss_reason = "PRICE"
     mock_db.query.return_value.filter.return_value.all.return_value = [lost]
-    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [(1, 10.0)]
+    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+        (1, 10.0)
+    ]
     result = calc.calculate_waste_by_period(date(2024, 1, 1), date(2024, 2, 1))
     assert result["waste_rate"] == 1.0
 
 
-@pytest.mark.skip(reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用")
+@pytest.mark.skip(
+    reason="源码 waste_calculation.py 使用了不存在的 LeadOutcomeEnum.PENDING，等源码修复后再启用"
+)
 def test_calculate_waste_wasted_cost(calc, mock_db):
     """浪费成本 = 浪费工时 * hourly_rate"""
     lost = MagicMock()
@@ -101,7 +115,9 @@ def test_calculate_waste_wasted_cost(calc, mock_db):
     lost.outcome = LeadOutcomeEnum.LOST.value
     lost.loss_reason = "OTHER"
     mock_db.query.return_value.filter.return_value.all.return_value = [lost]
-    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [(1, 5.0)]
+    mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+        (1, 5.0)
+    ]
     result = calc.calculate_waste_by_period(date(2024, 1, 1), date(2024, 2, 1))
     assert result["wasted_cost"] == Decimal("500")
 

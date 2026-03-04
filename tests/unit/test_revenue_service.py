@@ -8,13 +8,14 @@ File Size: 59 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.services.revenue_service import RevenueService
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+from sqlalchemy.orm import Session
+
+from app.services.revenue_service import RevenueService
 
 
 @pytest.fixture
@@ -30,9 +31,8 @@ class TestRevenueService:
         """测试服务初始化"""
         service = RevenueService()
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_get_project_revenue(self, revenue_service):
         """测试 get_project_revenue 方法"""
@@ -42,7 +42,6 @@ class TestRevenueService:
         # 3. 验证结果
         pass
 
-
     def test_get_project_revenue_detail(self, revenue_service):
         """测试 get_project_revenue_detail 方法"""
         # TODO: 实现测试逻辑
@@ -50,7 +49,6 @@ class TestRevenueService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     def test_get_projects_revenue(self, revenue_service):
         """测试 get_projects_revenue 方法"""
@@ -60,7 +58,6 @@ class TestRevenueService:
         # 3. 验证结果
         pass
 
-
     def test_get_total_revenue(self, revenue_service):
         """测试 get_total_revenue 方法"""
         # TODO: 实现测试逻辑
@@ -68,7 +65,6 @@ class TestRevenueService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

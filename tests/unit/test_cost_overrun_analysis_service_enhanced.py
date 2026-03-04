@@ -75,10 +75,10 @@ class TestCalculateMaterialCost(unittest.TestCase):
         """测试有物料成本数据"""
         mock_query = self.db.query.return_value
         mock_filter = mock_query.filter.return_value
-        mock_filter.scalar.return_value = Decimal('5000.00')
+        mock_filter.scalar.return_value = Decimal("5000.00")
 
         result = self.service._calculate_material_cost(1)
-        self.assertEqual(result, Decimal('5000.00'))
+        self.assertEqual(result, Decimal("5000.00"))
 
     def test_calculate_material_cost_no_data(self):
         """测试无物料成本数据"""
@@ -87,17 +87,17 @@ class TestCalculateMaterialCost(unittest.TestCase):
         mock_filter.scalar.return_value = None
 
         result = self.service._calculate_material_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
     def test_calculate_material_cost_multiple_types(self):
         """测试只统计MATERIAL类型"""
         mock_query = self.db.query.return_value
         mock_filter = mock_query.filter.return_value
-        mock_filter.scalar.return_value = Decimal('3500.50')
+        mock_filter.scalar.return_value = Decimal("3500.50")
 
         result = self.service._calculate_material_cost(1)
         self.assertIsInstance(result, Decimal)
-        self.assertEqual(result, Decimal('3500.50'))
+        self.assertEqual(result, Decimal("3500.50"))
 
 
 class TestCalculateLaborCost(unittest.TestCase):
@@ -141,9 +141,10 @@ class TestCalculateLaborCost(unittest.TestCase):
         def query_side_effect(model):
             from app.models.timesheet import Timesheet
             from app.models.user import User
-            if model.__name__ == 'Timesheet' or str(model) == str(Timesheet):
+
+            if model.__name__ == "Timesheet" or str(model) == str(Timesheet):
                 return mock_ts_query
-            elif model.__name__ == 'User' or str(model) == str(User):
+            elif model.__name__ == "User" or str(model) == str(User):
                 return mock_user_query
             return Mock()
 
@@ -151,11 +152,11 @@ class TestCalculateLaborCost(unittest.TestCase):
 
         # Mock hourly rate service
         self.service.hourly_rate_service.get_user_hourly_rate = Mock(
-            side_effect=[Decimal('100'), Decimal('150')]
+            side_effect=[Decimal("100"), Decimal("150")]
         )
 
         result = self.service._calculate_labor_cost(1)
-        expected = Decimal('10.0') * Decimal('100') + Decimal('15.5') * Decimal('150')
+        expected = Decimal("10.0") * Decimal("100") + Decimal("15.5") * Decimal("150")
         self.assertEqual(result, expected)
 
     def test_calculate_labor_cost_no_timesheets(self):
@@ -167,7 +168,7 @@ class TestCalculateLaborCost(unittest.TestCase):
         self.db.query.return_value = mock_query
 
         result = self.service._calculate_labor_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
     def test_calculate_labor_cost_user_not_found(self):
         """测试用户不存在时跳过该工时"""
@@ -189,16 +190,17 @@ class TestCalculateLaborCost(unittest.TestCase):
         def query_side_effect(model):
             from app.models.timesheet import Timesheet
             from app.models.user import User
-            if model.__name__ == 'Timesheet' or str(model) == str(Timesheet):
+
+            if model.__name__ == "Timesheet" or str(model) == str(Timesheet):
                 return mock_ts_query
-            elif model.__name__ == 'User' or str(model) == str(User):
+            elif model.__name__ == "User" or str(model) == str(User):
                 return mock_user_query
             return Mock()
 
         self.db.query.side_effect = query_side_effect
 
         result = self.service._calculate_labor_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
 
 class TestCalculateOutsourcingCost(unittest.TestCase):
@@ -211,10 +213,10 @@ class TestCalculateOutsourcingCost(unittest.TestCase):
     def test_calculate_outsourcing_cost_with_orders(self):
         """测试有外协订单时计算成本"""
         mock_order1 = Mock()
-        mock_order1.total_amount = Decimal('2000.00')
+        mock_order1.total_amount = Decimal("2000.00")
 
         mock_order2 = Mock()
-        mock_order2.total_amount = Decimal('3500.50')
+        mock_order2.total_amount = Decimal("3500.50")
 
         mock_query = Mock()
         mock_filter = Mock()
@@ -223,7 +225,7 @@ class TestCalculateOutsourcingCost(unittest.TestCase):
         self.db.query.return_value = mock_query
 
         result = self.service._calculate_outsourcing_cost(1)
-        self.assertEqual(result, Decimal('5500.50'))
+        self.assertEqual(result, Decimal("5500.50"))
 
     def test_calculate_outsourcing_cost_no_orders(self):
         """测试无外协订单时返回0"""
@@ -234,7 +236,7 @@ class TestCalculateOutsourcingCost(unittest.TestCase):
         self.db.query.return_value = mock_query
 
         result = self.service._calculate_outsourcing_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
     def test_calculate_outsourcing_cost_with_none_amount(self):
         """测试订单金额为None时的处理"""
@@ -248,7 +250,7 @@ class TestCalculateOutsourcingCost(unittest.TestCase):
         self.db.query.return_value = mock_query
 
         result = self.service._calculate_outsourcing_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
 
 class TestCalculateActualCost(unittest.TestCase):
@@ -261,44 +263,44 @@ class TestCalculateActualCost(unittest.TestCase):
     def test_calculate_actual_cost_all_components(self):
         """测试计算包含所有成本组件"""
         # Mock各个成本计算方法
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_labor_cost = Mock(return_value=Decimal('10000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('3000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_labor_cost = Mock(return_value=Decimal("10000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("3000"))
 
         # Mock其他成本查询
         mock_query = self.db.query.return_value
         mock_filter = mock_query.filter.return_value
-        mock_filter.scalar.return_value = Decimal('2000')
+        mock_filter.scalar.return_value = Decimal("2000")
 
         result = self.service._calculate_actual_cost(1)
-        expected = Decimal('5000') + Decimal('10000') + Decimal('3000') + Decimal('2000')
+        expected = Decimal("5000") + Decimal("10000") + Decimal("3000") + Decimal("2000")
         self.assertEqual(result, expected)
 
     def test_calculate_actual_cost_no_other_costs(self):
         """测试无其他成本时"""
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_labor_cost = Mock(return_value=Decimal('10000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('3000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_labor_cost = Mock(return_value=Decimal("10000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("3000"))
 
         mock_query = self.db.query.return_value
         mock_filter = mock_query.filter.return_value
         mock_filter.scalar.return_value = None
 
         result = self.service._calculate_actual_cost(1)
-        self.assertEqual(result, Decimal('18000'))
+        self.assertEqual(result, Decimal("18000"))
 
     def test_calculate_actual_cost_zero_costs(self):
         """测试所有成本为0"""
-        self.service._calculate_material_cost = Mock(return_value=Decimal('0'))
-        self.service._calculate_labor_cost = Mock(return_value=Decimal('0'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('0'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("0"))
+        self.service._calculate_labor_cost = Mock(return_value=Decimal("0"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("0"))
 
         mock_query = self.db.query.return_value
         mock_filter = mock_query.filter.return_value
-        mock_filter.scalar.return_value = Decimal('0')
+        mock_filter.scalar.return_value = Decimal("0")
 
         result = self.service._calculate_actual_cost(1)
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
 
 class TestAnalyzeProjectOverrun(unittest.TestCase):
@@ -312,144 +314,144 @@ class TestAnalyzeProjectOverrun(unittest.TestCase):
         """测试项目无超支"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('20000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("20000")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('15000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("15000"))
         self.service._calculate_actual_hours = Mock(return_value=80.0)
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertFalse(result['has_overrun'])
-        self.assertEqual(result['project_id'], 1)
-        self.assertEqual(result['budget'], 20000.0)
-        self.assertEqual(result['actual_cost'], 15000.0)
-        self.assertEqual(result['overrun_amount'], 0.0)
-        self.assertEqual(result['reasons'], [])
+        self.assertFalse(result["has_overrun"])
+        self.assertEqual(result["project_id"], 1)
+        self.assertEqual(result["budget"], 20000.0)
+        self.assertEqual(result["actual_cost"], 15000.0)
+        self.assertEqual(result["overrun_amount"], 0.0)
+        self.assertEqual(result["reasons"], [])
 
     def test_analyze_project_with_overrun_hours(self):
         """测试工时超支"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('20000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("20000")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('25000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("25000"))
         self.service._calculate_actual_hours = Mock(return_value=150.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('3000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("3000"))
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertEqual(result['overrun_amount'], 5000.0)
-        self.assertIn('工时超支', result['reasons'])
+        self.assertTrue(result["has_overrun"])
+        self.assertEqual(result["overrun_amount"], 5000.0)
+        self.assertIn("工时超支", result["reasons"])
 
     def test_analyze_project_with_ecn(self):
         """测试有需求变更"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('20000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("20000")
         mock_project.plan_manhours = 100
         mock_project.ecns = [Mock()]  # 有ECN
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('25000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("25000"))
         self.service._calculate_actual_hours = Mock(return_value=90.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('3000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("3000"))
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertIn('需求变更导致成本增加', result['reasons'])
+        self.assertTrue(result["has_overrun"])
+        self.assertIn("需求变更导致成本增加", result["reasons"])
 
     def test_analyze_project_material_overrun(self):
         """测试物料成本超支"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('20000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("20000")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('25000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("25000"))
         self.service._calculate_actual_hours = Mock(return_value=90.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('15000'))  # 超过预算50%
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('2000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("15000"))  # 超过预算50%
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("2000"))
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertIn('物料成本超支', result['reasons'])
+        self.assertTrue(result["has_overrun"])
+        self.assertIn("物料成本超支", result["reasons"])
 
     def test_analyze_project_outsourcing_overrun(self):
         """测试外协成本超支"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('20000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("20000")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('25000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("25000"))
         self.service._calculate_actual_hours = Mock(return_value=90.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('8000'))  # 超过预算20%
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("8000"))  # 超过预算20%
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertIn('外协成本超支', result['reasons'])
+        self.assertTrue(result["has_overrun"])
+        self.assertIn("外协成本超支", result["reasons"])
 
     def test_analyze_project_overrun_ratio_calculation(self):
         """测试超支比例计算"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('10000')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("10000")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('12000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("12000"))
         self.service._calculate_actual_hours = Mock(return_value=90.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('5000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('2000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("5000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("2000"))
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertEqual(result['overrun_ratio'], 20.0)  # (12000-10000)/10000*100
+        self.assertTrue(result["has_overrun"])
+        self.assertEqual(result["overrun_ratio"], 20.0)  # (12000-10000)/10000*100
 
     def test_analyze_project_zero_budget(self):
         """测试预算为0时的处理"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.project_name = 'Test Project'
-        mock_project.budget = Decimal('0')
+        mock_project.project_code = "PRJ001"
+        mock_project.project_name = "Test Project"
+        mock_project.budget = Decimal("0")
         mock_project.plan_manhours = 100
         mock_project.ecns = []
 
-        self.service._calculate_actual_cost = Mock(return_value=Decimal('5000'))
+        self.service._calculate_actual_cost = Mock(return_value=Decimal("5000"))
         self.service._calculate_actual_hours = Mock(return_value=90.0)
-        self.service._calculate_material_cost = Mock(return_value=Decimal('2000'))
-        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal('1000'))
+        self.service._calculate_material_cost = Mock(return_value=Decimal("2000"))
+        self.service._calculate_outsourcing_cost = Mock(return_value=Decimal("1000"))
 
         result = self.service._analyze_project_overrun(mock_project)
 
-        self.assertTrue(result['has_overrun'])
-        self.assertEqual(result['overrun_ratio'], 0.0)
+        self.assertTrue(result["has_overrun"])
+        self.assertEqual(result["overrun_ratio"], 0.0)
 
 
 class TestAnalyzeReasons(unittest.TestCase):
@@ -469,15 +471,15 @@ class TestAnalyzeReasons(unittest.TestCase):
 
         result = self.service.analyze_reasons()
 
-        self.assertEqual(result['total_overrun_projects'], 0)
-        self.assertEqual(result['reasons'], [])
-        self.assertEqual(result['projects'], [])
+        self.assertEqual(result["total_overrun_projects"], 0)
+        self.assertEqual(result["reasons"], [])
+        self.assertEqual(result["projects"], [])
 
     def test_analyze_reasons_with_project_filter(self):
         """测试按项目ID过滤"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.status = 'ST10'
+        mock_project.status = "ST10"
 
         mock_query = Mock()
         mock_filter1 = Mock()
@@ -487,12 +489,14 @@ class TestAnalyzeReasons(unittest.TestCase):
         mock_query.filter.return_value = mock_filter1
         self.db.query.return_value = mock_query
 
-        self.service._analyze_project_overrun = Mock(return_value={
-            'has_overrun': False,
-            'project_id': 1,
-            'overrun_amount': 0.0,
-            'reasons': []
-        })
+        self.service._analyze_project_overrun = Mock(
+            return_value={
+                "has_overrun": False,
+                "project_id": 1,
+                "overrun_amount": 0.0,
+                "reasons": [],
+            }
+        )
 
         result = self.service.analyze_reasons(project_id=1)
         self.assertIsNotNone(result)
@@ -501,7 +505,7 @@ class TestAnalyzeReasons(unittest.TestCase):
         """测试按日期范围过滤"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.status = 'ST10'
+        mock_project.status = "ST10"
         mock_project.created_at = datetime(2024, 1, 15)
 
         mock_query = Mock()
@@ -514,31 +518,33 @@ class TestAnalyzeReasons(unittest.TestCase):
         mock_query.filter.return_value = mock_filter1
         self.db.query.return_value = mock_query
 
-        self.service._analyze_project_overrun = Mock(return_value={
-            'has_overrun': False,
-            'project_id': 1,
-            'overrun_amount': 0.0,
-            'reasons': []
-        })
+        self.service._analyze_project_overrun = Mock(
+            return_value={
+                "has_overrun": False,
+                "project_id": 1,
+                "overrun_amount": 0.0,
+                "reasons": [],
+            }
+        )
 
         start_date = date(2024, 1, 1)
         end_date = date(2024, 1, 31)
         result = self.service.analyze_reasons(start_date=start_date, end_date=end_date)
 
-        self.assertEqual(result['analysis_period']['start_date'], '2024-01-01')
-        self.assertEqual(result['analysis_period']['end_date'], '2024-01-31')
+        self.assertEqual(result["analysis_period"]["start_date"], "2024-01-01")
+        self.assertEqual(result["analysis_period"]["end_date"], "2024-01-31")
 
     def test_analyze_reasons_aggregates_by_reason(self):
         """测试按原因聚合统计"""
         mock_project1 = Mock()
         mock_project1.id = 1
-        mock_project1.status = 'ST10'
-        mock_project1.project_code = 'PRJ001'
+        mock_project1.status = "ST10"
+        mock_project1.project_code = "PRJ001"
 
         mock_project2 = Mock()
         mock_project2.id = 2
-        mock_project2.status = 'ST20'
-        mock_project2.project_code = 'PRJ002'
+        mock_project2.status = "ST20"
+        mock_project2.project_code = "PRJ002"
 
         mock_query = Mock()
         mock_filter = Mock()
@@ -546,31 +552,33 @@ class TestAnalyzeReasons(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         self.db.query.return_value = mock_query
 
-        self.service._analyze_project_overrun = Mock(side_effect=[
-            {
-                'has_overrun': True,
-                'project_id': 1,
-                'project_code': 'PRJ001',
-                'overrun_amount': 5000.0,
-                'reasons': ['工时超支', '物料成本超支']
-            },
-            {
-                'has_overrun': True,
-                'project_id': 2,
-                'project_code': 'PRJ002',
-                'overrun_amount': 3000.0,
-                'reasons': ['工时超支']
-            }
-        ])
+        self.service._analyze_project_overrun = Mock(
+            side_effect=[
+                {
+                    "has_overrun": True,
+                    "project_id": 1,
+                    "project_code": "PRJ001",
+                    "overrun_amount": 5000.0,
+                    "reasons": ["工时超支", "物料成本超支"],
+                },
+                {
+                    "has_overrun": True,
+                    "project_id": 2,
+                    "project_code": "PRJ002",
+                    "overrun_amount": 3000.0,
+                    "reasons": ["工时超支"],
+                },
+            ]
+        )
 
         result = self.service.analyze_reasons()
 
-        self.assertEqual(result['total_overrun_projects'], 2)
+        self.assertEqual(result["total_overrun_projects"], 2)
         # 检查原因统计
-        reasons = {r['reason']: r for r in result['reasons']}
-        self.assertIn('工时超支', reasons)
-        self.assertEqual(reasons['工时超支']['count'], 2)
-        self.assertEqual(reasons['工时超支']['total_overrun'], 8000.0)
+        reasons = {r["reason"]: r for r in result["reasons"]}
+        self.assertIn("工时超支", reasons)
+        self.assertEqual(reasons["工时超支"]["count"], 2)
+        self.assertEqual(reasons["工时超支"]["total_overrun"], 8000.0)
 
 
 class TestAnalyzeAccountability(unittest.TestCase):
@@ -582,13 +590,11 @@ class TestAnalyzeAccountability(unittest.TestCase):
 
     def test_analyze_accountability_empty(self):
         """测试无超支项目时"""
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': []
-        })
+        self.service.analyze_reasons = Mock(return_value={"projects": []})
 
         result = self.service.analyze_accountability()
 
-        self.assertEqual(len(result['by_person']), 0)
+        self.assertEqual(len(result["by_person"]), 0)
 
     def test_analyze_accountability_by_opportunity_owner(self):
         """测试归责到商机负责人"""
@@ -604,27 +610,28 @@ class TestAnalyzeAccountability(unittest.TestCase):
 
         mock_user = Mock()
         mock_user.id = 1
-        mock_user.real_name = 'Zhang San'
-        mock_user.username = 'zhangsan'
-        mock_user.department = 'Sales'
+        mock_user.real_name = "Zhang San"
+        mock_user.username = "zhangsan"
+        mock_user.department = "Sales"
 
         # Setup query mocks
         def query_side_effect(model):
             from app.models.project import Project
             from app.models.user import User
-            if model.__name__ == 'Project' or str(model) == str(Project):
+
+            if model.__name__ == "Project" or str(model) == str(Project):
                 mock_q = Mock()
                 mock_f = Mock()
                 mock_f.first.return_value = mock_project
                 mock_q.filter.return_value = mock_f
                 return mock_q
-            elif model.__name__ == 'Timesheet':
+            elif model.__name__ == "Timesheet":
                 mock_q = Mock()
                 mock_f = Mock()
                 mock_f.all.return_value = []
                 mock_q.filter.return_value = mock_f
                 return mock_q
-            elif model.__name__ == 'User' or str(model) == str(User):
+            elif model.__name__ == "User" or str(model) == str(User):
                 mock_q = Mock()
                 mock_f = Mock()
                 mock_f.first.return_value = mock_user
@@ -634,19 +641,16 @@ class TestAnalyzeAccountability(unittest.TestCase):
 
         self.db.query.side_effect = query_side_effect
 
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': [{
-                'project_id': 1,
-                'overrun_amount': 5000.0
-            }]
-        })
+        self.service.analyze_reasons = Mock(
+            return_value={"projects": [{"project_id": 1, "overrun_amount": 5000.0}]}
+        )
 
         result = self.service.analyze_accountability()
 
-        self.assertGreater(len(result['by_person']), 0)
-        person = result['by_person'][0]
-        self.assertEqual(person['person_name'], 'Zhang San')
-        self.assertIn('报价不准确', person['reasons'])
+        self.assertGreater(len(result["by_person"]), 0)
+        person = result["by_person"][0]
+        self.assertEqual(person["person_name"], "Zhang San")
+        self.assertIn("报价不准确", person["reasons"])
 
 
 class TestAnalyzeImpact(unittest.TestCase):
@@ -658,23 +662,21 @@ class TestAnalyzeImpact(unittest.TestCase):
 
     def test_analyze_impact_no_projects(self):
         """测试无超支项目时"""
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': []
-        })
+        self.service.analyze_reasons = Mock(return_value={"projects": []})
 
         result = self.service.analyze_impact()
 
-        self.assertEqual(result['summary']['total_overrun'], 0.0)
-        self.assertEqual(result['summary']['total_contract_amount'], 0.0)
-        self.assertEqual(len(result['affected_projects']), 0)
+        self.assertEqual(result["summary"]["total_overrun"], 0.0)
+        self.assertEqual(result["summary"]["total_contract_amount"], 0.0)
+        self.assertEqual(len(result["affected_projects"]), 0)
 
     def test_analyze_impact_calculates_margin_impact(self):
         """测试计算毛利率影响"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
-        mock_project.contract_amount = Decimal('100000')
-        mock_project.est_margin = Decimal('20')
+        mock_project.project_code = "PRJ001"
+        mock_project.contract_amount = Decimal("100000")
+        mock_project.est_margin = Decimal("20")
 
         mock_query = Mock()
         mock_filter = Mock()
@@ -682,29 +684,27 @@ class TestAnalyzeImpact(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         self.db.query.return_value = mock_query
 
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': [{
-                'project_id': 1,
-                'project_code': 'PRJ001',
-                'overrun_amount': 10000.0
-            }]
-        })
+        self.service.analyze_reasons = Mock(
+            return_value={
+                "projects": [{"project_id": 1, "project_code": "PRJ001", "overrun_amount": 10000.0}]
+            }
+        )
 
         result = self.service.analyze_impact()
 
-        self.assertEqual(result['summary']['total_overrun'], 10000.0)
-        self.assertEqual(result['summary']['total_contract_amount'], 100000.0)
-        self.assertGreater(len(result['affected_projects']), 0)
-        affected = result['affected_projects'][0]
-        self.assertEqual(affected['margin_impact'], 10.0)  # 20 - 10
+        self.assertEqual(result["summary"]["total_overrun"], 10000.0)
+        self.assertEqual(result["summary"]["total_contract_amount"], 100000.0)
+        self.assertGreater(len(result["affected_projects"]), 0)
+        affected = result["affected_projects"][0]
+        self.assertEqual(affected["margin_impact"], 10.0)  # 20 - 10
 
     def test_analyze_impact_zero_contract_amount(self):
         """测试合同金额为0时的处理"""
         mock_project = Mock()
         mock_project.id = 1
-        mock_project.project_code = 'PRJ001'
+        mock_project.project_code = "PRJ001"
         mock_project.contract_amount = None
-        mock_project.est_margin = Decimal('20')
+        mock_project.est_margin = Decimal("20")
 
         mock_query = Mock()
         mock_filter = Mock()
@@ -712,31 +712,27 @@ class TestAnalyzeImpact(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         self.db.query.return_value = mock_query
 
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': [{
-                'project_id': 1,
-                'project_code': 'PRJ001',
-                'overrun_amount': 10000.0
-            }]
-        })
+        self.service.analyze_reasons = Mock(
+            return_value={
+                "projects": [{"project_id": 1, "project_code": "PRJ001", "overrun_amount": 10000.0}]
+            }
+        )
 
         result = self.service.analyze_impact()
 
-        self.assertEqual(result['summary']['overrun_ratio'], 0.0)
+        self.assertEqual(result["summary"]["overrun_ratio"], 0.0)
 
     def test_analyze_impact_with_date_range(self):
         """测试带日期范围的影响分析"""
-        self.service.analyze_reasons = Mock(return_value={
-            'projects': []
-        })
+        self.service.analyze_reasons = Mock(return_value={"projects": []})
 
         start_date = date(2024, 1, 1)
         end_date = date(2024, 1, 31)
         result = self.service.analyze_impact(start_date=start_date, end_date=end_date)
 
-        self.assertEqual(result['analysis_period']['start_date'], '2024-01-01')
-        self.assertEqual(result['analysis_period']['end_date'], '2024-01-31')
+        self.assertEqual(result["analysis_period"]["start_date"], "2024-01-01")
+        self.assertEqual(result["analysis_period"]["end_date"], "2024-01-31")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

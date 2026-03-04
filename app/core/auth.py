@@ -15,8 +15,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from ..dependencies import get_db  # Moved to break circular import
 from ..common.context import set_audit_context
+from ..dependencies import get_db  # Moved to break circular import
 from ..models.user import User
 from ..utils.redis_client import get_redis_client
 from .config import settings
@@ -60,19 +60,19 @@ __all__ = [
 def is_superuser(user: User) -> bool:
     """
     判断用户是否为超级管理员
-    
+
     超级管理员必须同时满足：
     1. is_superuser = True
     2. tenant_id IS NULL
-    
+
     这是统一的超级管理员判断标准，避免使用 tenant_id is None 单独判断。
-    
+
     Args:
         user: 用户对象
-        
+
     Returns:
         bool: 是否为超级管理员
-        
+
     Example:
         >>> if is_superuser(current_user):
         >>>     # 超级管理员可以访问所有资源
@@ -84,17 +84,17 @@ def is_superuser(user: User) -> bool:
 def validate_user_tenant_consistency(user: User) -> None:
     """
     验证用户租户数据一致性
-    
+
     确保用户数据符合以下规则：
     1. 超级管理员：is_superuser=True 且 tenant_id IS NULL
     2. 租户用户：is_superuser=False 且 tenant_id IS NOT NULL
-    
+
     Args:
         user: 用户对象
-        
+
     Raises:
         ValueError: 当用户数据不一致时抛出异常
-        
+
     Example:
         >>> validate_user_tenant_consistency(user)  # 验证通过
         >>> # 或抛出 ValueError
@@ -102,14 +102,14 @@ def validate_user_tenant_consistency(user: User) -> None:
     user_is_superuser = getattr(user, "is_superuser", False)
     user_tenant_id = getattr(user, "tenant_id", 0)
     user_id = getattr(user, "id", "unknown")
-    
+
     # 超级管理员必须 tenant_id 为 None
     if user_is_superuser and user_tenant_id is not None:
         raise ValueError(
             f"Invalid superuser data: user_id={user_id} has is_superuser=True "
             f"but tenant_id={user_tenant_id} (should be NULL)"
         )
-    
+
     # 非超级管理员必须有 tenant_id
     if not user_is_superuser and user_tenant_id is None:
         raise ValueError(
@@ -121,30 +121,32 @@ def validate_user_tenant_consistency(user: User) -> None:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
     import bcrypt
-    password_bytes = plain_password.encode('utf-8')[:72]
-    return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
+
+    password_bytes = plain_password.encode("utf-8")[:72]
+    return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
     """生成密码哈希 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
     import bcrypt
-    password_bytes = password.encode('utf-8')[:72]
-    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode('utf-8')
+
+    password_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(
-    data: dict, 
+    data: dict,
     expires_delta: Optional[timedelta] = None,
     jti: Optional[str] = None,
 ) -> str:
     """
     创建访问令牌
-    
+
     Args:
         data: 要编码的数据
         expires_delta: 过期时间增量
         jti: JWT ID（可选，用于会话管理）
-    
+
     Returns:
         JWT token字符串
     """
@@ -154,10 +156,10 @@ def create_access_token(
         expire = now + expires_delta
     else:
         expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+
     if not jti:
         jti = secrets.token_hex(16)
-    
+
     to_encode.update(
         {
             "exp": expire,
@@ -166,9 +168,7 @@ def create_access_token(
             "token_type": "access",
         }
     )
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
@@ -179,29 +179,29 @@ def create_refresh_token(
 ) -> str:
     """
     创建刷新令牌
-    
+
     Refresh Token有效期更长，用于获取新的Access Token
-    
+
     Args:
         data: 要编码的数据
         expires_delta: 过期时间增量（默认7天）
         jti: JWT ID（可选，用于会话管理）
-    
+
     Returns:
         JWT refresh token字符串
     """
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
-    
+
     if expires_delta:
         expire = now + expires_delta
     else:
         # 默认7天有效期
         expire = now + timedelta(days=7)
-    
+
     if not jti:
         jti = secrets.token_hex(16)
-    
+
     to_encode.update(
         {
             "exp": expire,
@@ -210,10 +210,8 @@ def create_refresh_token(
             "token_type": "refresh",
         }
     )
-    
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
+
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
@@ -224,42 +222,42 @@ def create_token_pair(
 ) -> tuple[str, str, str, str]:
     """
     创建Access Token和Refresh Token对
-    
+
     Args:
         data: 要编码的数据（通常包含用户ID）
         access_expires: Access Token过期时间
         refresh_expires: Refresh Token过期时间
-    
+
     Returns:
         (access_token, refresh_token, access_jti, refresh_jti)
     """
     # 生成唯一的JTI
     access_jti = secrets.token_hex(16)
     refresh_jti = secrets.token_hex(16)
-    
+
     # 创建tokens
     access_token = create_access_token(
         data=data,
         expires_delta=access_expires,
         jti=access_jti,
     )
-    
+
     refresh_token = create_refresh_token(
         data=data,
         expires_delta=refresh_expires,
         jti=refresh_jti,
     )
-    
+
     return access_token, refresh_token, access_jti, refresh_jti
 
 
 def verify_refresh_token(refresh_token: str) -> Optional[dict]:
     """
     验证Refresh Token
-    
+
     Args:
         refresh_token: 要验证的refresh token
-    
+
     Returns:
         解码后的payload，验证失败返回None
     """
@@ -268,21 +266,17 @@ def verify_refresh_token(refresh_token: str) -> Optional[dict]:
         if is_token_revoked(refresh_token):
             logger.warning("Refresh token已被撤销")
             return None
-        
+
         # 解码token
-        payload = jwt.decode(
-            refresh_token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-        
+        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
         # 验证token类型
         if payload.get("token_type") != "refresh":
             logger.warning("Token类型错误，期望refresh token")
             return None
-        
+
         return payload
-    
+
     except JWTError as e:
         logger.warning(f"Refresh token验证失败: {e}")
         return None
@@ -291,10 +285,10 @@ def verify_refresh_token(refresh_token: str) -> Optional[dict]:
 def extract_jti_from_token(token: str) -> Optional[str]:
     """
     从token中提取JTI（不验证token有效性）
-    
+
     Args:
         token: JWT token字符串
-    
+
     Returns:
         JTI字符串或None
     """
@@ -303,7 +297,7 @@ def extract_jti_from_token(token: str) -> Optional[str]:
             token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],
-            options={"verify_exp": False}
+            options={"verify_exp": False},
         )
         return payload.get("jti")
     except JWTError:
@@ -415,14 +409,14 @@ def is_token_revoked(token: Optional[str]) -> bool:
 async def verify_token_and_get_user(token: str, db: Session) -> User:
     """
     验证Token并获取用户（供中间件使用，不使用Depends）
-    
+
     Args:
         token: JWT token字符串
         db: 数据库会话
-    
+
     Returns:
         User对象
-    
+
     Raises:
         HTTPException: 认证失败时抛出
     """
@@ -433,22 +427,20 @@ async def verify_token_and_get_user(token: str, db: Session) -> User:
     )
 
     logger.debug(f"中间件验证token，长度: {len(token) if token else 0}")
-    
+
     if is_token_revoked(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token已失效，请重新登录",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id_str = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
-        
+
         try:
             user_id = int(user_id_str)
         except (ValueError, TypeError):
@@ -465,10 +457,10 @@ async def verify_token_and_get_user(token: str, db: Session) -> User:
 
         # 设置审计上下文
         set_audit_context(operator_id=user.id, tenant_id=user.tenant_id)
-        
+
         logger.debug(f"中间件认证成功: user_id={user.id}, username={user.username}")
         return user
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -495,9 +487,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id_str = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
@@ -526,9 +516,7 @@ async def get_current_user(
             from sqlalchemy import text
 
             result = db.execute(
-                text(
-                    "SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"
-                ),
+                text("SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"),
                 {"user_id": user_id},
             )
             user_row = result.fetchone()
@@ -639,7 +627,7 @@ def is_system_admin(user: User) -> bool:
     # 优先检查超级管理员标志位（使用统一判断函数）
     if is_superuser(user):
         return True
-    
+
     # 检查租户管理员
     if getattr(user, "is_tenant_admin", False):
         return True
@@ -716,10 +704,7 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
                 role = user_role.role
                 if hasattr(role, "api_permissions"):
                     for rap in role.api_permissions:
-                        if (
-                            rap.permission
-                            and rap.permission.perm_code == permission_code
-                        ):
+                        if rap.permission and rap.permission.perm_code == permission_code:
                             return True
             return False
         else:
@@ -745,10 +730,7 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
                 role = user_role.role
                 if hasattr(role, "api_permissions"):
                     for rap in role.api_permissions:
-                        if (
-                            rap.permission
-                            and rap.permission.perm_code == permission_code
-                        ):
+                        if rap.permission and rap.permission.perm_code == permission_code:
                             return True
         except Exception:
             logger.debug("权限检查 ORM 降级查询失败", exc_info=True)
@@ -765,6 +747,7 @@ def require_permission(permission_code: str):
     TODO: 实现真正的权限检查逻辑
     """
     import functools
+
     from fastapi import Depends as _Depends
 
     # When called as Depends(), FastAPI will introspect this function's signature.
@@ -780,6 +763,7 @@ def require_permission(permission_code: str):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
+
         return wrapper
 
     # Make the returned object work as both a Depends-callable AND a decorator.
@@ -802,5 +786,6 @@ def require_permission(permission_code: str):
     guard = _PermissionGuard()
     # Copy the signature so FastAPI can resolve the dependency correctly
     import inspect
+
     guard.__signature__ = inspect.signature(permission_dependency)
     return guard

@@ -1,20 +1,23 @@
 """
 AI情绪分析相关Schema
 """
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 情绪分析相关 ====================
 
+
 class EmotionAnalysisRequest(BaseModel):
     """情绪分析请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     customer_id: int = Field(..., description="客户ID")
     communication_content: str = Field(..., min_length=1, description="沟通内容")
-    
-    @field_validator('communication_content')
+
+    @field_validator("communication_content")
     @classmethod
     def validate_content(cls, v):
         if not v or not v.strip():
@@ -24,6 +27,7 @@ class EmotionAnalysisRequest(BaseModel):
 
 class EmotionAnalysisResponse(BaseModel):
     """情绪分析响应"""
+
     id: int
     presale_ticket_id: int
     customer_id: int
@@ -40,8 +44,10 @@ class EmotionAnalysisResponse(BaseModel):
 
 # ==================== 流失预警相关 ====================
 
+
 class ChurnRiskPredictionRequest(BaseModel):
     """流失风险预测请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     customer_id: int = Field(..., description="客户ID")
     recent_communications: List[str] = Field(..., min_length=1, description="最近的沟通记录")
@@ -51,6 +57,7 @@ class ChurnRiskPredictionRequest(BaseModel):
 
 class ChurnRiskPredictionResponse(BaseModel):
     """流失风险预测响应"""
+
     presale_ticket_id: int
     customer_id: int
     churn_risk: str  # high/medium/low
@@ -62,8 +69,10 @@ class ChurnRiskPredictionResponse(BaseModel):
 
 # ==================== 跟进提醒相关 ====================
 
+
 class FollowUpRecommendationRequest(BaseModel):
     """跟进时机推荐请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     customer_id: int = Field(..., description="客户ID")
     latest_emotion_analysis_id: Optional[int] = Field(None, description="最新情绪分析ID")
@@ -71,6 +80,7 @@ class FollowUpRecommendationRequest(BaseModel):
 
 class FollowUpRecommendationResponse(BaseModel):
     """跟进时机推荐响应"""
+
     id: int
     presale_ticket_id: int
     recommended_time: datetime
@@ -86,19 +96,23 @@ class FollowUpRecommendationResponse(BaseModel):
 
 class FollowUpReminderListResponse(BaseModel):
     """跟进提醒列表响应"""
+
     total: int
     reminders: List[FollowUpRecommendationResponse]
 
 
 class DismissReminderRequest(BaseModel):
     """忽略提醒请求"""
+
     reminder_id: int = Field(..., description="提醒ID")
 
 
 # ==================== 情绪趋势相关 ====================
 
+
 class EmotionTrendResponse(BaseModel):
     """情绪趋势响应"""
+
     id: int
     presale_ticket_id: int
     customer_id: int
@@ -113,15 +127,17 @@ class EmotionTrendResponse(BaseModel):
 
 # ==================== 批量分析相关 ====================
 
+
 class BatchAnalysisRequest(BaseModel):
     """批量分析请求"""
+
     customer_ids: List[int] = Field(..., min_length=1, max_length=100, description="客户ID列表")
     analysis_type: str = Field(default="full", description="分析类型: full/emotion/churn")
-    
-    @field_validator('analysis_type')
+
+    @field_validator("analysis_type")
     @classmethod
     def validate_analysis_type(cls, v):
-        allowed_types = ['full', 'emotion', 'churn']
+        allowed_types = ["full", "emotion", "churn"]
         if v not in allowed_types:
             raise ValueError(f"分析类型必须是: {', '.join(allowed_types)}")
         return v
@@ -129,6 +145,7 @@ class BatchAnalysisRequest(BaseModel):
 
 class CustomerAnalysisSummary(BaseModel):
     """客户分析摘要"""
+
     customer_id: int
     latest_sentiment: Optional[str] = None
     purchase_intent_score: Optional[float] = None
@@ -139,6 +156,7 @@ class CustomerAnalysisSummary(BaseModel):
 
 class BatchAnalysisResponse(BaseModel):
     """批量分析响应"""
+
     total_analyzed: int
     success_count: int
     failed_count: int
@@ -148,7 +166,9 @@ class BatchAnalysisResponse(BaseModel):
 
 # ==================== 通用响应 ====================
 
+
 class MessageResponse(BaseModel):
     """通用消息响应"""
+
     message: str
     success: bool = True

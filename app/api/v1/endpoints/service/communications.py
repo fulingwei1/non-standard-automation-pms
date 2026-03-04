@@ -42,22 +42,39 @@ def get_customer_communication_statistics(
     # 本周沟通数
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
-    this_week = db.query(CustomerCommunication).filter(CustomerCommunication.communication_date >= week_start).count()
+    this_week = (
+        db.query(CustomerCommunication)
+        .filter(CustomerCommunication.communication_date >= week_start)
+        .count()
+    )
 
     # 本月沟通数
     this_month_start = date(today.year, today.month, 1)
-    this_month = db.query(CustomerCommunication).filter(CustomerCommunication.communication_date >= this_month_start).count()
+    this_month = (
+        db.query(CustomerCommunication)
+        .filter(CustomerCommunication.communication_date >= this_month_start)
+        .count()
+    )
 
     # 待跟进数
-    pending_follow_up = db.query(CustomerCommunication).filter(
-        CustomerCommunication.follow_up_required,
-        CustomerCommunication.follow_up_status == "待处理"
-    ).count()
+    pending_follow_up = (
+        db.query(CustomerCommunication)
+        .filter(
+            CustomerCommunication.follow_up_required,
+            CustomerCommunication.follow_up_status == "待处理",
+        )
+        .count()
+    )
 
     # 按类型统计
     by_type = {}
     from sqlalchemy import func
-    types = db.query(CustomerCommunication.communication_type, func.count(CustomerCommunication.id)).group_by(CustomerCommunication.communication_type).all()
+
+    types = (
+        db.query(CustomerCommunication.communication_type, func.count(CustomerCommunication.id))
+        .group_by(CustomerCommunication.communication_type)
+        .all()
+    )
     for comm_type, count in types:
         by_type[comm_type] = count
 
@@ -70,7 +87,11 @@ def get_customer_communication_statistics(
     }
 
 
-@router.get("", response_model=PaginatedResponse[CustomerCommunicationResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "",
+    response_model=PaginatedResponse[CustomerCommunicationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_customer_communications(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -102,10 +123,19 @@ def read_customer_communications(
         query = query.filter(CustomerCommunication.communication_date <= date_to)
 
     # 应用关键词过滤（沟通编号/客户名称/主题/内容）
-    query = apply_keyword_filter(query, CustomerCommunication, keyword, ["communication_no", "customer_name", "subject", "content"])
+    query = apply_keyword_filter(
+        query,
+        CustomerCommunication,
+        keyword,
+        ["communication_no", "customer_name", "subject", "content"],
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(CustomerCommunication.communication_date)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(CustomerCommunication.communication_date)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 获取创建人姓名
     for item in items:
@@ -160,7 +190,9 @@ def create_customer_communication(
     return save_obj(db, comm)
 
 
-@router.get("/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK
+)
 def read_customer_communication(
     *,
     db: Session = Depends(deps.get_db),
@@ -175,7 +207,9 @@ def read_customer_communication(
     return comm
 
 
-@router.put("/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK
+)
 def update_customer_communication(
     *,
     db: Session = Depends(deps.get_db),

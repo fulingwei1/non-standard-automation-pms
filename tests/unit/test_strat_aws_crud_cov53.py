@@ -2,16 +2,17 @@
 """
 Unit tests for app/services/strategy/annual_work_service/crud.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.strategy.annual_work_service.crud import (
         create_annual_work,
+        delete_annual_work,
         get_annual_work,
         list_annual_works,
         update_annual_work,
-        delete_annual_work,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -39,6 +40,7 @@ def _make_create_data():
 # create_annual_work
 # ---------------------------------------------------------------------------
 
+
 def test_create_annual_work_adds_and_commits():
     db = MagicMock()
     data = _make_create_data()
@@ -51,6 +53,7 @@ def test_create_annual_work_adds_and_commits():
 # ---------------------------------------------------------------------------
 # get_annual_work
 # ---------------------------------------------------------------------------
+
 
 def test_get_annual_work_found():
     db = MagicMock()
@@ -70,6 +73,7 @@ def test_get_annual_work_not_found():
 # ---------------------------------------------------------------------------
 # update_annual_work
 # ---------------------------------------------------------------------------
+
 
 def test_update_annual_work_not_found_returns_none():
     db = MagicMock()
@@ -96,6 +100,7 @@ def test_update_annual_work_applies_fields():
 # delete_annual_work
 # ---------------------------------------------------------------------------
 
+
 def test_delete_annual_work_not_found_returns_false():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -116,6 +121,7 @@ def test_delete_annual_work_soft_deletes():
 # ---------------------------------------------------------------------------
 # list_annual_works
 # ---------------------------------------------------------------------------
+
 
 def test_list_annual_works_returns_items_and_total():
     db = MagicMock()

@@ -10,19 +10,17 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.sla import SLAMonitor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sla import SLAMonitorResponse
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
 
-@router.get(
-    "/monitors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/monitors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def get_sla_monitors(
     *,
     db: Session = Depends(deps.get_db),
@@ -100,9 +98,7 @@ def get_sla_monitor(
     """
     monitor = db.query(SLAMonitor).filter(SLAMonitor.id == monitor_id).first()
     if not monitor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SLA监控记录不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SLA监控记录不存在")
 
     monitor_dict = SLAMonitorResponse.model_validate(monitor).model_dump()
     if monitor.ticket:

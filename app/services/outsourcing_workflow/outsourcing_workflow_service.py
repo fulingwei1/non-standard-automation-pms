@@ -41,15 +41,19 @@ class OutsourcingWorkflowService(BaseApprovalWorkflowService):
             "order_no": entity.order_no if entity else None,
             "order_title": entity.order_title if entity else None,
             "order_type": entity.order_type if entity else None,
-            "amount_with_tax": float(entity.amount_with_tax)
-            if entity and entity.amount_with_tax
-            else 0,
-            "vendor_name": entity.vendor.vendor_name
-            if entity and hasattr(entity, "vendor") and entity.vendor
-            else None,
-            "project_name": entity.project.project_name
-            if entity and hasattr(entity, "project") and entity.project
-            else None,
+            "amount_with_tax": (
+                float(entity.amount_with_tax) if entity and entity.amount_with_tax else 0
+            ),
+            "vendor_name": (
+                entity.vendor.vendor_name
+                if entity and hasattr(entity, "vendor") and entity.vendor
+                else None
+            ),
+            "project_name": (
+                entity.project.project_name
+                if entity and hasattr(entity, "project") and entity.project
+                else None
+            ),
         }
 
     def _build_history_item(self, task: Any, entity: Optional[OutsourcingOrder]) -> Dict[str, Any]:
@@ -57,9 +61,9 @@ class OutsourcingWorkflowService(BaseApprovalWorkflowService):
             "order_no": entity.order_no if entity else None,
             "order_title": entity.order_title if entity else None,
             "order_type": entity.order_type if entity else None,
-            "amount_with_tax": float(entity.amount_with_tax)
-            if entity and entity.amount_with_tax
-            else 0,
+            "amount_with_tax": (
+                float(entity.amount_with_tax) if entity and entity.amount_with_tax else 0
+            ),
         }
 
     def _on_approved(self, entity_id: int, approver_id: int) -> None:
@@ -71,6 +75,4 @@ class OutsourcingWorkflowService(BaseApprovalWorkflowService):
                 self.db, entity_id, created_by=approver_id
             )
         except Exception as e:
-            logger.error(
-                f"Failed to collect cost from outsourcing order {entity_id}: {e}"
-            )
+            logger.error(f"Failed to collect cost from outsourcing order {entity_id}: {e}")

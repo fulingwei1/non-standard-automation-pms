@@ -140,28 +140,26 @@ LEVEL_KEYWORDS = {
 def get_role_by_code(db_session, role_code: str) -> Optional[Role]:
     """根据角色编码获取角色"""
     return (
-        db_session.query(Role)
-        .filter(Role.role_code == role_code, Role.is_active == True)
-        .first()
+        db_session.query(Role).filter(Role.role_code == role_code, Role.is_active == True).first()
     )
 
 
-def get_department_default_roles(
-    db_session, department_id: Optional[int]
-) -> List[Role]:
+def get_department_default_roles(db_session, department_id: Optional[int]) -> List[Role]:
     """获取部门的默认角色"""
     if not department_id:
         return []
 
     result = db_session.execute(
-        text("""
+        text(
+            """
         SELECT r.id, r.role_code, r.role_name
         FROM department_default_roles ddr
         JOIN roles r ON ddr.role_id = r.id
         WHERE ddr.department_id = :dept_id
         AND r.is_active = 1
         ORDER BY ddr.is_primary DESC, ddr.created_at ASC
-    """),
+    """
+        ),
         {"dept_id": department_id},
     )
 
@@ -313,9 +311,7 @@ def is_manager_level(job_level: Optional[str], position: Optional[str]) -> bool:
     return False
 
 
-def get_manager_role(
-    db_session, department_name: Optional[str] = None
-) -> Optional[Role]:
+def get_manager_role(db_session, department_name: Optional[str] = None) -> Optional[Role]:
     """
     获取部门经理角色
 
@@ -406,9 +402,7 @@ def assign_role_to_user(
     return assigned_count > 0
 
 
-def auto_assign_roles(
-    dry_run: bool = True, replace: bool = False, verbose: bool = False
-):
+def auto_assign_roles(dry_run: bool = True, replace: bool = False, verbose: bool = False):
     """
     智能角色分配
 
@@ -421,9 +415,7 @@ def auto_assign_roles(
         print("=" * 80)
         print("智能角色分配工具")
         print("=" * 80)
-        print(
-            f"模式: {'预览模式（不会实际分配）' if dry_run else '执行模式（将分配角色）'}"
-        )
+        print(f"模式: {'预览模式（不会实际分配）' if dry_run else '执行模式（将分配角色）'}")
         print(f"替换现有角色: {'是' if replace else '否（保留现有角色）'}")
         print()
 
@@ -455,9 +447,7 @@ def auto_assign_roles(
                 print(f"  职位: {user.position or '无'}")
 
             # 获取用户当前角色
-            current_roles = (
-                session.query(UserRole).filter(UserRole.user_id == user.id).all()
-            )
+            current_roles = session.query(UserRole).filter(UserRole.user_id == user.id).all()
             current_role_ids = [ur.role_id for ur in current_roles]
 
             if current_roles and not replace:
@@ -502,9 +492,7 @@ def auto_assign_roles(
                 hr_position = None
                 try:
                     employee = (
-                        session.query(Employee)
-                        .filter(Employee.id == user.employee_id)
-                        .first()
+                        session.query(Employee).filter(Employee.id == user.employee_id).first()
                     )
                     if employee:
                         hr_profile = (
@@ -525,11 +513,7 @@ def auto_assign_roles(
                 base_role = get_role_by_position_and_level(session, position, job_level)
 
                 # 如果没有基础角色且是工程技术中心，使用默认工程师角色
-                if (
-                    not base_role
-                    and user.department
-                    and "工程技术中心" in user.department
-                ):
+                if not base_role and user.department and "工程技术中心" in user.department:
                     base_role = get_role_by_code(session, "ENGINEER")
 
                 # 检查是否为经理级别
@@ -570,9 +554,7 @@ def auto_assign_roles(
                             if user.department and "工程技术中心" in user.department:
                                 role_to_assign = get_role_by_code(session, "ENGINEER")
                                 if role_to_assign:
-                                    dept_mgr_role = get_role_by_code(
-                                        session, "DEPT_MGR"
-                                    )
+                                    dept_mgr_role = get_role_by_code(session, "DEPT_MGR")
                                     if dept_mgr_role:
                                         additional_roles.append(dept_mgr_role)
                                     assignment_method = f"工程技术中心默认（经理级别）"
@@ -592,9 +574,7 @@ def auto_assign_roles(
 
                 # 如果还没有匹配到角色
                 if not role_to_assign:
-                    role_to_assign = get_role_by_position_and_level(
-                        session, position, job_level
-                    )
+                    role_to_assign = get_role_by_position_and_level(session, position, job_level)
                     if role_to_assign:
                         assignment_method = f"职位+职级匹配"
                         if job_level:
@@ -602,16 +582,10 @@ def auto_assign_roles(
                         stats["by_position"] += 1
 
                 # 方法4: 如果工程技术中心且没有匹配到具体角色，使用默认工程师角色（fallback）
-                if (
-                    not role_to_assign
-                    and user.department
-                    and "工程技术中心" in user.department
-                ):
+                if not role_to_assign and user.department and "工程技术中心" in user.department:
                     role_to_assign = get_role_by_code(session, "ENGINEER")
                     if role_to_assign:
-                        assignment_method = (
-                            f"工程技术中心默认 (部门: {user.department})"
-                        )
+                        assignment_method = f"工程技术中心默认 (部门: {user.department})"
                         stats["by_department_rule"] += 1
 
             # 方法3: 使用默认角色
@@ -682,9 +656,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="智能角色分配工具")
-    parser.add_argument(
-        "--execute", action="store_true", help="实际执行分配（默认是预览模式）"
-    )
+    parser.add_argument("--execute", action="store_true", help="实际执行分配（默认是预览模式）")
     parser.add_argument(
         "--replace", action="store_true", help="替换用户现有角色（默认保留现有角色）"
     )
@@ -692,6 +664,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    auto_assign_roles(
-        dry_run=not args.execute, replace=args.replace, verbose=args.verbose
-    )
+    auto_assign_roles(dry_run=not args.execute, replace=args.replace, verbose=args.verbose)

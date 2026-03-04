@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
 from app.core import security
-from app.models.sales import Quote, QuoteVersion, QuoteItem
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
@@ -38,28 +38,32 @@ def get_quote_versions(
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
-    versions = db.query(QuoteVersion).filter(
-        QuoteVersion.quote_id == quote_id
-    ).order_by(desc(QuoteVersion.created_at)).all()
+    versions = (
+        db.query(QuoteVersion)
+        .filter(QuoteVersion.quote_id == quote_id)
+        .order_by(desc(QuoteVersion.created_at))
+        .all()
+    )
 
-    versions_data = [{
-        "id": v.id,
-        "version_no": v.version_no,
-        "total_price": float(v.total_price) if v.total_price else None,
-        "cost_total": float(v.cost_total) if v.cost_total else None,
-        "gross_margin": float(v.gross_margin) if v.gross_margin else None,
-        "lead_time_days": v.lead_time_days,
-        "delivery_date": v.delivery_date.isoformat() if v.delivery_date else None,
-        "approved_by": v.approved_by,
-        "approved_at": v.approved_at.isoformat() if v.approved_at else None,
-        "is_current": v.id == quote.current_version_id,
-        "created_at": v.created_at.isoformat() if v.created_at else None,
-    } for v in versions]
+    versions_data = [
+        {
+            "id": v.id,
+            "version_no": v.version_no,
+            "total_price": float(v.total_price) if v.total_price else None,
+            "cost_total": float(v.cost_total) if v.cost_total else None,
+            "gross_margin": float(v.gross_margin) if v.gross_margin else None,
+            "lead_time_days": v.lead_time_days,
+            "delivery_date": v.delivery_date.isoformat() if v.delivery_date else None,
+            "approved_by": v.approved_by,
+            "approved_at": v.approved_at.isoformat() if v.approved_at else None,
+            "is_current": v.id == quote.current_version_id,
+            "created_at": v.created_at.isoformat() if v.created_at else None,
+        }
+        for v in versions
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取版本列表成功",
-        data={"quote_id": quote_id, "versions": versions_data}
+        code=200, message="获取版本列表成功", data={"quote_id": quote_id, "versions": versions_data}
     )
 
 
@@ -82,28 +86,33 @@ def get_quote_version_detail(
     Returns:
         ResponseModel: 版本详情
     """
-    version = db.query(QuoteVersion).options(
-        joinedload(QuoteVersion.items),
-        joinedload(QuoteVersion.creator),
-        joinedload(QuoteVersion.approver)
-    ).filter(
-        QuoteVersion.id == version_id,
-        QuoteVersion.quote_id == quote_id
-    ).first()
+    version = (
+        db.query(QuoteVersion)
+        .options(
+            joinedload(QuoteVersion.items),
+            joinedload(QuoteVersion.creator),
+            joinedload(QuoteVersion.approver),
+        )
+        .filter(QuoteVersion.id == version_id, QuoteVersion.quote_id == quote_id)
+        .first()
+    )
 
     if not version:
         raise HTTPException(status_code=404, detail="版本不存在")
 
-    items_data = [{
-        "id": item.id,
-        "item_type": item.item_type,
-        "item_name": item.item_name,
-        "qty": float(item.qty) if item.qty else None,
-        "unit_price": float(item.unit_price) if item.unit_price else None,
-        "cost": float(item.cost) if item.cost else None,
-        "lead_time_days": item.lead_time_days,
-        "remark": item.remark,
-    } for item in (version.items or [])]
+    items_data = [
+        {
+            "id": item.id,
+            "item_type": item.item_type,
+            "item_name": item.item_name,
+            "qty": float(item.qty) if item.qty else None,
+            "unit_price": float(item.unit_price) if item.unit_price else None,
+            "cost": float(item.cost) if item.cost else None,
+            "lead_time_days": item.lead_time_days,
+            "remark": item.remark,
+        }
+        for item in (version.items or [])
+    ]
 
     data = {
         "id": version.id,
@@ -149,9 +158,7 @@ def create_quote_version(
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 生成版本号
-    existing_count = db.query(QuoteVersion).filter(
-        QuoteVersion.quote_id == quote_id
-    ).count()
+    existing_count = db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote_id).count()
     version_no = version_data.get("version_no") or f"V{existing_count + 1}"
 
     # 创建新版本
@@ -169,17 +176,19 @@ def create_quote_version(
     db.flush()
 
     # 创建明细项
-    for item in (version_data.get("items") or []):
-        db.add(QuoteItem(
-            quote_version_id=version.id,
-            item_type=item.get("item_type"),
-            item_name=item.get("item_name"),
-            qty=item.get("qty"),
-            unit_price=item.get("unit_price"),
-            cost=item.get("cost"),
-            lead_time_days=item.get("lead_time_days"),
-            remark=item.get("remark"),
-        ))
+    for item in version_data.get("items") or []:
+        db.add(
+            QuoteItem(
+                quote_version_id=version.id,
+                item_type=item.get("item_type"),
+                item_name=item.get("item_name"),
+                qty=item.get("qty"),
+                unit_price=item.get("unit_price"),
+                cost=item.get("cost"),
+                lead_time_days=item.get("lead_time_days"),
+                remark=item.get("remark"),
+            )
+        )
 
     # 设置为当前版本
     if version_data.get("set_as_current", True):
@@ -189,9 +198,7 @@ def create_quote_version(
     db.refresh(version)
 
     return ResponseModel(
-        code=200,
-        message="版本创建成功",
-        data={"id": version.id, "version_no": version.version_no}
+        code=200, message="版本创建成功", data={"id": version.id, "version_no": version.version_no}
     )
 
 
@@ -216,14 +223,16 @@ def compare_versions(
     Returns:
         ResponseModel: 对比结果
     """
-    v1 = db.query(QuoteVersion).filter(
-        QuoteVersion.id == version_id_1,
-        QuoteVersion.quote_id == quote_id
-    ).first()
-    v2 = db.query(QuoteVersion).filter(
-        QuoteVersion.id == version_id_2,
-        QuoteVersion.quote_id == quote_id
-    ).first()
+    v1 = (
+        db.query(QuoteVersion)
+        .filter(QuoteVersion.id == version_id_1, QuoteVersion.quote_id == quote_id)
+        .first()
+    )
+    v2 = (
+        db.query(QuoteVersion)
+        .filter(QuoteVersion.id == version_id_2, QuoteVersion.quote_id == quote_id)
+        .first()
+    )
 
     if not v1 or not v2:
         raise HTTPException(status_code=404, detail="版本不存在")
@@ -260,7 +269,7 @@ def compare_versions(
             "price_diff": price_diff,
             "cost_diff": cost_diff,
             "margin_diff": margin_diff,
-        }
+        },
     }
 
     return ResponseModel(code=200, message="版本对比成功", data=data)

@@ -51,9 +51,11 @@ class TestGetBudgetExecutionAnalysis:
     def test_no_budget_no_costs(self, mock_db):
         project = _make_project(budget_amount=Decimal("100000"), actual_cost=None)
         mock_db.query.return_value.filter.return_value.first.return_value = project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        
+
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["project_id"] == 1
         assert result["budget_amount"] == 100000.0
@@ -64,7 +66,7 @@ class TestGetBudgetExecutionAnalysis:
         project = _make_project()
         budget = _make_budget(total_amount=Decimal("100000"))
         costs = [_make_cost(amount=Decimal("30000")), _make_cost(amount=Decimal("20000"))]
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -74,7 +76,7 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = costs
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["actual_cost"] == 50000.0
@@ -83,7 +85,7 @@ class TestGetBudgetExecutionAnalysis:
 
     def test_over_budget(self, mock_db):
         project = _make_project(actual_cost=Decimal("110000"))
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -93,7 +95,7 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = []
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["warning_status"] == "超支"
@@ -101,7 +103,7 @@ class TestGetBudgetExecutionAnalysis:
 
     def test_warning_90pct(self, mock_db):
         project = _make_project(actual_cost=Decimal("95000"))
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -111,14 +113,14 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = []
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["warning_status"] == "警告"
 
     def test_notice_80pct(self, mock_db):
         project = _make_project(actual_cost=Decimal("85000"))
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -128,7 +130,7 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = []
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["warning_status"] == "注意"
@@ -140,7 +142,7 @@ class TestGetBudgetExecutionAnalysis:
         budget_item.budget_amount = 50000
         budget = _make_budget(items=[budget_item])
         cost = _make_cost(amount=Decimal("30000"), cost_category="硬件")
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -150,14 +152,14 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = [cost]
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert len(result["category_comparison"]) >= 1
 
     def test_zero_budget(self, mock_db):
         project = _make_project(budget_amount=Decimal("0"), actual_cost=None)
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -167,7 +169,7 @@ class TestGetBudgetExecutionAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.all.return_value = []
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
         assert result["execution_rate"] == 0
@@ -181,7 +183,7 @@ class TestGetBudgetTrendAnalysis:
 
     def test_no_costs(self, mock_db):
         project = _make_project()
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -190,10 +192,14 @@ class TestGetBudgetTrendAnalysis:
                 q.filter.return_value.order_by.return_value.first.return_value = None
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.order_by.return_value.all.return_value = []
-                q.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-                q.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+                q.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                    []
+                )
+                q.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                    []
+                )
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
         assert result["project_id"] == 1
@@ -204,7 +210,7 @@ class TestGetBudgetTrendAnalysis:
         budget = _make_budget()
         cost1 = _make_cost(amount=Decimal("10000"), cost_date=date(2024, 1, 15))
         cost2 = _make_cost(amount=Decimal("20000"), cost_date=date(2024, 2, 15))
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -214,7 +220,7 @@ class TestGetBudgetTrendAnalysis:
             elif model.__name__ == "ProjectCost":
                 q.filter.return_value.order_by.return_value.all.return_value = [cost1, cost2]
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
         assert len(result["monthly_trend"]) == 2
@@ -223,7 +229,7 @@ class TestGetBudgetTrendAnalysis:
 
     def test_with_date_filters(self, mock_db):
         project = _make_project()
-        
+
         def query_side_effect(model):
             q = MagicMock()
             if model.__name__ == "Project":
@@ -236,7 +242,7 @@ class TestGetBudgetTrendAnalysis:
                 inner_q.order_by.return_value.all.return_value = []
                 q.filter.return_value = inner_q
             return q
-        
+
         mock_db.query.side_effect = query_side_effect
         result = BudgetAnalysisService.get_budget_trend_analysis(
             mock_db, 1, start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)

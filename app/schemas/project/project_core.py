@@ -17,7 +17,6 @@ from .milestone import MilestoneResponse
 # Import at runtime - __init__.py ensures project_cost is loaded first
 from .project_cost import ProjectCostSummary
 
-
 ZERO_DECIMAL = Decimal("0")
 HUNDRED_DECIMAL = Decimal("100")
 

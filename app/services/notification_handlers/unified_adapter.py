@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationChannel,
     NotificationPriority,
+    NotificationRequest,
 )
 
 
@@ -42,9 +42,7 @@ def resolve_recipient_id(
         return user.id
     if target_field and target_value:
         try:
-            candidate = (
-                db.query(User).filter(getattr(User, target_field) == target_value).first()
-            )
+            candidate = db.query(User).filter(getattr(User, target_field) == target_value).first()
             if candidate:
                 return candidate.id
         except Exception:
@@ -74,9 +72,7 @@ def send_alert_via_unified(
         or "预警通知"
     )
     content = (
-        getattr(notification, "notify_content", None)
-        or getattr(alert, "alert_content", None)
-        or ""
+        getattr(notification, "notify_content", None) or getattr(alert, "alert_content", None) or ""
     )
     alert_id = getattr(alert, "id", None)
 

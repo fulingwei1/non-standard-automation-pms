@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.data_integrity.check")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.data_integrity.check import DataCheckMixin
 
 
@@ -75,10 +76,13 @@ def setup_db_for_check(db, period, profile, work_logs=5, collab=3, contrib=1):
     review_q = MagicMock()
     review_q.filter.return_value.count.return_value = 1
 
-    from app.models.performance import PerformancePeriod
     from app.models.engineer_performance import (
-        EngineerProfile, CollaborationRating, DesignReview, KnowledgeContribution
+        CollaborationRating,
+        DesignReview,
+        EngineerProfile,
+        KnowledgeContribution,
     )
+    from app.models.performance import PerformancePeriod
     from app.models.project import Project, ProjectMember
     from app.models.project_evaluation import ProjectEvaluation
     from app.models.work_log import WorkLog
@@ -104,6 +108,7 @@ def setup_db_for_check(db, period, profile, work_logs=5, collab=3, contrib=1):
 
 # ------------------------------------------------------------------ tests ---
 
+
 def test_raises_when_period_not_found():
     checker, db = make_checker()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -116,8 +121,8 @@ def test_returns_zero_when_profile_missing():
     period = MagicMock()
     period.start_date = "2024-01-01"
     period.end_date = "2024-12-31"
-    from app.models.performance import PerformancePeriod
     from app.models.engineer_performance import EngineerProfile
+    from app.models.performance import PerformancePeriod
 
     period_q = MagicMock()
     period_q.filter.return_value.first.return_value = period
@@ -198,5 +203,12 @@ def test_result_contains_required_keys():
 
     setup_db_for_check(db, period, profile)
     result = checker.check_data_completeness(1, 1)
-    for key in ("engineer_id", "period_id", "completeness_score", "missing_items", "warnings", "suggestions"):
+    for key in (
+        "engineer_id",
+        "period_id",
+        "completeness_score",
+        "missing_items",
+        "warnings",
+        "suggestions",
+    ):
         assert key in result

@@ -16,9 +16,7 @@ def mock_db():
 
 @pytest.fixture
 def analyzer(mock_db):
-    with patch(
-        "app.services.project_review_ai.comparison_analyzer.AIClientService"
-    ) as MockAI:
+    with patch("app.services.project_review_ai.comparison_analyzer.AIClientService") as MockAI:
         MockAI.return_value = MagicMock()
         svc = ProjectComparisonAnalyzer(db=mock_db)
     return svc
@@ -39,6 +37,7 @@ def _make_review(review_id=1, status="PUBLISHED", budget=500000.0):
 # ---------------------------------------------------------------------------
 # compare_with_history
 # ---------------------------------------------------------------------------
+
 
 class TestCompareWithHistory:
     def test_raises_when_review_not_found(self, analyzer, mock_db):
@@ -67,10 +66,11 @@ class TestCompareWithHistory:
 
         mock_db.query.side_effect = query_side_effect
 
-        with patch.object(
-            analyzer, "_analyze_comparison", return_value={"improvements": [], "benchmarks": {}}
-        ), patch.object(
-            analyzer, "_format_review", return_value={}
+        with (
+            patch.object(
+                analyzer, "_analyze_comparison", return_value={"improvements": [], "benchmarks": {}}
+            ),
+            patch.object(analyzer, "_format_review", return_value={}),
         ):
             result = analyzer.compare_with_history(review_id=1)
 
@@ -95,10 +95,11 @@ class TestCompareWithHistory:
 
         mock_db.query.side_effect = query_side_effect
 
-        with patch.object(
-            analyzer, "_analyze_comparison", return_value={"improvements": [], "benchmarks": {}}
-        ), patch.object(
-            analyzer, "_format_review", return_value={}
+        with (
+            patch.object(
+                analyzer, "_analyze_comparison", return_value={"improvements": [], "benchmarks": {}}
+            ),
+            patch.object(analyzer, "_format_review", return_value={}),
         ):
             result = analyzer.compare_with_history(review_id=1)
 
@@ -108,6 +109,7 @@ class TestCompareWithHistory:
 # ---------------------------------------------------------------------------
 # _find_similar_reviews
 # ---------------------------------------------------------------------------
+
 
 class TestFindSimilarReviews:
     def test_industry_similarity(self, analyzer, mock_db):
@@ -141,6 +143,7 @@ class TestFindSimilarReviews:
 # identify_improvements
 # ---------------------------------------------------------------------------
 
+
 class TestIdentifyImprovements:
     def test_returns_empty_list_when_no_improvements(self, analyzer):
         with patch.object(
@@ -156,16 +159,17 @@ class TestIdentifyImprovements:
             {"title": "低优先级", "priority": "LOW", "estimated_impact": 10},
             {"title": "高优先级", "priority": "HIGH", "estimated_impact": 80},
         ]
-        with patch.object(
-            analyzer,
-            "compare_with_history",
-            return_value={"analysis": {"improvements": improvements, "benchmarks": {}}},
-        ), patch.object(
-            analyzer, "_calculate_priority", side_effect=lambda x: x["priority"]
-        ), patch.object(
-            analyzer, "_assess_feasibility", return_value="HIGH"
-        ), patch.object(
-            analyzer, "_estimate_impact", side_effect=lambda x: x.get("estimated_impact", 0)
+        with (
+            patch.object(
+                analyzer,
+                "compare_with_history",
+                return_value={"analysis": {"improvements": improvements, "benchmarks": {}}},
+            ),
+            patch.object(analyzer, "_calculate_priority", side_effect=lambda x: x["priority"]),
+            patch.object(analyzer, "_assess_feasibility", return_value="HIGH"),
+            patch.object(
+                analyzer, "_estimate_impact", side_effect=lambda x: x.get("estimated_impact", 0)
+            ),
         ):
             result = analyzer.identify_improvements(review_id=1)
 

@@ -16,6 +16,7 @@ class TestGetPdfStyles:
         """返回字典类型"""
         try:
             from app.services.pdf_styles import get_pdf_styles
+
             result = get_pdf_styles()
             assert isinstance(result, dict)
         except ImportError:
@@ -39,7 +40,7 @@ class TestGetPdfStyles:
     def test_has_title_style_when_available(self):
         """reportlab 可用时包含 title 样式键"""
         try:
-            from app.services.pdf_styles import get_pdf_styles, REPORTLAB_AVAILABLE
+            from app.services.pdf_styles import REPORTLAB_AVAILABLE, get_pdf_styles
         except ImportError:
             pytest.skip("pdf_styles 不可用")
 
@@ -52,7 +53,7 @@ class TestGetPdfStyles:
     def test_has_heading_style_when_available(self):
         """reportlab 可用时包含 heading 样式键"""
         try:
-            from app.services.pdf_styles import get_pdf_styles, REPORTLAB_AVAILABLE
+            from app.services.pdf_styles import REPORTLAB_AVAILABLE, get_pdf_styles
         except ImportError:
             pytest.skip("pdf_styles 不可用")
 
@@ -65,7 +66,7 @@ class TestGetPdfStyles:
     def test_has_normal_style_when_available(self):
         """reportlab 可用时包含 normal 样式键"""
         try:
-            from app.services.pdf_styles import get_pdf_styles, REPORTLAB_AVAILABLE
+            from app.services.pdf_styles import REPORTLAB_AVAILABLE, get_pdf_styles
         except ImportError:
             pytest.skip("pdf_styles 不可用")
 
@@ -78,7 +79,7 @@ class TestGetPdfStyles:
     def test_has_footer_style_when_available(self):
         """reportlab 可用时包含 footer 样式键"""
         try:
-            from app.services.pdf_styles import get_pdf_styles, REPORTLAB_AVAILABLE
+            from app.services.pdf_styles import REPORTLAB_AVAILABLE, get_pdf_styles
         except ImportError:
             pytest.skip("pdf_styles 不可用")
 
@@ -100,8 +101,10 @@ class TestGetPdfStyles:
         mock_style = MagicMock()
         mock_styles_sheet = {"Heading1": mock_style, "Heading2": mock_style, "Normal": mock_style}
 
-        with patch("app.services.pdf_styles.getSampleStyleSheet", return_value=mock_styles_sheet), \
-             patch("app.services.pdf_styles.ParagraphStyle", return_value=mock_style):
+        with (
+            patch("app.services.pdf_styles.getSampleStyleSheet", return_value=mock_styles_sheet),
+            patch("app.services.pdf_styles.ParagraphStyle", return_value=mock_style),
+        ):
             try:
                 result = ps.get_pdf_styles()
                 assert isinstance(result, dict)

@@ -3,12 +3,13 @@
 项目健康度计算器单元测试
 覆盖 H1/H2/H3/H4 全路径及各风险检测子方法
 """
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.health_calculator import HealthCalculator
+import pytest
+
 from app.models.enums import ProjectHealthEnum
+from app.services.health_calculator import HealthCalculator
 
 
 @pytest.fixture
@@ -83,7 +84,9 @@ class TestHasRisks:
         # _is_deadline_approaching checks without db queries
         # Mock all db sub-checks to return 0
         calculator.db.query.return_value.filter.return_value.count.return_value = 0
-        calculator.db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+        calculator.db.query.return_value.join.return_value.filter.return_value.count.return_value = (
+            0
+        )
         result = calculator._is_deadline_approaching(p, days=7)
         assert result is True
 

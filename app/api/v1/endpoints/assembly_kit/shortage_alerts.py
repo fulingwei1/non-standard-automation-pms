@@ -40,17 +40,14 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/assembly-kit/shortage-alerts",
-    tags=["shortage_alerts"]
-)
+router = APIRouter(prefix="/assembly-kit/shortage-alerts", tags=["shortage_alerts"])
 
 # 共 1 个路由
 
 # ==================== 缺料预警 ====================
+
 
 @router.get("/shortage-alerts", response_model=ResponseModel)
 async def get_shortage_alerts(
@@ -58,7 +55,7 @@ async def get_shortage_alerts(
     alert_level: Optional[str] = Query(None, description="预警级别(L1/L2/L3/L4)"),
     is_blocking: Optional[bool] = Query(None, description="是否阻塞性物料"),
     project_id: Optional[int] = Query(None, description="项目ID"),
-    pagination: PaginationParams = Depends(get_pagination_query)
+    pagination: PaginationParams = Depends(get_pagination_query),
 ):
     """获取缺料预警列表"""
     query = db.query(ShortageDetail).filter(ShortageDetail.shortage_qty > 0)
@@ -69,9 +66,11 @@ async def get_shortage_alerts(
         query = query.filter(ShortageDetail.is_blocking == is_blocking)
     if project_id:
         # 通过readiness关联项目
-        readiness_ids = db.query(MaterialReadiness.id).filter(
-            MaterialReadiness.project_id == project_id
-        ).subquery()
+        readiness_ids = (
+            db.query(MaterialReadiness.id)
+            .filter(MaterialReadiness.project_id == project_id)
+            .subquery()
+        )
         query = query.filter(ShortageDetail.readiness_id.in_(readiness_ids))
 
     total = query.count()
@@ -82,49 +81,65 @@ async def get_shortage_alerts(
     l3_count = query.filter(ShortageDetail.alert_level == "L3").count()
     l4_count = query.filter(ShortageDetail.alert_level == "L4").count()
 
-    shortages = apply_pagination(query.order_by(
-        ShortageDetail.alert_level,
-        ShortageDetail.is_blocking.desc(),
-        ShortageDetail.shortage_qty.desc()
-    ), pagination.offset, pagination.limit).all()
+    shortages = apply_pagination(
+        query.order_by(
+            ShortageDetail.alert_level,
+            ShortageDetail.is_blocking.desc(),
+            ShortageDetail.shortage_qty.desc(),
+        ),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 构建预警项
     alert_items = []
     stages = {s.stage_code: s for s in db.query(AssemblyStage).all()}
 
     for s in shortages:
-        readiness = db.query(MaterialReadiness).filter(MaterialReadiness.id == s.readiness_id).first()
+        readiness = (
+            db.query(MaterialReadiness).filter(MaterialReadiness.id == s.readiness_id).first()
+        )
         if not readiness:
             continue
 
         project = db.query(Project).filter(Project.id == readiness.project_id).first()
-        machine = db.query(Machine).filter(Machine.id == readiness.machine_id).first() if readiness.machine_id else None
+        machine = (
+            db.query(Machine).filter(Machine.id == readiness.machine_id).first()
+            if readiness.machine_id
+            else None
+        )
         stage = stages.get(s.assembly_stage)
 
         # 获取响应时限
-        rule = db.query(ShortageAlertRule).filter(ShortageAlertRule.alert_level == s.alert_level).first()
+        rule = (
+            db.query(ShortageAlertRule)
+            .filter(ShortageAlertRule.alert_level == s.alert_level)
+            .first()
+        )
         response_hours = rule.response_deadline_hours if rule else 24
 
-        alert_items.append(ShortageAlertItem(
-            shortage_id=s.id,
-            readiness_id=s.readiness_id,
-            project_id=readiness.project_id,
-            project_no=project.project_no if project else "",
-            project_name=project.name if project else "",
-            machine_id=readiness.machine_id,
-            machine_no=machine.machine_no if machine else None,
-            material_code=s.material_code,
-            material_name=s.material_name,
-            assembly_stage=s.assembly_stage,
-            stage_name=stage.stage_name if stage else s.assembly_stage,
-            is_blocking=s.is_blocking,
-            required_qty=s.required_qty,
-            shortage_qty=s.shortage_qty,
-            alert_level=s.alert_level,
-            expected_arrival_date=s.expected_arrival_date,
-            days_to_required=7,  # 简化处理
-            response_deadline=datetime.now() + timedelta(hours=response_hours)
-        ))
+        alert_items.append(
+            ShortageAlertItem(
+                shortage_id=s.id,
+                readiness_id=s.readiness_id,
+                project_id=readiness.project_id,
+                project_no=project.project_no if project else "",
+                project_name=project.name if project else "",
+                machine_id=readiness.machine_id,
+                machine_no=machine.machine_no if machine else None,
+                material_code=s.material_code,
+                material_name=s.material_name,
+                assembly_stage=s.assembly_stage,
+                stage_name=stage.stage_name if stage else s.assembly_stage,
+                is_blocking=s.is_blocking,
+                required_qty=s.required_qty,
+                shortage_qty=s.shortage_qty,
+                alert_level=s.alert_level,
+                expected_arrival_date=s.expected_arrival_date,
+                days_to_required=7,  # 简化处理
+                response_deadline=datetime.now() + timedelta(hours=response_hours),
+            )
+        )
 
     return ResponseModel(
         code=200,
@@ -135,9 +150,6 @@ async def get_shortage_alerts(
             l2_count=l2_count,
             l3_count=l3_count,
             l4_count=l4_count,
-            items=alert_items
-        )
+            items=alert_items,
+        ),
     )
-
-
-

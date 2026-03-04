@@ -9,9 +9,9 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
 
 from app.services.project_performance.service import ProjectPerformanceService
 
@@ -99,13 +99,13 @@ class TestProjectPerformanceService(unittest.TestCase):
 
         # Mock数据库查询
         mock_query = MagicMock()
-        
+
         # 第一次查询：返回目标用户
         mock_query.filter.return_value.first.return_value = target_user
-        
+
         # 第二次查询：返回当前用户管理的项目（空列表）
         mock_query.filter.return_value.all.return_value = []
-        
+
         self.db.query.return_value = mock_query
 
         result = self.service.check_performance_view_permission(current_user, 2)
@@ -139,12 +139,14 @@ class TestProjectPerformanceService(unittest.TestCase):
         task.owner_id = 2
 
         # 设置复杂的mock链
-        query_results = iter([
-            target_user,  # 第一次filter().first() - 获取目标用户
-            [project],    # 第一次filter().all() - 获取当前用户管理的项目
-            [project],    # 第二次filter().all() - 获取项目列表
-            task,         # 第二次filter().first() - 检查成员任务
-        ])
+        query_results = iter(
+            [
+                target_user,  # 第一次filter().first() - 获取目标用户
+                [project],  # 第一次filter().all() - 获取当前用户管理的项目
+                [project],  # 第二次filter().all() - 获取项目列表
+                task,  # 第二次filter().first() - 检查成员任务
+            ]
+        )
 
         def mock_filter(*args, **kwargs):
             mock_result = MagicMock()

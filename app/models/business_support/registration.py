@@ -21,7 +21,9 @@ class CustomerSupplierRegistration(Base, TimestampMixin):
     platform_name = Column(String(100), nullable=False, comment="平台名称")
     platform_url = Column(String(500), comment="平台链接")
 
-    registration_status = Column(String(20), default="PENDING", comment="状态：PENDING/SUBMITTED/APPROVED/REJECTED/ACTIVE")
+    registration_status = Column(
+        String(20), default="PENDING", comment="状态：PENDING/SUBMITTED/APPROVED/REJECTED/ACTIVE"
+    )
     application_date = Column(Date, comment="申请日期")
     approved_date = Column(Date, comment="批准日期")
     expire_date = Column(Date, comment="有效期")

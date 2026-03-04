@@ -3,14 +3,17 @@
 
 测试项目从启动、计划、执行、监控到交付验收的完整流程
 """
-import pytest
+
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 try:
-    from app.models.project import Project, Customer, ProjectMember, Machine
-    from app.models.project.core import Milestone
     from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
+    from app.models.project import Customer, Machine, Project, ProjectMember
+    from app.models.project.core import Milestone
     from app.models.task_center import TaskUnified
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
@@ -104,9 +107,9 @@ class TestProjectFullLifecycle:
         db_session.commit()
 
         # 验证团队配置
-        members = db_session.query(ProjectMember).filter(
-            ProjectMember.project_id == project.id
-        ).all()
+        members = (
+            db_session.query(ProjectMember).filter(ProjectMember.project_id == project.id).all()
+        )
         assert len(members) == 3
         assert sum(1 for m in members if m.is_lead) == 1
 
@@ -165,13 +168,11 @@ class TestProjectFullLifecycle:
                 created_by=1,
             )
             db_session.add(milestone)
-        
+
         db_session.commit()
 
         # 验证里程碑
-        ms_list = db_session.query(Milestone).filter(
-            Milestone.project_id == project.id
-        ).all()
+        ms_list = db_session.query(Milestone).filter(Milestone.project_id == project.id).all()
         assert len(ms_list) == 5
         assert sum(ms.weight for ms in ms_list) == 100
 
@@ -198,7 +199,9 @@ class TestProjectFullLifecycle:
         assert project.stage == "S3"
         assert project.actual_start_date is not None
 
-    def test_05_create_and_assign_project_tasks(self, db_session: Session, project_customer: Customer):
+    def test_05_create_and_assign_project_tasks(
+        self, db_session: Session, project_customer: Customer
+    ):
         """测试5：创建并分配项目任务"""
         project = Project(
             project_code="PJ-2026-005",
@@ -236,15 +239,13 @@ class TestProjectFullLifecycle:
                 created_by=1,
             ),
         ]
-        
+
         for task in tasks:
             db_session.add(task)
         db_session.commit()
 
         # 验证任务
-        task_list = db_session.query(TaskUnified).filter(
-            TaskUnified.project_id == project.id
-        ).all()
+        task_list = db_session.query(TaskUnified).filter(TaskUnified.project_id == project.id).all()
         assert len(task_list) == 2
 
     def test_06_update_project_progress(self, db_session: Session, project_customer: Customer):
@@ -338,15 +339,13 @@ class TestProjectFullLifecycle:
                 status="DESIGN",
             ),
         ]
-        
+
         for machine in machines:
             db_session.add(machine)
         db_session.commit()
 
         # 验证设备
-        machine_list = db_session.query(Machine).filter(
-            Machine.project_id == project.id
-        ).all()
+        machine_list = db_session.query(Machine).filter(Machine.project_id == project.id).all()
         assert len(machine_list) == 2
 
     def test_09_conduct_factory_acceptance(self, db_session: Session, project_customer: Customer):
@@ -374,9 +373,11 @@ class TestProjectFullLifecycle:
         db_session.commit()
 
         # 获取验收模板
-        template = db_session.query(AcceptanceTemplate).filter(
-            AcceptanceTemplate.acceptance_type == "FAT"
-        ).first()
+        template = (
+            db_session.query(AcceptanceTemplate)
+            .filter(AcceptanceTemplate.acceptance_type == "FAT")
+            .first()
+        )
 
         if template:
             # 创建验收单
@@ -430,9 +431,11 @@ class TestProjectFullLifecycle:
         db_session.add(machine)
         db_session.commit()
 
-        template = db_session.query(AcceptanceTemplate).filter(
-            AcceptanceTemplate.acceptance_type == "FAT"
-        ).first()
+        template = (
+            db_session.query(AcceptanceTemplate)
+            .filter(AcceptanceTemplate.acceptance_type == "FAT")
+            .first()
+        )
 
         if template:
             acceptance = AcceptanceOrder(

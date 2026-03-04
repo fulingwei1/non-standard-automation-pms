@@ -38,7 +38,7 @@ class TestCheckBudgetExecution:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch('app.services.cost_alert_service.get_project_budget') as mock_get_budget:
+        with patch("app.services.cost_alert_service.get_project_budget") as mock_get_budget:
             mock_get_budget.return_value = 0
 
             result = CostAlertService.check_budget_execution(mock_db, 1)
@@ -57,10 +57,12 @@ class TestCheckBudgetExecution:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch('app.services.cost_alert_service.get_project_budget') as mock_get_budget, \
-             patch('app.services.cost_alert_service.get_actual_cost') as mock_get_cost, \
-             patch('app.services.cost_alert_service.get_or_create_alert_rule') as mock_get_rule, \
-             patch('app.services.cost_alert_service.determine_alert_level') as mock_determine:
+        with (
+            patch("app.services.cost_alert_service.get_project_budget") as mock_get_budget,
+            patch("app.services.cost_alert_service.get_actual_cost") as mock_get_cost,
+            patch("app.services.cost_alert_service.get_or_create_alert_rule") as mock_get_rule,
+            patch("app.services.cost_alert_service.determine_alert_level") as mock_determine,
+        ):
 
             mock_get_budget.return_value = 100000
             mock_get_cost.return_value = 50000  # 50% 执行率，不需要预警
@@ -86,12 +88,14 @@ class TestCheckBudgetExecution:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch('app.services.cost_alert_service.get_project_budget') as mock_get_budget, \
-             patch('app.services.cost_alert_service.get_actual_cost') as mock_get_cost, \
-             patch('app.services.cost_alert_service.get_or_create_alert_rule') as mock_get_rule, \
-             patch('app.services.cost_alert_service.determine_alert_level') as mock_determine, \
-             patch('app.services.cost_alert_service.find_existing_alert') as mock_find_existing, \
-             patch('app.services.cost_alert_service.create_alert_record') as mock_create:
+        with (
+            patch("app.services.cost_alert_service.get_project_budget") as mock_get_budget,
+            patch("app.services.cost_alert_service.get_actual_cost") as mock_get_cost,
+            patch("app.services.cost_alert_service.get_or_create_alert_rule") as mock_get_rule,
+            patch("app.services.cost_alert_service.determine_alert_level") as mock_determine,
+            patch("app.services.cost_alert_service.find_existing_alert") as mock_find_existing,
+            patch("app.services.cost_alert_service.create_alert_record") as mock_create,
+        ):
 
             mock_get_budget.return_value = 100000
             mock_get_cost.return_value = 120000  # 超支
@@ -121,11 +125,13 @@ class TestCheckBudgetExecution:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch('app.services.cost_alert_service.get_project_budget') as mock_get_budget, \
-             patch('app.services.cost_alert_service.get_actual_cost') as mock_get_cost, \
-             patch('app.services.cost_alert_service.get_or_create_alert_rule') as mock_get_rule, \
-             patch('app.services.cost_alert_service.determine_alert_level') as mock_determine, \
-             patch('app.services.cost_alert_service.find_existing_alert') as mock_find_existing:
+        with (
+            patch("app.services.cost_alert_service.get_project_budget") as mock_get_budget,
+            patch("app.services.cost_alert_service.get_actual_cost") as mock_get_cost,
+            patch("app.services.cost_alert_service.get_or_create_alert_rule") as mock_get_rule,
+            patch("app.services.cost_alert_service.determine_alert_level") as mock_determine,
+            patch("app.services.cost_alert_service.find_existing_alert") as mock_find_existing,
+        ):
 
             mock_get_budget.return_value = 100000
             mock_get_cost.return_value = 120000
@@ -151,12 +157,14 @@ class TestCheckBudgetExecution:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch('app.services.cost_alert_service.get_project_budget') as mock_get_budget, \
-             patch('app.services.cost_alert_service.get_actual_cost') as mock_get_cost, \
-             patch('app.services.cost_alert_service.get_or_create_alert_rule') as mock_get_rule, \
-             patch('app.services.cost_alert_service.determine_alert_level') as mock_determine, \
-             patch('app.services.cost_alert_service.find_existing_alert') as mock_find_existing, \
-             patch('app.services.cost_alert_service.create_alert_record') as mock_create:
+        with (
+            patch("app.services.cost_alert_service.get_project_budget") as mock_get_budget,
+            patch("app.services.cost_alert_service.get_actual_cost") as mock_get_cost,
+            patch("app.services.cost_alert_service.get_or_create_alert_rule") as mock_get_rule,
+            patch("app.services.cost_alert_service.determine_alert_level") as mock_determine,
+            patch("app.services.cost_alert_service.find_existing_alert") as mock_find_existing,
+            patch("app.services.cost_alert_service.create_alert_record") as mock_create,
+        ):
 
             mock_get_budget.return_value = 100000
             mock_get_cost.return_value = 120000
@@ -192,14 +200,17 @@ class TestCheckAllProjectsBudget:
         mock_project2.id = 2
         mock_project2.project_code = "PJ002"
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_project1,
+            mock_project2,
+        ]
 
-        with patch.object(CostAlertService, 'check_budget_execution') as mock_check:
+        with patch.object(CostAlertService, "check_budget_execution") as mock_check:
             mock_check.return_value = None
 
             result = CostAlertService.check_all_projects_budget(mock_db, project_ids=[1, 2])
 
-            assert result['checked_count'] == 2
+            assert result["checked_count"] == 2
             assert mock_check.call_count == 2
 
     def test_checks_all_active_projects(self):
@@ -215,12 +226,12 @@ class TestCheckAllProjectsBudget:
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
 
-        with patch.object(CostAlertService, 'check_budget_execution') as mock_check:
+        with patch.object(CostAlertService, "check_budget_execution") as mock_check:
             mock_check.return_value = None
 
             result = CostAlertService.check_all_projects_budget(mock_db)
 
-            assert result['checked_count'] == 1
+            assert result["checked_count"] == 1
 
     def test_counts_alerts(self):
         """测试统计预警数量"""
@@ -240,19 +251,22 @@ class TestCheckAllProjectsBudget:
         mock_alert.id = 100
         mock_alert.alert_level = "WARNING"
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_project1,
+            mock_project2,
+        ]
 
-        with patch.object(CostAlertService, 'check_budget_execution') as mock_check:
+        with patch.object(CostAlertService, "check_budget_execution") as mock_check:
             # 第一个项目有预警，第二个没有
             mock_check.side_effect = [mock_alert, None]
 
             result = CostAlertService.check_all_projects_budget(mock_db, project_ids=[1, 2])
 
-            assert result['checked_count'] == 2
-            assert result['alert_count'] == 1
-            assert len(result['projects']) == 1
-            assert result['projects'][0]['project_id'] == 1
-            assert result['projects'][0]['alert_level'] == "WARNING"
+            assert result["checked_count"] == 2
+            assert result["alert_count"] == 1
+            assert len(result["projects"]) == 1
+            assert result["projects"][0]["project_id"] == 1
+            assert result["projects"][0]["alert_level"] == "WARNING"
 
     def test_returns_empty_for_no_projects(self):
         """测试无项目时返回空"""
@@ -263,9 +277,9 @@ class TestCheckAllProjectsBudget:
 
         result = CostAlertService.check_all_projects_budget(mock_db, project_ids=[])
 
-        assert result['checked_count'] == 0
-        assert result['alert_count'] == 0
-        assert result['projects'] == []
+        assert result["checked_count"] == 0
+        assert result["alert_count"] == 0
+        assert result["projects"] == []
 
     def test_includes_project_details_in_result(self):
         """测试结果包含项目详情"""
@@ -283,12 +297,12 @@ class TestCheckAllProjectsBudget:
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
 
-        with patch.object(CostAlertService, 'check_budget_execution') as mock_check:
+        with patch.object(CostAlertService, "check_budget_execution") as mock_check:
             mock_check.return_value = mock_alert
 
             result = CostAlertService.check_all_projects_budget(mock_db, project_ids=[1])
 
-            assert result['projects'][0]['project_id'] == 1
-            assert result['projects'][0]['project_code'] == "PJ001"
-            assert result['projects'][0]['alert_id'] == 100
-            assert result['projects'][0]['alert_level'] == "CRITICAL"
+            assert result["projects"][0]["project_id"] == 1
+            assert result["projects"][0]["project_code"] == "PJ001"
+            assert result["projects"][0]["alert_id"] == 100
+            assert result["projects"][0]["alert_level"] == "CRITICAL"

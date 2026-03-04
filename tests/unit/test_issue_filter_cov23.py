@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第二十三批：data_scope/issue_filter 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.data_scope.issue_filter")
 
@@ -35,7 +36,10 @@ class TestFilterIssuesByScopeALL:
         db = _make_db()
         query = MagicMock()
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="ALL"):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="ALL",
+        ):
             result = IssueFilterService.filter_issues_by_scope(db, query, user)
         assert result is query
 
@@ -47,7 +51,10 @@ class TestFilterIssuesByScopeOWN:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="OWN"):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="OWN",
+        ):
             result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
         assert result is filtered
@@ -60,8 +67,14 @@ class TestFilterIssuesByScopeSubordinate:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="SUBORDINATE"):
-            with patch("app.services.data_scope.issue_filter.UserScopeService.get_subordinate_ids", return_value={2, 3}):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="SUBORDINATE",
+        ):
+            with patch(
+                "app.services.data_scope.issue_filter.UserScopeService.get_subordinate_ids",
+                return_value={2, 3},
+            ):
                 result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
 
@@ -73,8 +86,14 @@ class TestFilterIssuesByScopeProject:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="PROJECT"):
-            with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_project_ids", return_value={10, 11}):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="PROJECT",
+        ):
+            with patch(
+                "app.services.data_scope.issue_filter.UserScopeService.get_user_project_ids",
+                return_value={10, 11},
+            ):
                 result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
 
@@ -84,8 +103,14 @@ class TestFilterIssuesByScopeProject:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="PROJECT"):
-            with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_project_ids", return_value=set()):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="PROJECT",
+        ):
+            with patch(
+                "app.services.data_scope.issue_filter.UserScopeService.get_user_project_ids",
+                return_value=set(),
+            ):
                 result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
 
@@ -97,7 +122,10 @@ class TestFilterIssuesByScopeDept:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False, department=None)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="DEPT"):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="DEPT",
+        ):
             result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
 
@@ -117,6 +145,7 @@ class TestFilterIssuesByScopeDept:
         projects_q.filter.return_value.all.return_value = [(100,), (101,)]
 
         call_count = [0]
+
         def db_query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -127,7 +156,10 @@ class TestFilterIssuesByScopeDept:
 
         db.query.side_effect = db_query_side
 
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="DEPT"):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="DEPT",
+        ):
             result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()
 
@@ -139,6 +171,9 @@ class TestFilterIssuesByScopeUnknown:
         filtered = MagicMock()
         query.filter.return_value = filtered
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope", return_value="UNKNOWN"):
+        with patch(
+            "app.services.data_scope.issue_filter.UserScopeService.get_user_data_scope",
+            return_value="UNKNOWN",
+        ):
             result = IssueFilterService.filter_issues_by_scope(db, query, user)
         query.filter.assert_called_once()

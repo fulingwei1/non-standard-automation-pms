@@ -40,24 +40,22 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/assembly-kit/scheduling",
-    tags=["scheduling"]
-)
+router = APIRouter(prefix="/assembly-kit/scheduling", tags=["scheduling"])
 
 # 共 4 个路由
 
 # ==================== 排产建议 ====================
 
+
 @router.post("/suggestions/generate", response_model=ResponseModel)
 async def generate_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
     scope: str = Query("WEEKLY", description="排产范围：WEEKLY/MONTHLY"),
-    project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔")
+    project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔"),
 ):
     """生成智能排产建议"""
     from app.services.scheduling_suggestion_service import SchedulingSuggestionService
@@ -73,7 +71,7 @@ async def generate_scheduling_suggestions(
     return ResponseModel(
         code=200,
         message="排产建议生成成功",
-        data={"suggestions": suggestions, "total": len(suggestions)}
+        data={"suggestions": suggestions, "total": len(suggestions)},
     )
 
 
@@ -82,7 +80,7 @@ async def get_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
     suggestion_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None),
-    pagination: PaginationParams = Depends(get_pagination_query)
+    pagination: PaginationParams = Depends(get_pagination_query),
 ):
     """获取排产建议列表"""
     query = db.query(SchedulingSuggestion)
@@ -93,15 +91,20 @@ async def get_scheduling_suggestions(
         query = query.filter(SchedulingSuggestion.project_id == project_id)
 
     total = query.count()
-    suggestions = apply_pagination(query.order_by(
-        SchedulingSuggestion.priority_score.desc(),
-        SchedulingSuggestion.created_at.desc()
-    ), pagination.offset, pagination.limit).all()
+    suggestions = apply_pagination(
+        query.order_by(
+            SchedulingSuggestion.priority_score.desc(), SchedulingSuggestion.created_at.desc()
+        ),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     result = []
     for s in suggestions:
         project = db.query(Project).filter(Project.id == s.project_id).first()
-        machine = db.query(Machine).filter(Machine.id == s.machine_id).first() if s.machine_id else None
+        machine = (
+            db.query(Machine).filter(Machine.id == s.machine_id).first() if s.machine_id else None
+        )
 
         data = SchedulingSuggestionResponse.model_validate(s)
         data.project_no = project.project_no if project else None
@@ -112,7 +115,12 @@ async def get_scheduling_suggestions(
     return ResponseModel(
         code=200,
         message="success",
-        data={"total": total, "items": result, "page": pagination.page, "page_size": pagination.page_size}
+        data={
+            "total": total,
+            "items": result,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+        },
     )
 
 
@@ -121,7 +129,7 @@ async def accept_suggestion(
     suggestion_id: int,
     accept_data: SchedulingSuggestionAccept,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read"))
+    current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
     """接受排产建议"""
     suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")
@@ -139,7 +147,9 @@ async def accept_suggestion(
     db.commit()
     db.refresh(suggestion)
 
-    return ResponseModel(code=200, message="已接受建议", data=SchedulingSuggestionResponse.model_validate(suggestion))
+    return ResponseModel(
+        code=200, message="已接受建议", data=SchedulingSuggestionResponse.model_validate(suggestion)
+    )
 
 
 @router.post("/suggestions/{suggestion_id}/reject", response_model=ResponseModel)
@@ -147,7 +157,7 @@ async def reject_suggestion(
     suggestion_id: int,
     reject_data: SchedulingSuggestionReject,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read"))
+    current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
     """拒绝排产建议"""
     suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")
@@ -162,7 +172,6 @@ async def reject_suggestion(
     db.commit()
     db.refresh(suggestion)
 
-    return ResponseModel(code=200, message="已拒绝建议", data=SchedulingSuggestionResponse.model_validate(suggestion))
-
-
-
+    return ResponseModel(
+        code=200, message="已拒绝建议", data=SchedulingSuggestionResponse.model_validate(suggestion)
+    )

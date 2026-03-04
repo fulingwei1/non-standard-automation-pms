@@ -190,7 +190,11 @@ def build_tasks(
         scenario = TASK_SCENARIOS[idx % len(TASK_SCENARIOS)]
         customer = CUSTOMERS[idx % len(CUSTOMERS)]
         line = LINES[idx % len(LINES)]
-        project = projects[idx % len(projects)] if projects else {"id": None, "project_code": None, "project_name": f"{customer}{line}项目"}
+        project = (
+            projects[idx % len(projects)]
+            if projects
+            else {"id": None, "project_code": None, "project_name": f"{customer}{line}项目"}
+        )
 
         amount_wan = RNG.randint(80, 650)
         amount_yuan = RNG.randint(1200, 18000)
@@ -224,14 +228,18 @@ def build_tasks(
         priority = RNG.choices(["HIGH", "MEDIUM", "LOW"], weights=[0.26, 0.52, 0.22], k=1)[0]
 
         days_ago = RNG.randint(1, 30)
-        created_at_dt = now - timedelta(days=days_ago, hours=RNG.randint(0, 20), minutes=RNG.randint(0, 55))
+        created_at_dt = now - timedelta(
+            days=days_ago, hours=RNG.randint(0, 20), minutes=RNG.randint(0, 55)
+        )
         plan_start_dt = created_at_dt + timedelta(days=RNG.randint(0, 3))
         plan_end_dt = plan_start_dt + timedelta(days=RNG.randint(3, 15))
         deadline_dt = plan_end_dt + timedelta(hours=RNG.randint(9, 18))
         actual_start = date_str(plan_start_dt) if status == "IN_PROGRESS" else None
         progress = RNG.randint(28, 88) if status == "IN_PROGRESS" else RNG.randint(0, 22)
         estimated_hours = round(RNG.uniform(1.5, 16.0), 2)
-        actual_hours = round(estimated_hours * RNG.uniform(0.2, 0.9), 2) if status == "IN_PROGRESS" else 0
+        actual_hours = (
+            round(estimated_hours * RNG.uniform(0.2, 0.9), 2) if status == "IN_PROGRESS" else 0
+        )
         is_urgent = 1 if priority == "HIGH" and RNG.random() < 0.45 else 0
 
         if idx < ADMIN_TODO_COUNT:
@@ -301,7 +309,11 @@ def build_alerts(
         scenario = ALERT_SCENARIOS[idx % len(ALERT_SCENARIOS)]
         customer = CUSTOMERS[idx % len(CUSTOMERS)]
         material = MATERIALS[idx % len(MATERIALS)]
-        project = projects[idx % len(projects)] if projects else {"id": None, "project_code": None, "project_name": f"{customer}项目"}
+        project = (
+            projects[idx % len(projects)]
+            if projects
+            else {"id": None, "project_code": None, "project_name": f"{customer}项目"}
+        )
 
         days = RNG.randint(2, 28)
         qty = RNG.randint(1, 9)
@@ -327,7 +339,9 @@ def build_alerts(
 
         alert_level = RNG.choices(["HIGH", "MEDIUM", "LOW"], weights=[0.30, 0.46, 0.24], k=1)[0]
         days_ago = RNG.randint(1, 30)
-        triggered_at_dt = now - timedelta(days=days_ago, hours=RNG.randint(0, 20), minutes=RNG.randint(0, 55))
+        triggered_at_dt = now - timedelta(
+            days=days_ago, hours=RNG.randint(0, 20), minutes=RNG.randint(0, 55)
+        )
 
         alert_data = json.dumps(
             {
@@ -394,7 +408,9 @@ def insert_alerts(cur: sqlite3.Cursor, alerts: list[tuple[Any, ...]]) -> None:
     )
 
 
-def query_distribution(cur: sqlite3.Cursor, table: str, key: str, code_col: str, prefix: str) -> dict[str, int]:
+def query_distribution(
+    cur: sqlite3.Cursor, table: str, key: str, code_col: str, prefix: str
+) -> dict[str, int]:
     rows = cur.execute(
         f"""
         SELECT {key}, COUNT(*)
@@ -432,12 +448,24 @@ def print_report(cur: sqlite3.Cursor) -> None:
         ).fetchone()[0]
     )
 
-    task_status_dist = query_distribution(cur, "task_unified", "status", "task_code", TASK_CODE_PREFIX)
-    task_priority_dist = query_distribution(cur, "task_unified", "priority", "task_code", TASK_CODE_PREFIX)
-    task_category_dist = query_distribution(cur, "task_unified", "category", "task_code", TASK_CODE_PREFIX)
-    alert_type_dist = query_distribution(cur, "alert_records", "target_type", "alert_no", ALERT_NO_PREFIX)
-    alert_level_dist = query_distribution(cur, "alert_records", "alert_level", "alert_no", ALERT_NO_PREFIX)
-    alert_status_dist = query_distribution(cur, "alert_records", "status", "alert_no", ALERT_NO_PREFIX)
+    task_status_dist = query_distribution(
+        cur, "task_unified", "status", "task_code", TASK_CODE_PREFIX
+    )
+    task_priority_dist = query_distribution(
+        cur, "task_unified", "priority", "task_code", TASK_CODE_PREFIX
+    )
+    task_category_dist = query_distribution(
+        cur, "task_unified", "category", "task_code", TASK_CODE_PREFIX
+    )
+    alert_type_dist = query_distribution(
+        cur, "alert_records", "target_type", "alert_no", ALERT_NO_PREFIX
+    )
+    alert_level_dist = query_distribution(
+        cur, "alert_records", "alert_level", "alert_no", ALERT_NO_PREFIX
+    )
+    alert_status_dist = query_distribution(
+        cur, "alert_records", "status", "alert_no", ALERT_NO_PREFIX
+    )
 
     task_date_span = cur.execute(
         """

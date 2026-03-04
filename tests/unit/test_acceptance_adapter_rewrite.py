@@ -12,10 +12,10 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem, AcceptanceTemplate
 from app.models.approval import ApprovalInstance
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
+from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
 
 
 class TestAcceptanceAdapterCore(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             total_items=10,
             passed_items=10,
             failed_items=0,
-            pass_rate=100.0
+            pass_rate=100.0,
         )
 
         # 设置查询返回
@@ -73,13 +73,13 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
         self.assertEqual(result["acceptance_type"], "FAT")
         self.assertEqual(result["overall_result"], "PASSED")
         self.assertEqual(result["status"], "DRAFT")
-        
+
         # 验证统计字段
         self.assertEqual(result["total_items"], 10)
         self.assertEqual(result["passed_items"], 10)
         self.assertEqual(result["failed_items"], 0)
         self.assertEqual(result["pass_rate"], 100.0)
-        
+
         # 验证标记字段
         self.assertFalse(result["has_critical_failure"])
         self.assertFalse(result["is_officially_completed"])
@@ -87,9 +87,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_get_entity_data_with_project(self):
         """测试获取包含项目信息的验收单数据"""
         mock_order = self._create_mock_order(
-            order_no="SAT-2024-001",
-            acceptance_type="SAT",
-            project_id=10
+            order_no="SAT-2024-001", acceptance_type="SAT", project_id=10
         )
 
         mock_project = MagicMock(spec=Project)
@@ -119,10 +117,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_with_machine(self):
         """测试获取包含设备信息的验收单数据"""
-        mock_order = self._create_mock_order(
-            order_no="FAT-2024-002",
-            machine_id=20
-        )
+        mock_order = self._create_mock_order(order_no="FAT-2024-002", machine_id=20)
 
         mock_machine = MagicMock(spec=Machine)
         mock_machine.machine_code = "MCH-001"
@@ -148,10 +143,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_with_template(self):
         """测试获取包含模板信息的验收单数据"""
-        mock_order = self._create_mock_order(
-            order_no="FAT-2024-003",
-            template_id=5
-        )
+        mock_order = self._create_mock_order(order_no="FAT-2024-003", template_id=5)
 
         mock_template = MagicMock(spec=AcceptanceTemplate)
         mock_template.template_name = "标准验收模板"
@@ -184,7 +176,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             overall_result="FAILED",
             total_items=10,
             passed_items=8,
-            failed_items=2
+            failed_items=2,
         )
 
         def query_side_effect(model):
@@ -206,10 +198,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_no_critical_failure(self):
         """测试没有关键项不合格"""
-        mock_order = self._create_mock_order(
-            order_no="FAT-2024-005",
-            failed_items=0
-        )
+        mock_order = self._create_mock_order(order_no="FAT-2024-005", failed_items=0)
 
         self._setup_query_returns(mock_order)
 
@@ -228,7 +217,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             order_no="SAT-2024-002",
             planned_date=planned_date,
             actual_start_date=start_date,
-            actual_end_date=end_date
+            actual_end_date=end_date,
         )
 
         self._setup_query_returns(mock_order)
@@ -275,10 +264,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_fat_passed(self):
         """测试FAT验收通过审批"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FAT",
-            overall_result="PASSED"
-        )
+        mock_order = self._create_mock_order(acceptance_type="FAT", overall_result="PASSED")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -289,10 +275,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_fat_conditional(self):
         """测试FAT有条件通过审批"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FAT",
-            overall_result="CONDITIONAL"
-        )
+        mock_order = self._create_mock_order(acceptance_type="FAT", overall_result="CONDITIONAL")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -303,10 +286,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_fat_failed(self):
         """测试FAT不合格审批通过（状态只设置为APPROVED）"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FAT",
-            overall_result="FAILED"
-        )
+        mock_order = self._create_mock_order(acceptance_type="FAT", overall_result="FAILED")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -317,10 +297,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_sat_passed(self):
         """测试SAT验收通过审批"""
-        mock_order = self._create_mock_order(
-            acceptance_type="SAT",
-            overall_result="PASSED"
-        )
+        mock_order = self._create_mock_order(acceptance_type="SAT", overall_result="PASSED")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -331,10 +308,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_sat_conditional(self):
         """测试SAT有条件通过审批"""
-        mock_order = self._create_mock_order(
-            acceptance_type="SAT",
-            overall_result="CONDITIONAL"
-        )
+        mock_order = self._create_mock_order(acceptance_type="SAT", overall_result="CONDITIONAL")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -345,16 +319,13 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_final_passed(self):
         """测试终验收通过审批"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FINAL",
-            overall_result="PASSED"
-        )
+        mock_order = self._create_mock_order(acceptance_type="FINAL", overall_result="PASSED")
         mock_order.is_officially_completed = False
         mock_order.officially_completed_at = None
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        with patch('app.services.approval_engine.adapters.acceptance.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.acceptance.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
@@ -368,10 +339,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_final_conditional(self):
         """测试终验收有条件通过（不设置正式完成）"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FINAL",
-            overall_result="CONDITIONAL"
-        )
+        mock_order = self._create_mock_order(acceptance_type="FINAL", overall_result="CONDITIONAL")
         mock_order.is_officially_completed = False
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
@@ -385,10 +353,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_on_approved_unknown_type(self):
         """测试未知验收类型"""
-        mock_order = self._create_mock_order(
-            acceptance_type="UNKNOWN",
-            overall_result="PASSED"
-        )
+        mock_order = self._create_mock_order(acceptance_type="UNKNOWN", overall_result="PASSED")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         self.adapter.on_approved(self.entity_id, self.instance)
@@ -455,9 +420,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_title_fat_passed(self):
         """测试生成FAT合格标题"""
         mock_order = self._create_mock_order(
-            order_no="FAT-2024-001",
-            acceptance_type="FAT",
-            overall_result="PASSED"
+            order_no="FAT-2024-001", acceptance_type="FAT", overall_result="PASSED"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -468,9 +431,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_title_sat_conditional(self):
         """测试生成SAT有条件通过标题"""
         mock_order = self._create_mock_order(
-            order_no="SAT-2024-002",
-            acceptance_type="SAT",
-            overall_result="CONDITIONAL"
+            order_no="SAT-2024-002", acceptance_type="SAT", overall_result="CONDITIONAL"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -481,9 +442,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_title_final_failed(self):
         """测试生成终验收不合格标题"""
         mock_order = self._create_mock_order(
-            order_no="FINAL-2024-003",
-            acceptance_type="FINAL",
-            overall_result="FAILED"
+            order_no="FINAL-2024-003", acceptance_type="FINAL", overall_result="FAILED"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -494,9 +453,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_title_unknown_type(self):
         """测试生成未知类型的标题"""
         mock_order = self._create_mock_order(
-            order_no="TEST-2024-001",
-            acceptance_type="CUSTOM",
-            overall_result="PASSED"
+            order_no="TEST-2024-001", acceptance_type="CUSTOM", overall_result="PASSED"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -525,7 +482,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=10,
             total_items=10,
             failed_items=0,
-            location="工厂车间"
+            location="工厂车间",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -549,7 +506,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=9,
             total_items=10,
             failed_items=1,
-            location="客户现场"
+            location="客户现场",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -563,9 +520,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_summary_with_project(self):
         """测试生成包含项目的摘要"""
         mock_order = self._create_mock_order(
-            order_no="FAT-2024-003",
-            acceptance_type="FAT",
-            project_id=10
+            order_no="FAT-2024-003", acceptance_type="FAT", project_id=10
         )
 
         mock_project = MagicMock(spec=Project)
@@ -589,9 +544,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_summary_with_machine(self):
         """测试生成包含设备的摘要"""
         mock_order = self._create_mock_order(
-            order_no="FAT-2024-004",
-            acceptance_type="FAT",
-            machine_id=20
+            order_no="FAT-2024-004", acceptance_type="FAT", machine_id=20
         )
 
         mock_machine = MagicMock(spec=Machine)
@@ -615,9 +568,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_generate_summary_machine_without_code(self):
         """测试设备没有machine_code属性"""
         mock_order = self._create_mock_order(
-            order_no="FAT-2024-005",
-            acceptance_type="FAT",
-            machine_id=20
+            order_no="FAT-2024-005", acceptance_type="FAT", machine_id=20
         )
 
         mock_machine = MagicMock(spec=Machine)
@@ -660,7 +611,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=10,
             failed_items=0,
             na_items=0,
-            overall_result="PASSED"
+            overall_result="PASSED",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -679,7 +630,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=5,
             failed_items=0,
             na_items=0,
-            overall_result="PASSED"
+            overall_result="PASSED",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -709,10 +660,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_validate_submit_missing_project(self):
         """测试缺少项目关联"""
-        mock_order = self._create_mock_order(
-            status="DRAFT",
-            project_id=None
-        )
+        mock_order = self._create_mock_order(status="DRAFT", project_id=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         valid, error = self.adapter.validate_submit(self.entity_id)
@@ -722,11 +670,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_validate_submit_missing_acceptance_type(self):
         """测试缺少验收类型"""
-        mock_order = self._create_mock_order(
-            status="DRAFT",
-            project_id=1,
-            acceptance_type=None
-        )
+        mock_order = self._create_mock_order(status="DRAFT", project_id=1, acceptance_type=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         valid, error = self.adapter.validate_submit(self.entity_id)
@@ -737,10 +681,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def test_validate_submit_no_items(self):
         """测试没有检查项"""
         mock_order = self._create_mock_order(
-            status="DRAFT",
-            project_id=1,
-            acceptance_type="FAT",
-            total_items=0
+            status="DRAFT", project_id=1, acceptance_type="FAT", total_items=0
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -758,7 +699,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             total_items=10,
             passed_items=5,
             failed_items=2,
-            na_items=1
+            na_items=1,
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -778,7 +719,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=10,
             failed_items=0,
             na_items=0,
-            overall_result=None
+            overall_result=None,
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -798,7 +739,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             failed_items=0,
             na_items=0,
             overall_result="CONDITIONAL",
-            conditions=None
+            conditions=None,
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -818,7 +759,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             failed_items=0,
             na_items=0,
             overall_result="CONDITIONAL",
-            conditions=""
+            conditions="",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -837,7 +778,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             passed_items=8,
             failed_items=2,
             na_items=0,
-            overall_result="PASSED"
+            overall_result="PASSED",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -857,7 +798,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
             failed_items=1,
             na_items=0,
             overall_result="CONDITIONAL",
-            conditions="需在3天内修复问题项"
+            conditions="需在3天内修复问题项",
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
@@ -879,10 +820,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_cc_user_ids_with_project_manager(self):
         """测试获取包含项目经理的抄送人"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FAT",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(acceptance_type="FAT", project_id=10)
 
         mock_project = MagicMock(spec=Project)
         mock_project.manager_id = 100
@@ -898,7 +836,11 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
         self.db.query.side_effect = query_side_effect
 
         # Mock基类方法
-        with patch.object(AcceptanceOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]):
+        with patch.object(
+            AcceptanceOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[200],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 应包含项目经理和质量部负责人
@@ -907,17 +849,22 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_cc_user_ids_sat_with_sales(self):
         """测试SAT类型添加销售负责人"""
-        mock_order = self._create_mock_order(
-            acceptance_type="SAT",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(acceptance_type="SAT", project_id=10)
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         # Mock基类方法
-        with patch.object(AcceptanceOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]), \
-             patch.object(AcceptanceOrderApprovalAdapter, 'get_project_sales_user_id', return_value=300):
-            
+        with (
+            patch.object(
+                AcceptanceOrderApprovalAdapter,
+                "get_department_manager_user_ids_by_codes",
+                return_value=[200],
+            ),
+            patch.object(
+                AcceptanceOrderApprovalAdapter, "get_project_sales_user_id", return_value=300
+            ),
+        ):
+
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 应包含销售负责人
@@ -925,17 +872,22 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_cc_user_ids_fat_no_sales(self):
         """测试FAT类型不添加销售负责人"""
-        mock_order = self._create_mock_order(
-            acceptance_type="FAT",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(acceptance_type="FAT", project_id=10)
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         # Mock基类方法
-        with patch.object(AcceptanceOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]), \
-             patch.object(AcceptanceOrderApprovalAdapter, 'get_project_sales_user_id', return_value=300):
-            
+        with (
+            patch.object(
+                AcceptanceOrderApprovalAdapter,
+                "get_department_manager_user_ids_by_codes",
+                return_value=[200],
+            ),
+            patch.object(
+                AcceptanceOrderApprovalAdapter, "get_project_sales_user_id", return_value=300
+            ),
+        ):
+
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # FAT不应包含销售负责人
@@ -943,10 +895,7 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
 
     def test_get_cc_user_ids_deduplication(self):
         """测试抄送人去重"""
-        mock_order = self._create_mock_order(
-            acceptance_type="SAT",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(acceptance_type="SAT", project_id=10)
 
         mock_project = MagicMock(spec=Project)
         mock_project.manager_id = 100
@@ -962,9 +911,17 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
         self.db.query.side_effect = query_side_effect
 
         # 模拟重复的用户ID
-        with patch.object(AcceptanceOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[100, 200]), \
-             patch.object(AcceptanceOrderApprovalAdapter, 'get_project_sales_user_id', return_value=100):
-            
+        with (
+            patch.object(
+                AcceptanceOrderApprovalAdapter,
+                "get_department_manager_user_ids_by_codes",
+                return_value=[100, 200],
+            ),
+            patch.object(
+                AcceptanceOrderApprovalAdapter, "get_project_sales_user_id", return_value=100
+            ),
+        ):
+
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 验证去重
@@ -976,43 +933,44 @@ class TestAcceptanceAdapterCore(unittest.TestCase):
     def _create_mock_order(self, **kwargs):
         """创建模拟验收单对象"""
         mock_order = MagicMock(spec=AcceptanceOrder)
-        
+
         # 设置默认值
         defaults = {
-            'id': self.entity_id,
-            'order_no': 'TEST-001',
-            'acceptance_type': 'FAT',
-            'status': 'DRAFT',
-            'overall_result': 'PASSED',
-            'total_items': 10,
-            'passed_items': 10,
-            'failed_items': 0,
-            'na_items': 0,
-            'pass_rate': 100.0,
-            'project_id': None,
-            'machine_id': None,
-            'template_id': None,
-            'planned_date': None,
-            'actual_start_date': None,
-            'actual_end_date': None,
-            'location': None,
-            'conclusion': None,
-            'conditions': None,
-            'created_by': 1,
-            'is_officially_completed': False,
+            "id": self.entity_id,
+            "order_no": "TEST-001",
+            "acceptance_type": "FAT",
+            "status": "DRAFT",
+            "overall_result": "PASSED",
+            "total_items": 10,
+            "passed_items": 10,
+            "failed_items": 0,
+            "na_items": 0,
+            "pass_rate": 100.0,
+            "project_id": None,
+            "machine_id": None,
+            "template_id": None,
+            "planned_date": None,
+            "actual_start_date": None,
+            "actual_end_date": None,
+            "location": None,
+            "conclusion": None,
+            "conditions": None,
+            "created_by": 1,
+            "is_officially_completed": False,
         }
-        
+
         # 合并自定义值
         defaults.update(kwargs)
-        
+
         # 设置属性
         for key, value in defaults.items():
             setattr(mock_order, key, value)
-        
+
         return mock_order
 
     def _setup_query_returns(self, mock_order):
         """设置基础查询返回"""
+
         def query_side_effect(model):
             mock_query = MagicMock()
             if model == AcceptanceOrder:
@@ -1032,5 +990,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(AcceptanceOrderApprovalAdapter.entity_type, "ACCEPTANCE_ORDER")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

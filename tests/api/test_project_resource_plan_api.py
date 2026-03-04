@@ -26,10 +26,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -43,15 +40,16 @@ class TestProjectResourcePlanAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/", headers=headers
         )
 
         assert response.status_code == 200, response.text
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_project_resource_plans_with_stage_filter(self, client: TestClient, admin_token: str):
+    def test_list_project_resource_plans_with_stage_filter(
+        self, client: TestClient, admin_token: str
+    ):
         """测试阶段筛选"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -59,10 +57,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -78,7 +73,7 @@ class TestProjectResourcePlanAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
             params={"stage_code": "S1"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -91,10 +86,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -108,8 +100,7 @@ class TestProjectResourcePlanAPI:
 
         # 先获取资源计划列表
         plans_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/", headers=headers
         )
 
         if plans_response.status_code != 200:
@@ -124,7 +115,7 @@ class TestProjectResourcePlanAPI:
         # 获取详情
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/{plan_id}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -140,10 +131,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -156,8 +144,7 @@ class TestProjectResourcePlanAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -170,10 +157,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -187,8 +171,7 @@ class TestProjectResourcePlanAPI:
 
         # 测试汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/summary", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -205,10 +188,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -228,13 +208,13 @@ class TestProjectResourcePlanAPI:
             "skill_requirements": "Python, FastAPI",
             "planned_start": "2025-02-01",
             "planned_end": "2025-03-31",
-            "remark": "方案设计阶段人员需求"
+            "remark": "方案设计阶段人员需求",
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
             json=plan_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -256,10 +236,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -281,7 +258,7 @@ class TestProjectResourcePlanAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
             json=plan_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -292,15 +269,12 @@ class TestProjectResourcePlanAPI:
             pytest.skip("Failed to get resource plan ID")
 
         # 更新资源计划
-        update_data = {
-            "headcount": 3,
-            "remark": "更新后的备注"
-        }
+        update_data = {"headcount": 3, "remark": "更新后的备注"}
 
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/{plan_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -315,10 +289,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -340,7 +311,7 @@ class TestProjectResourcePlanAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
             json=plan_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -353,7 +324,7 @@ class TestProjectResourcePlanAPI:
         # 删除资源计划
         response = client.delete(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/{plan_id}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code in [200, 204], response.text
@@ -361,7 +332,7 @@ class TestProjectResourcePlanAPI:
         # 验证已删除
         get_response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/{plan_id}",
-            headers=headers
+            headers=headers,
         )
         assert get_response.status_code == 404
 
@@ -373,10 +344,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -390,8 +358,7 @@ class TestProjectResourcePlanAPI:
 
         # 获取资源计划列表，找一个已分配的
         plans_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/", headers=headers
         )
 
         if plans_response.status_code != 200:
@@ -410,7 +377,7 @@ class TestProjectResourcePlanAPI:
         # 尝试删除已分配的资源计划
         response = client.delete(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/{assigned_plan['id']}",
-            headers=headers
+            headers=headers,
         )
 
         # 应该返回400错误
@@ -424,10 +391,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -445,7 +409,7 @@ class TestProjectResourcePlanAPI:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/resource-plan/",
                 params={"stage_code": stage},
-                headers=headers
+                headers=headers,
             )
 
             assert response.status_code == 200, f"Failed for stage {stage}: {response.text}"

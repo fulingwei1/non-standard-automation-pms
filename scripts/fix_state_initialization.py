@@ -8,38 +8,54 @@ import sys
 from pathlib import Path
 
 FILES_TO_FIX = [
-    'frontend/src/pages/AdministrativeApprovals.jsx',
-    'frontend/src/pages/AttendanceManagement.jsx',
-    'frontend/src/pages/PerformanceManagement.jsx',
-    'frontend/src/pages/VehicleManagement.jsx',
-    'frontend/src/pages/CustomerServiceDashboard.jsx',
+    "frontend/src/pages/AdministrativeApprovals.jsx",
+    "frontend/src/pages/AttendanceManagement.jsx",
+    "frontend/src/pages/PerformanceManagement.jsx",
+    "frontend/src/pages/VehicleManagement.jsx",
+    "frontend/src/pages/CustomerServiceDashboard.jsx",
 ]
+
 
 def fix_state_initialization(file_path: Path) -> bool:
     """修复状态初始化"""
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
         original_content = content
 
         # 替换 useState(mockPendingApprovals) -> useState([])
-        content = re.sub(r'state=\[setApprovals\]\s*=\s*useState\(mockPendingApprovals\)',
-                       r'state={[setApprovals]} = useState([])', content)
+        content = re.sub(
+            r"state=\[setApprovals\]\s*=\s*useState\(mockPendingApprovals\)",
+            r"state={[setApprovals]} = useState([])",
+            content,
+        )
 
-        content = re.sub(r'state=\[setApprovals\]\s*=\s*useState\(mockApprovalHistory\)',
-                       r'state={[setApprovals]} = useState([])', content)
+        content = re.sub(
+            r"state=\[setApprovals\]\s*=\s*useState\(mockApprovalHistory\)",
+            r"state={[setApprovals]} = useState([])",
+            content,
+        )
 
-        content = re.sub(r'state=\[setAttendanceStats\]\s*=\s*useState\(mockAttendanceStats\)',
-                       r'state={[setAttendanceStats]} = useState([])', content)
+        content = re.sub(
+            r"state=\[setAttendanceStats\]\s*=\s*useState\(mockAttendanceStats\)",
+            r"state={[setAttendanceStats]} = useState([])",
+            content,
+        )
 
-        content = re.sub(r'state=\[setVehicles\]\s*=\s*useState\(mockVehicles\)',
-                       r'state={[setVehicles]} = useState([])', content)
+        content = re.sub(
+            r"state=\[setVehicles\]\s*=\s*useState\(mockVehicles\)",
+            r"state={[setVehicles]} = useState([])",
+            content,
+        )
 
-        content = re.sub(r'state=\[setStats\]\s*=\s*useState\(mockStats\)',
-                       r'state={[setStats]} = useState({})', content)
+        content = re.sub(
+            r"state=\[setStats\]\s*=\s*useState\(mockStats\)",
+            r"state={[setStats]} = useState({})",
+            content,
+        )
 
         # 如果有修改，保存文件
         if content != original_content:
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
             return True
 
         return False
@@ -47,7 +63,8 @@ def fix_state_initialization(file_path: Path) -> bool:
         print(f"Error fixing {file_path}: {e}", file=sys.stderr)
         return False
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     base_path = Path("/Users/flw/non-standard-automation-pm")
 
     fixed = 0

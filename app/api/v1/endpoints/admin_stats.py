@@ -32,22 +32,16 @@ def get_admin_stats(
     """
     # 用户统计
     total_users = db.query(func.count(User.id)).scalar() or 0
-    active_users = (
-        db.query(func.count(User.id)).filter(User.is_active).scalar() or 0
-    )
+    active_users = db.query(func.count(User.id)).filter(User.is_active).scalar() or 0
     inactive_users = total_users - active_users
 
     # 有角色的用户数
-    users_with_roles = (
-        db.query(func.count(func.distinct(UserRole.user_id))).scalar() or 0
-    )
+    users_with_roles = db.query(func.count(func.distinct(UserRole.user_id))).scalar() or 0
     users_without_roles = total_users - users_with_roles
 
     # 角色统计
     total_roles = db.query(func.count(Role.id)).scalar() or 0
-    active_roles = (
-        db.query(func.count(Role.id)).filter(Role.is_active).scalar() or 0
-    )
+    active_roles = db.query(func.count(Role.id)).filter(Role.is_active).scalar() or 0
     inactive_roles = total_roles - active_roles
 
     # 系统角色 vs 自定义角色（假设系统角色是 is_system = True 或按某种规则区分）
@@ -62,10 +56,7 @@ def get_admin_stats(
 
     # 权限统计（使用新的 ApiPermission 和 RoleApiPermission 表）
     total_permissions = (
-        db.query(func.count(ApiPermission.id))
-        .filter(ApiPermission.is_active)
-        .scalar()
-        or 0
+        db.query(func.count(ApiPermission.id)).filter(ApiPermission.is_active).scalar() or 0
     )
 
     # 已分配的权限数（角色-权限关联总数）

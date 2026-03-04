@@ -15,9 +15,7 @@ class RuleManager:
 
     @staticmethod
     def get_or_create_rule(
-        db: Session,
-        rule_code: str,
-        default_config: Dict[str, Any]
+        db: Session, rule_code: str, default_config: Dict[str, Any]
     ) -> AlertRule:
         """
         获取或创建预警规则
@@ -30,17 +28,10 @@ class RuleManager:
         Returns:
             AlertRule: 预警规则
         """
-        rule = db.query(AlertRule).filter(
-            AlertRule.rule_code == rule_code
-        ).first()
+        rule = db.query(AlertRule).filter(AlertRule.rule_code == rule_code).first()
 
         if not rule:
-            rule = AlertRule(
-                rule_code=rule_code,
-                is_system=True,
-                is_enabled=True,
-                **default_config
-            )
+            rule = AlertRule(rule_code=rule_code, is_system=True, is_enabled=True, **default_config)
             db.add(rule)
             db.flush()
 

@@ -3,15 +3,17 @@
 AI项目规划助手 - Pydantic Schemas
 """
 
-from typing import List, Optional, Dict, Any
 from datetime import date
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
 # ========== 项目计划 ==========
 
+
 class ProjectPlanRequest(BaseModel):
     """项目计划生成请求"""
+
     project_name: str = Field(..., description="项目名称")
     project_type: str = Field(..., description="项目类型")
     requirements: str = Field(..., description="项目需求描述")
@@ -22,6 +24,7 @@ class ProjectPlanRequest(BaseModel):
 
 class ProjectPlanResponse(BaseModel):
     """项目计划响应"""
+
     template_id: int
     template_code: str
     template_name: str
@@ -33,15 +36,17 @@ class ProjectPlanResponse(BaseModel):
     milestones: Optional[str] = None
     required_roles: Optional[str] = None
     risk_factors: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
 
 # ========== WBS分解 ==========
 
+
 class WbsDecompositionRequest(BaseModel):
     """WBS分解请求"""
+
     project_id: int = Field(..., description="项目ID")
     template_id: Optional[int] = Field(None, description="使用的模板ID")
     max_level: Optional[int] = Field(3, ge=1, le=5, description="最大分解层级")
@@ -49,6 +54,7 @@ class WbsDecompositionRequest(BaseModel):
 
 class WbsSuggestionItem(BaseModel):
     """WBS建议项"""
+
     wbs_id: int
     wbs_code: str
     task_name: str
@@ -62,6 +68,7 @@ class WbsSuggestionItem(BaseModel):
 
 class WbsDecompositionResponse(BaseModel):
     """WBS分解响应"""
+
     project_id: int
     total_tasks: int
     suggestions: List[WbsSuggestionItem]
@@ -69,8 +76,10 @@ class WbsDecompositionResponse(BaseModel):
 
 # ========== 资源分配 ==========
 
+
 class ResourceAllocationRequest(BaseModel):
     """资源分配请求"""
+
     wbs_suggestion_id: int = Field(..., description="WBS建议ID")
     available_user_ids: Optional[List[int]] = Field(None, description="可用用户ID列表")
     constraints: Optional[Dict[str, Any]] = Field(None, description="约束条件")
@@ -78,6 +87,7 @@ class ResourceAllocationRequest(BaseModel):
 
 class ResourceAllocationItem(BaseModel):
     """资源分配项"""
+
     allocation_id: int
     user_id: int
     allocation_type: str
@@ -90,6 +100,7 @@ class ResourceAllocationItem(BaseModel):
 
 class ResourceAllocationResponse(BaseModel):
     """资源分配响应"""
+
     wbs_suggestion_id: int
     total_recommendations: int
     allocations: List[ResourceAllocationItem]
@@ -97,8 +108,10 @@ class ResourceAllocationResponse(BaseModel):
 
 # ========== 进度排期 ==========
 
+
 class ScheduleOptimizationRequest(BaseModel):
     """进度排期优化请求"""
+
     project_id: int = Field(..., description="项目ID")
     start_date: Optional[date] = Field(None, description="项目开始日期")
     constraints: Optional[Dict[str, Any]] = Field(None, description="约束条件")
@@ -106,6 +119,7 @@ class ScheduleOptimizationRequest(BaseModel):
 
 class GanttTaskItem(BaseModel):
     """甘特图任务项"""
+
     task_id: int
     task_name: str
     wbs_code: str
@@ -120,6 +134,7 @@ class GanttTaskItem(BaseModel):
 
 class ScheduleOptimizationResponse(BaseModel):
     """进度排期优化响应"""
+
     project_id: int
     start_date: str
     total_duration_days: float

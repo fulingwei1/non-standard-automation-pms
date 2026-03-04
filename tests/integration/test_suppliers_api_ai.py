@@ -36,9 +36,7 @@ class TestSuppliersCRUDAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/suppliers/", params=params, resource_type="suppliers_list"
-        )
+        response = self.helper.get("/suppliers/", params=params, resource_type="suppliers_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -63,9 +61,7 @@ class TestSuppliersCRUDAPI:
             "remark": "精密零件加工、表面处理",
         }
 
-        response = self.helper.post(
-            "/suppliers/", supplier_data, resource_type="supplier"
-        )
+        response = self.helper.post("/suppliers/", supplier_data, resource_type="supplier")
 
         result = self.helper.assert_success(response)
         if result:

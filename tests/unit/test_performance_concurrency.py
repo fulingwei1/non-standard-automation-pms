@@ -19,10 +19,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # =========================================================
 # 场景 1：大批量数据处理
 # =========================================================
+
 
 class TestBatchTimesheetPerformance:
     """批量工时数据处理性能测试"""
@@ -33,14 +33,16 @@ class TestBatchTimesheetPerformance:
 
         策略：mock 掉 DB 查询，仅测试 service 层循环逻辑本身的吞吐。
         """
-        from app.services.timesheet_sync_service import TimesheetSyncService
         from datetime import date
+
+        from app.services.timesheet_sync_service import TimesheetSyncService
 
         db = MagicMock()
         service = TimesheetSyncService(db)
 
         # 构造 1000 条已审批工时对象
         N = 1000
+
         def _make_ts(i):
             ts = MagicMock()
             ts.id = i
@@ -60,10 +62,14 @@ class TestBatchTimesheetPerformance:
         timesheets = [_make_ts(i) for i in range(N)]
 
         # 模拟 get_month_range_by_ym、DB 查询、HourlyRateService
-        with patch("app.services.timesheet_sync_service.get_month_range_by_ym",
-                   return_value=(date(2026, 2, 1), date(2026, 2, 28))), \
-             patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr, \
-             patch("app.services.timesheet_sync_service.save_obj"):
+        with (
+            patch(
+                "app.services.timesheet_sync_service.get_month_range_by_ym",
+                return_value=(date(2026, 2, 1), date(2026, 2, 28)),
+            ),
+            patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr,
+            patch("app.services.timesheet_sync_service.save_obj"),
+        ):
 
             mock_hr.get_user_hourly_rate.return_value = Decimal("100.0")
 
@@ -86,8 +92,9 @@ class TestBatchTimesheetPerformance:
 
         验证：add_all 被调用，而非循环调用500次 add。
         """
-        from app.models.timesheet import Timesheet
         from datetime import date
+
+        from app.models.timesheet import Timesheet
 
         db = MagicMock()
         records = [
@@ -114,8 +121,9 @@ class TestBatchTimesheetPerformance:
         """
         处理200条记录时，DB 查询次数不应超过 N*2（每条最多2次：检查现有+创建）。
         """
-        from app.services.timesheet_sync_service import TimesheetSyncService
         from datetime import date
+
+        from app.services.timesheet_sync_service import TimesheetSyncService
 
         db = MagicMock()
         service = TimesheetSyncService(db)
@@ -139,10 +147,14 @@ class TestBatchTimesheetPerformance:
 
         timesheets = [_make_ts(i) for i in range(N)]
 
-        with patch("app.services.timesheet_sync_service.get_month_range_by_ym",
-                   return_value=(date(2026, 2, 1), date(2026, 2, 28))), \
-             patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr, \
-             patch("app.services.timesheet_sync_service.save_obj"):
+        with (
+            patch(
+                "app.services.timesheet_sync_service.get_month_range_by_ym",
+                return_value=(date(2026, 2, 1), date(2026, 2, 28)),
+            ),
+            patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr,
+            patch("app.services.timesheet_sync_service.save_obj"),
+        ):
 
             mock_hr.get_user_hourly_rate.return_value = Decimal("100.0")
             db.query.return_value.filter.return_value.all.return_value = timesheets
@@ -151,14 +163,15 @@ class TestBatchTimesheetPerformance:
             result = service.sync_to_finance(project_id=1, year=2026, month=2)
 
         # 验证：DB query 调用次数 <= N * 2 + 1（最后1次是初始批量查询）
-        assert db.query.call_count <= N * 2 + 1, (
-            f"DB 查询次数 {db.query.call_count} 超出预期 {N * 2 + 1}"
-        )
+        assert (
+            db.query.call_count <= N * 2 + 1
+        ), f"DB 查询次数 {db.query.call_count} 超出预期 {N * 2 + 1}"
 
 
 # =========================================================
 # 场景 2 & 3：缓存穿透保护 & 缓存失效
 # =========================================================
+
 
 class TestCacheProtection:
     """缓存穿透保护与失效测试"""
@@ -179,6 +192,7 @@ class TestCacheProtection:
         mock_cache.set = MagicMock()
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="test:project", ttl=60)
             def get_project(project_id):
                 call_count[0] += 1
@@ -203,6 +217,7 @@ class TestCacheProtection:
         mock_cache.get.return_value = cached_value  # 始终命中
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="test:project", ttl=60)
             def get_project(project_id):
                 call_count[0] += 1
@@ -225,6 +240,7 @@ class TestCacheProtection:
         mock_cache.invalidate_project_detail = MagicMock()
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_detail
             def get_project_detail(self, project_id):
                 return {"id": project_id, "name": "Detail"}
@@ -257,6 +273,7 @@ class TestCacheProtection:
         mock_cache.set.side_effect = fake_set
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="test:seq", ttl=120)
             def compute(x):
                 return {"result": x * 2}
@@ -272,6 +289,7 @@ class TestCacheProtection:
 # 场景 4：分页偏移性能
 # =========================================================
 
+
 class TestPaginationEfficiency:
     """分页偏移性能测试"""
 
@@ -283,8 +301,10 @@ class TestPaginationEfficiency:
         直接传入 default_page_size / max_page_size，绕过 settings 依赖。
         """
         from app.common.pagination import get_pagination_params
-        params = get_pagination_params(page=100, page_size=20,
-                                       default_page_size=20, max_page_size=500)
+
+        params = get_pagination_params(
+            page=100, page_size=20, default_page_size=20, max_page_size=500
+        )
 
         assert params.offset == 1980, f"第100页 offset 应为 1980，实际为 {params.offset}"
         assert params.limit == 20, f"每页 limit 应为 20，实际为 {params.limit}"
@@ -292,8 +312,10 @@ class TestPaginationEfficiency:
     def test_first_page_offset_is_zero(self):
         """第1页 offset 应为 0。"""
         from app.common.pagination import get_pagination_params
-        params = get_pagination_params(page=1, page_size=20,
-                                       default_page_size=20, max_page_size=500)
+
+        params = get_pagination_params(
+            page=1, page_size=20, default_page_size=20, max_page_size=500
+        )
 
         assert params.offset == 0
         assert params.limit == 20
@@ -301,8 +323,10 @@ class TestPaginationEfficiency:
     def test_page_size_capped_at_maximum(self):
         """每页条数不应超过 MAX_PAGE_SIZE 上限。"""
         from app.common.pagination import get_pagination_params
-        params = get_pagination_params(page=1, page_size=9999,
-                                       default_page_size=20, max_page_size=100)
+
+        params = get_pagination_params(
+            page=1, page_size=9999, default_page_size=20, max_page_size=100
+        )
 
         assert params.limit <= 100, f"page_size 应被限制在 100，实际为 {params.limit}"
 
@@ -318,8 +342,9 @@ class TestPaginationEfficiency:
             (100, 20, 1980),
         ]
         for page, page_size, expected_offset in cases:
-            params = get_pagination_params(page=page, page_size=page_size,
-                                           default_page_size=20, max_page_size=500)
+            params = get_pagination_params(
+                page=page, page_size=page_size, default_page_size=20, max_page_size=500
+            )
             assert params.offset == expected_offset, (
                 f"page={page}, page_size={page_size}: "
                 f"期望 offset={expected_offset}，实际={params.offset}"
@@ -333,8 +358,9 @@ class TestPaginationEfficiency:
         """
         from app.common.pagination import get_pagination_params
 
-        params = get_pagination_params(page=100, page_size=20,
-                                       default_page_size=20, max_page_size=500)
+        params = get_pagination_params(
+            page=100, page_size=20, default_page_size=20, max_page_size=500
+        )
 
         # 模拟 SQLAlchemy query 对象
         mock_query = MagicMock()
@@ -352,6 +378,7 @@ class TestPaginationEfficiency:
 # 场景 5：权限缓存命中
 # =========================================================
 
+
 class TestPermissionCacheOptimization:
     """权限检查缓存优化测试"""
 
@@ -360,8 +387,8 @@ class TestPermissionCacheOptimization:
         权限命中缓存时，get_user_permissions 从缓存返回，不再执行 SQL。
         PermissionService.check_permission → get_user_permissions → 缓存命中。
         """
-        from app.services.permission_service import PermissionService
         from app.models.user import User as UserModel
+        from app.services.permission_service import PermissionService
 
         # 构造明确的非超级管理员用户（避免 MagicMock 的 is_superuser 为真值）
         mock_user = MagicMock(spec=UserModel)
@@ -407,14 +434,15 @@ class TestPermissionCacheOptimization:
         # DB 查询返回空列表（用户无权限）
         db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch(
-            "app.services.permission_service.get_permission_cache_service",
-            return_value=mock_cache_svc,
-        ), patch("app.services.permission_service.text"):
+        with (
+            patch(
+                "app.services.permission_service.get_permission_cache_service",
+                return_value=mock_cache_svc,
+            ),
+            patch("app.services.permission_service.text"),
+        ):
             # 缓存 miss 后执行 SQL，DB 异常正常捕获降级
-            has_perm = PermissionService.check_permission(
-                db, user_id, "admin_access"
-            )
+            has_perm = PermissionService.check_permission(db, user_id, "admin_access")
 
         assert has_perm is False
 
@@ -422,8 +450,8 @@ class TestPermissionCacheOptimization:
         """
         超级管理员应直接返回 True，不走缓存也不查 DB。
         """
-        from app.services.permission_service import PermissionService
         from app.models.user import User
+        from app.services.permission_service import PermissionService
 
         db = MagicMock()
         user = MagicMock(spec=User)
@@ -470,6 +498,7 @@ class TestPermissionCacheOptimization:
 # 场景 6：工时锁定保护
 # =========================================================
 
+
 class TestTimesheetLockProtection:
     """工时锁定保护测试"""
 
@@ -515,8 +544,9 @@ class TestTimesheetLockProtection:
         """
         已审批（APPROVED）的工时记录可以正常同步（有效的基准场景）。
         """
-        from app.services.timesheet_sync_service import TimesheetSyncService
         from datetime import date
+
+        from app.services.timesheet_sync_service import TimesheetSyncService
 
         db = MagicMock()
         service = TimesheetSyncService(db)
@@ -540,8 +570,10 @@ class TestTimesheetLockProtection:
         query_mock.filter.return_value.first.side_effect = [approved_record, None]
         db.query.return_value = query_mock
 
-        with patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr, \
-             patch("app.services.timesheet_sync_service.save_obj"):
+        with (
+            patch("app.services.timesheet_sync_service.HourlyRateService") as mock_hr,
+            patch("app.services.timesheet_sync_service.save_obj"),
+        ):
             mock_hr.get_user_hourly_rate.return_value = Decimal("150.0")
             result = service.sync_to_finance(timesheet_id=3)
 
@@ -574,6 +606,7 @@ class TestTimesheetLockProtection:
         当工时记录已通过财务同步（has_synced=True），业务层应拒绝重复写入，
         防止并发修改导致数据不一致。
         """
+
         # 模拟一个通用的"冻结检查"函数，代表工时锁定业务规则
         def check_timesheet_editable(timesheet) -> bool:
             """业务规则：已同步或已锁定的工时不可修改"""
@@ -600,8 +633,9 @@ class TestTimesheetLockProtection:
 
         TimesheetSyncService._create_financial_cost_from_timesheet 在记录存在时走 update 分支。
         """
-        from app.services.timesheet_sync_service import TimesheetSyncService
         from datetime import date
+
+        from app.services.timesheet_sync_service import TimesheetSyncService
 
         db = MagicMock()
         service = TimesheetSyncService(db)
@@ -645,6 +679,7 @@ class TestTimesheetLockProtection:
 # 场景综合：性能基准快速验证
 # =========================================================
 
+
 class TestPerformanceBenchmarks:
     """性能基准快速验证"""
 
@@ -654,8 +689,9 @@ class TestPerformanceBenchmarks:
 
         start = time.time()
         for page in range(1, 1001):
-            params = get_pagination_params(page=page, page_size=20,
-                                           default_page_size=20, max_page_size=500)
+            params = get_pagination_params(
+                page=page, page_size=20, default_page_size=20, max_page_size=500
+            )
             assert params.offset == (page - 1) * 20
         elapsed = time.time() - start
 
@@ -685,10 +721,7 @@ class TestPerformanceBenchmarks:
 
         # 方式A：列表推导式（推荐）
         start = time.time()
-        records_a = [
-            {"engineer_id": i, "hours": 8.0, "date": "2026-02-17"}
-            for i in range(1000)
-        ]
+        records_a = [{"engineer_id": i, "hours": 8.0, "date": "2026-02-17"} for i in range(1000)]
         elapsed_a = time.time() - start
 
         # 方式B：逐条 append

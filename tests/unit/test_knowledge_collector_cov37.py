@@ -3,9 +3,10 @@
 第三十七批覆盖率测试 - 知识贡献数据收集器
 tests/unit/test_knowledge_collector_cov37.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.performance_collector.knowledge_collector")
 
@@ -21,8 +22,11 @@ def _make_collector(contributions=None, code_count=0, plc_count=0):
     def query_side(model):
         q = MagicMock()
         from app.models.engineer_performance import (
-            KnowledgeContribution, CodeModule, PlcModuleLibrary
+            CodeModule,
+            KnowledgeContribution,
+            PlcModuleLibrary,
         )
+
         if model is KnowledgeContribution:
             q.filter.return_value.all.return_value = contributions
         elif model is CodeModule:
@@ -53,8 +57,13 @@ class TestKnowledgeCollector:
             1, date(2025, 1, 1), date(2025, 1, 31)
         )
         expected_keys = {
-            "total_contributions", "document_count", "template_count",
-            "module_count", "total_reuse_count", "code_modules", "plc_modules"
+            "total_contributions",
+            "document_count",
+            "template_count",
+            "module_count",
+            "total_reuse_count",
+            "code_modules",
+            "plc_modules",
         }
         assert expected_keys.issubset(result.keys())
 

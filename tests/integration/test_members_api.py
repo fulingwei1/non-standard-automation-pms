@@ -6,11 +6,10 @@ Updated for unified response format
 """
 
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_list_response,
+    assert_success_response,
     extract_items,
 )
-
 
 
 class TestMembersAPI:
@@ -87,9 +86,7 @@ class TestMembersAPI:
         assert data["project_id"] == member_data["project_id"]
         assert data["user_id"] == member_data["user_id"]
 
-    def test_add_member_duplicate(
-        self, client, admin_token, test_project, engineer_user
-    ):
+    def test_add_member_duplicate(self, client, admin_token, test_project, engineer_user):
         """测试添加重复成员"""
         member_data = {
             "project_id": test_project.id,
@@ -252,9 +249,7 @@ class TestMembersAPIValidation:
         )
         assert response.status_code == 200
 
-    def test_invalid_allocation_pct(
-        self, client, admin_token, test_project, engineer_user
-    ):
+    def test_invalid_allocation_pct(self, client, admin_token, test_project, engineer_user):
         """测试无效分配百分比"""
         member_data = {
             "project_id": test_project.id,

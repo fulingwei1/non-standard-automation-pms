@@ -28,9 +28,7 @@ class QualificationService:
 
     @staticmethod
     def get_qualification_levels(
-        db: Session,
-        role_type: Optional[str] = None,
-        is_active: Optional[bool] = True
+        db: Session, role_type: Optional[str] = None, is_active: Optional[bool] = True
     ) -> List[QualificationLevel]:
         """获取任职资格等级列表"""
         query = db.query(QualificationLevel)
@@ -44,16 +42,13 @@ class QualificationService:
 
     @staticmethod
     def get_competency_model(
-        db: Session,
-        position_type: str,
-        level_id: int,
-        position_subtype: Optional[str] = None
+        db: Session, position_type: str, level_id: int, position_subtype: Optional[str] = None
     ) -> Optional[PositionCompetencyModel]:
         """获取岗位能力模型"""
         query = db.query(PositionCompetencyModel).filter(
             PositionCompetencyModel.position_type == position_type,
             PositionCompetencyModel.level_id == level_id,
-            PositionCompetencyModel.is_active
+            PositionCompetencyModel.is_active,
         )
 
         if position_subtype:
@@ -63,9 +58,7 @@ class QualificationService:
 
     @staticmethod
     def get_employee_qualification(
-        db: Session,
-        employee_id: int,
-        position_type: Optional[str] = None
+        db: Session, employee_id: int, position_type: Optional[str] = None
     ) -> Optional[EmployeeQualification]:
         """获取员工任职资格"""
         query = db.query(EmployeeQualification).filter(
@@ -86,7 +79,7 @@ class QualificationService:
         assessment_details: Dict[str, Any],
         certifier_id: int,
         certified_date: Optional[date] = None,
-        valid_until: Optional[date] = None
+        valid_until: Optional[date] = None,
     ) -> EmployeeQualification:
         """认证员工任职资格"""
         # 检查员工是否存在
@@ -100,10 +93,14 @@ class QualificationService:
             raise ValueError(f"等级 {level_id} 不存在")
 
         # 创建或更新任职资格
-        existing = db.query(EmployeeQualification).filter(
-            EmployeeQualification.employee_id == employee_id,
-            EmployeeQualification.position_type == position_type
-        ).first()
+        existing = (
+            db.query(EmployeeQualification)
+            .filter(
+                EmployeeQualification.employee_id == employee_id,
+                EmployeeQualification.position_type == position_type,
+            )
+            .first()
+        )
 
         if existing:
             # 更新现有记录
@@ -124,7 +121,7 @@ class QualificationService:
                 certifier_id=certifier_id,
                 certified_date=certified_date or date.today(),
                 valid_until=valid_until,
-                status=QualificationStatusEnum.APPROVED
+                status=QualificationStatusEnum.APPROVED,
             )
             db.add(qualification)
 
@@ -141,7 +138,7 @@ class QualificationService:
         assessor_id: Optional[int] = None,
         qualification_id: Optional[int] = None,
         assessment_period: Optional[str] = None,
-        comments: Optional[str] = None
+        comments: Optional[str] = None,
     ) -> QualificationAssessment:
         """评估员工任职资格"""
         # 计算综合得分
@@ -160,7 +157,7 @@ class QualificationService:
             result=result,
             assessor_id=assessor_id,
             comments=comments,
-            assessed_at=datetime.now()
+            assessed_at=datetime.now(),
         )
 
         save_obj(db, assessment)
@@ -169,71 +166,66 @@ class QualificationService:
 
     @staticmethod
     def check_promotion_eligibility(
-        db: Session,
-        employee_id: int,
-        target_level_id: int
+        db: Session, employee_id: int, target_level_id: int
     ) -> Dict[str, Any]:
         """检查晋升资格"""
         # 获取当前任职资格
         qualification = QualificationService.get_employee_qualification(db, employee_id)
         if not qualification:
-            return {
-                'eligible': False,
-                'reason': '员工尚未获得任职资格认证'
-            }
+            return {"eligible": False, "reason": "员工尚未获得任职资格认证"}
 
         # 获取当前等级和目标等级
-        current_level = db.query(QualificationLevel).filter(
-            QualificationLevel.id == qualification.current_level_id
-        ).first()
-        target_level = db.query(QualificationLevel).filter(
-            QualificationLevel.id == target_level_id
-        ).first()
+        current_level = (
+            db.query(QualificationLevel)
+            .filter(QualificationLevel.id == qualification.current_level_id)
+            .first()
+        )
+        target_level = (
+            db.query(QualificationLevel).filter(QualificationLevel.id == target_level_id).first()
+        )
 
         if not current_level or not target_level:
-            return {
-                'eligible': False,
-                'reason': '等级信息不存在'
-            }
+            return {"eligible": False, "reason": "等级信息不存在"}
 
         # 检查是否满足晋升条件
         if target_level.level_order <= current_level.level_order:
-            return {
-                'eligible': False,
-                'reason': '目标等级不能低于或等于当前等级'
-            }
+            return {"eligible": False, "reason": "目标等级不能低于或等于当前等级"}
 
         # 检查是否有最近的评估记录
-        recent_assessment = db.query(QualificationAssessment).filter(
-            QualificationAssessment.employee_id == employee_id,
-            QualificationAssessment.qualification_id == qualification.id
-        ).order_by(desc(QualificationAssessment.assessed_at)).first()
+        recent_assessment = (
+            db.query(QualificationAssessment)
+            .filter(
+                QualificationAssessment.employee_id == employee_id,
+                QualificationAssessment.qualification_id == qualification.id,
+            )
+            .order_by(desc(QualificationAssessment.assessed_at))
+            .first()
+        )
 
         if not recent_assessment:
-            return {
-                'eligible': False,
-                'reason': '需要先完成任职资格评估'
-            }
+            return {"eligible": False, "reason": "需要先完成任职资格评估"}
 
         # 检查评估结果
         if recent_assessment.result != AssessmentResultEnum.PASS:
             return {
-                'eligible': False,
-                'reason': f'最近一次评估结果为 {recent_assessment.result}，需要达到 PASS 才能晋升'
+                "eligible": False,
+                "reason": f"最近一次评估结果为 {recent_assessment.result}，需要达到 PASS 才能晋升",
             }
 
         # 检查综合得分是否达到目标等级要求（假设需要80分以上）
         if recent_assessment.total_score and recent_assessment.total_score < 80:
             return {
-                'eligible': False,
-                'reason': f'综合得分 {recent_assessment.total_score} 未达到晋升要求（需要80分以上）'
+                "eligible": False,
+                "reason": f"综合得分 {recent_assessment.total_score} 未达到晋升要求（需要80分以上）",
             }
 
         return {
-            'eligible': True,
-            'current_level': current_level.level_code,
-            'target_level': target_level.level_code,
-            'recent_score': float(recent_assessment.total_score) if recent_assessment.total_score else None
+            "eligible": True,
+            "current_level": current_level.level_code,
+            "target_level": target_level.level_code,
+            "recent_score": (
+                float(recent_assessment.total_score) if recent_assessment.total_score else None
+            ),
         }
 
     @staticmethod
@@ -242,15 +234,15 @@ class QualificationService:
         # 获取能力模型（需要从评估详情中获取权重信息）
         # 这里简化处理，假设各维度权重相等
         if not scores:
-            return Decimal('0.00')
+            return Decimal("0.00")
 
         total = sum(float(v) if isinstance(v, (int, float)) else 0 for v in scores.values())
         count = len(scores)
 
         if count == 0:
-            return Decimal('0.00')
+            return Decimal("0.00")
 
-        return Decimal(str(total / count)).quantize(Decimal('0.01'))
+        return Decimal(str(total / count)).quantize(Decimal("0.01"))
 
     @staticmethod
     def _determine_result(total_score: Decimal) -> str:
@@ -265,9 +257,7 @@ class QualificationService:
 
     @staticmethod
     def get_assessment_history(
-        db: Session,
-        employee_id: int,
-        qualification_id: Optional[int] = None
+        db: Session, employee_id: int, qualification_id: Optional[int] = None
     ) -> List[QualificationAssessment]:
         """获取员工评估历史"""
         query = db.query(QualificationAssessment).filter(
@@ -281,25 +271,15 @@ class QualificationService:
 
     @staticmethod
     def get_competency_models_by_position(
-        db: Session,
-        position_type: str,
-        position_subtype: Optional[str] = None
+        db: Session, position_type: str, position_subtype: Optional[str] = None
     ) -> List[PositionCompetencyModel]:
         """获取指定岗位的所有能力模型"""
         query = db.query(PositionCompetencyModel).filter(
             PositionCompetencyModel.position_type == position_type,
-            PositionCompetencyModel.is_active
+            PositionCompetencyModel.is_active,
         )
 
         if position_subtype:
             query = query.filter(PositionCompetencyModel.position_subtype == position_subtype)
 
-        return query.join(QualificationLevel).order_by(
-            QualificationLevel.level_order
-        ).all()
-
-
-
-
-
-
+        return query.join(QualificationLevel).order_by(QualificationLevel.level_order).all()

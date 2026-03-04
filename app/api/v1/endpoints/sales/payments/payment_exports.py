@@ -68,9 +68,19 @@ def export_payment_invoices(
 
     # 设置表头
     headers = [
-        "发票号", "合同编号", "项目编号", "客户名称", "发票金额",
-        "已收金额", "未收金额", "收款状态", "开票日期", "到期日期",
-        "实际收款日期", "逾期天数", "备注"
+        "发票号",
+        "合同编号",
+        "项目编号",
+        "客户名称",
+        "发票金额",
+        "已收金额",
+        "未收金额",
+        "收款状态",
+        "开票日期",
+        "到期日期",
+        "实际收款日期",
+        "逾期天数",
+        "备注",
     ]
 
     # 设置表头样式
@@ -92,20 +102,40 @@ def export_payment_invoices(
         unpaid = total - paid
 
         overdue_days = None
-        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
+        if (
+            invoice.due_date
+            and invoice.due_date < today
+            and invoice.payment_status in ["PENDING", "PARTIAL"]
+        ):
             overdue_days = (today - invoice.due_date).days
 
         ws.cell(row=row, column=1, value=invoice.invoice_code or "")
         ws.cell(row=row, column=2, value=contract.contract_code if contract else "")
         ws.cell(row=row, column=3, value=invoice.project.project_code if invoice.project else "")
-        ws.cell(row=row, column=4, value=contract.customer.customer_name if contract and contract.customer else "")
+        ws.cell(
+            row=row,
+            column=4,
+            value=contract.customer.customer_name if contract and contract.customer else "",
+        )
         ws.cell(row=row, column=5, value=float(total))
         ws.cell(row=row, column=6, value=float(paid))
         ws.cell(row=row, column=7, value=float(unpaid))
         ws.cell(row=row, column=8, value=invoice.payment_status or "")
-        ws.cell(row=row, column=9, value=invoice.issue_date.strftime("%Y-%m-%d") if invoice.issue_date else "")
-        ws.cell(row=row, column=10, value=invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "")
-        ws.cell(row=row, column=11, value=invoice.paid_date.strftime("%Y-%m-%d") if invoice.paid_date else "")
+        ws.cell(
+            row=row,
+            column=9,
+            value=invoice.issue_date.strftime("%Y-%m-%d") if invoice.issue_date else "",
+        )
+        ws.cell(
+            row=row,
+            column=10,
+            value=invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "",
+        )
+        ws.cell(
+            row=row,
+            column=11,
+            value=invoice.paid_date.strftime("%Y-%m-%d") if invoice.paid_date else "",
+        )
         ws.cell(row=row, column=12, value=overdue_days if overdue_days else "")
         ws.cell(row=row, column=13, value=invoice.remark or "")
 
@@ -129,8 +159,7 @@ def export_payment_invoices(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": (
-                f"attachment; filename={ascii_filename}; "
-                f"filename*=UTF-8''{encoded_filename}"
+                f"attachment; filename={ascii_filename}; " f"filename*=UTF-8''{encoded_filename}"
             )
         },
     )
@@ -155,9 +184,18 @@ def export_payments(
         create_excel_response,
     )
 
-    query = db.query(ProjectPaymentPlan).join(Contract).filter(ProjectPaymentPlan.status.in_(["PENDING", "INVOICED", "PARTIAL"]))
+    query = (
+        db.query(ProjectPaymentPlan)
+        .join(Contract)
+        .filter(ProjectPaymentPlan.status.in_(["PENDING", "INVOICED", "PARTIAL"]))
+    )
     if keyword:
-        query = query.filter(or_(ProjectPaymentPlan.payment_name.contains(keyword), ProjectPaymentPlan.contract.has(Contract.contract_code.contains(keyword))))
+        query = query.filter(
+            or_(
+                ProjectPaymentPlan.payment_name.contains(keyword),
+                ProjectPaymentPlan.contract.has(Contract.contract_code.contains(keyword)),
+            )
+        )
     if status:
         query = query.filter(ProjectPaymentPlan.status == status)
     if customer_id:
@@ -172,21 +210,63 @@ def export_payments(
         {"key": "contract_code", "label": "合同编码", "width": 15},
         {"key": "customer_name", "label": "客户名称", "width": 25},
         {"key": "project_code", "label": "项目编码", "width": 15},
-        {"key": "planned_amount", "label": "计划金额", "width": 15, "format": export_service.format_currency},
-        {"key": "actual_amount", "label": "已收金额", "width": 15, "format": export_service.format_currency},
-        {"key": "unpaid_amount", "label": "未收金额", "width": 15, "format": export_service.format_currency},
-        {"key": "planned_date", "label": "计划日期", "width": 12, "format": export_service.format_date},
+        {
+            "key": "planned_amount",
+            "label": "计划金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "actual_amount",
+            "label": "已收金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "unpaid_amount",
+            "label": "未收金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "planned_date",
+            "label": "计划日期",
+            "width": 12,
+            "format": export_service.format_date,
+        },
         {"key": "status", "label": "状态", "width": 12},
         {"key": "overdue_days", "label": "逾期天数", "width": 10},
     ]
 
     if include_aging:
-        columns.extend([
-            {"key": "aging_0_30", "label": "0-30天", "width": 12, "format": export_service.format_currency},
-            {"key": "aging_31_60", "label": "31-60天", "width": 12, "format": export_service.format_currency},
-            {"key": "aging_61_90", "label": "61-90天", "width": 12, "format": export_service.format_currency},
-            {"key": "aging_over_90", "label": "90天以上", "width": 12, "format": export_service.format_currency},
-        ])
+        columns.extend(
+            [
+                {
+                    "key": "aging_0_30",
+                    "label": "0-30天",
+                    "width": 12,
+                    "format": export_service.format_currency,
+                },
+                {
+                    "key": "aging_31_60",
+                    "label": "31-60天",
+                    "width": 12,
+                    "format": export_service.format_currency,
+                },
+                {
+                    "key": "aging_61_90",
+                    "label": "61-90天",
+                    "width": 12,
+                    "format": export_service.format_currency,
+                },
+                {
+                    "key": "aging_over_90",
+                    "label": "90天以上",
+                    "width": 12,
+                    "format": export_service.format_currency,
+                },
+            ]
+        )
 
     data = []
     for plan in payment_plans:
@@ -198,15 +278,19 @@ def export_payments(
             overdue_days = (today - plan.planned_date).days
 
         row_data = {
-            "payment_name": plan.payment_name or '',
-            "contract_code": plan.contract.contract_code if plan.contract else '',
-            "customer_name": plan.contract.customer.customer_name if plan.contract and plan.contract.customer else '',
-            "project_code": plan.project.project_code if plan.project else '',
+            "payment_name": plan.payment_name or "",
+            "contract_code": plan.contract.contract_code if plan.contract else "",
+            "customer_name": (
+                plan.contract.customer.customer_name
+                if plan.contract and plan.contract.customer
+                else ""
+            ),
+            "project_code": plan.project.project_code if plan.project else "",
             "planned_amount": planned_amount,
             "actual_amount": actual_amount,
             "unpaid_amount": unpaid_amount,
             "planned_date": plan.planned_date,
-            "status": plan.status or '',
+            "status": plan.status or "",
             "overdue_days": overdue_days,
         }
 
@@ -221,10 +305,22 @@ def export_payments(
                     aging_61_90 = unpaid_amount
                 else:
                     aging_over_90 = unpaid_amount
-            row_data.update({"aging_0_30": aging_0_30, "aging_31_60": aging_31_60, "aging_61_90": aging_61_90, "aging_over_90": aging_over_90})
+            row_data.update(
+                {
+                    "aging_0_30": aging_0_30,
+                    "aging_31_60": aging_31_60,
+                    "aging_61_90": aging_61_90,
+                    "aging_over_90": aging_over_90,
+                }
+            )
 
         data.append(row_data)
 
-    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="应收账款列表", title="应收账款列表（含账龄分析）" if include_aging else "应收账款列表")
+    excel_data = export_service.export_to_excel(
+        data=data,
+        columns=columns,
+        sheet_name="应收账款列表",
+        title="应收账款列表（含账龄分析）" if include_aging else "应收账款列表",
+    )
     filename = f"应收账款列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return create_excel_response(excel_data, filename)

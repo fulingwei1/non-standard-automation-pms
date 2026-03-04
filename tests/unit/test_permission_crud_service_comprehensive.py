@@ -8,8 +8,8 @@ PermissionCRUDService 综合单元测试
 - list_permissions: 获取权限列表
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,8 +30,8 @@ class TestPermissionCRUDServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.permission_crud_service import PermissionCRUDService
         from app.models.user import ApiPermission
+        from app.services.permission_crud_service import PermissionCRUDService
 
         mock_db = MagicMock()
 
@@ -128,7 +128,10 @@ class TestListPermissions:
         mock_perm2.updated_at = datetime(2024, 1, 1)
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_perm1, mock_perm2]
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [
+            mock_perm1,
+            mock_perm2,
+        ]
         mock_db.query.return_value = mock_query
 
         result = service.list_permissions()

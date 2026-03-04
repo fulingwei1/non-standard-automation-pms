@@ -2,6 +2,7 @@
 问题成本关联服务
 用于查询问题关联的成本记录和工时记录
 """
+
 from decimal import Decimal
 from typing import Dict
 
@@ -43,17 +44,13 @@ class IssueCostService:
         # 计算库存损失（description中包含"库存"的成本）
         inventory_loss = Decimal(0)
         for cost in costs:
-            if cost.description and '库存' in cost.description:
+            if cost.description and "库存" in cost.description:
                 inventory_loss += cost.amount or Decimal(0)
 
         # 计算总成本
         total_cost = sum(cost.amount or Decimal(0) for cost in costs)
 
-        return {
-            'inventory_loss': inventory_loss,
-            'total_cost': total_cost,
-            'costs': costs
-        }
+        return {"inventory_loss": inventory_loss, "total_cost": total_cost, "costs": costs}
 
     @staticmethod
     def get_issue_related_hours(db: Session, issue_no: str) -> Dict:
@@ -84,14 +81,11 @@ class IssueCostService:
         total_hours = Decimal(0)
         approved_timesheets = []
         for ts in timesheets:
-            if ts.status == 'APPROVED':
+            if ts.status == "APPROVED":
                 total_hours += ts.hours or Decimal(0)
                 approved_timesheets.append(ts)
 
-        return {
-            'total_hours': total_hours,
-            'timesheets': approved_timesheets
-        }
+        return {"total_hours": total_hours, "timesheets": approved_timesheets}
 
     @staticmethod
     def get_issue_cost_summary(db: Session, issue_no: str) -> Dict:
@@ -109,15 +103,10 @@ class IssueCostService:
         hours_info = IssueCostService.get_issue_related_hours(db, issue_no)
 
         return {
-            'issue_no': issue_no,
-            'inventory_loss': costs_info['inventory_loss'],
-            'total_cost': costs_info['total_cost'],
-            'total_hours': hours_info['total_hours'],
-            'cost_count': len(costs_info['costs']),
-            'timesheet_count': len(hours_info['timesheets'])
+            "issue_no": issue_no,
+            "inventory_loss": costs_info["inventory_loss"],
+            "total_cost": costs_info["total_cost"],
+            "total_hours": hours_info["total_hours"],
+            "cost_count": len(costs_info["costs"]),
+            "timesheet_count": len(hours_info["timesheets"]),
         }
-
-
-
-
-

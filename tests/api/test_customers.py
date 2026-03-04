@@ -29,7 +29,7 @@ class TestCustomerCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/customers/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -45,7 +45,7 @@ class TestCustomerCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/customers/",
             params={"page": 1, "page_size": 10, "keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -66,9 +66,7 @@ class TestCustomerCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/customers/",
-            json=customer_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/customers/", json=customer_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -87,10 +85,7 @@ class TestCustomerCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取客户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/customers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get customers list")
@@ -102,10 +97,7 @@ class TestCustomerCRUD:
 
         customer_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/{customer_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/customers/{customer_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -117,10 +109,7 @@ class TestCustomerCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/customers/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -132,10 +121,7 @@ class TestCustomerCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取客户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/customers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get customers list")
@@ -153,9 +139,7 @@ class TestCustomerCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/customers/{customer_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/customers/{customer_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -175,10 +159,7 @@ class TestCustomerProjects:
         headers = _auth_headers(admin_token)
 
         # 先获取客户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/customers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get customers list")
@@ -191,8 +172,7 @@ class TestCustomerProjects:
         customer_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/{customer_id}/projects",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/customers/{customer_id}/projects", headers=headers
         )
 
         assert response.status_code == 200
@@ -209,10 +189,7 @@ class TestCustomer360:
         headers = _auth_headers(admin_token)
 
         # 先获取客户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/customers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get customers list")
@@ -225,8 +202,7 @@ class TestCustomer360:
         customer_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/customers/{customer_id}/360",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/customers/{customer_id}/360", headers=headers
         )
 
         assert response.status_code == 200
@@ -241,9 +217,6 @@ class TestCustomerDelete:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/customers/99999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/customers/99999", headers=headers)
 
         assert response.status_code in [404, 403]

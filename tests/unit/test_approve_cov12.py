@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：审批处理功能单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.engine.approve import ApprovalProcessMixin
+
     SKIP = False
 except Exception:
     SKIP = True

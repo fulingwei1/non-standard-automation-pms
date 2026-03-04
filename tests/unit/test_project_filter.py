@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/data_scope/project_filter.py"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.data_scope.project_filter import ProjectFilterService
 

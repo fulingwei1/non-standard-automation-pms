@@ -10,18 +10,21 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== SLA策略 ====================
+
 
 class SLAPolicyCreate(BaseModel):
     """创建SLA策略"""
+
     policy_name: str = Field(..., description="策略名称")
     policy_code: str = Field(..., description="策略编码")
     problem_type: Optional[str] = Field(None, description="问题类型（可选，为空表示适用所有类型）")
     urgency: Optional[str] = Field(None, description="紧急程度（可选，为空表示适用所有紧急程度）")
     response_time_hours: int = Field(..., gt=0, description="响应时间（小时）")
     resolve_time_hours: int = Field(..., gt=0, description="解决时间（小时）")
-    warning_threshold_percent: Optional[Decimal] = Field(80, ge=0, le=100, description="预警阈值（百分比）")
+    warning_threshold_percent: Optional[Decimal] = Field(
+        80, ge=0, le=100, description="预警阈值（百分比）"
+    )
     priority: Optional[int] = Field(100, description="优先级（数字越小优先级越高）")
     description: Optional[str] = Field(None, description="策略描述")
     remark: Optional[str] = Field(None, description="备注")
@@ -29,12 +32,15 @@ class SLAPolicyCreate(BaseModel):
 
 class SLAPolicyUpdate(BaseModel):
     """更新SLA策略"""
+
     policy_name: Optional[str] = Field(None, description="策略名称")
     problem_type: Optional[str] = Field(None, description="问题类型")
     urgency: Optional[str] = Field(None, description="紧急程度")
     response_time_hours: Optional[int] = Field(None, gt=0, description="响应时间（小时）")
     resolve_time_hours: Optional[int] = Field(None, gt=0, description="解决时间（小时）")
-    warning_threshold_percent: Optional[Decimal] = Field(None, ge=0, le=100, description="预警阈值（百分比）")
+    warning_threshold_percent: Optional[Decimal] = Field(
+        None, ge=0, le=100, description="预警阈值（百分比）"
+    )
     priority: Optional[int] = Field(None, description="优先级")
     is_active: Optional[bool] = Field(None, description="是否启用")
     description: Optional[str] = Field(None, description="策略描述")
@@ -43,6 +49,7 @@ class SLAPolicyUpdate(BaseModel):
 
 class SLAPolicyResponse(BaseModel):
     """SLA策略响应"""
+
     id: int
     policy_name: str
     policy_code: str
@@ -66,8 +73,10 @@ class SLAPolicyResponse(BaseModel):
 
 # ==================== SLA监控记录 ====================
 
+
 class SLAMonitorResponse(BaseModel):
     """SLA监控记录响应"""
+
     id: int
     ticket_id: int
     ticket_no: Optional[str] = None
@@ -96,8 +105,10 @@ class SLAMonitorResponse(BaseModel):
 
 # ==================== SLA统计 ====================
 
+
 class SLAStatisticsResponse(BaseModel):
     """SLA统计响应"""
+
     total_tickets: int = Field(..., description="总工单数")
     monitored_tickets: int = Field(..., description="已监控工单数")
     response_on_time: int = Field(..., description="响应按时数")

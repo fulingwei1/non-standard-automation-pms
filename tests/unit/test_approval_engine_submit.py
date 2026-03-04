@@ -64,9 +64,7 @@ class TestSubmitApproval:
         mock_adapter = MagicMock()
         mock_adapter.validate_submit.return_value = (True, None)
 
-        with patch(
-            "app.services.approval_engine.engine.submit.get_adapter"
-        ) as mock_get_adapter:
+        with patch("app.services.approval_engine.engine.submit.get_adapter") as mock_get_adapter:
             mock_get_adapter.return_value = mock_adapter
 
             result = mixin.submit(
@@ -107,9 +105,7 @@ class TestSubmitApproval:
         mock_adapter.generate_title.return_value = "Auto Title"
         mock_adapter.generate_summary.return_value = "Auto Summary"
 
-        with patch(
-            "app.services.approval_engine.engine.submit.get_adapter"
-        ) as mock_get_adapter:
+        with patch("app.services.approval_engine.engine.submit.get_adapter") as mock_get_adapter:
             mock_get_adapter.return_value = mock_adapter
 
             result = mixin.submit(
@@ -146,9 +142,7 @@ class TestSubmitApproval:
         mock_adapter = MagicMock()
         mock_adapter.validate_submit.return_value = (True, None)
 
-        with patch(
-            "app.services.approval_engine.engine.submit.get_adapter"
-        ) as mock_get_adapter:
+        with patch("app.services.approval_engine.engine.submit.get_adapter") as mock_get_adapter:
             mock_get_adapter.return_value = mock_adapter
 
             # Test URGENCY
@@ -238,9 +232,7 @@ class TestSubmitApproval:
         mock_adapter = MagicMock()
         mock_adapter.validate_submit.return_value = (False, "Cannot submit")
 
-        with patch(
-            "app.services.approval_engine.engine.submit.get_adapter"
-        ) as mock_get_adapter:
+        with patch("app.services.approval_engine.engine.submit.get_adapter") as mock_get_adapter:
             mock_get_adapter.return_value = mock_adapter
 
             with pytest.raises(ValueError, match="Cannot submit"):
@@ -278,9 +270,7 @@ class TestSubmitApproval:
         mock_adapter = MagicMock()
         mock_adapter.validate_submit.return_value = (True, None)
 
-        with patch(
-            "app.services.approval_engine.engine.submit.get_adapter"
-        ) as mock_get_adapter:
+        with patch("app.services.approval_engine.engine.submit.get_adapter") as mock_get_adapter:
             mock_get_adapter.return_value = mock_adapter
 
             result = mixin.submit(

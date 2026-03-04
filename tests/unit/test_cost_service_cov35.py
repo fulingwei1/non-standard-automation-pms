@@ -2,11 +2,13 @@
 """
 第三十五批 - cost_service.py 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.cost_service import CostService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -40,8 +42,10 @@ def _make_db(project=None, cost_total=0.0, cost_by_type=None, cost_by_category=N
     cat_q.all.return_value = cost_by_category or []
 
     call_count = [0]
+
     def query_side_effect(model):
         from app.models.project import Project, ProjectCost
+
         if model is Project:
             return proj_q
         return total_q  # simplified
@@ -129,11 +133,15 @@ class TestCostService:
         """超出预算时 is_over_budget 为 True"""
         db = MagicMock()
         svc = CostService(db)
-        with patch.object(svc, "get_cost_breakdown", return_value={
-            "total_cost": 15000.0,
-            "cost_by_type": {},
-            "cost_by_category": {},
-        }):
+        with patch.object(
+            svc,
+            "get_cost_breakdown",
+            return_value={
+                "total_cost": 15000.0,
+                "cost_by_type": {},
+                "cost_by_category": {},
+            },
+        ):
             result = svc.calculate_cost_stats(1, budget_amount=10000.0)
         assert result["is_over_budget"] is True
 
@@ -141,10 +149,14 @@ class TestCostService:
         """在预算内时 is_over_budget 为 False"""
         db = MagicMock()
         svc = CostService(db)
-        with patch.object(svc, "get_cost_breakdown", return_value={
-            "total_cost": 8000.0,
-            "cost_by_type": {},
-            "cost_by_category": {},
-        }):
+        with patch.object(
+            svc,
+            "get_cost_breakdown",
+            return_value={
+                "total_cost": 8000.0,
+                "cost_by_type": {},
+                "cost_by_category": {},
+            },
+        ):
             result = svc.calculate_cost_stats(1, budget_amount=10000.0)
         assert result["is_over_budget"] is False

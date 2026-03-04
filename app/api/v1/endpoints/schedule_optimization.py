@@ -24,7 +24,7 @@ def analyze_optimization(
 ) -> Any:
     """
     AI 分析项目优化潜力
-    
+
     返回：
     1. 可节省时间的环节
     2. 可复用的模块/内容
@@ -33,10 +33,10 @@ def analyze_optimization(
     """
     service = ScheduleOptimizationService(db)
     analysis = service.analyze_optimization_potential(project_id)
-    
-    if 'error' in analysis:
-        raise HTTPException(status_code=404, detail=analysis['error'])
-    
+
+    if "error" in analysis:
+        raise HTTPException(status_code=404, detail=analysis["error"])
+
     return analysis
 
 
@@ -51,8 +51,8 @@ def auto_generate_bom(
     """
     # TODO: 实现 BOM 自动生成
     return {
-        'message': 'BOM 自动生成开发中',
-        'project_id': project_id,
+        "message": "BOM 自动生成开发中",
+        "project_id": project_id,
     }
 
 
@@ -67,6 +67,6 @@ def auto_create_purchase(
     """
     # TODO: 实现自动采购申请
     return {
-        'message': '自动采购申请开发中',
-        'project_id': project_id,
+        "message": "自动采购申请开发中",
+        "project_id": project_id,
     }

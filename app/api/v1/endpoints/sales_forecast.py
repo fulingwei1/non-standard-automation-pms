@@ -4,8 +4,9 @@
 为领导层提供公司整体销售计划完成情况的 AI 预测
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 公司整体销售预测 ==========
 
+
 @router.get("/forecast/company-overview", summary="公司整体销售预测")
 def get_company_forecast(
     period: str = Query("quarterly", description="周期：monthly/quarterly/yearly"),
@@ -26,26 +28,25 @@ def get_company_forecast(
 ) -> Any:
     """
     公司整体销售计划完成情况预测
-    
+
     基于：
     - 当前已完成业绩
     - 漏斗中各阶段商机金额 × 赢单率
     - 历史同期数据
     - 季节性因素
-    
+
     返回：
     - 预测完成率
     - 置信区间
     - 风险等级
     - 关键驱动因素
     """
-    
+
     # 模拟预测数据
     forecast = {
         "period": "2026-Q1",
         "period_type": "quarterly",
         "generated_at": date.today().isoformat(),
-        
         # 目标 vs 实际 vs 预测
         "targets": {
             "quarterly_target": 50000000,
@@ -55,7 +56,6 @@ def get_company_forecast(
             "total_days": 90,
             "time_progress": 66.7,
         },
-        
         # AI 预测结果
         "prediction": {
             "predicted_revenue": 52800000,
@@ -68,17 +68,40 @@ def get_company_forecast(
             "risk_level": "LOW",
             "trend": "positive",
         },
-        
         # 预测依据 - 漏斗分析
         "funnel_contribution": {
-            "stage1": {"count": 45, "total_amount": 18000000, "weighted_amount": 4500000, "win_rate": 25},
-            "stage2": {"count": 28, "total_amount": 12000000, "weighted_amount": 6000000, "win_rate": 50},
-            "stage3": {"count": 15, "total_amount": 8000000, "weighted_amount": 5200000, "win_rate": 65},
-            "stage4": {"count": 10, "total_amount": 5000000, "weighted_amount": 3750000, "win_rate": 75},
-            "stage5": {"count": 5, "total_amount": 2500000, "weighted_amount": 2125000, "win_rate": 85},
+            "stage1": {
+                "count": 45,
+                "total_amount": 18000000,
+                "weighted_amount": 4500000,
+                "win_rate": 25,
+            },
+            "stage2": {
+                "count": 28,
+                "total_amount": 12000000,
+                "weighted_amount": 6000000,
+                "win_rate": 50,
+            },
+            "stage3": {
+                "count": 15,
+                "total_amount": 8000000,
+                "weighted_amount": 5200000,
+                "win_rate": 65,
+            },
+            "stage4": {
+                "count": 10,
+                "total_amount": 5000000,
+                "weighted_amount": 3750000,
+                "win_rate": 75,
+            },
+            "stage5": {
+                "count": 5,
+                "total_amount": 2500000,
+                "weighted_amount": 2125000,
+                "win_rate": 85,
+            },
             "total_weighted": 21575000,
         },
-        
         # 预测分解
         "forecast_breakdown": {
             "committed": {  # 已签约
@@ -97,7 +120,6 @@ def get_company_forecast(
                 "confidence": 60,
             },
         },
-        
         # 关键驱动因素
         "key_drivers": [
             {
@@ -116,7 +138,6 @@ def get_company_forecast(
                 "description": "视觉检测设备带动新增需求",
             },
         ],
-        
         # 风险预警
         "risks": [
             {
@@ -132,7 +153,6 @@ def get_company_forecast(
                 "mitigation": "做好客户交接预案",
             },
         ],
-        
         # 建议行动
         "recommended_actions": [
             {
@@ -154,7 +174,6 @@ def get_company_forecast(
                 "deadline": "3 月 25 日前",
             },
         ],
-        
         # 历史对比
         "historical_comparison": {
             "last_quarter": {
@@ -172,11 +191,12 @@ def get_company_forecast(
             "average_q1_completion": 102.5,
         },
     }
-    
+
     return forecast
 
 
 # ========== 2. 销售团队预测 ==========
+
 
 @router.get("/forecast/team-breakdown", summary="团队销售预测分解")
 def get_team_forecast(
@@ -186,13 +206,13 @@ def get_team_forecast(
 ) -> Any:
     """
     各销售团队/大区预测分解
-    
+
     显示：
     - 各团队完成率
     - 预测排名
     - 风险团队标识
     """
-    
+
     teams = [
         {
             "team_id": 1,
@@ -257,7 +277,7 @@ def get_team_forecast(
             ],
         },
     ]
-    
+
     return {
         "period": "2026-Q1",
         "total_teams": len(teams),
@@ -269,6 +289,7 @@ def get_team_forecast(
 
 # ========== 3. 个人销售预测 ==========
 
+
 @router.get("/forecast/sales-rep-breakdown", summary="个人销售预测分解")
 def get_sales_rep_forecast(
     team_id: Optional[int] = Query(None, description="团队 ID"),
@@ -278,13 +299,13 @@ def get_sales_rep_forecast(
 ) -> Any:
     """
     各销售人员预测分解
-    
+
     显示：
     - 个人完成率
     - 预测排名
     - 关键商机
     """
-    
+
     sales_reps = [
         {
             "sales_id": 101,
@@ -343,10 +364,10 @@ def get_sales_rep_forecast(
             "alerts": ["需要加速商机推进"],
         },
     ]
-    
+
     if team_id:
         sales_reps = [s for s in sales_reps if s["team_id"] == team_id]
-    
+
     return {
         "period": "2026-Q1",
         "total_reps": len(sales_reps),
@@ -358,6 +379,7 @@ def get_sales_rep_forecast(
 
 # ========== 4. 预测准确性追踪 ==========
 
+
 @router.get("/forecast/accuracy-tracking", summary="预测准确性追踪")
 def get_forecast_accuracy(
     months: int = Query(6, description="追踪月数"),
@@ -366,12 +388,12 @@ def get_forecast_accuracy(
 ) -> Any:
     """
     追踪历史预测的准确性
-    
+
     用于：
     - 验证预测模型可靠性
     - 持续改进预测算法
     """
-    
+
     accuracy_history = [
         {
             "period": "2025-09",
@@ -416,9 +438,9 @@ def get_forecast_accuracy(
             "accuracy": 94.0,
         },
     ]
-    
+
     avg_accuracy = sum(h["accuracy"] for h in accuracy_history) / len(accuracy_history)
-    
+
     return {
         "tracking_period": f"最近{months}个月",
         "average_accuracy": round(avg_accuracy, 1),
@@ -435,6 +457,7 @@ def get_forecast_accuracy(
 
 # ========== 5. 领导驾驶舱汇总 ==========
 
+
 @router.get("/forecast/executive-dashboard", summary="领导驾驶舱")
 def get_executive_dashboard(
     db: Session = Depends(deps.get_db),
@@ -442,14 +465,13 @@ def get_executive_dashboard(
 ) -> Any:
     """
     领导驾驶舱 - 一页纸看全公司销售情况
-    
+
     专为 CEO/销售副总设计
     """
-    
+
     return {
         "dashboard_date": date.today().isoformat(),
         "period": "2026-Q1",
-        
         # 核心指标
         "kpi_summary": {
             "revenue": {
@@ -475,7 +497,6 @@ def get_executive_dashboard(
                 "change_percentage": 5.3,
             },
         },
-        
         # 红绿灯预警
         "traffic_lights": {
             "overall": "GREEN",
@@ -485,7 +506,6 @@ def get_executive_dashboard(
                 {"team": "华北大区", "light": "RED", "completion": 98.8},
             ],
         },
-        
         # 关键风险
         "top_risks": [
             {
@@ -499,13 +519,21 @@ def get_executive_dashboard(
                 "action": "加强价格谈判支持",
             },
         ],
-        
         # 关键机会
         "top_opportunities": [
-            {"customer": "欣旺达", "amount": 3200000, "probability": 70, "expected_close": "3 月 20 日"},
-            {"customer": "中创新航", "amount": 2500000, "probability": 65, "expected_close": "3 月 15 日"},
+            {
+                "customer": "欣旺达",
+                "amount": 3200000,
+                "probability": 70,
+                "expected_close": "3 月 20 日",
+            },
+            {
+                "customer": "中创新航",
+                "amount": 2500000,
+                "probability": 65,
+                "expected_close": "3 月 15 日",
+            },
         ],
-        
         # 需要领导关注的事项
         "executive_actions": [
             {
@@ -521,7 +549,6 @@ def get_executive_dashboard(
                 "deadline": "3 月 5 日前",
             },
         ],
-        
         # 预测趋势图数据
         "trend_data": [
             {"month": "1 月", "target": 15000000, "actual": 13500000, "predicted": 14200000},

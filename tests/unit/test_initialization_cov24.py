@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - stage_instance/initialization 单元测试"""
 
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.stage_instance.initialization")
 
@@ -32,14 +33,16 @@ class TestInitializeProjectStagesErrors:
         mixin, db = _make_mixin()
         project_mock = MagicMock()
 
-        results = iter([
-            # 1st query(Project).filter().first() -> project found
-            project_mock,
-            # 2nd query(ProjectStageInstance).filter().count() -> 0
-            None,
-            # 3rd query(StageTemplate).options().filter().first() -> None
-            None,
-        ])
+        results = iter(
+            [
+                # 1st query(Project).filter().first() -> project found
+                project_mock,
+                # 2nd query(ProjectStageInstance).filter().count() -> 0
+                None,
+                # 3rd query(StageTemplate).options().filter().first() -> None
+                None,
+            ]
+        )
 
         # We'll use side_effect on the filter chain
         def make_q(return_val=None, count_val=0, first_val=None):
@@ -50,6 +53,7 @@ class TestInitializeProjectStagesErrors:
             return q
 
         call_count = [0]
+
         def query_side_effect(*args):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -69,6 +73,7 @@ class TestInitializeProjectStagesErrors:
         project_mock = MagicMock()
 
         call_count = [0]
+
         def query_side_effect(*args):
             call_count[0] += 1
             q = MagicMock()

@@ -4,11 +4,12 @@ Unit tests for app/services/data_scope/config.py
 批次: cov50
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
-    from app.services.data_scope.config import DataScopeConfig, DATA_SCOPE_CONFIGS
+    from app.services.data_scope.config import DATA_SCOPE_CONFIGS, DataScopeConfig
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

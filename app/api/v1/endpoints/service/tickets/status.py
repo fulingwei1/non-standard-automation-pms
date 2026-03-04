@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -19,13 +19,13 @@ from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
 from app.services.status_update_service import StatusUpdateService
 from app.utils.db_helpers import get_or_404
 
-from fastapi import APIRouter
-
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.put("/{ticket_id}/status", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{ticket_id}/status", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK
+)
 def update_service_ticket_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -49,18 +49,21 @@ def update_service_ticket_status(
         """记录状态变更到时间线"""
         if not entity.timeline:
             entity.timeline = []
-        entity.timeline.append({
-            "type": "STATUS_CHANGE",
-            "timestamp": datetime.now().isoformat(),
-            "user": operator.real_name or operator.username,
-            "description": f"状态变更：{old_status} → {new_status}",
-        })
+        entity.timeline.append(
+            {
+                "type": "STATUS_CHANGE",
+                "timestamp": datetime.now().isoformat(),
+                "user": operator.real_name or operator.username,
+                "description": f"状态变更：{old_status} → {new_status}",
+            }
+        )
 
     # 创建更新后回调（同步SLA监控）
     def after_update_callback(entity, old_status, new_status, operator):
         """状态更新后同步SLA监控"""
         try:
             from app.services.sla_service import sync_ticket_to_sla_monitor
+
             sync_ticket_to_sla_monitor(db, entity)
         except Exception as e:
             logger.error(f"同步SLA监控状态失败: {e}", exc_info=True)
@@ -90,7 +93,9 @@ def update_service_ticket_status(
     return result.entity
 
 
-@router.put("/{ticket_id}/close", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{ticket_id}/close", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK
+)
 def close_service_ticket(
     *,
     db: Session = Depends(deps.get_db),
@@ -125,12 +130,14 @@ def close_service_ticket(
         """记录关闭操作到时间线"""
         if not entity.timeline:
             entity.timeline = []
-        entity.timeline.append({
-            "type": "CLOSED",
-            "timestamp": datetime.now().isoformat(),
-            "user": operator.real_name or operator.username,
-            "description": "工单已关闭",
-        })
+        entity.timeline.append(
+            {
+                "type": "CLOSED",
+                "timestamp": datetime.now().isoformat(),
+                "user": operator.real_name or operator.username,
+                "description": "工单已关闭",
+            }
+        )
 
     # 创建更新后回调（同步SLA和提取知识）
     def after_update_callback(entity, old_status, new_status, operator):
@@ -138,6 +145,7 @@ def close_service_ticket(
         # 同步SLA监控状态
         try:
             from app.services.sla_service import sync_ticket_to_sla_monitor
+
             sync_ticket_to_sla_monitor(db, entity)
         except Exception as e:
             logger.error(f"同步SLA监控状态失败: {e}", exc_info=True)
@@ -147,6 +155,7 @@ def close_service_ticket(
             from app.services.knowledge_extraction_service import (
                 auto_extract_knowledge_from_ticket,
             )
+
             auto_extract_knowledge_from_ticket(db, entity, auto_publish=True)
         except Exception as e:
             logger.error(f"自动提取知识失败: {e}", exc_info=True)

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十批：ProjectEvaluationService 单元测试"""
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.project_evaluation_service import ProjectEvaluationService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -83,10 +85,7 @@ def test_calculate_evaluation_score(service, db):
         pytest.skip("方法不存在")
     scores = {"novelty": 80, "new_tech": 90, "difficulty": 85, "workload": 75, "amount": 70}
     weights = ProjectEvaluationService.DEFAULT_WEIGHTS
-    total = sum(
-        Decimal(str(scores[k])) * weights[k]
-        for k in scores if k in weights
-    )
+    total = sum(Decimal(str(scores[k])) * weights[k] for k in scores if k in weights)
     assert total > 0
 
 

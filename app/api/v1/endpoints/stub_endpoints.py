@@ -26,15 +26,17 @@ async def stub_handler(request: Request, path: str):
     full_path = f"/{path}"
 
     if request.method == "GET":
-        return JSONResponse(content={
-            "items": [],
-            "total": 0,
-            "page": 1,
-            "page_size": 20,
-            "pages": 0,
-            "_stub": True,
-            "_message": f"此API尚未实现: {full_path}"
-        })
+        return JSONResponse(
+            content={
+                "items": [],
+                "total": 0,
+                "page": 1,
+                "page_size": 20,
+                "pages": 0,
+                "_stub": True,
+                "_message": f"此API尚未实现: {full_path}",
+            }
+        )
     else:
         return JSONResponse(
             status_code=200,
@@ -43,6 +45,6 @@ async def stub_handler(request: Request, path: str):
                 "message": "操作成功（stub响应）",
                 "data": None,
                 "_stub": True,
-                "_message": f"此API尚未实现: {full_path}"
-            }
+                "_message": f"此API尚未实现: {full_path}",
+            },
         )

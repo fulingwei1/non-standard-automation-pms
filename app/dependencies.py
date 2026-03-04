@@ -7,18 +7,19 @@ app/models/base → TenantQuery → app.core.security → app.core.auth → app.
 """
 
 from typing import Generator
+
 from sqlalchemy.orm import Session
 
 
 def get_db() -> Generator[Session, None, None]:
     """
     FastAPI 依赖使用的数据库会话生成器
-    
+
     Yields:
         Session: SQLAlchemy数据库会话
     """
     from app.models.base import get_session
-    
+
     db = get_session()
     try:
         yield db
@@ -29,6 +30,7 @@ def get_db() -> Generator[Session, None, None]:
         except Exception:
             pass
         db.close()
+
 
 # 别名，兼容旧代码
 get_db_session = get_db

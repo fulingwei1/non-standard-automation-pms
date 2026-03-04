@@ -41,26 +41,28 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/bonus/payment",
-    tags=["payment"]
-)
+router = APIRouter(prefix="/bonus/payment", tags=["payment"])
 
 # 共 4 个路由
 
 # ==================== 奖金发放 ====================
 
+
 def generate_distribution_code() -> str:
     """生成发放单号"""
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     return f"BD{timestamp}"
 
 
-@router.post("/distribute", response_model=ResponseModel[BonusDistributionResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/distribute",
+    response_model=ResponseModel[BonusDistributionResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_bonus_distribution(
     *,
     db: Session = Depends(deps.get_db),
@@ -73,31 +75,30 @@ def create_bonus_distribution(
     # 检查计算记录是否存在且已审批
     calculation = get_or_404(db, BonusCalculation, dist_in.calculation_id, "计算记录不存在")
 
-    if calculation.status != 'APPROVED':
+    if calculation.status != "APPROVED":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="计算记录未审批，无法发放"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="计算记录未审批，无法发放"
         )
 
     # 检查是否已发放
-    existing = db.query(BonusDistribution).filter(
-        BonusDistribution.calculation_id == dist_in.calculation_id,
-        BonusDistribution.status == 'PAID'
-    ).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="该计算记录已发放"
+    existing = (
+        db.query(BonusDistribution)
+        .filter(
+            BonusDistribution.calculation_id == dist_in.calculation_id,
+            BonusDistribution.status == "PAID",
         )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="该计算记录已发放")
 
     distribution = BonusDistribution(
-        distribution_code=generate_distribution_code(),
-        **dist_in.model_dump()
+        distribution_code=generate_distribution_code(), **dist_in.model_dump()
     )
     db.add(distribution)
 
     # 更新计算记录状态
-    calculation.status = 'DISTRIBUTED'
+    calculation.status = "DISTRIBUTED"
 
     db.commit()
     db.refresh(distribution)
@@ -105,7 +106,9 @@ def create_bonus_distribution(
     return ResponseModel(code=200, message="创建成功", data=distribution)
 
 
-@router.get("/distributions", response_model=BonusDistributionListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/distributions", response_model=BonusDistributionListResponse, status_code=status.HTTP_200_OK
+)
 def get_bonus_distributions(
     *,
     db: Session = Depends(deps.get_db),
@@ -128,20 +131,27 @@ def get_bonus_distributions(
 
     total = query.count()
     pg = get_pagination_params(page=query_params.page, page_size=query_params.page_size)
-    distributions = query.order_by(desc(BonusDistribution.distribution_date)).offset(
-        pg.offset
-    ).limit(pg.limit).all()
+    distributions = (
+        query.order_by(desc(BonusDistribution.distribution_date))
+        .offset(pg.offset)
+        .limit(pg.limit)
+        .all()
+    )
 
     return BonusDistributionListResponse(
         items=distributions,
         total=total,
         page=pg.page,
         page_size=pg.page_size,
-        pages=pg.pages_for_total(total)
+        pages=pg.pages_for_total(total),
     )
 
 
-@router.get("/distributions/{dist_id}", response_model=ResponseModel[BonusDistributionResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/distributions/{dist_id}",
+    response_model=ResponseModel[BonusDistributionResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_bonus_distribution(
     *,
     db: Session = Depends(deps.get_db),
@@ -156,7 +166,11 @@ def get_bonus_distribution(
     return ResponseModel(code=200, data=distribution)
 
 
-@router.post("/distributions/{dist_id}/pay", response_model=ResponseModel[BonusDistributionResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/distributions/{dist_id}/pay",
+    response_model=ResponseModel[BonusDistributionResponse],
+    status_code=status.HTTP_200_OK,
+)
 def pay_bonus_distribution(
     *,
     db: Session = Depends(deps.get_db),
@@ -169,13 +183,10 @@ def pay_bonus_distribution(
     """
     distribution = get_or_404(db, BonusDistribution, dist_id, "发放记录不存在")
 
-    if distribution.status == 'PAID':
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="该记录已发放"
-        )
+    if distribution.status == "PAID":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="该记录已发放")
 
-    distribution.status = 'PAID'
+    distribution.status = "PAID"
     distribution.paid_by = current_user.id
     distribution.paid_at = datetime.now()
 
@@ -190,6 +201,3 @@ def pay_bonus_distribution(
     db.refresh(distribution)
 
     return ResponseModel(code=200, message="发放成功", data=distribution)
-
-
-

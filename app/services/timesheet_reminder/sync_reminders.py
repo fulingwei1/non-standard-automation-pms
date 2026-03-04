@@ -22,7 +22,6 @@ from app.services.timesheet_reminder.base import create_timesheet_notification
 logger = logging.getLogger(__name__)
 
 
-
 def notify_sync_failure(db: Session) -> int:
     """
     提醒数据同步失败的工时记录
@@ -43,8 +42,7 @@ def notify_sync_failure(db: Session) -> int:
         .filter(
             Timesheet.status == "APPROVED",
             Timesheet.approve_time.isnot(None),
-            Timesheet.approve_time
-            >= datetime.now() - timedelta(days=1),  # 最近1天审批的
+            Timesheet.approve_time >= datetime.now() - timedelta(days=1),  # 最近1天审批的
         )
         .all()
     )
@@ -72,8 +70,7 @@ def notify_sync_failure(db: Session) -> int:
                     Notification.user_id == user_id,
                     Notification.notification_type == "TIMESHEET_SYNC_FAILURE",
                     Notification.source_id == timesheet.id,
-                    Notification.created_at
-                    >= datetime.combine(date.today(), datetime.min.time()),
+                    Notification.created_at >= datetime.combine(date.today(), datetime.min.time()),
                 )
                 .first()
             )
@@ -93,9 +90,9 @@ def notify_sync_failure(db: Session) -> int:
                 extra_data={
                     "timesheet_id": timesheet.id,
                     "work_date": timesheet.work_date.isoformat(),
-                    "approve_time": timesheet.approve_time.isoformat()
-                    if timesheet.approve_time
-                    else None,
+                    "approve_time": (
+                        timesheet.approve_time.isoformat() if timesheet.approve_time else None
+                    ),
                 },
             )
             notified_users.add(user_id)
@@ -105,5 +102,3 @@ def notify_sync_failure(db: Session) -> int:
     logger.info(f"数据同步失败提醒完成: 发送 {reminder_count} 条提醒")
 
     return reminder_count
-
-

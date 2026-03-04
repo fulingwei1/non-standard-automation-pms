@@ -111,10 +111,7 @@ def calculate_csf_health(db: Session, csf_id: int) -> Dict[str, Any]:
     if not csf:
         return {"score": None, "level": None, "kpi_completion_rate": None}
 
-    kpis = db.query(KPI).filter(
-        KPI.csf_id == csf_id,
-        KPI.is_active
-    ).all()
+    kpis = db.query(KPI).filter(KPI.csf_id == csf_id, KPI.is_active).all()
 
     if not kpis:
         return {"score": None, "level": None, "kpi_completion_rate": None}
@@ -159,11 +156,11 @@ def calculate_dimension_health(db: Session, strategy_id: int, dimension: str) ->
     Returns:
         Dict: 健康度数据
     """
-    csfs = db.query(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.dimension == dimension,
-        CSF.is_active
-    ).all()
+    csfs = (
+        db.query(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.dimension == dimension, CSF.is_active)
+        .all()
+    )
 
     if not csfs:
         return {"score": None, "level": None}
@@ -200,10 +197,7 @@ def calculate_strategy_health(db: Session, strategy_id: int) -> Optional[int]:
     Returns:
         Optional[int]: 健康度分数（0-100）
     """
-    strategy = db.query(Strategy).filter(
-        Strategy.id == strategy_id,
-        Strategy.is_active
-    ).first()
+    strategy = db.query(Strategy).filter(Strategy.id == strategy_id, Strategy.is_active).first()
     if not strategy:
         return None
 
@@ -222,11 +216,12 @@ def calculate_strategy_health(db: Session, strategy_id: int) -> Optional[int]:
         health_data = calculate_dimension_health(db, strategy_id, dimension)
         if health_data["score"] is not None:
             # 计算该维度的实际权重（基于 CSF 权重总和）
-            csf_weights = db.query(func.sum(CSF.weight)).filter(
-                CSF.strategy_id == strategy_id,
-                CSF.dimension == dimension,
-                CSF.is_active
-            ).scalar() or 0
+            csf_weights = (
+                db.query(func.sum(CSF.weight))
+                .filter(CSF.strategy_id == strategy_id, CSF.dimension == dimension, CSF.is_active)
+                .scalar()
+                or 0
+            )
 
             weight = float(csf_weights) if csf_weights > 0 else default_weight
             total_weight += weight
@@ -238,11 +233,7 @@ def calculate_strategy_health(db: Session, strategy_id: int) -> Optional[int]:
     return int(weighted_score / total_weight)
 
 
-def get_health_trend(
-    db: Session,
-    strategy_id: int,
-    periods: int = 6
-) -> List[Dict[str, Any]]:
+def get_health_trend(db: Session, strategy_id: int, periods: int = 6) -> List[Dict[str, Any]]:
     """
     获取健康度趋势
 
@@ -256,10 +247,13 @@ def get_health_trend(
     """
     from app.models.strategy import StrategyReview
 
-    reviews = db.query(StrategyReview).filter(
-        StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active
-    ).order_by(StrategyReview.review_date.desc()).limit(periods).all()
+    reviews = (
+        db.query(StrategyReview)
+        .filter(StrategyReview.strategy_id == strategy_id, StrategyReview.is_active)
+        .order_by(StrategyReview.review_date.desc())
+        .limit(periods)
+        .all()
+    )
 
     return [
         {
@@ -275,10 +269,7 @@ def get_health_trend(
     ]
 
 
-def get_dimension_health_details(
-    db: Session,
-    strategy_id: int
-) -> List[Dict[str, Any]]:
+def get_dimension_health_details(db: Session, strategy_id: int) -> List[Dict[str, Any]]:
     """
     获取各维度健康度详情
 
@@ -301,26 +292,36 @@ def get_dimension_health_details(
         health_data = calculate_dimension_health(db, strategy_id, dimension)
 
         # 统计该维度的 CSF 和 KPI 数量
-        csf_count = db.query(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dimension,
-            CSF.is_active
-        ).count()
+        csf_count = (
+            db.query(CSF)
+            .filter(CSF.strategy_id == strategy_id, CSF.dimension == dimension, CSF.is_active)
+            .count()
+        )
 
-        kpi_count = db.query(KPI).join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dimension,
-            CSF.is_active,
-            KPI.is_active
-        ).count()
+        kpi_count = (
+            db.query(KPI)
+            .join(CSF)
+            .filter(
+                CSF.strategy_id == strategy_id,
+                CSF.dimension == dimension,
+                CSF.is_active,
+                KPI.is_active,
+            )
+            .count()
+        )
 
         # 统计 KPI 完成情况
-        kpis = db.query(KPI).join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dimension,
-            CSF.is_active,
-            KPI.is_active
-        ).all()
+        kpis = (
+            db.query(KPI)
+            .join(CSF)
+            .filter(
+                CSF.strategy_id == strategy_id,
+                CSF.dimension == dimension,
+                CSF.is_active,
+                KPI.is_active,
+            )
+            .all()
+        )
 
         on_track = 0
         at_risk = 0
@@ -339,18 +340,20 @@ def get_dimension_health_details(
         # 计算 KPI 完成率
         kpi_completion_rate = (on_track / kpi_count * 100) if kpi_count > 0 else 0.0
 
-        details.append({
-            "dimension": dimension,
-            "dimension_name": name,
-            "score": health_data["score"],
-            "level": health_data["level"],
-            "health_level": health_data["level"],  # 兼容 schema 字段名
-            "csf_count": csf_count,
-            "kpi_count": kpi_count,
-            "kpi_completion_rate": kpi_completion_rate,
-            "kpi_on_track": on_track,
-            "kpi_at_risk": at_risk,
-            "kpi_off_track": off_track,
-        })
+        details.append(
+            {
+                "dimension": dimension,
+                "dimension_name": name,
+                "score": health_data["score"],
+                "level": health_data["level"],
+                "health_level": health_data["level"],  # 兼容 schema 字段名
+                "csf_count": csf_count,
+                "kpi_count": kpi_count,
+                "kpi_completion_rate": kpi_completion_rate,
+                "kpi_on_track": on_track,
+                "kpi_at_risk": at_risk,
+                "kpi_off_track": off_track,
+            }
+        )
 
     return details

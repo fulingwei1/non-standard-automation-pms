@@ -7,11 +7,7 @@
 
 from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.models.project import ProjectCost
-from app.schemas.project import (
-    ProjectCostCreate,
-    ProjectCostUpdate,
-    ProjectCostResponse
-)
+from app.schemas.project import ProjectCostCreate, ProjectCostResponse, ProjectCostUpdate
 
 
 def filter_by_cost_type(query, cost_type: str):
@@ -30,7 +26,5 @@ router = create_project_crud_router(
     keyword_fields=["description", "source_no", "cost_category"],
     default_order_by="created_at",
     default_order_direction="desc",
-    custom_filters={
-        "cost_type": filter_by_cost_type  # 支持 ?cost_type=LABOR 筛选
-    }
+    custom_filters={"cost_type": filter_by_cost_type},  # 支持 ?cost_type=LABOR 筛选
 )

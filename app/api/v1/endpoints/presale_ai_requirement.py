@@ -2,6 +2,7 @@
 AI需求理解API路由
 提供6个API端点实现需求分析、精炼、查询等功能
 """
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -9,15 +10,14 @@ from app.core.auth import get_current_user
 from app.dependencies import get_db
 from app.models.user import User
 from app.schemas.presale_ai_requirement import (
+    ClarificationQuestionsResponse,
+    ConfidenceScoreResponse,
     RequirementAnalysisRequest,
     RequirementAnalysisResponse,
     RequirementRefinementRequest,
     RequirementUpdateRequest,
-    ClarificationQuestionsResponse,
-    ConfidenceScoreResponse
 )
 from app.services.presale_ai_requirement_service import PresaleAIRequirementService
-
 
 router = APIRouter(prefix="/api/v1/presale/ai", tags=["presale-ai-requirement"])
 
@@ -39,30 +39,26 @@ router = APIRouter(prefix="/api/v1/presale/ai", tags=["presale-ai-requirement"])
     - 评估技术可行性
     
     **响应时间**：通常 <3秒
-    """
+    """,
 )
 async def analyze_requirement(
     request: RequirementAnalysisRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> RequirementAnalysisResponse:
     """分析需求"""
-    
+
     try:
         service = PresaleAIRequirementService(db)
         analysis = await service.analyze_requirement(request, current_user.id)
-        
+
         return RequirementAnalysisResponse.from_orm(analysis)
-    
+
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"需求分析失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"需求分析失败: {str(e)}"
         )
 
 
@@ -82,24 +78,21 @@ async def analyze_requirement(
     - 澄清问题
     - 可行性分析
     - 置信度评分
-    """
+    """,
 )
 def get_analysis(
-    analysis_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    analysis_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> RequirementAnalysisResponse:
     """获取分析结果"""
-    
+
     service = PresaleAIRequirementService(db)
     analysis = service.get_analysis(analysis_id)
-    
+
     if not analysis:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"分析记录 {analysis_id} 不存在"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"分析记录 {analysis_id} 不存在"
         )
-    
+
     return RequirementAnalysisResponse.from_orm(analysis)
 
 
@@ -120,30 +113,26 @@ def get_analysis(
     - 更精确的设备清单
     - 更完整的技术参数
     - 提升置信度评分
-    """
+    """,
 )
 async def refine_requirement(
     request: RequirementRefinementRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> RequirementAnalysisResponse:
     """精炼需求"""
-    
+
     try:
         service = PresaleAIRequirementService(db)
         analysis = await service.refine_requirement(request, current_user.id)
-        
+
         return RequirementAnalysisResponse.from_orm(analysis)
-    
+
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"需求精炼失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"需求精炼失败: {str(e)}"
         )
 
 
@@ -166,35 +155,33 @@ async def refine_requirement(
     - high: 高度建议
     - medium: 建议澄清
     - low: 可选
-    """
+    """,
 )
 def get_clarification_questions(
-    ticket_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    ticket_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> ClarificationQuestionsResponse:
     """获取澄清问题"""
-    
+
     service = PresaleAIRequirementService(db)
     questions, analysis_id = service.get_clarification_questions(ticket_id)
-    
+
     if not questions:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"工单 {ticket_id} 没有找到澄清问题，请先进行需求分析"
+            detail=f"工单 {ticket_id} 没有找到澄清问题，请先进行需求分析",
         )
-    
+
     # 统计各优先级问题数量
     critical_count = sum(1 for q in questions if q.importance == "critical")
     high_count = sum(1 for q in questions if q.importance == "high")
-    
+
     return ClarificationQuestionsResponse(
         analysis_id=analysis_id,
         presale_ticket_id=ticket_id,
         questions=questions,
         total_count=len(questions),
         critical_count=critical_count,
-        high_priority_count=high_count
+        high_priority_count=high_count,
     )
 
 
@@ -216,30 +203,26 @@ def get_clarification_questions(
     - 修正AI的识别错误
     - 补充AI遗漏的信息
     - 根据客户反馈调整需求
-    """
+    """,
 )
 def update_structured_requirement(
     request: RequirementUpdateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> RequirementAnalysisResponse:
     """更新结构化需求"""
-    
+
     try:
         service = PresaleAIRequirementService(db)
         analysis = service.update_structured_requirement(request, current_user.id)
-        
+
         return RequirementAnalysisResponse.from_orm(analysis)
-    
+
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"更新失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新失败: {str(e)}"
         )
 
 
@@ -260,16 +243,14 @@ def update_structured_requirement(
     - 技术清晰度 (30%)
     - 参数明确性 (25%)
     - 可执行性 (15%)
-    """
+    """,
 )
 def get_requirement_confidence(
-    ticket_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    ticket_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> ConfidenceScoreResponse:
     """获取置信度评分"""
-    
+
     service = PresaleAIRequirementService(db)
     confidence_data = service.get_requirement_confidence(ticket_id)
-    
+
     return ConfidenceScoreResponse(**confidence_data)

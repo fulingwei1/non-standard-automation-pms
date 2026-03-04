@@ -53,7 +53,11 @@ def generate_bidding_no(db: Session) -> str:
     return f"{prefix}{seq:03d}"
 
 
-@router.get("", response_model=ResponseModel[PaginatedResponse[BiddingProjectResponse]], summary="获取投标项目列表")
+@router.get(
+    "",
+    response_model=ResponseModel[PaginatedResponse[BiddingProjectResponse]],
+    summary="获取投标项目列表",
+)
 async def get_bidding_projects(
     pagination: PaginationParams = Depends(get_pagination_query),
     bidding_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
@@ -61,7 +65,7 @@ async def get_bidding_projects(
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:read"))
+    current_user: User = Depends(security.require_permission("business_support:read")),
 ):
     """获取投标项目列表"""
     try:
@@ -76,7 +80,9 @@ async def get_bidding_projects(
             query = query.filter(BiddingProject.customer_id == customer_id)
 
         # 应用关键词过滤（项目名称/投标编号/客户名称）
-        query = apply_keyword_filter(query, BiddingProject, search, ["project_name", "bidding_no", "customer_name"])
+        query = apply_keyword_filter(
+            query, BiddingProject, search, ["project_name", "bidding_no", "customer_name"]
+        )
 
         # 总数
         total = query.count()
@@ -125,7 +131,7 @@ async def get_bidding_projects(
                 status=item.status,
                 remark=item.remark,
                 created_at=item.created_at,
-                updated_at=item.updated_at
+                updated_at=item.updated_at,
             )
             for item in items
         ]
@@ -138,8 +144,8 @@ async def get_bidding_projects(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取投标项目列表失败: {str(e)}")
@@ -149,7 +155,7 @@ async def get_bidding_projects(
 async def create_bidding_project(
     bidding_data: BiddingProjectCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:create"))
+    current_user: User = Depends(security.require_permission("business_support:create")),
 ):
     """创建投标项目"""
     try:
@@ -179,7 +185,7 @@ async def create_bidding_project(
             support_person_id=bidding_data.support_person_id or current_user.id,
             support_person_name=bidding_data.support_person_name or current_user.username,
             remark=bidding_data.remark,
-            status="draft"
+            status="draft",
         )
 
         db.add(bidding_project)
@@ -223,19 +229,23 @@ async def create_bidding_project(
                 status=bidding_project.status,
                 remark=bidding_project.remark,
                 created_at=bidding_project.created_at,
-                updated_at=bidding_project.updated_at
-            )
+                updated_at=bidding_project.updated_at,
+            ),
         )
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"创建投标项目失败: {str(e)}")
 
 
-@router.get("/{bidding_id}", response_model=ResponseModel[BiddingProjectResponse], summary="获取投标项目详情")
+@router.get(
+    "/{bidding_id}",
+    response_model=ResponseModel[BiddingProjectResponse],
+    summary="获取投标项目详情",
+)
 async def get_bidding_project(
     bidding_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:read"))
+    current_user: User = Depends(security.require_permission("business_support:read")),
 ):
     """获取投标项目详情"""
     try:
@@ -278,8 +288,8 @@ async def get_bidding_project(
                 status=bidding_project.status,
                 remark=bidding_project.remark,
                 created_at=bidding_project.created_at,
-                updated_at=bidding_project.updated_at
-            )
+                updated_at=bidding_project.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -287,12 +297,14 @@ async def get_bidding_project(
         raise HTTPException(status_code=500, detail=f"获取投标项目详情失败: {str(e)}")
 
 
-@router.put("/{bidding_id}", response_model=ResponseModel[BiddingProjectResponse], summary="更新投标项目")
+@router.put(
+    "/{bidding_id}", response_model=ResponseModel[BiddingProjectResponse], summary="更新投标项目"
+)
 async def update_bidding_project(
     bidding_id: int,
     bidding_data: BiddingProjectUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:update"))
+    current_user: User = Depends(security.require_permission("business_support:update")),
 ):
     """更新投标项目"""
     try:
@@ -343,8 +355,8 @@ async def update_bidding_project(
                 status=bidding_project.status,
                 remark=bidding_project.remark,
                 created_at=bidding_project.created_at,
-                updated_at=bidding_project.updated_at
-            )
+                updated_at=bidding_project.updated_at,
+            ),
         )
     except HTTPException:
         raise

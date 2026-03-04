@@ -32,11 +32,11 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
-from app.services.channel_handlers.system_handler import SystemChannelHandler
 from app.services.channel_handlers.email_handler import EmailChannelHandler
-from app.services.channel_handlers.wechat_handler import WeChatChannelHandler
 from app.services.channel_handlers.sms_handler import SMSChannelHandler
+from app.services.channel_handlers.system_handler import SystemChannelHandler
 from app.services.channel_handlers.webhook_handler import WebhookChannelHandler
+from app.services.channel_handlers.wechat_handler import WeChatChannelHandler
 
 if TYPE_CHECKING:
     from app.models.alert import Alert
@@ -52,19 +52,11 @@ class NotificationService:
         self.db = db
         self.logger = logging.getLogger(__name__)
         self._handlers = {
-            NotificationChannel.SYSTEM: SystemChannelHandler(
-                db, NotificationChannel.SYSTEM
-            ),
-            NotificationChannel.EMAIL: EmailChannelHandler(
-                db, NotificationChannel.EMAIL
-            ),
-            NotificationChannel.WECHAT: WeChatChannelHandler(
-                db, NotificationChannel.WECHAT
-            ),
+            NotificationChannel.SYSTEM: SystemChannelHandler(db, NotificationChannel.SYSTEM),
+            NotificationChannel.EMAIL: EmailChannelHandler(db, NotificationChannel.EMAIL),
+            NotificationChannel.WECHAT: WeChatChannelHandler(db, NotificationChannel.WECHAT),
             NotificationChannel.SMS: SMSChannelHandler(db, NotificationChannel.SMS),
-            NotificationChannel.WEBHOOK: WebhookChannelHandler(
-                db, NotificationChannel.WEBHOOK
-            ),
+            NotificationChannel.WEBHOOK: WebhookChannelHandler(db, NotificationChannel.WEBHOOK),
         }
 
     def _get_user_settings(self, user_id: int) -> Optional[NotificationSettings]:
@@ -193,9 +185,7 @@ class NotificationService:
             except Exception as e:
                 self.logger.error(f"渠道{channel}发送失败: {e}")
                 results.append(
-                    NotificationResult(
-                        channel=channel, success=False, error_message=str(e)
-                    )
+                    NotificationResult(channel=channel, success=False, error_message=str(e))
                 )
         return results
 
@@ -250,9 +240,7 @@ class NotificationService:
             "message": f"发送到{len(sent_channels)}个渠道",
         }
 
-    def send_bulk_notification(
-        self, requests: List[NotificationRequest]
-    ) -> List[Dict[str, Any]]:
+    def send_bulk_notification(self, requests: List[NotificationRequest]) -> List[Dict[str, Any]]:
         """批量发送通知"""
         return [self.send_notification(req) for req in requests]
 
@@ -338,9 +326,11 @@ class NotificationService:
         priority = (
             NotificationPriority.URGENT
             if alert_level == "CRITICAL"
-            else NotificationPriority.HIGH
-            if alert_level == "WARNING"
-            else NotificationPriority.NORMAL
+            else (
+                NotificationPriority.HIGH
+                if alert_level == "WARNING"
+                else NotificationPriority.NORMAL
+            )
         )
         request = NotificationRequest(
             recipient_id=recipient_id,
@@ -442,10 +432,7 @@ notification_service_instance = None
 def get_notification_service(db: Session) -> NotificationService:
     """获取NotificationService单例"""
     global notification_service_instance
-    if (
-        notification_service_instance is None
-        or notification_service_instance.db is not db
-    ):
+    if notification_service_instance is None or notification_service_instance.db is not db:
         notification_service_instance = NotificationService(db)
     return notification_service_instance
 

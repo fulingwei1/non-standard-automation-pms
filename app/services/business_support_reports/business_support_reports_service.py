@@ -43,9 +43,7 @@ class BusinessSupportReportsService:
 
     # ========== 统计计算方法 ==========
 
-    def calculate_contract_stats(
-        self, start_date: date, end_date: date
-    ) -> Dict[str, any]:
+    def calculate_contract_stats(self, start_date: date, end_date: date) -> Dict[str, any]:
         """计算合同统计"""
         new_contracts = (
             self.db.query(Contract)
@@ -67,9 +65,7 @@ class BusinessSupportReportsService:
             .count(),
         }
 
-    def calculate_order_stats(
-        self, start_date: date, end_date: date
-    ) -> Dict[str, any]:
+    def calculate_order_stats(self, start_date: date, end_date: date) -> Dict[str, any]:
         """计算订单统计"""
         new_orders = (
             self.db.query(SalesOrder)
@@ -84,9 +80,7 @@ class BusinessSupportReportsService:
             "new_amount": sum(o.order_amount or Decimal("0") for o in new_orders),
         }
 
-    def calculate_receipt_stats(
-        self, start_date: date, end_date: date
-    ) -> Dict[str, Decimal]:
+    def calculate_receipt_stats(self, start_date: date, end_date: date) -> Dict[str, Decimal]:
         """计算回款统计"""
         params = {
             "start_date": start_date.strftime("%Y-%m-%d"),
@@ -102,9 +96,7 @@ class BusinessSupportReportsService:
             ),
             params,
         ).fetchone()
-        planned_amount = (
-            Decimal(str(planned[0])) if planned and planned[0] else Decimal("0")
-        )
+        planned_amount = Decimal(str(planned[0])) if planned and planned[0] else Decimal("0")
 
         actual = self.db.execute(
             text(
@@ -115,9 +107,7 @@ class BusinessSupportReportsService:
             ),
             params,
         ).fetchone()
-        actual_amount = (
-            Decimal(str(actual[0])) if actual and actual[0] else Decimal("0")
-        )
+        actual_amount = Decimal(str(actual[0])) if actual and actual[0] else Decimal("0")
 
         overdue = self.db.execute(
             text(
@@ -128,22 +118,16 @@ class BusinessSupportReportsService:
             ),
             {"end_date": end_date.strftime("%Y-%m-%d")},
         ).fetchone()
-        overdue_amount = (
-            Decimal(str(overdue[0])) if overdue and overdue[0] else Decimal("0")
-        )
+        overdue_amount = Decimal(str(overdue[0])) if overdue and overdue[0] else Decimal("0")
 
         return {
             "planned": planned_amount,
             "actual": actual_amount,
-            "rate": (actual_amount / planned_amount * 100)
-            if planned_amount > 0
-            else Decimal("0"),
+            "rate": (actual_amount / planned_amount * 100) if planned_amount > 0 else Decimal("0"),
             "overdue": overdue_amount,
         }
 
-    def calculate_invoice_stats(
-        self, start_date: date, end_date: date
-    ) -> Dict[str, any]:
+    def calculate_invoice_stats(self, start_date: date, end_date: date) -> Dict[str, any]:
         """计算开票统计"""
         invoices = (
             self.db.query(Invoice)
@@ -174,9 +158,7 @@ class BusinessSupportReportsService:
 
         return {"count": invoices_count, "amount": invoices_amount, "rate": rate}
 
-    def calculate_bidding_stats(
-        self, start_date: date, end_date: date
-    ) -> Dict[str, any]:
+    def calculate_bidding_stats(self, start_date: date, end_date: date) -> Dict[str, any]:
         """计算投标统计"""
         new_bidding = (
             self.db.query(BiddingProject)
@@ -198,11 +180,7 @@ class BusinessSupportReportsService:
         )
 
         total = self.db.query(BiddingProject).count()
-        win_rate = (
-            (Decimal(won_bidding) / Decimal(total) * 100)
-            if total > 0
-            else Decimal("0")
-        )
+        win_rate = (Decimal(won_bidding) / Decimal(total) * 100) if total > 0 else Decimal("0")
 
         return {"new_count": new_bidding, "won_count": won_bidding, "win_rate": win_rate}
 
@@ -228,25 +206,17 @@ class BusinessSupportReportsService:
             .all()
         )
         new_contracts_count = len(new_contracts)
-        new_contracts_amount = sum(
-            c.contract_amount or Decimal("0") for c in new_contracts
-        )
+        new_contracts_amount = sum(c.contract_amount or Decimal("0") for c in new_contracts)
 
         active_contracts = (
-            self.db.query(Contract)
-            .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
-            .count()
+            self.db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
         )
 
-        completed_contracts = (
-            self.db.query(Contract).filter(Contract.status == "COMPLETED").count()
-        )
+        completed_contracts = self.db.query(Contract).filter(Contract.status == "COMPLETED").count()
 
         # 2. 订单统计
         new_orders = (
-            self.db.query(SalesOrder)
-            .filter(func.date(SalesOrder.created_at) == report_dt)
-            .all()
+            self.db.query(SalesOrder).filter(func.date(SalesOrder.created_at) == report_dt).all()
         )
         new_orders_count = len(new_orders)
         new_orders_amount = sum(o.order_amount or Decimal("0") for o in new_orders)
@@ -280,9 +250,7 @@ class BusinessSupportReportsService:
             {"report_date": report_date_str},
         ).fetchone()
         actual_receipt_amount = (
-            Decimal(str(actual_result[0]))
-            if actual_result and actual_result[0]
-            else Decimal("0")
+            Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
         )
 
         receipt_completion_rate = (
@@ -311,9 +279,7 @@ class BusinessSupportReportsService:
         # 4. 开票统计
         invoices = (
             self.db.query(Invoice)
-            .filter(
-                func.date(Invoice.issue_date) == report_dt, Invoice.status == "ISSUED"
-            )
+            .filter(func.date(Invoice.issue_date) == report_dt, Invoice.status == "ISSUED")
             .all()
         )
         invoices_count = len(invoices)

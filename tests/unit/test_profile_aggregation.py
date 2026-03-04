@@ -15,7 +15,9 @@ class TestAggregateEmployeeProfile:
         db.query.return_value.filter.return_value.first.return_value = None
         db.query.return_value.join.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.staff_matching.profile_aggregation.HrEmployeeProfile") as MockProfile:
+        with patch(
+            "app.services.staff_matching.profile_aggregation.HrEmployeeProfile"
+        ) as MockProfile:
             profile = MagicMock()
             MockProfile.return_value = profile
             result = ProfileAggregator.aggregate_employee_profile(db, 1)
@@ -36,7 +38,9 @@ class TestUpdateEmployeeWorkload:
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch("app.services.staff_matching.profile_aggregation.HrEmployeeProfile") as MockProfile:
+        with patch(
+            "app.services.staff_matching.profile_aggregation.HrEmployeeProfile"
+        ) as MockProfile:
             MockProfile.return_value = MagicMock()
             ProfileAggregator.update_employee_workload(db, 1)
             db.add.assert_called_once()

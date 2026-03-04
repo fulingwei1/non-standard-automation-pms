@@ -11,10 +11,7 @@ from .download import router as download_router
 from .export import router as export_router
 from .generation import router as generation_router
 
-router = APIRouter(
-    prefix="/report-center/generate",
-    tags=["generate"]
-)
+router = APIRouter(prefix="/report-center/generate", tags=["generate"])
 
 # 聚合所有子路由
 for route in generation_router.routes:

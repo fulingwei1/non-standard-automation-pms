@@ -10,13 +10,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import ReceivableDispute
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import ReceivableDisputeCreate, ReceivableDisputeResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import save_obj
 
 router = APIRouter()
@@ -38,7 +38,9 @@ def read_disputes(
         query = query.filter(ReceivableDispute.status == status)
 
     total = query.count()
-    disputes = apply_pagination(query.order_by(desc(ReceivableDispute.created_at)), pagination.offset, pagination.limit).all()
+    disputes = apply_pagination(
+        query.order_by(desc(ReceivableDispute.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     dispute_responses = []
     for dispute in disputes:
@@ -53,7 +55,7 @@ def read_disputes(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 

@@ -3,10 +3,13 @@
 
 测试审批驳回后的处理流程和重新提交机制
 """
-import pytest
+
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 from app.models.approval.instance import ApprovalInstance
 from app.models.approval.task import ApprovalTask
 from app.models.purchase import PurchaseRequest
@@ -405,10 +408,15 @@ class TestApprovalRejection:
         db_session.commit()
 
         # 查询审批历史
-        history = db_session.query(ApprovalInstance).filter(
-            ApprovalInstance.business_id == pr.id,
-            ApprovalInstance.business_type == "PURCHASE_REQUEST"
-        ).order_by(ApprovalInstance.created_at).all()
+        history = (
+            db_session.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.business_id == pr.id,
+                ApprovalInstance.business_type == "PURCHASE_REQUEST",
+            )
+            .order_by(ApprovalInstance.created_at)
+            .all()
+        )
 
         assert len(history) == 3
         assert history[0].status == "REJECTED"

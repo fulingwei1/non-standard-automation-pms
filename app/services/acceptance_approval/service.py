@@ -45,11 +45,7 @@ class AcceptanceApprovalService:
         errors = []
 
         for order_id in order_ids:
-            order = (
-                self.db.query(AcceptanceOrder)
-                .filter(AcceptanceOrder.id == order_id)
-                .first()
-            )
+            order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
             if not order:
                 errors.append({"order_id": order_id, "error": "验收单不存在"})
                 continue
@@ -66,9 +62,7 @@ class AcceptanceApprovalService:
 
             # 验证是否有验收结论
             if not order.overall_result:
-                errors.append(
-                    {"order_id": order_id, "error": "验收单没有验收结论，无法提交审批"}
-                )
+                errors.append({"order_id": order_id, "error": "验收单没有验收结论，无法提交审批"})
                 continue
 
             try:
@@ -125,9 +119,7 @@ class AcceptanceApprovalService:
         Returns:
             (任务列表, 总数)
         """
-        tasks = self.engine.get_pending_tasks(
-            user_id=user_id, entity_type="ACCEPTANCE_ORDER"
-        )
+        tasks = self.engine.get_pending_tasks(user_id=user_id, entity_type="ACCEPTANCE_ORDER")
 
         # 如果指定了验收类型筛选
         if acceptance_type:
@@ -169,28 +161,26 @@ class AcceptanceApprovalService:
                     "order_id": instance.entity_id,
                     "order_no": order.order_no if order else None,
                     "acceptance_type": order.acceptance_type if order else None,
-                    "acceptance_type_name": type_name_map.get(order.acceptance_type)
-                    if order
-                    else None,
+                    "acceptance_type_name": (
+                        type_name_map.get(order.acceptance_type) if order else None
+                    ),
                     "overall_result": order.overall_result if order else None,
-                    "result_name": result_name_map.get(order.overall_result)
-                    if order
-                    else None,
-                    "pass_rate": float(order.pass_rate)
-                    if order and order.pass_rate
-                    else 0,
-                    "project_name": order.project.project_name
-                    if order and hasattr(order, "project") and order.project
-                    else None,
-                    "machine_code": order.machine.machine_code
-                    if order and hasattr(order, "machine") and order.machine
-                    else None,
-                    "initiator_name": instance.initiator.real_name
-                    if instance.initiator
-                    else None,
-                    "submitted_at": instance.created_at.isoformat()
-                    if instance.created_at
-                    else None,
+                    "result_name": result_name_map.get(order.overall_result) if order else None,
+                    "pass_rate": float(order.pass_rate) if order and order.pass_rate else 0,
+                    "project_name": (
+                        order.project.project_name
+                        if order and hasattr(order, "project") and order.project
+                        else None
+                    ),
+                    "machine_code": (
+                        order.machine.machine_code
+                        if order and hasattr(order, "machine") and order.machine
+                        else None
+                    ),
+                    "initiator_name": instance.initiator.real_name if instance.initiator else None,
+                    "submitted_at": (
+                        instance.created_at.isoformat() if instance.created_at else None
+                    ),
                     "urgency": instance.urgency,
                     "node_name": task.node.node_name if task.node else None,
                 }
@@ -214,13 +204,9 @@ class AcceptanceApprovalService:
             操作结果
         """
         if action == "approve":
-            result = self.engine.approve(
-                task_id=task_id, approver_id=approver_id, comment=comment
-            )
+            result = self.engine.approve(task_id=task_id, approver_id=approver_id, comment=comment)
         elif action == "reject":
-            result = self.engine.reject(
-                task_id=task_id, approver_id=approver_id, comment=comment
-            )
+            result = self.engine.reject(task_id=task_id, approver_id=approver_id, comment=comment)
         else:
             raise ValueError(f"不支持的操作类型: {action}")
 
@@ -255,17 +241,11 @@ class AcceptanceApprovalService:
         for task_id in task_ids:
             try:
                 if action == "approve":
-                    self.engine.approve(
-                        task_id=task_id, approver_id=approver_id, comment=comment
-                    )
+                    self.engine.approve(task_id=task_id, approver_id=approver_id, comment=comment)
                 elif action == "reject":
-                    self.engine.reject(
-                        task_id=task_id, approver_id=approver_id, comment=comment
-                    )
+                    self.engine.reject(task_id=task_id, approver_id=approver_id, comment=comment)
                 else:
-                    errors.append(
-                        {"task_id": task_id, "error": f"不支持的操作: {action}"}
-                    )
+                    errors.append({"task_id": task_id, "error": f"不支持的操作: {action}"})
                     continue
 
                 results.append({"task_id": task_id, "status": "success"})
@@ -284,11 +264,7 @@ class AcceptanceApprovalService:
         Returns:
             审批状态信息
         """
-        order = (
-            self.db.query(AcceptanceOrder)
-            .filter(AcceptanceOrder.id == order_id)
-            .first()
-        )
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
         if not order:
             raise ValueError("验收单不存在")
 
@@ -324,15 +300,11 @@ class AcceptanceApprovalService:
                 {
                     "task_id": task.id,
                     "node_name": task.node.node_name if task.node else None,
-                    "assignee_name": task.assignee.real_name
-                    if task.assignee
-                    else None,
+                    "assignee_name": task.assignee.real_name if task.assignee else None,
                     "status": task.status,
                     "action": task.action,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 
@@ -345,12 +317,8 @@ class AcceptanceApprovalService:
             "instance_id": instance.id,
             "instance_status": instance.status,
             "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
+            "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+            "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
             "task_history": task_history,
         }
 
@@ -368,11 +336,7 @@ class AcceptanceApprovalService:
         Returns:
             撤回结果
         """
-        order = (
-            self.db.query(AcceptanceOrder)
-            .filter(AcceptanceOrder.id == order_id)
-            .first()
-        )
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
         if not order:
             raise ValueError("验收单不存在")
 
@@ -435,12 +399,7 @@ class AcceptanceApprovalService:
             query = query.filter(ApprovalTask.status == status_filter)
 
         total = query.count()
-        tasks = (
-            query.order_by(ApprovalTask.completed_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        tasks = query.order_by(ApprovalTask.completed_at.desc()).offset(offset).limit(limit).all()
 
         type_name_map = {"FAT": "出厂验收", "SAT": "现场验收", "FINAL": "终验收"}
         result_name_map = {
@@ -468,19 +427,15 @@ class AcceptanceApprovalService:
                     "order_id": instance.entity_id,
                     "order_no": order.order_no if order else None,
                     "acceptance_type": order.acceptance_type if order else None,
-                    "acceptance_type_name": type_name_map.get(order.acceptance_type)
-                    if order
-                    else None,
+                    "acceptance_type_name": (
+                        type_name_map.get(order.acceptance_type) if order else None
+                    ),
                     "overall_result": order.overall_result if order else None,
-                    "result_name": result_name_map.get(order.overall_result)
-                    if order
-                    else None,
+                    "result_name": result_name_map.get(order.overall_result) if order else None,
                     "action": task.action,
                     "status": task.status,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 

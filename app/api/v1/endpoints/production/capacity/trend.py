@@ -31,7 +31,7 @@ async def get_capacity_trend(
 ):
     """
     产能趋势分析
-    
+
     分析产能随时间的变化趋势
     """
     # 默认查询最近90天
@@ -39,36 +39,36 @@ async def get_capacity_trend(
         start_date = date.today() - timedelta(days=90)
     if not end_date:
         end_date = date.today()
-    
+
     if type == "oee":
         # OEE趋势
         filters = [
             EquipmentOEERecord.record_date >= start_date,
             EquipmentOEERecord.record_date <= end_date,
         ]
-        
+
         if equipment_id:
             filters.append(EquipmentOEERecord.equipment_id == equipment_id)
         if workshop_id:
             filters.append(EquipmentOEERecord.workshop_id == workshop_id)
-        
+
         if granularity == "day":
             # 按天
             results = (
                 db.query(
                     EquipmentOEERecord.record_date,
-                    func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                    func.avg(EquipmentOEERecord.availability).label('avg_availability'),
-                    func.avg(EquipmentOEERecord.performance).label('avg_performance'),
-                    func.avg(EquipmentOEERecord.quality).label('avg_quality'),
-                    func.sum(EquipmentOEERecord.actual_output).label('total_output'),
+                    func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                    func.avg(EquipmentOEERecord.availability).label("avg_availability"),
+                    func.avg(EquipmentOEERecord.performance).label("avg_performance"),
+                    func.avg(EquipmentOEERecord.quality).label("avg_quality"),
+                    func.sum(EquipmentOEERecord.actual_output).label("total_output"),
                 )
                 .filter(and_(*filters))
                 .group_by(EquipmentOEERecord.record_date)
                 .order_by(EquipmentOEERecord.record_date)
                 .all()
             )
-            
+
             items = [
                 {
                     "date": row.record_date.isoformat(),
@@ -80,21 +80,21 @@ async def get_capacity_trend(
                 }
                 for row in results
             ]
-            
+
         elif granularity == "week":
             # 按周
             results = (
                 db.query(
-                    func.date_format(EquipmentOEERecord.record_date, '%Y-%u').label('week'),
-                    func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                    func.sum(EquipmentOEERecord.actual_output).label('total_output'),
+                    func.date_format(EquipmentOEERecord.record_date, "%Y-%u").label("week"),
+                    func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                    func.sum(EquipmentOEERecord.actual_output).label("total_output"),
                 )
                 .filter(and_(*filters))
-                .group_by(func.date_format(EquipmentOEERecord.record_date, '%Y-%u'))
-                .order_by(func.date_format(EquipmentOEERecord.record_date, '%Y-%u'))
+                .group_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%u"))
+                .order_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%u"))
                 .all()
             )
-            
+
             items = [
                 {
                     "period": row.week,
@@ -103,21 +103,21 @@ async def get_capacity_trend(
                 }
                 for row in results
             ]
-            
+
         else:  # month
             # 按月
             results = (
                 db.query(
-                    func.date_format(EquipmentOEERecord.record_date, '%Y-%m').label('month'),
-                    func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                    func.sum(EquipmentOEERecord.actual_output).label('total_output'),
+                    func.date_format(EquipmentOEERecord.record_date, "%Y-%m").label("month"),
+                    func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                    func.sum(EquipmentOEERecord.actual_output).label("total_output"),
                 )
                 .filter(and_(*filters))
-                .group_by(func.date_format(EquipmentOEERecord.record_date, '%Y-%m'))
-                .order_by(func.date_format(EquipmentOEERecord.record_date, '%Y-%m'))
+                .group_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%m"))
+                .order_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%m"))
                 .all()
             )
-            
+
             items = [
                 {
                     "period": row.month,
@@ -126,33 +126,33 @@ async def get_capacity_trend(
                 }
                 for row in results
             ]
-            
+
     elif type == "efficiency":
         # 工人效率趋势
         filters = [
             WorkerEfficiencyRecord.record_date >= start_date,
             WorkerEfficiencyRecord.record_date <= end_date,
         ]
-        
+
         if worker_id:
             filters.append(WorkerEfficiencyRecord.worker_id == worker_id)
         if workshop_id:
             filters.append(WorkerEfficiencyRecord.workshop_id == workshop_id)
-        
+
         if granularity == "day":
             results = (
                 db.query(
                     WorkerEfficiencyRecord.record_date,
-                    func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
-                    func.avg(WorkerEfficiencyRecord.quality_rate).label('avg_quality_rate'),
-                    func.sum(WorkerEfficiencyRecord.completed_qty).label('total_completed'),
+                    func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
+                    func.avg(WorkerEfficiencyRecord.quality_rate).label("avg_quality_rate"),
+                    func.sum(WorkerEfficiencyRecord.completed_qty).label("total_completed"),
                 )
                 .filter(and_(*filters))
                 .group_by(WorkerEfficiencyRecord.record_date)
                 .order_by(WorkerEfficiencyRecord.record_date)
                 .all()
             )
-            
+
             items = [
                 {
                     "date": row.record_date.isoformat(),
@@ -164,19 +164,21 @@ async def get_capacity_trend(
             ]
         else:
             # 按周或月
-            date_format = '%Y-%u' if granularity == 'week' else '%Y-%m'
+            date_format = "%Y-%u" if granularity == "week" else "%Y-%m"
             results = (
                 db.query(
-                    func.date_format(WorkerEfficiencyRecord.record_date, date_format).label('period'),
-                    func.avg(WorkerEfficiencyRecord.efficiency).label('avg_efficiency'),
-                    func.sum(WorkerEfficiencyRecord.completed_qty).label('total_completed'),
+                    func.date_format(WorkerEfficiencyRecord.record_date, date_format).label(
+                        "period"
+                    ),
+                    func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
+                    func.sum(WorkerEfficiencyRecord.completed_qty).label("total_completed"),
                 )
                 .filter(and_(*filters))
                 .group_by(func.date_format(WorkerEfficiencyRecord.record_date, date_format))
                 .order_by(func.date_format(WorkerEfficiencyRecord.record_date, date_format))
                 .all()
             )
-            
+
             items = [
                 {
                     "period": row.period,
@@ -191,22 +193,26 @@ async def get_capacity_trend(
             "message": "不支持的类型",
             "data": None,
         }
-    
+
     # 计算趋势统计
     if items and len(items) >= 2:
-        values = [item.get('avg_oee', item.get('avg_efficiency', 0)) for item in items]
-        first_half = values[:len(values)//2]
-        second_half = values[len(values)//2:]
-        
+        values = [item.get("avg_oee", item.get("avg_efficiency", 0)) for item in items]
+        first_half = values[: len(values) // 2]
+        second_half = values[len(values) // 2 :]
+
         avg_first = sum(first_half) / len(first_half) if first_half else 0
         avg_second = sum(second_half) / len(second_half) if second_half else 0
-        
-        trend = "上升" if avg_second > avg_first * 1.05 else ("下降" if avg_second < avg_first * 0.95 else "平稳")
+
+        trend = (
+            "上升"
+            if avg_second > avg_first * 1.05
+            else ("下降" if avg_second < avg_first * 0.95 else "平稳")
+        )
         change_percent = ((avg_second - avg_first) / avg_first * 100) if avg_first > 0 else 0
     else:
         trend = "数据不足"
         change_percent = 0
-    
+
     return {
         "code": 200,
         "message": "查询成功",

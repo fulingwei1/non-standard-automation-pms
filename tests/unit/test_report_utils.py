@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for acceptance/report_utils.py"""
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 from app.services.acceptance.report_utils import (
+    build_report_content,
     generate_report_no,
     get_report_version,
-    build_report_content,
 )
 
 
@@ -41,7 +41,9 @@ class TestGetReportVersion:
     def test_increment_version(self):
         db = MagicMock()
         existing = MagicMock(version=3)
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            existing
+        )
         assert get_report_version(db, 1, "FAT") == 4
 
 

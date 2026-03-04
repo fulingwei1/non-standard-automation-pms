@@ -58,9 +58,9 @@ class TestGenerateProjectWeekly:
 
         # milestones, timesheets, machines
         db.query.return_value.filter.return_value.all.side_effect = [
-            [],       # milestones
+            [],  # milestones
             [ts1, ts2],  # timesheets
-            [],       # machines
+            [],  # machines
         ]
 
         result = ProjectReportMixin._generate_project_weekly(

@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - project_timeline_service 单元测试"""
 
-import pytest
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+
+import pytest
 
 pytest.importorskip("app.services.project_timeline_service")
 
 from app.services.project_timeline_service import (
-    collect_status_change_events,
-    collect_milestone_events,
-    collect_task_events,
+    add_project_created_event,
     collect_cost_events,
     collect_document_events,
-    add_project_created_event,
+    collect_milestone_events,
+    collect_status_change_events,
+    collect_task_events,
 )
 
-
 # ── collect_status_change_events ──────────────────────────────────────────────
+
 
 class TestCollectStatusChangeEvents:
     def test_returns_empty_when_no_logs(self):
@@ -75,6 +76,7 @@ class TestCollectStatusChangeEvents:
 
 # ── collect_milestone_events ──────────────────────────────────────────────────
 
+
 class TestCollectMilestoneEvents:
     def test_returns_empty_when_no_milestones(self):
         db = MagicMock()
@@ -128,6 +130,7 @@ class TestCollectMilestoneEvents:
 
 
 # ── collect_task_events ───────────────────────────────────────────────────────
+
 
 class TestCollectTaskEvents:
     def test_returns_empty_when_no_tasks(self):
@@ -184,6 +187,7 @@ class TestCollectTaskEvents:
 
 # ── collect_cost_events ───────────────────────────────────────────────────────
 
+
 class TestCollectCostEvents:
     def test_returns_empty_when_no_costs(self):
         db = MagicMock()
@@ -219,6 +223,7 @@ class TestCollectCostEvents:
 
 # ── collect_document_events ───────────────────────────────────────────────────
 
+
 class TestCollectDocumentEvents:
     def test_returns_empty_when_no_documents(self):
         db = MagicMock()
@@ -253,6 +258,7 @@ class TestCollectDocumentEvents:
 
 
 # ── add_project_created_event ─────────────────────────────────────────────────
+
 
 class TestAddProjectCreatedEvent:
     def test_returns_project_created_event(self):

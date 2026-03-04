@@ -16,16 +16,16 @@
 - ACCEPTANCE_ORDER: 验收单审批
 """
 
+from .acceptance import AcceptanceOrderApprovalAdapter
 from .base import ApprovalAdapter
 from .contract import ContractApprovalAdapter
 from .ecn import EcnApprovalAdapter
 from .invoice import InvoiceApprovalAdapter
+from .outsourcing import OutsourcingOrderApprovalAdapter
 from .project import ProjectApprovalAdapter
+from .purchase import PurchaseOrderApprovalAdapter
 from .quote import QuoteApprovalAdapter
 from .timesheet import TimesheetApprovalAdapter
-from .purchase import PurchaseOrderApprovalAdapter
-from .outsourcing import OutsourcingOrderApprovalAdapter
-from .acceptance import AcceptanceOrderApprovalAdapter
 
 __all__ = [
     "ApprovalAdapter",

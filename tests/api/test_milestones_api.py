@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from tests.factories import ProjectWithCustomerFactory, ProjectMilestoneFactory
+from tests.factories import ProjectMilestoneFactory, ProjectWithCustomerFactory
 
 
 @pytest.fixture
@@ -34,20 +34,22 @@ class TestMilestonesAPI:
         """测试 DELETE /api/v1/milestones/{milestone_id} - 删除里程碑"""
         project = ProjectWithCustomerFactory()
         milestone = ProjectMilestoneFactory(project_id=project.id)
-        
+
         response = api_client.delete(f"/api/v1/milestones/{milestone.id}")
-        
+
         assert response.status_code in [200, 204, 400, 404]
         if response.status_code in [200, 204]:
             # 验证里程碑已被删除
-            from app.models.project import ProjectMilestone
             from app.models.base import get_session
-            with get_session() as session:
-                deleted_milestone = session.query(ProjectMilestone).filter(
-                    ProjectMilestone.id == milestone.id
-                ).first()
-                assert deleted_milestone is None
+            from app.models.project import ProjectMilestone
 
+            with get_session() as session:
+                deleted_milestone = (
+                    session.query(ProjectMilestone)
+                    .filter(ProjectMilestone.id == milestone.id)
+                    .first()
+                )
+                assert deleted_milestone is None
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

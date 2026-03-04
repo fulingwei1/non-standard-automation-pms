@@ -20,6 +20,7 @@ def _make_gen():
 
 # ---------- generate_work_log_from_timesheet ----------
 
+
 def test_generate_returns_none_when_submitted_exists(tmp_path):
     gen, db = _make_gen()
     # 已有SUBMITTED日志
@@ -75,9 +76,12 @@ def test_generate_returns_none_when_no_user():
 
 # ---------- generate_yesterday_work_logs ----------
 
+
 def test_generate_yesterday_work_logs_calls_batch():
     gen, db = _make_gen()
-    with patch.object(gen, "batch_generate_work_logs", return_value={"generated_count": 5}) as mock_batch:
+    with patch.object(
+        gen, "batch_generate_work_logs", return_value={"generated_count": 5}
+    ) as mock_batch:
         result = gen.generate_yesterday_work_logs()
     yesterday = date.today() - timedelta(days=1)
     mock_batch.assert_called_once_with(
@@ -88,15 +92,14 @@ def test_generate_yesterday_work_logs_calls_batch():
 
 # ---------- batch_generate_work_logs ----------
 
+
 def test_batch_generate_stats_structure():
     gen, db = _make_gen()
     with patch.object(gen, "generate_work_log_from_timesheet", return_value=None):
         # 用空用户列表快速跑
         db.query.return_value.filter.return_value.distinct.return_value.all.return_value = []
         db.query.return_value.filter.return_value.all.return_value = []
-        stats = gen.batch_generate_work_logs(
-            start_date=date(2025, 1, 1), end_date=date(2025, 1, 1)
-        )
+        stats = gen.batch_generate_work_logs(start_date=date(2025, 1, 1), end_date=date(2025, 1, 1))
     assert "generated_count" in stats
     assert "error_count" in stats
 
@@ -112,8 +115,6 @@ def test_batch_generate_counts_generated():
 
     with patch.object(gen, "generate_work_log_from_timesheet", return_value=fake_log):
         stats = gen.batch_generate_work_logs(
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 1, 2),
-            user_ids=[1]
+            start_date=date(2025, 1, 1), end_date=date(2025, 1, 2), user_ids=[1]
         )
     assert stats["generated_count"] == 2  # 2天各1个

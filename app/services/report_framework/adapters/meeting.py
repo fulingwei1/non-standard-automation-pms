@@ -7,18 +7,17 @@
 
 from typing import Any, Dict, Optional
 
-
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 
 
 class MeetingReportAdapter(BaseReportAdapter):
     """会议报表适配器"""
-    
+
     def get_report_code(self) -> str:
         """返回报表代码"""
         return "MEETING_MONTHLY"
-    
+
     def generate_data(
         self,
         params: Dict[str, Any],
@@ -26,11 +25,11 @@ class MeetingReportAdapter(BaseReportAdapter):
     ) -> Dict[str, Any]:
         """
         生成会议报表数据
-        
+
         Args:
             params: 报表参数
             user: 当前用户
-            
+
         Returns:
             报表数据字典
         """

@@ -14,6 +14,7 @@ from app.schemas.common import TimestampSchema
 
 class ProjectBudgetItemCreate(BaseModel):
     """创建预算明细"""
+
     item_no: int = Field(..., description="行号")
     cost_category: str = Field(..., max_length=50, description="成本类别")
     cost_item: str = Field(..., max_length=200, description="成本项")
@@ -25,6 +26,7 @@ class ProjectBudgetItemCreate(BaseModel):
 
 class ProjectBudgetItemUpdate(BaseModel):
     """更新预算明细"""
+
     cost_category: Optional[str] = Field(None, max_length=50, description="成本类别")
     cost_item: Optional[str] = Field(None, max_length=200, description="成本项")
     description: Optional[str] = Field(None, description="说明")
@@ -35,6 +37,7 @@ class ProjectBudgetItemUpdate(BaseModel):
 
 class ProjectBudgetItemResponse(TimestampSchema):
     """预算明细响应"""
+
     id: int
     budget_id: int
     item_no: int
@@ -51,6 +54,7 @@ class ProjectBudgetItemResponse(TimestampSchema):
 
 class ProjectBudgetCreate(BaseModel):
     """创建项目预算"""
+
     project_id: int = Field(..., description="项目ID")
     budget_name: str = Field(..., max_length=200, description="预算名称")
     budget_type: str = Field(default="INITIAL", description="预算类型：INITIAL/REVISED/SUPPLEMENT")
@@ -64,6 +68,7 @@ class ProjectBudgetCreate(BaseModel):
 
 class ProjectBudgetUpdate(BaseModel):
     """更新项目预算"""
+
     budget_name: Optional[str] = Field(None, max_length=200, description="预算名称")
     budget_type: Optional[str] = Field(None, description="预算类型")
     total_amount: Optional[Decimal] = Field(None, description="预算总额")
@@ -75,6 +80,7 @@ class ProjectBudgetUpdate(BaseModel):
 
 class ProjectBudgetResponse(TimestampSchema):
     """项目预算响应"""
+
     id: int
     budget_no: str
     project_id: int
@@ -108,14 +114,17 @@ class ProjectBudgetResponse(TimestampSchema):
 
 class ProjectBudgetApproveRequest(BaseModel):
     """预算审批请求"""
+
     approved: bool = Field(..., description="是否审批通过")
     approval_note: Optional[str] = Field(None, description="审批意见")
 
 
 # ==================== 成本分摊规则 ====================
 
+
 class ProjectCostAllocationRuleCreate(BaseModel):
     """创建成本分摊规则"""
+
     rule_name: str = Field(..., max_length=100, description="规则名称")
     rule_type: str = Field(..., description="分摊类型：PROPORTION/MANUAL")
     allocation_basis: str = Field(..., description="分摊依据：MACHINE_COUNT/REVENUE/MANUAL")
@@ -130,6 +139,7 @@ class ProjectCostAllocationRuleCreate(BaseModel):
 
 class ProjectCostAllocationRuleUpdate(BaseModel):
     """更新成本分摊规则"""
+
     rule_name: Optional[str] = Field(None, max_length=100, description="规则名称")
     rule_type: Optional[str] = Field(None, description="分摊类型")
     allocation_basis: Optional[str] = Field(None, description="分摊依据")
@@ -145,6 +155,7 @@ class ProjectCostAllocationRuleUpdate(BaseModel):
 
 class ProjectCostAllocationRuleResponse(TimestampSchema):
     """成本分摊规则响应"""
+
     id: int
     rule_name: str
     rule_type: str
@@ -165,14 +176,11 @@ class ProjectCostAllocationRuleResponse(TimestampSchema):
 
 class ProjectCostAllocationRequest(BaseModel):
     """成本分摊请求"""
+
     cost_id: int = Field(..., description="成本记录ID")
     rule_id: Optional[int] = Field(None, description="分摊规则ID（可选，使用规则分摊）")
-    allocation_targets: Optional[List[dict]] = Field(None, description="分摊目标列表（手工分摊时使用）")
+    allocation_targets: Optional[List[dict]] = Field(
+        None, description="分摊目标列表（手工分摊时使用）"
+    )
     # allocation_targets格式: [{"machine_id": 1, "amount": 1000}, {"machine_id": 2, "amount": 2000}]
     # 或 [{"project_id": 1, "amount": 1000}, {"project_id": 2, "amount": 2000}]
-
-
-
-
-
-

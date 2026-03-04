@@ -18,7 +18,7 @@ COLUMN_CATEGORY_MAP = {
     4: {"code": "POWER_TOOLS", "name": "电动工具"},
     5: {"code": "AUTOMATION_LINE", "name": "自动化线体"},
     6: {"code": "OTHER_EQUIPMENT", "name": "其他设备"},
-    7: {"code": "EDUCATION", "name": "教育实训"}
+    7: {"code": "EDUCATION", "name": "教育实训"},
 }
 
 
@@ -31,10 +31,7 @@ def clear_existing_data(db: Session) -> None:
     db.commit()
 
 
-def ensure_categories_exist(
-    db: Session,
-    clear_existing: bool
-) -> Tuple[Dict[int, int], int]:
+def ensure_categories_exist(db: Session, clear_existing: bool) -> Tuple[Dict[int, int], int]:
     """
     确保类别存在
 
@@ -54,10 +51,7 @@ def ensure_categories_exist(
             category_id_map[col_idx] = existing_categories[cat_info["code"]]
         else:
             new_cat = AdvantageProductCategory(
-                code=cat_info["code"],
-                name=cat_info["name"],
-                sort_order=col_idx + 1,
-                is_active=True
+                code=cat_info["code"], name=cat_info["name"], sort_order=col_idx + 1, is_active=True
             )
             db.add(new_cat)
             db.flush()
@@ -68,10 +62,7 @@ def ensure_categories_exist(
 
 
 def parse_product_from_cell(
-    cell_str: str,
-    current_series: Optional[str],
-    row_idx: int,
-    col_idx: int
+    cell_str: str, current_series: Optional[str], row_idx: int, col_idx: int
 ) -> Tuple[Optional[str], str]:
     """
     从单元格解析产品编码和名称
@@ -112,7 +103,7 @@ def process_product_row(
     product_name: str,
     category_id: int,
     current_series: Optional[str],
-    clear_existing: bool
+    clear_existing: bool,
 ) -> Tuple[bool, bool, bool]:
     """
     处理单行产品数据
@@ -120,9 +111,9 @@ def process_product_row(
     Returns:
         Tuple[bool, bool, bool]: (是否创建, 是否更新, 是否跳过)
     """
-    existing = db.query(AdvantageProduct).filter(
-        AdvantageProduct.product_code == product_code
-    ).first()
+    existing = (
+        db.query(AdvantageProduct).filter(AdvantageProduct.product_code == product_code).first()
+    )
 
     if existing:
         if clear_existing:
@@ -139,7 +130,7 @@ def process_product_row(
             product_name=product_name,
             category_id=category_id,
             series_code=current_series,
-            is_active=True
+            is_active=True,
         )
         db.add(new_product)
         return True, False, False

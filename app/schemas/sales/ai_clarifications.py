@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class AIClarificationBase(BaseModel):
     """AI 澄清基础模型"""
+
     source_type: str = Field(..., description="来源类型：LEAD/OPPORTUNITY")
     source_id: int = Field(..., description="来源ID")
     round: int = Field(1, description="澄清轮次")
@@ -19,16 +20,19 @@ class AIClarificationBase(BaseModel):
 
 class AIClarificationCreate(AIClarificationBase):
     """创建 AI 澄清"""
+
     pass
 
 
 class AIClarificationUpdate(BaseModel):
     """更新 AI 澄清"""
+
     answers: Optional[str] = Field(None, description="用户回答(JSON Array)")
 
 
 class AIClarificationResponse(AIClarificationBase):
     """AI 澄清响应"""
+
     id: int
     answers: Optional[str] = None
     created_at: Optional[datetime] = None

@@ -50,10 +50,7 @@ class UserScopeService:
         """获取用户参与的项目ID列表"""
         members = (
             db.query(ProjectMember.project_id)
-            .filter(
-                ProjectMember.user_id == user_id,
-                ProjectMember.is_active
-            )
+            .filter(ProjectMember.user_id == user_id, ProjectMember.is_active)
             .all()
         )
         return {m[0] for m in members}
@@ -61,12 +58,5 @@ class UserScopeService:
     @staticmethod
     def get_subordinate_ids(db: Session, user_id: int) -> Set[int]:
         """获取用户的直接下属ID列表"""
-        subordinates = (
-            db.query(User.id)
-            .filter(
-                User.reporting_to == user_id,
-                User.is_active
-            )
-            .all()
-        )
+        subordinates = db.query(User.id).filter(User.reporting_to == user_id, User.is_active).all()
         return {s[0] for s in subordinates}

@@ -7,8 +7,8 @@ pytest.importorskip("app.services.preset_stage_templates.templates.presales_stag
 
 from app.services.preset_stage_templates.templates.presales_stages import PRESALES_STAGES
 
-
 # ─── 基础结构验证 ────────────────────────────────────────────
+
 
 class TestPresalesStagesStructure:
 
@@ -22,8 +22,15 @@ class TestPresalesStagesStructure:
 
     def test_all_stages_have_required_fields(self):
         required_fields = [
-            "stage_code", "stage_name", "sequence", "category",
-            "estimated_days", "is_required", "is_milestone", "is_parallel", "nodes"
+            "stage_code",
+            "stage_name",
+            "sequence",
+            "category",
+            "estimated_days",
+            "is_required",
+            "is_milestone",
+            "is_parallel",
+            "nodes",
         ]
         for stage in PRESALES_STAGES:
             for field in required_fields:
@@ -43,6 +50,7 @@ class TestPresalesStagesStructure:
 
 
 # ─── 里程碑验证 ──────────────────────────────────────────────
+
 
 class TestMilestoneStages:
 
@@ -69,6 +77,7 @@ class TestMilestoneStages:
 
 # ─── 节点验证 ────────────────────────────────────────────────
 
+
 class TestStageNodes:
 
     def test_all_stages_have_nodes(self):
@@ -85,14 +94,21 @@ class TestStageNodes:
         assert len(s06["nodes"]) == 6
 
     def test_nodes_have_required_fields(self):
-        required = ["node_code", "node_name", "node_type", "sequence",
-                    "estimated_days", "completion_method", "is_required"]
+        required = [
+            "node_code",
+            "node_name",
+            "node_type",
+            "sequence",
+            "estimated_days",
+            "completion_method",
+            "is_required",
+        ]
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
                 for field in required:
-                    assert field in node, (
-                        f"阶段 {stage['stage_code']} 节点 {node.get('node_code')} 缺少 {field}"
-                    )
+                    assert (
+                        field in node
+                    ), f"阶段 {stage['stage_code']} 节点 {node.get('node_code')} 缺少 {field}"
 
     def test_node_codes_unique_within_stage(self):
         for stage in PRESALES_STAGES:
@@ -118,12 +134,13 @@ class TestStageNodes:
     def test_all_nodes_have_estimated_days_positive(self):
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert node["estimated_days"] > 0, (
-                    f"阶段 {stage['stage_code']} 节点 {node['node_code']} 预计天数无效"
-                )
+                assert (
+                    node["estimated_days"] > 0
+                ), f"阶段 {stage['stage_code']} 节点 {node['node_code']} 预计天数无效"
 
 
 # ─── 节点类型验证 ────────────────────────────────────────────
+
 
 class TestNodeTypes:
 
@@ -131,29 +148,30 @@ class TestNodeTypes:
         valid_types = {"TASK", "APPROVAL", "DELIVERABLE", "MILESTONE"}
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert node["node_type"] in valid_types, (
-                    f"阶段 {stage['stage_code']} 节点 {node['node_code']} 类型 {node['node_type']} 无效"
-                )
+                assert (
+                    node["node_type"] in valid_types
+                ), f"阶段 {stage['stage_code']} 节点 {node['node_code']} 类型 {node['node_type']} 无效"
 
     def test_valid_completion_methods(self):
         valid_methods = {"MANUAL", "APPROVAL", "UPLOAD", "AUTO"}
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert node["completion_method"] in valid_methods, (
-                    f"节点 {node['node_code']} 完成方式 {node['completion_method']} 无效"
-                )
+                assert (
+                    node["completion_method"] in valid_methods
+                ), f"节点 {node['node_code']} 完成方式 {node['completion_method']} 无效"
 
     def test_approval_nodes_have_approval_completion(self):
         """APPROVAL 类型节点应使用 APPROVAL 完成方式"""
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
                 if node["node_type"] == "APPROVAL":
-                    assert node["completion_method"] == "APPROVAL", (
-                        f"节点 {node['node_code']} 类型为 APPROVAL 但完成方式不是 APPROVAL"
-                    )
+                    assert (
+                        node["completion_method"] == "APPROVAL"
+                    ), f"节点 {node['node_code']} 类型为 APPROVAL 但完成方式不是 APPROVAL"
 
 
 # ─── 估算工期验证 ────────────────────────────────────────────
+
 
 class TestEstimatedDays:
 
@@ -174,27 +192,26 @@ class TestEstimatedDays:
 
 # ─── 交付物验证 ──────────────────────────────────────────────
 
+
 class TestDeliverables:
 
     def test_all_nodes_have_deliverables_field(self):
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert "deliverables" in node, (
-                    f"阶段 {stage['stage_code']} 节点 {node['node_code']} 缺少 deliverables"
-                )
+                assert (
+                    "deliverables" in node
+                ), f"阶段 {stage['stage_code']} 节点 {node['node_code']} 缺少 deliverables"
 
     def test_deliverables_is_list(self):
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert isinstance(node["deliverables"], list), (
-                    f"节点 {node['node_code']} deliverables 应为列表"
-                )
+                assert isinstance(
+                    node["deliverables"], list
+                ), f"节点 {node['node_code']} deliverables 应为列表"
 
     def test_required_nodes_have_non_empty_deliverables(self):
         """必填节点通常有交付物（至少检查 S04 关键节点）"""
         s04 = next(s for s in PRESALES_STAGES if s["stage_code"] == "S04")
         required_nodes = [n for n in s04["nodes"] if n["is_required"]]
         for node in required_nodes:
-            assert len(node["deliverables"]) > 0, (
-                f"S04 必填节点 {node['node_code']} 没有交付物"
-            )
+            assert len(node["deliverables"]) > 0, f"S04 必填节点 {node['node_code']} 没有交付物"

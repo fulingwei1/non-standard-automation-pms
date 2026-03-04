@@ -5,11 +5,11 @@
 # 基础模型
 from ...base import Base, TimestampMixin, get_engine, get_session, init_db
 
-# 状态机模型
-from ...state_machine import StateTransitionLog
-
 # 枚举
 from ...enums import *
+
+# 状态机模型
+from ...state_machine import StateTransitionLog
 
 __all__ = [
     "Base",

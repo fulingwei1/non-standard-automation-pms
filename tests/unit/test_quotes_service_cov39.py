@@ -2,9 +2,10 @@
 """
 第三十九批覆盖率测试 - sales/quotes_service.py
 """
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales.quotes_service", reason="import failed, skip")
 
@@ -17,6 +18,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.sales.quotes_service import QuotesService
+
     return QuotesService(mock_db)
 
 
@@ -47,11 +49,13 @@ class TestQuotesServiceGetQuotes:
         mock_query.count.return_value = 1
         mock_query.all.return_value = [_make_quote()]
 
-        with patch("app.services.sales.quotes_service.apply_keyword_filter",
-                   return_value=mock_query), \
-             patch("app.services.sales.quotes_service.apply_pagination",
-                   return_value=mock_query), \
-             patch("app.services.sales.quotes_service.get_pagination_params") as mock_pp:
+        with (
+            patch(
+                "app.services.sales.quotes_service.apply_keyword_filter", return_value=mock_query
+            ),
+            patch("app.services.sales.quotes_service.apply_pagination", return_value=mock_query),
+            patch("app.services.sales.quotes_service.get_pagination_params") as mock_pp,
+        ):
             mock_pagination = MagicMock()
             mock_pagination.page = 1
             mock_pagination.page_size = 20
@@ -72,11 +76,13 @@ class TestQuotesServiceGetQuotes:
         mock_query.count.return_value = 0
         mock_query.all.return_value = []
 
-        with patch("app.services.sales.quotes_service.apply_keyword_filter",
-                   return_value=mock_query), \
-             patch("app.services.sales.quotes_service.apply_pagination",
-                   return_value=mock_query), \
-             patch("app.services.sales.quotes_service.get_pagination_params") as mock_pp:
+        with (
+            patch(
+                "app.services.sales.quotes_service.apply_keyword_filter", return_value=mock_query
+            ),
+            patch("app.services.sales.quotes_service.apply_pagination", return_value=mock_query),
+            patch("app.services.sales.quotes_service.get_pagination_params") as mock_pp,
+        ):
             mock_pagination = MagicMock()
             mock_pagination.page = 1
             mock_pagination.page_size = 20
@@ -99,11 +105,13 @@ class TestQuotesServiceCreateQuote:
             description="desc",
             total_amount=10000,
             valid_until=date(2024, 12, 31),
-            terms="Net 30"
+            terms="Net 30",
         )
 
-        with patch("app.services.sales.quotes_service.save_obj") as mock_save, \
-             patch.object(service, "_generate_quote_number", return_value="QT2024010100001"):
+        with (
+            patch("app.services.sales.quotes_service.save_obj") as mock_save,
+            patch.object(service, "_generate_quote_number", return_value="QT2024010100001"),
+        ):
             mock_quote = MagicMock()
             with patch("app.services.sales.quotes_service.Quote", return_value=mock_quote):
                 result = service.create_quote(mock_quote_data, mock_user)

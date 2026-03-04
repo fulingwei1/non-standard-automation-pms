@@ -4,13 +4,14 @@ Unit tests for app/services/dashboard_adapters/strategy.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.dashboard_adapters.strategy import StrategyDashboardAdapter
     from app.schemas.dashboard import DashboardWidget, DetailedDashboardResponse
+    from app.services.dashboard_adapters.strategy import StrategyDashboardAdapter
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -22,11 +23,11 @@ def _make_adapter(db=None, user=None):
 
 
 def _mock_stat_card(**kw):
-    return MagicMock(key=kw.get('key'), value=kw.get('value'), label=kw.get('label'))
+    return MagicMock(key=kw.get("key"), value=kw.get("value"), label=kw.get("label"))
 
 
 def _mock_widget(**kw):
-    return MagicMock(widget_id=kw.get('widget_id'), data=kw.get('data'))
+    return MagicMock(widget_id=kw.get("widget_id"), data=kw.get("data"))
 
 
 def test_module_properties():
@@ -42,8 +43,13 @@ def test_get_stats_no_active_strategy():
     db = MagicMock()
     db.query.return_value.filter.return_value.count.return_value = 2
 
-    with patch("app.services.strategy.get_active_strategy", return_value=None), \
-         patch("app.services.dashboard_adapters.strategy.DashboardStatCard", side_effect=_mock_stat_card):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=None),
+        patch(
+            "app.services.dashboard_adapters.strategy.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -61,11 +67,22 @@ def test_get_stats_with_active_strategy():
     kpi1 = MagicMock()
     kpi2 = MagicMock()
     kpi3 = MagicMock()
-    db.query.return_value.join.return_value.filter.return_value.all.return_value = [kpi1, kpi2, kpi3]
+    db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+        kpi1,
+        kpi2,
+        kpi3,
+    ]
 
-    with patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=1)), \
-         patch("app.services.strategy.calculate_kpi_completion_rate", side_effect=[85.0, 60.0, 30.0]), \
-         patch("app.services.dashboard_adapters.strategy.DashboardStatCard", side_effect=_mock_stat_card):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=1)),
+        patch(
+            "app.services.strategy.calculate_kpi_completion_rate", side_effect=[85.0, 60.0, 30.0]
+        ),
+        patch(
+            "app.services.dashboard_adapters.strategy.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -77,8 +94,13 @@ def test_get_stats_returns_six_cards():
     db = MagicMock()
     db.query.return_value.filter.return_value.count.return_value = 0
 
-    with patch("app.services.strategy.get_active_strategy", return_value=None), \
-         patch("app.services.dashboard_adapters.strategy.DashboardStatCard", side_effect=_mock_stat_card):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=None),
+        patch(
+            "app.services.dashboard_adapters.strategy.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -101,9 +123,11 @@ def test_get_widgets_with_active_strategy():
     user = MagicMock(id=42)
     db.query.return_value.join.return_value.filter.return_value.all.return_value = []
 
-    with patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=1)), \
-         patch("app.services.strategy.calculate_kpi_completion_rate", return_value=90.0), \
-         patch("app.services.dashboard_adapters.strategy.DashboardWidget", side_effect=_mock_widget):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=1)),
+        patch("app.services.strategy.calculate_kpi_completion_rate", return_value=90.0),
+        patch("app.services.dashboard_adapters.strategy.DashboardWidget", side_effect=_mock_widget),
+    ):
         adapter = _make_adapter(db=db, user=user)
         widgets = adapter.get_widgets()
 
@@ -119,9 +143,17 @@ def test_get_detailed_data_no_active_strategy():
     db.query.return_value.filter.return_value.count.return_value = 0
 
     mock_response = MagicMock(module="strategy", details={})
-    with patch("app.services.strategy.get_active_strategy", return_value=None), \
-         patch("app.services.dashboard_adapters.strategy.DashboardStatCard", side_effect=_mock_stat_card), \
-         patch("app.services.dashboard_adapters.strategy.DetailedDashboardResponse", return_value=mock_response):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=None),
+        patch(
+            "app.services.dashboard_adapters.strategy.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+        patch(
+            "app.services.dashboard_adapters.strategy.DetailedDashboardResponse",
+            return_value=mock_response,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         result = adapter.get_detailed_data()
 
@@ -139,12 +171,20 @@ def test_get_detailed_data_with_dimensions():
 
     def capture_response(**kw):
         captured.update(kw)
-        return MagicMock(module=kw.get('module'), details=kw.get('details', {}))
+        return MagicMock(module=kw.get("module"), details=kw.get("details", {}))
 
-    with patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=5)), \
-         patch("app.services.strategy.calculate_kpi_completion_rate", return_value=90.0), \
-         patch("app.services.dashboard_adapters.strategy.DashboardStatCard", side_effect=_mock_stat_card), \
-         patch("app.services.dashboard_adapters.strategy.DetailedDashboardResponse", side_effect=capture_response):
+    with (
+        patch("app.services.strategy.get_active_strategy", return_value=MagicMock(id=5)),
+        patch("app.services.strategy.calculate_kpi_completion_rate", return_value=90.0),
+        patch(
+            "app.services.dashboard_adapters.strategy.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+        patch(
+            "app.services.dashboard_adapters.strategy.DetailedDashboardResponse",
+            side_effect=capture_response,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         result = adapter.get_detailed_data()
 

@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.bonus.performance")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -16,6 +16,7 @@ def db():
 @pytest.fixture
 def calculator(db):
     from app.services.bonus.performance import PerformanceBonusCalculator
+
     return PerformanceBonusCalculator(db)
 
 
@@ -44,8 +45,10 @@ def test_calculate_returns_bonus_calculation(calculator):
     perf.id = 10
     perf.total_score = Decimal("95")
 
-    with patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.5")), \
-         patch("app.services.bonus.performance.BonusCalculation") as MockCalc:
+    with (
+        patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.5")),
+        patch("app.services.bonus.performance.BonusCalculation") as MockCalc,
+    ):
         MockCalc.return_value = MagicMock()
         result = calculator.calculate(perf, rule)
         assert result is not None
@@ -66,11 +69,15 @@ def test_calculate_amount_correctly(calculator):
 
     captured = {}
 
-    with patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.2")), \
-         patch("app.services.bonus.performance.BonusCalculation") as MockCalc:
+    with (
+        patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.2")),
+        patch("app.services.bonus.performance.BonusCalculation") as MockCalc,
+    ):
+
         def capture(**kwargs):
             captured.update(kwargs)
             return MagicMock()
+
         MockCalc.side_effect = capture
         calculator.calculate(perf, rule)
         assert captured.get("calculated_amount") == Decimal("2400")
@@ -88,8 +95,10 @@ def test_calculate_detail_includes_level(calculator):
     perf.id = 30
     perf.total_score = Decimal("75")
 
-    with patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.0")), \
-         patch("app.services.bonus.performance.BonusCalculation") as MockCalc:
+    with (
+        patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.0")),
+        patch("app.services.bonus.performance.BonusCalculation") as MockCalc,
+    ):
         MockCalc.return_value = MagicMock()
         calculator.calculate(perf, rule)
         kwargs = MockCalc.call_args[1]
@@ -108,8 +117,10 @@ def test_calculate_status_is_calculated(calculator):
     perf.id = 1
     perf.total_score = Decimal("80")
 
-    with patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.2")), \
-         patch("app.services.bonus.performance.BonusCalculation") as MockCalc:
+    with (
+        patch.object(calculator, "get_coefficient_by_level", return_value=Decimal("1.2")),
+        patch("app.services.bonus.performance.BonusCalculation") as MockCalc,
+    ):
         MockCalc.return_value = MagicMock()
         calculator.calculate(perf, rule)
         kwargs = MockCalc.call_args[1]

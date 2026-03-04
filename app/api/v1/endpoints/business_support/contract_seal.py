@@ -22,12 +22,16 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.post("/{contract_id}/seal", response_model=ResponseModel[ContractSealRecordResponse], summary="创建合同盖章记录")
+@router.post(
+    "/{contract_id}/seal",
+    response_model=ResponseModel[ContractSealRecordResponse],
+    summary="创建合同盖章记录",
+)
 async def create_contract_seal_record(
     contract_id: int,
     seal_data: ContractSealRecordCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:create"))
+    current_user: User = Depends(security.require_permission("business_support:create")),
 ):
     """创建合同盖章记录"""
     try:
@@ -43,7 +47,7 @@ async def create_contract_seal_record(
             send_date=seal_data.send_date,
             tracking_no=seal_data.tracking_no,
             courier_company=seal_data.courier_company,
-            remark=seal_data.remark
+            remark=seal_data.remark,
         )
 
         db.add(seal_record)
@@ -67,8 +71,8 @@ async def create_contract_seal_record(
                 archive_location=seal_record.archive_location,
                 remark=seal_record.remark,
                 created_at=seal_record.created_at,
-                updated_at=seal_record.updated_at
-            )
+                updated_at=seal_record.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -77,22 +81,23 @@ async def create_contract_seal_record(
         raise HTTPException(status_code=500, detail=f"创建合同盖章记录失败: {str(e)}")
 
 
-@router.put("/{contract_id}/seal/{seal_id}", response_model=ResponseModel[ContractSealRecordResponse], summary="更新合同盖章记录")
+@router.put(
+    "/{contract_id}/seal/{seal_id}",
+    response_model=ResponseModel[ContractSealRecordResponse],
+    summary="更新合同盖章记录",
+)
 async def update_contract_seal_record(
     contract_id: int,
     seal_id: int,
     seal_data: ContractSealRecordUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:update"))
+    current_user: User = Depends(security.require_permission("business_support:update")),
 ):
     """更新合同盖章记录"""
     try:
         seal_record = (
             db.query(ContractSealRecord)
-            .filter(
-                ContractSealRecord.id == seal_id,
-                ContractSealRecord.contract_id == contract_id
-            )
+            .filter(ContractSealRecord.id == seal_id, ContractSealRecord.contract_id == contract_id)
             .first()
         )
         if not seal_record:
@@ -123,8 +128,8 @@ async def update_contract_seal_record(
                 archive_location=seal_record.archive_location,
                 remark=seal_record.remark,
                 created_at=seal_record.created_at,
-                updated_at=seal_record.updated_at
-            )
+                updated_at=seal_record.updated_at,
+            ),
         )
     except HTTPException:
         raise

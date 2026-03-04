@@ -12,19 +12,19 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import QuoteCostTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.schemas.sales import (
     QuoteCostTemplateCreate,
     QuoteCostTemplateResponse,
     QuoteCostTemplateUpdate,
 )
-
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+
 router = APIRouter()
 
 
@@ -54,13 +54,15 @@ def get_cost_templates(
         query = query.filter(QuoteCostTemplate.is_active == is_active)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(QuoteCostTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(QuoteCostTemplate.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for template in templates:
         template_dict = {
             **{c.name: getattr(template, c.name) for c in template.__table__.columns},
-            "creator_name": template.creator.real_name if template.creator else None
+            "creator_name": template.creator.real_name if template.creator else None,
         }
         items.append(QuoteCostTemplateResponse(**template_dict))
 
@@ -69,7 +71,7 @@ def get_cost_templates(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -87,7 +89,7 @@ def get_cost_template(
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
-        "creator_name": template.creator.real_name if template.creator else None
+        "creator_name": template.creator.real_name if template.creator else None,
     }
     return QuoteCostTemplateResponse(**template_dict)
 
@@ -102,15 +104,12 @@ def create_cost_template(
     """
     创建成本模板
     """
-    template = QuoteCostTemplate(
-        **template_in.model_dump(),
-        created_by=current_user.id
-    )
+    template = QuoteCostTemplate(**template_in.model_dump(), created_by=current_user.id)
     save_obj(db, template)
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
-        "creator_name": template.creator.real_name if template.creator else None
+        "creator_name": template.creator.real_name if template.creator else None,
     }
     return QuoteCostTemplateResponse(**template_dict)
 
@@ -137,7 +136,7 @@ def update_cost_template(
 
     template_dict = {
         **{c.name: getattr(template, c.name) for c in template.__table__.columns},
-        "creator_name": template.creator.real_name if template.creator else None
+        "creator_name": template.creator.real_name if template.creator else None,
     }
     return QuoteCostTemplateResponse(**template_dict)
 
@@ -157,4 +156,5 @@ def delete_cost_template(
     delete_obj(db, template)
 
     from app.schemas.common import ResponseModel
+
     return ResponseModel(code=200, message="删除成功")

@@ -58,5 +58,5 @@ def build_issue_response(issue: AcceptanceIssue, db: Session) -> AcceptanceIssue
         is_blocking=issue.is_blocking,
         attachments=issue.attachments,
         created_at=issue.created_at,
-        updated_at=issue.updated_at
+        updated_at=issue.updated_at,
     )

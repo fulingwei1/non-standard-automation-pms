@@ -49,8 +49,14 @@ class TestGetKpiDetail:
         mock_get_kpi.return_value = kpi
         mock_trend.return_value = "UP"
 
-        with patch("app.services.strategy.kpi_service.detail_history.calculate_kpi_health", return_value={"level": "GREEN"}):
-            with patch("app.services.strategy.kpi_service.detail_history.calculate_kpi_completion_rate", return_value=75.0):
+        with patch(
+            "app.services.strategy.kpi_service.detail_history.calculate_kpi_health",
+            return_value={"level": "GREEN"},
+        ):
+            with patch(
+                "app.services.strategy.kpi_service.detail_history.calculate_kpi_completion_rate",
+                return_value=75.0,
+            ):
                 # CSF query
                 csf = MagicMock()
                 csf.name = "CSF1"
@@ -79,13 +85,17 @@ class TestGetKpiHistory:
         h.recorded_by = None
         h.created_at = None
         h.updated_at = None
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            h
+        ]
         result = get_kpi_history(db, 1)
         assert len(result) == 1
 
     def test_empty_history(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = get_kpi_history(db, 1)
         assert result == []
 

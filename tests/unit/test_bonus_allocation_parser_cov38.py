@@ -3,18 +3,20 @@
 Unit tests for bonus_allocation_parser (第三十八批)
 """
 import io
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.bonus_allocation_parser", reason="导入失败，跳过")
 
 try:
-    from app.services.bonus_allocation_parser import (
-        validate_file_type,
-        save_uploaded_file,
-        parse_excel_file,
-    )
     from fastapi import HTTPException
+
+    from app.services.bonus_allocation_parser import (
+        parse_excel_file,
+        save_uploaded_file,
+        validate_file_type,
+    )
 except ImportError:
     pytestmark = pytest.mark.skip(reason="bonus_allocation_parser 不可用")
     validate_file_type = None
@@ -64,9 +66,11 @@ class TestSaveUploadedFile:
         mock_file = MagicMock()
         mock_file.filename = "test.xlsx"
 
-        with patch("app.services.bonus_allocation_parser.settings") as mock_settings, \
-             patch("app.services.bonus_allocation_parser.os.makedirs"), \
-             patch("app.services.bonus_allocation_parser.uuid.uuid4") as mock_uuid:
+        with (
+            patch("app.services.bonus_allocation_parser.settings") as mock_settings,
+            patch("app.services.bonus_allocation_parser.os.makedirs"),
+            patch("app.services.bonus_allocation_parser.uuid.uuid4") as mock_uuid,
+        ):
             mock_settings.UPLOAD_DIR = "/tmp"
             mock_uuid.return_value.hex = "abc123"
             result = save_uploaded_file(mock_file)
@@ -79,9 +83,11 @@ class TestSaveUploadedFile:
         mock_file = MagicMock()
         mock_file.filename = "bonus.xlsx"
 
-        with patch("app.services.bonus_allocation_parser.settings") as mock_settings, \
-             patch("app.services.bonus_allocation_parser.os.makedirs"), \
-             patch("app.services.bonus_allocation_parser.uuid.uuid4") as mock_uuid:
+        with (
+            patch("app.services.bonus_allocation_parser.settings") as mock_settings,
+            patch("app.services.bonus_allocation_parser.os.makedirs"),
+            patch("app.services.bonus_allocation_parser.uuid.uuid4") as mock_uuid,
+        ):
             mock_settings.UPLOAD_DIR = "/tmp"
             mock_uuid.return_value.hex = "def456"
             file_path, relative_path, size = save_uploaded_file(mock_file)
@@ -97,6 +103,7 @@ class TestParseExcelFile:
         mock_content = b"fake excel content"
         with patch("app.services.bonus_allocation_parser.ImportExportEngine") as MockEngine:
             import pandas as pd
+
             MockEngine.parse_excel.return_value = pd.DataFrame({"col": [1, 2]})
             result = parse_excel_file(mock_content)
             MockEngine.parse_excel.assert_called_once_with(mock_content)

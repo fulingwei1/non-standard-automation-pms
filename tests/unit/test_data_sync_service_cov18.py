@@ -6,6 +6,7 @@ import pytest
 
 try:
     from app.services.data_sync_service import DataSyncService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -60,6 +61,7 @@ class TestSyncContractToProject:
     def test_returns_error_if_project_not_found(self, db, service):
         contract = make_contract(project_id=5)
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             m = MagicMock()
@@ -78,6 +80,7 @@ class TestSyncContractToProject:
         project = make_project(project_id=5)
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             m = MagicMock()
@@ -103,6 +106,7 @@ class TestSyncCustomerToContracts:
         customer = MagicMock()
         customer.id = 10
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             m = MagicMock()
@@ -131,6 +135,7 @@ class TestSyncCustomerToContracts:
         contract.contact_phone = "13900139000"
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             m = MagicMock()

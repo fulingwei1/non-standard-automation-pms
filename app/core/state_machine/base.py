@@ -7,18 +7,19 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
+
+from app.services.notification_service import NotificationPriority
 
 from .exceptions import (
     InvalidStateTransitionError,
     PermissionDeniedError,
     StateMachineValidationError,
 )
-from .permissions import StateMachinePermissionChecker
 from .notifications import StateMachineNotifier
-from app.services.notification_service import NotificationPriority
+from .permissions import StateMachinePermissionChecker
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ class StateMachine:
 
         # 支持枚举类型
         from enum import Enum as _Enum
+
         if isinstance(target_state, _Enum):
             target_state = target_state.value
         else:
@@ -142,6 +144,7 @@ class StateMachine:
         from_state = self.current_state
         # 支持枚举类型作为 target_state 参数
         from enum import Enum as _Enum
+
         if isinstance(target_state, _Enum):
             target_state = target_state.value
         else:
@@ -155,7 +158,9 @@ class StateMachine:
         transition_key = (from_state, to_state)
         if transition_key not in self._transitions:
             raise InvalidStateTransitionError(
-                from_state, target_state, f"未定义从 '{from_state}' 到 '{target_state}' 的状态转换规则"
+                from_state,
+                target_state,
+                f"未定义从 '{from_state}' 到 '{target_state}' 的状态转换规则",
             )
 
         transition_func = self._transitions[transition_key]
@@ -181,7 +186,7 @@ class StateMachine:
         if not can_transition:
             # Check if it's a validation failure vs invalid transition
             if reason.startswith("VALIDATION_FAILED:"):
-                actual_reason = reason[len("VALIDATION_FAILED:"):]
+                actual_reason = reason[len("VALIDATION_FAILED:") :]
                 raise StateMachineValidationError(actual_reason)
             raise InvalidStateTransitionError(from_state, target_state, reason)
 
@@ -268,11 +273,7 @@ class StateMachine:
             List[str]: 允许的目标状态列表
         """
         current = self.current_state
-        return [
-            to_state
-            for (from_state, to_state) in self._transitions
-            if from_state == current
-        ]
+        return [to_state for (from_state, to_state) in self._transitions if from_state == current]
 
     def get_transition_history(self) -> List[Dict[str, Any]]:
         """
@@ -350,11 +351,11 @@ class StateMachine:
             entity_id = self._get_entity_id()
 
             # 获取操作人信息
-            operator_id = operator.id if hasattr(operator, 'id') else None
+            operator_id = operator.id if hasattr(operator, "id") else None
             operator_name = None
-            if hasattr(operator, 'name'):
+            if hasattr(operator, "name"):
                 operator_name = operator.name
-            elif hasattr(operator, 'username'):
+            elif hasattr(operator, "username"):
                 operator_name = operator.username
 
             # 创建审计日志
@@ -437,15 +438,13 @@ class StateMachine:
         Returns:
             实体ID
         """
-        if hasattr(self.model, 'id'):
+        if hasattr(self.model, "id"):
             return self.model.id
         else:
             raise AttributeError(f"模型 {self.model.__class__.__name__} 没有 'id' 属性")
 
     @classmethod
-    def create(
-        cls, model: Any, db: Session, state_field: str = "status"
-    ) -> "StateMachine":
+    def create(cls, model: Any, db: Session, state_field: str = "status") -> "StateMachine":
         """
         工厂方法：为给定模型创建状态机实例
 

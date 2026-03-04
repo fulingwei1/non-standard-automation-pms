@@ -7,13 +7,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ===================== MetricCalculationService =====================
+
 
 class TestMetricCalculationService:
     @pytest.fixture
     def svc(self):
         from app.services.metric_calculation_service import MetricCalculationService
+
         db = MagicMock()
         return MetricCalculationService(db)
 
@@ -49,6 +50,7 @@ SERVICE_CLASSES_DB_ONLY = [
 class TestDbOnlyServices:
     def test_init(self, module_path, class_name):
         import importlib
+
         mod = importlib.import_module(module_path)
         cls = getattr(mod, class_name)
         db = MagicMock()
@@ -120,6 +122,7 @@ IMPORT_MODULES = [
 def test_module_importable(module_path):
     """Test that service modules can be imported without errors"""
     import importlib
+
     try:
         mod = importlib.import_module(module_path)
         assert mod is not None

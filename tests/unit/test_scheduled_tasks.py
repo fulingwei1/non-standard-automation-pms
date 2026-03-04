@@ -23,7 +23,6 @@ from app.utils.scheduled_tasks.base import (
     send_notification_for_alert,
 )
 
-
 # ============================================================================
 # Base 模块测试
 # ============================================================================
@@ -118,9 +117,7 @@ class TestSafeTaskExecution:
         def task_returns_none():
             return None
 
-            wrapped = safe_task_execution(
-            task_returns_none, "task_returns_none", mock_logger
-            )
+            wrapped = safe_task_execution(task_returns_none, "task_returns_none", mock_logger)
             result = wrapped()
 
             assert result is None
@@ -184,23 +181,18 @@ class TestEnqueueOrDispatchNotification:
             content="c",
         )
 
-        with patch(
-            "app.services.notification_queue.enqueue_notification", return_value=False
-        ):
+        with patch("app.services.notification_queue.enqueue_notification", return_value=False):
             result = enqueue_or_dispatch_notification(
                 dispatcher, notification, alert, user, request=request
             )
 
         assert result["queued"] is False
         assert result["sent"] is True
-        dispatcher.dispatch.assert_called_once_with(
-            notification, alert, user, request=request
-        )
+        dispatcher.dispatch.assert_called_once_with(notification, alert, user, request=request)
 
-
-            # ============================================================================
-            # Project Health Tasks 测试
-            # ============================================================================
+        # ============================================================================
+        # Project Health Tasks 测试
+        # ============================================================================
 
 
 @pytest.mark.unit
@@ -210,7 +202,7 @@ class TestProjectHealthTasks:
     def test_calculate_project_health_callable(self):
         """测试健康度计算函数可调用"""
         from app.utils.scheduled_tasks.project_health_tasks import (
-        calculate_project_health,
+            calculate_project_health,
         )
 
         assert callable(calculate_project_health)
@@ -218,7 +210,7 @@ class TestProjectHealthTasks:
     def test_daily_health_snapshot_callable(self):
         """测试每日健康度快照函数可调用"""
         from app.utils.scheduled_tasks.project_health_tasks import (
-        daily_health_snapshot,
+            daily_health_snapshot,
         )
 
         assert callable(daily_health_snapshot)
@@ -226,12 +218,10 @@ class TestProjectHealthTasks:
     def test_calculate_project_health_exception(self):
         """测试健康度计算异常处理"""
         from app.utils.scheduled_tasks.project_health_tasks import (
-        calculate_project_health,
+            calculate_project_health,
         )
 
-        with patch(
-            "app.utils.scheduled_tasks.project_health_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.project_health_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = calculate_project_health()
@@ -245,9 +235,7 @@ class TestProjectHealthTasks:
             daily_health_snapshot,
         )
 
-        with patch(
-            "app.utils.scheduled_tasks.project_health_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.project_health_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("Snapshot error")
 
             result = daily_health_snapshot()
@@ -273,7 +261,7 @@ class TestMilestoneTasks:
     def test_check_milestone_risk_alerts_callable(self):
         """测试里程碑风险预警函数可调用"""
         from app.utils.scheduled_tasks.milestone_tasks import (
-        check_milestone_risk_alerts,
+            check_milestone_risk_alerts,
         )
 
         assert callable(check_milestone_risk_alerts)
@@ -281,7 +269,7 @@ class TestMilestoneTasks:
     def test_check_milestone_status_and_adjust_payments_callable(self):
         """测试里程碑状态调整函数可调用"""
         from app.utils.scheduled_tasks.milestone_tasks import (
-        check_milestone_status_and_adjust_payments,
+            check_milestone_status_and_adjust_payments,
         )
 
         assert callable(check_milestone_status_and_adjust_payments)
@@ -290,9 +278,7 @@ class TestMilestoneTasks:
         """测试里程碑预警检查异常"""
         from app.utils.scheduled_tasks.milestone_tasks import check_milestone_alerts
 
-        with patch(
-            "app.utils.scheduled_tasks.milestone_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("Service error")
 
             result = check_milestone_alerts()
@@ -305,9 +291,7 @@ class TestMilestoneTasks:
             check_milestone_status_and_adjust_payments,
         )
 
-        with patch(
-            "app.utils.scheduled_tasks.milestone_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("Payment error")
 
             result = check_milestone_status_and_adjust_payments()
@@ -320,9 +304,7 @@ class TestMilestoneTasks:
             check_milestone_risk_alerts,
         )
 
-        with patch(
-            "app.utils.scheduled_tasks.milestone_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("Risk error")
 
             result = check_milestone_risk_alerts()
@@ -355,9 +337,7 @@ class TestAlertTasks:
         """测试预警升级异常处理"""
         from app.utils.scheduled_tasks.alert_tasks import check_alert_escalation
 
-        with patch(
-            "app.utils.scheduled_tasks.alert_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.alert_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_alert_escalation()
@@ -368,9 +348,7 @@ class TestAlertTasks:
         """测试通知重试异常处理"""
         from app.utils.scheduled_tasks.alert_tasks import retry_failed_notifications
 
-        with patch(
-            "app.utils.scheduled_tasks.alert_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.alert_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = retry_failed_notifications()
@@ -396,7 +374,7 @@ class TestIssueScheduledTasks:
     def test_check_blocking_issues_callable(self):
         """测试阻塞问题检查函数可调用"""
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
-        check_blocking_issues,
+            check_blocking_issues,
         )
 
         assert callable(check_blocking_issues)
@@ -405,9 +383,7 @@ class TestIssueScheduledTasks:
         """测试逾期问题检查异常处理"""
         from app.utils.scheduled_tasks.issue_scheduled_tasks import check_overdue_issues
 
-        with patch(
-            "app.utils.scheduled_tasks.issue_scheduled_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.issue_scheduled_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_overdue_issues()
@@ -427,7 +403,7 @@ class TestProjectScheduledTasks:
     def test_calculate_project_health_callable(self):
         """测试项目健康度计算函数可调用"""
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
-        calculate_project_health,
+            calculate_project_health,
         )
 
         assert callable(calculate_project_health)
@@ -435,7 +411,7 @@ class TestProjectScheduledTasks:
     def test_check_project_deadline_alerts_callable(self):
         """测试截止日期预警函数可调用"""
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
-        check_project_deadline_alerts,
+            check_project_deadline_alerts,
         )
 
         assert callable(check_project_deadline_alerts)
@@ -498,9 +474,7 @@ class TestScheduledTasksIntegration:
     def test_module_imports(self):
         """测试模块可以正常导入"""
         # 验证所有任务模块可以正常导入
-        from app.utils.scheduled_tasks import base
-        from app.utils.scheduled_tasks import project_health_tasks
-        from app.utils.scheduled_tasks import milestone_tasks
+        from app.utils.scheduled_tasks import base, milestone_tasks, project_health_tasks
 
         assert hasattr(base, "log_task_result")
         assert hasattr(base, "safe_task_execution")
@@ -516,34 +490,34 @@ class TestScheduledTasksIntegration:
     def test_all_tasks_callable(self):
         """测试所有任务函数可调用"""
         from app.utils.scheduled_tasks.alert_tasks import (
-        check_alert_escalation,
-        retry_failed_notifications,
-        )
-        from app.utils.scheduled_tasks.milestone_tasks import (
-        check_milestone_alerts,
-        check_milestone_risk_alerts,
-        )
-        from app.utils.scheduled_tasks.project_scheduled_tasks import (
-        calculate_project_health,
-        check_project_deadline_alerts,
+            check_alert_escalation,
+            retry_failed_notifications,
         )
         from app.utils.scheduled_tasks.issue_scheduled_tasks import (
-        check_overdue_issues,
-        check_blocking_issues,
+            check_blocking_issues,
+            check_overdue_issues,
+        )
+        from app.utils.scheduled_tasks.milestone_tasks import (
+            check_milestone_alerts,
+            check_milestone_risk_alerts,
+        )
+        from app.utils.scheduled_tasks.project_scheduled_tasks import (
+            calculate_project_health,
+            check_project_deadline_alerts,
         )
 
         assert all(
-        callable(f)
-        for f in [
-        check_alert_escalation,
-        retry_failed_notifications,
-        check_milestone_alerts,
-        check_milestone_risk_alerts,
-        calculate_project_health,
-        check_project_deadline_alerts,
-        check_overdue_issues,
-        check_blocking_issues,
-        ]
+            callable(f)
+            for f in [
+                check_alert_escalation,
+                retry_failed_notifications,
+                check_milestone_alerts,
+                check_milestone_risk_alerts,
+                calculate_project_health,
+                check_project_deadline_alerts,
+                check_overdue_issues,
+                check_blocking_issues,
+            ]
         )
 
 
@@ -572,9 +546,7 @@ class TestHRTasks:
         """测试合同到期提醒异常处理"""
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
 
-        with patch(
-            "app.utils.scheduled_tasks.hr_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.hr_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_contract_expiry_reminder()
@@ -585,9 +557,7 @@ class TestHRTasks:
         """测试员工转正提醒异常处理"""
         from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
 
-        with patch(
-            "app.utils.scheduled_tasks.hr_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.hr_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_employee_confirmation_reminder()
@@ -598,9 +568,7 @@ class TestHRTasks:
         """测试无到期合同时的处理"""
         from app.utils.scheduled_tasks.hr_tasks import check_contract_expiry_reminder
 
-        with patch(
-            "app.utils.scheduled_tasks.hr_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.hr_tasks.get_db_session") as mock_db_ctx:
             mock_session = MagicMock()
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -615,9 +583,7 @@ class TestHRTasks:
         """测试无待转正员工时的处理"""
         from app.utils.scheduled_tasks.hr_tasks import check_employee_confirmation_reminder
 
-        with patch(
-            "app.utils.scheduled_tasks.hr_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.hr_tasks.get_db_session") as mock_db_ctx:
             mock_session = MagicMock()
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -658,7 +624,7 @@ class TestTimesheetTasks:
     def test_timesheet_approval_timeout_callable(self):
         """测试审批超时提醒函数可调用"""
         from app.utils.scheduled_tasks.timesheet_tasks import (
-        timesheet_approval_timeout_reminder_task,
+            timesheet_approval_timeout_reminder_task,
         )
 
         assert callable(timesheet_approval_timeout_reminder_task)
@@ -690,17 +656,16 @@ class TestTimesheetTasks:
     def test_daily_timesheet_reminder_with_mock_service(self):
         """测试每日工时提醒 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_reminder_task
 
         # 创建mock服务模块
         mock_service = MagicMock()
         mock_service.notify_timesheet_missing = MagicMock(return_value=5)
-        sys.modules['app.services.timesheet_reminder_service'] = mock_service
+        sys.modules["app.services.timesheet_reminder_service"] = mock_service
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -710,22 +675,21 @@ class TestTimesheetTasks:
                 assert result is not None
         finally:
             # 清理mock模块
-            if 'app.services.timesheet_reminder_service' in sys.modules:
-                del sys.modules['app.services.timesheet_reminder_service']
+            if "app.services.timesheet_reminder_service" in sys.modules:
+                del sys.modules["app.services.timesheet_reminder_service"]
 
     def test_weekly_timesheet_reminder_with_mock_service(self):
         """测试每周工时提醒 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import weekly_timesheet_reminder_task
 
         mock_service = MagicMock()
         mock_service.notify_weekly_timesheet_missing = MagicMock(return_value=3)
-        sys.modules['app.services.timesheet_reminder_service'] = mock_service
+        sys.modules["app.services.timesheet_reminder_service"] = mock_service
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -734,22 +698,21 @@ class TestTimesheetTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.timesheet_reminder_service' in sys.modules:
-                del sys.modules['app.services.timesheet_reminder_service']
+            if "app.services.timesheet_reminder_service" in sys.modules:
+                del sys.modules["app.services.timesheet_reminder_service"]
 
     def test_timesheet_anomaly_alert_with_mock_service(self):
         """测试工时异常提醒 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import timesheet_anomaly_alert_task
 
         mock_service = MagicMock()
         mock_service.notify_anomaly_timesheet = MagicMock(return_value=2)
-        sys.modules['app.services.timesheet_reminder_service'] = mock_service
+        sys.modules["app.services.timesheet_reminder_service"] = mock_service
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -758,24 +721,23 @@ class TestTimesheetTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.timesheet_reminder_service' in sys.modules:
-                del sys.modules['app.services.timesheet_reminder_service']
+            if "app.services.timesheet_reminder_service" in sys.modules:
+                del sys.modules["app.services.timesheet_reminder_service"]
 
     def test_timesheet_approval_timeout_with_mock_service(self):
         """测试审批超时提醒 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import (
             timesheet_approval_timeout_reminder_task,
         )
 
         mock_service = MagicMock()
         mock_service.notify_approval_timeout = MagicMock(return_value=1)
-        sys.modules['app.services.timesheet_reminder_service'] = mock_service
+        sys.modules["app.services.timesheet_reminder_service"] = mock_service
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -784,30 +746,29 @@ class TestTimesheetTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.timesheet_reminder_service' in sys.modules:
-                del sys.modules['app.services.timesheet_reminder_service']
+            if "app.services.timesheet_reminder_service" in sys.modules:
+                del sys.modules["app.services.timesheet_reminder_service"]
 
     def test_daily_aggregation_with_mock_service(self):
         """测试每日汇总 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import daily_timesheet_aggregation_task
 
         # 创建mock服务模块
         mock_service_class = MagicMock()
         mock_service_instance = MagicMock()
         mock_service_instance.aggregate_monthly_timesheet = MagicMock(
-        return_value={'message': 'ok', 'success': True}
+            return_value={"message": "ok", "success": True}
         )
         mock_service_class.return_value = mock_service_instance
 
         mock_module = MagicMock()
         mock_module.TimesheetAggregationService = mock_service_class
-        sys.modules['app.services.timesheet_aggregation_service'] = mock_module
+        sys.modules["app.services.timesheet_aggregation_service"] = mock_module
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -815,31 +776,30 @@ class TestTimesheetTasks:
                 result = daily_timesheet_aggregation_task()
 
                 assert result is not None
-                assert 'message' in result
+                assert "message" in result
         finally:
-            if 'app.services.timesheet_aggregation_service' in sys.modules:
-                del sys.modules['app.services.timesheet_aggregation_service']
+            if "app.services.timesheet_aggregation_service" in sys.modules:
+                del sys.modules["app.services.timesheet_aggregation_service"]
 
     def test_weekly_aggregation_with_mock_service(self):
         """测试每周汇总 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import weekly_timesheet_aggregation_task
 
         mock_service_class = MagicMock()
         mock_service_instance = MagicMock()
         mock_service_instance.aggregate_monthly_timesheet = MagicMock(
-        return_value={'message': 'ok', 'success': True}
+            return_value={"message": "ok", "success": True}
         )
         mock_service_class.return_value = mock_service_instance
 
         mock_module = MagicMock()
         mock_module.TimesheetAggregationService = mock_service_class
-        sys.modules['app.services.timesheet_aggregation_service'] = mock_module
+        sys.modules["app.services.timesheet_aggregation_service"] = mock_module
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -848,29 +808,28 @@ class TestTimesheetTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.timesheet_aggregation_service' in sys.modules:
-                del sys.modules['app.services.timesheet_aggregation_service']
+            if "app.services.timesheet_aggregation_service" in sys.modules:
+                del sys.modules["app.services.timesheet_aggregation_service"]
 
     def test_monthly_aggregation_with_mock_service(self):
         """测试每月汇总 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import monthly_timesheet_aggregation_task
 
         mock_service_class = MagicMock()
         mock_service_instance = MagicMock()
         mock_service_instance.aggregate_monthly_timesheet = MagicMock(
-        return_value={'message': 'ok', 'success': True}
+            return_value={"message": "ok", "success": True}
         )
         mock_service_class.return_value = mock_service_instance
 
         mock_module = MagicMock()
         mock_module.TimesheetAggregationService = mock_service_class
-        sys.modules['app.services.timesheet_aggregation_service'] = mock_module
+        sys.modules["app.services.timesheet_aggregation_service"] = mock_module
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -878,31 +837,30 @@ class TestTimesheetTasks:
                 result = monthly_timesheet_aggregation_task()
 
                 assert result is not None
-                assert 'message' in result
+                assert "message" in result
         finally:
-            if 'app.services.timesheet_aggregation_service' in sys.modules:
-                del sys.modules['app.services.timesheet_aggregation_service']
+            if "app.services.timesheet_aggregation_service" in sys.modules:
+                del sys.modules["app.services.timesheet_aggregation_service"]
 
     def test_calculate_monthly_labor_cost_with_mock_service(self):
         """测试月度人工成本计算 - 使用模拟服务"""
         import sys
+
         from app.utils.scheduled_tasks.timesheet_tasks import calculate_monthly_labor_cost_task
 
         mock_service_class = MagicMock()
         mock_service_instance = MagicMock()
         mock_service_instance.calculate_monthly_labor_cost = MagicMock(
-        return_value={'message': 'ok', 'success': True}
+            return_value={"message": "ok", "success": True}
         )
         mock_service_class.return_value = mock_service_instance
 
         mock_module = MagicMock()
         mock_module.LaborCostCalculationService = mock_service_class
-        sys.modules['app.services.labor_cost_calculation_service'] = mock_module
+        sys.modules["app.services.labor_cost_calculation_service"] = mock_module
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.timesheet_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.timesheet_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -911,8 +869,8 @@ class TestTimesheetTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.labor_cost_calculation_service' in sys.modules:
-                del sys.modules['app.services.labor_cost_calculation_service']
+            if "app.services.labor_cost_calculation_service" in sys.modules:
+                del sys.modules["app.services.labor_cost_calculation_service"]
 
 
 # ============================================================================
@@ -946,9 +904,7 @@ class TestProductionTasks:
         """测试生产计划预警异常处理"""
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
 
-        with patch(
-            "app.utils.scheduled_tasks.production_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.production_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_production_plan_alerts()
@@ -959,9 +915,7 @@ class TestProductionTasks:
         """测试工单报工超时异常处理"""
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
 
-        with patch(
-            "app.utils.scheduled_tasks.production_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.production_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_work_report_timeout()
@@ -972,9 +926,7 @@ class TestProductionTasks:
         """测试每日生产报表异常处理"""
         from app.utils.scheduled_tasks.production_tasks import generate_production_daily_reports
 
-        with patch(
-            "app.utils.scheduled_tasks.production_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.production_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = generate_production_daily_reports()
@@ -985,9 +937,7 @@ class TestProductionTasks:
         """测试无生产计划预警时的处理"""
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
 
-        with patch(
-            "app.utils.scheduled_tasks.production_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.production_tasks.get_db_session") as mock_db_ctx:
             mock_session = MagicMock()
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -1001,9 +951,7 @@ class TestProductionTasks:
         """测试无超时工单时的处理"""
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
 
-        with patch(
-            "app.utils.scheduled_tasks.production_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.production_tasks.get_db_session") as mock_db_ctx:
             mock_session = MagicMock()
             mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -1051,9 +999,7 @@ class TestSalesTasks:
         """测试收款提醒异常处理"""
         from app.utils.scheduled_tasks.sales_tasks import check_payment_reminder
 
-        with patch(
-            "app.utils.scheduled_tasks.sales_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.sales_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_payment_reminder()
@@ -1064,9 +1010,7 @@ class TestSalesTasks:
         """测试应收逾期预警异常处理"""
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
 
-        with patch(
-            "app.utils.scheduled_tasks.sales_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.sales_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_overdue_receivable_alerts()
@@ -1077,9 +1021,7 @@ class TestSalesTasks:
         """测试商机阶段超时异常处理"""
         from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
 
-        with patch(
-            "app.utils.scheduled_tasks.sales_tasks.get_db_session"
-        ) as mock_db_ctx:
+        with patch("app.utils.scheduled_tasks.sales_tasks.get_db_session") as mock_db_ctx:
             mock_db_ctx.side_effect = Exception("DB error")
 
             result = check_opportunity_stage_timeout()
@@ -1089,16 +1031,15 @@ class TestSalesTasks:
     def test_check_payment_reminder_no_reminders(self):
         """测试无收款提醒时的处理"""
         import sys
+
         from app.utils.scheduled_tasks.sales_tasks import check_payment_reminder
 
         mock_service = MagicMock()
         mock_service.notify_payment_plan_upcoming = MagicMock(return_value=0)
-        sys.modules['app.services.sales_reminder'] = mock_service
+        sys.modules["app.services.sales_reminder"] = mock_service
 
         try:
-            with patch(
-                "app.utils.scheduled_tasks.sales_tasks.get_db_session"
-            ) as mock_db_ctx:
+            with patch("app.utils.scheduled_tasks.sales_tasks.get_db_session") as mock_db_ctx:
                 mock_session = MagicMock()
                 mock_db_ctx.return_value.__enter__ = MagicMock(return_value=mock_session)
                 mock_db_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -1107,5 +1048,5 @@ class TestSalesTasks:
 
                 assert result is not None
         finally:
-            if 'app.services.sales_reminder' in sys.modules:
-                del sys.modules['app.services.sales_reminder']
+            if "app.services.sales_reminder" in sys.modules:
+                del sys.modules["app.services.sales_reminder"]

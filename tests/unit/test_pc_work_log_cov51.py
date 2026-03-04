@@ -3,9 +3,10 @@
 tests/unit/test_pc_work_log_cov51.py
 Unit tests for app/services/performance_collector/work_log.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.performance_collector.work_log import (

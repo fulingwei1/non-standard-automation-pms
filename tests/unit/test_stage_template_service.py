@@ -12,16 +12,16 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.stage_template import StageTemplate, StageDefinition, NodeDefinition
-from app.services.stage_template import StageTemplateService
+from app.models.stage_template import NodeDefinition, StageDefinition, StageTemplate
 from app.services.preset_stage_templates import (
-    PRESET_TEMPLATES,
     FULL_LIFECYCLE_TEMPLATE,
-    STANDARD_TEMPLATE,
+    PRESET_TEMPLATES,
     QUICK_TEMPLATE,
     REPEAT_TEMPLATE,
+    STANDARD_TEMPLATE,
     get_preset_template,
 )
+from app.services.stage_template import StageTemplateService
 
 
 @pytest.mark.unit
@@ -135,11 +135,11 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-        template_code="TEST_TPL_001",
-        template_name="测试模板",
-        description="用于测试的模板",
-        project_type="NEW",
-        is_default=False,
+            template_code="TEST_TPL_001",
+            template_name="测试模板",
+            description="用于测试的模板",
+            project_type="NEW",
+            is_default=False,
         )
         db_session.flush()
 
@@ -153,17 +153,17 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         service.create_template(
-        template_code="TEST_TPL_DUP",
-        template_name="模板1",
-        project_type="NEW",
+            template_code="TEST_TPL_DUP",
+            template_name="模板1",
+            project_type="NEW",
         )
         db_session.flush()
 
         with pytest.raises(ValueError, match="模板编码.*已存在"):
             service.create_template(
-            template_code="TEST_TPL_DUP",
-            template_name="模板2",
-            project_type="NEW",
+                template_code="TEST_TPL_DUP",
+                template_name="模板2",
+                project_type="NEW",
             )
 
     def test_add_stage_to_template(self, db_session: Session):
@@ -171,20 +171,20 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-        template_code="TEST_TPL_STAGE",
-        template_name="测试模板",
-        project_type="NEW",
+            template_code="TEST_TPL_STAGE",
+            template_name="测试模板",
+            project_type="NEW",
         )
         db_session.flush()
 
         stage = service.add_stage(
-        template_id=template.id,
-        stage_code="S1",
-        stage_name="需求进入",
-        sequence=0,
-        estimated_days=7,
-        description="接收客户需求",
-        is_required=True,
+            template_id=template.id,
+            stage_code="S1",
+            stage_name="需求进入",
+            sequence=0,
+            estimated_days=7,
+            description="接收客户需求",
+            is_required=True,
         )
         db_session.flush()
 
@@ -197,28 +197,28 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-        template_code="TEST_TPL_NODE",
-        template_name="测试模板",
-        project_type="NEW",
+            template_code="TEST_TPL_NODE",
+            template_name="测试模板",
+            project_type="NEW",
         )
         stage = service.add_stage(
-        template_id=template.id,
-        stage_code="S1",
-        stage_name="需求进入",
-        sequence=0,
+            template_id=template.id,
+            stage_code="S1",
+            stage_name="需求进入",
+            sequence=0,
         )
         db_session.flush()
 
         node = service.add_node(
-        stage_definition_id=stage.id,
-        node_code="S1N01",
-        node_name="需求接收登记",
-        node_type="TASK",
-        sequence=0,
-        estimated_days=1,
-        completion_method="MANUAL",
-        is_required=True,
-        description="登记客户需求基本信息",
+            stage_definition_id=stage.id,
+            node_code="S1N01",
+            node_name="需求接收登记",
+            node_type="TASK",
+            sequence=0,
+            estimated_days=1,
+            completion_method="MANUAL",
+            is_required=True,
+            description="登记客户需求基本信息",
         )
         db_session.flush()
 
@@ -238,9 +238,11 @@ class TestStageTemplateService:
         assert template.template_code == "TPL_QUICK"
 
         # 验证阶段和节点已创建
-        stages = db_session.query(StageDefinition).filter(
-        StageDefinition.template_id == template.id
-        ).all()
+        stages = (
+            db_session.query(StageDefinition)
+            .filter(StageDefinition.template_id == template.id)
+            .all()
+        )
         assert len(stages) == 4
 
         # 验证节点
@@ -257,9 +259,11 @@ class TestStageTemplateService:
         db_session.flush()
 
         # 检查节点依赖关系
-        nodes_with_deps = db_session.query(NodeDefinition).filter(
-        NodeDefinition.dependency_node_ids.isnot(None)
-        ).all()
+        nodes_with_deps = (
+            db_session.query(NodeDefinition)
+            .filter(NodeDefinition.dependency_node_ids.isnot(None))
+            .all()
+        )
 
         # 标准模板中有多个节点有依赖
         assert len(nodes_with_deps) > 0
@@ -289,9 +293,9 @@ class TestStageTemplateService:
 
         # 复制
         copied = service.copy_template(
-        source_template_id=original.id,
-        new_code="TPL_QUICK_COPY",
-        new_name="快速模板副本",
+            source_template_id=original.id,
+            new_code="TPL_QUICK_COPY",
+            new_name="快速模板副本",
         )
         db_session.flush()
 
@@ -310,16 +314,16 @@ class TestStageTemplateService:
 
         # 创建两个同类型模板
         tpl1 = service.create_template(
-        template_code="TPL_DEFAULT_1",
-        template_name="模板1",
-        project_type="NEW",
-        is_default=True,
+            template_code="TPL_DEFAULT_1",
+            template_name="模板1",
+            project_type="NEW",
+            is_default=True,
         )
         tpl2 = service.create_template(
-        template_code="TPL_DEFAULT_2",
-        template_name="模板2",
-        project_type="NEW",
-        is_default=False,
+            template_code="TPL_DEFAULT_2",
+            template_name="模板2",
+            project_type="NEW",
+            is_default=False,
         )
         db_session.flush()
 
@@ -339,9 +343,9 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-        template_code="TPL_TO_DELETE",
-        template_name="待删除模板",
-        project_type="NEW",
+            template_code="TPL_TO_DELETE",
+            template_name="待删除模板",
+            project_type="NEW",
         )
         db_session.flush()
         template_id = template.id
@@ -352,9 +356,7 @@ class TestStageTemplateService:
         assert success is True
 
         # 验证已删除（硬删除）
-        deleted = db_session.query(StageTemplate).filter(
-        StageTemplate.id == template_id
-        ).first()
+        deleted = db_session.query(StageTemplate).filter(StageTemplate.id == template_id).first()
         assert deleted is None
 
     def test_list_templates(self, db_session: Session):
@@ -363,14 +365,14 @@ class TestStageTemplateService:
 
         # 创建几个模板
         service.create_template(
-        template_code="TPL_LIST_1",
-        template_name="列表模板1",
-        project_type="NEW",
+            template_code="TPL_LIST_1",
+            template_name="列表模板1",
+            project_type="NEW",
         )
         service.create_template(
-        template_code="TPL_LIST_2",
-        template_name="列表模板2",
-        project_type="REPEAT",
+            template_code="TPL_LIST_2",
+            template_name="列表模板2",
+            project_type="REPEAT",
         )
         db_session.flush()
 
@@ -419,7 +421,9 @@ class TestInitPresetTemplates:
 
         # 验证数据库中只有4个预置模板
         preset_codes = [t["template_code"] for t in PRESET_TEMPLATES]
-        count = db_session.query(StageTemplate).filter(
-        StageTemplate.template_code.in_(preset_codes)
-        ).count()
+        count = (
+            db_session.query(StageTemplate)
+            .filter(StageTemplate.template_code.in_(preset_codes))
+            .count()
+        )
         assert count == 4

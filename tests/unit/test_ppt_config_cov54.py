@@ -1,11 +1,14 @@
 """Tests for app/services/ppt_generator/config.py"""
-import pytest
+
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.ppt_generator.config import PresentationConfig
     from pptx.dml.color import RGBColor
     from pptx.util import Inches, Pt
+
+    from app.services.ppt_generator.config import PresentationConfig
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

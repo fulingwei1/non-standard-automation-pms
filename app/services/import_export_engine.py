@@ -113,7 +113,15 @@ class ImportExportEngine:
         return missing
 
     @staticmethod
-    def import_data(*, db, file_content: bytes, filename: str, template_type: str, current_user_id: int, update_existing: bool = False) -> Dict[str, Any]:
+    def import_data(
+        *,
+        db,
+        file_content: bytes,
+        filename: str,
+        template_type: str,
+        current_user_id: int,
+        update_existing: bool = False,
+    ) -> Dict[str, Any]:
         """统一导入入口（委托给 unified_import_service）"""
         from app.services.unified_import import unified_import_service
 

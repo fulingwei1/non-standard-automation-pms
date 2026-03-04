@@ -2,11 +2,13 @@
 """
 第八批覆盖率测试 - 工时报表生成服务
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_service import ReportService
+
     HAS_RS = True
 except Exception:
     HAS_RS = False
@@ -52,6 +54,7 @@ class TestGenerateReport:
         mock_template.id = 1
         try:
             from app.models.report import ReportTypeEnum
+
             mock_template.report_type = ReportTypeEnum.USER_MONTHLY.value
         except Exception:
             mock_template.report_type = "USER_MONTHLY"
@@ -70,6 +73,7 @@ class TestGenerateReport:
         mock_template = MagicMock()
         try:
             from app.models.report import ReportTypeEnum
+
             mock_template.report_type = ReportTypeEnum.DEPT_MONTHLY.value
         except Exception:
             mock_template.report_type = "DEPT_MONTHLY"
@@ -85,10 +89,11 @@ class TestGenerateReport:
 class TestArchiveReport:
     def test_archive_method_exists(self):
         """报表归档方法存在"""
-        assert hasattr(ReportService, 'archive_report') or \
-               hasattr(ReportService, 'save_report_archive') or \
-               hasattr(ReportService, 'generate_report'), \
-               "ReportService 应有报表相关方法"
+        assert (
+            hasattr(ReportService, "archive_report")
+            or hasattr(ReportService, "save_report_archive")
+            or hasattr(ReportService, "generate_report")
+        ), "ReportService 应有报表相关方法"
 
 
 class TestGetReportRecipients:
@@ -96,7 +101,7 @@ class TestGetReportRecipients:
         """获取报表接收人返回列表"""
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
-        if hasattr(ReportService, 'get_report_recipients'):
+        if hasattr(ReportService, "get_report_recipients"):
             result = ReportService.get_report_recipients(db, template_id=1)
             assert isinstance(result, list)
         else:

@@ -9,9 +9,9 @@ QueryDataSource 综合单元测试
 - get_required_params: 获取需要的参数名
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,8 +35,8 @@ class TestQueryDataSourceInit:
 
     def test_raises_for_missing_sql(self):
         """测试缺少SQL时抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -50,8 +50,8 @@ class TestQueryDataSourceInit:
 
     def test_raises_for_empty_sql(self):
         """测试空SQL时抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -81,8 +81,8 @@ class TestValidateConfig:
 
     def test_raises_for_drop_keyword(self):
         """测试DROP关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -96,8 +96,8 @@ class TestValidateConfig:
 
     def test_raises_for_delete_keyword(self):
         """测试DELETE关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -111,8 +111,8 @@ class TestValidateConfig:
 
     def test_raises_for_update_keyword(self):
         """测试UPDATE关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -126,8 +126,8 @@ class TestValidateConfig:
 
     def test_raises_for_insert_keyword(self):
         """测试INSERT关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -141,8 +141,8 @@ class TestValidateConfig:
 
     def test_raises_for_alter_keyword(self):
         """测试ALTER关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -156,8 +156,8 @@ class TestValidateConfig:
 
     def test_raises_for_truncate_keyword(self):
         """测试TRUNCATE关键词抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
 
@@ -192,8 +192,8 @@ class TestFetch:
         mock_db = MagicMock()
 
         mock_result = MagicMock()
-        mock_result.keys.return_value = ['id', 'name']
-        mock_result.fetchall.return_value = [(1, '项目A'), (2, '项目B')]
+        mock_result.keys.return_value = ["id", "name"]
+        mock_result.fetchall.return_value = [(1, "项目A"), (2, "项目B")]
         mock_db.execute.return_value = mock_result
 
         mock_config = MagicMock()
@@ -204,10 +204,10 @@ class TestFetch:
         result = source.fetch({"status": "ACTIVE"})
 
         assert len(result) == 2
-        assert result[0]['id'] == 1
-        assert result[0]['name'] == '项目A'
-        assert result[1]['id'] == 2
-        assert result[1]['name'] == '项目B'
+        assert result[0]["id"] == 1
+        assert result[0]["name"] == "项目A"
+        assert result[1]["id"] == 2
+        assert result[1]["name"] == "项目B"
 
     def test_fetches_empty_result(self):
         """测试获取空结果"""
@@ -216,7 +216,7 @@ class TestFetch:
         mock_db = MagicMock()
 
         mock_result = MagicMock()
-        mock_result.keys.return_value = ['id', 'name']
+        mock_result.keys.return_value = ["id", "name"]
         mock_result.fetchall.return_value = []
         mock_db.execute.return_value = mock_result
 
@@ -231,8 +231,8 @@ class TestFetch:
 
     def test_raises_for_execution_error(self):
         """测试执行错误时抛出异常"""
-        from app.services.report_framework.data_sources.query import QueryDataSource
         from app.services.report_framework.data_sources.base import DataSourceError
+        from app.services.report_framework.data_sources.query import QueryDataSource
 
         mock_db = MagicMock()
         mock_db.execute.side_effect = Exception("Database error")
@@ -264,7 +264,7 @@ class TestGetRequiredParams:
 
         result = source.get_required_params()
 
-        assert 'project_id' in result
+        assert "project_id" in result
 
     def test_extracts_multiple_params(self):
         """测试提取多个参数"""
@@ -284,9 +284,9 @@ class TestGetRequiredParams:
 
         result = source.get_required_params()
 
-        assert 'status' in result
-        assert 'start_date' in result
-        assert 'end_date' in result
+        assert "status" in result
+        assert "start_date" in result
+        assert "end_date" in result
 
     def test_deduplicates_params(self):
         """测试参数去重"""
@@ -305,7 +305,7 @@ class TestGetRequiredParams:
 
         result = source.get_required_params()
 
-        assert result.count('project_id') == 1
+        assert result.count("project_id") == 1
 
     def test_returns_empty_for_no_params(self):
         """测试无参数时返回空列表"""

@@ -2,8 +2,9 @@
 """
 第三十二批覆盖率测试 - 工时费用化服务 (deprecated模块测试)
 """
-import pytest
 import warnings
+
+import pytest
 
 try:
     with warnings.catch_warnings():
@@ -18,6 +19,7 @@ except Exception:
 
 try:
     from app.services.labor_cost_service import LaborCostExpenseService as LCES2
+
     HAS_LCES2 = True
 except Exception:
     HAS_LCES2 = False
@@ -33,7 +35,9 @@ class TestLaborCostExpenseServiceDeprecatedModule:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             import importlib
+
             import app.services.labor_cost_expense_service as m
+
             importlib.reload(m)
         # 验证模块仍然可用
         assert m.LaborCostExpenseService is not None
@@ -49,6 +53,7 @@ class TestLaborCostExpenseServiceDeprecatedModule:
         if not HAS_LCES:
             pytest.skip("labor_cost_expense_service 导入失败")
         import app.services.labor_cost_expense_service as m
+
         assert "LaborCostExpenseService" in m.__all__
         assert "PresaleExpense" in m.__all__
 
@@ -64,6 +69,7 @@ class TestLaborCostExpenseServiceMethods:
 
     def setup_method(self):
         from unittest.mock import MagicMock
+
         if not HAS_LCES2:
             pytest.skip("labor_cost_service 导入失败")
         self.db = MagicMock()
@@ -75,14 +81,16 @@ class TestLaborCostExpenseServiceMethods:
     def test_identify_lost_projects_no_projects(self):
         """无未中标项目时返回空列表"""
         from unittest.mock import MagicMock
+
         self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
         result = self.svc.identify_lost_projects()
         assert isinstance(result, list)
 
     def test_get_expense_statistics_empty(self):
         """空数据时统计正常返回"""
-        from unittest.mock import MagicMock, patch
         from datetime import date
+        from unittest.mock import MagicMock, patch
+
         with patch.object(self.svc, "get_lost_project_expenses", return_value=[]):
             if hasattr(self.svc, "get_expense_statistics"):
                 result = self.svc.get_expense_statistics(date(2024, 1, 1), date(2024, 12, 31))
@@ -91,10 +99,13 @@ class TestLaborCostExpenseServiceMethods:
     def test_has_detailed_design_false(self):
         """无详细设计工时时返回False"""
         from unittest.mock import MagicMock
+
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.stage = "S1"
-        self.db.query.return_value.filter.return_value.filter.return_value.scalar.return_value = None
+        self.db.query.return_value.filter.return_value.filter.return_value.scalar.return_value = (
+            None
+        )
         if hasattr(self.svc, "_has_detailed_design"):
             result = self.svc._has_detailed_design(mock_project)
             assert result is False or result is True  # Accept any bool
@@ -102,6 +113,7 @@ class TestLaborCostExpenseServiceMethods:
     def test_get_user_name_no_user(self):
         """用户不存在时返回None"""
         from unittest.mock import MagicMock
+
         self.db.query.return_value.filter.return_value.first.return_value = None
         if hasattr(self.svc, "_get_user_name"):
             result = self.svc._get_user_name(None)

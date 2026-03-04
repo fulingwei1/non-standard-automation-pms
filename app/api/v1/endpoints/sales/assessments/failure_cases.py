@@ -12,13 +12,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import FailureCase
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import FailureCaseCreate, FailureCaseResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import save_obj
 
 router = APIRouter()
@@ -48,10 +48,12 @@ def find_similar_cases(
             creator = db.query(User).filter(User.id == case.created_by).first()
             creator_name = creator.real_name if creator else None
 
-        result.append(FailureCaseResponse(
-            **{c.name: getattr(case, c.name) for c in case.__table__.columns},
-            creator_name=creator_name
-        ))
+        result.append(
+            FailureCaseResponse(
+                **{c.name: getattr(case, c.name) for c in case.__table__.columns},
+                creator_name=creator_name,
+            )
+        )
 
     return result
 
@@ -73,10 +75,15 @@ def list_failure_cases(
 
     # 应用关键词过滤（项目名称/核心失败原因）
     from app.common.query_filters import apply_keyword_filter
-    query = apply_keyword_filter(query, FailureCase, keyword, ["project_name", "core_failure_reason"])
+
+    query = apply_keyword_filter(
+        query, FailureCase, keyword, ["project_name", "core_failure_reason"]
+    )
 
     total = query.count()
-    cases = apply_pagination(query.order_by(desc(FailureCase.created_at)), pagination.offset, pagination.limit).all()
+    cases = apply_pagination(
+        query.order_by(desc(FailureCase.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     result = []
     for case in cases:
@@ -85,16 +92,15 @@ def list_failure_cases(
             creator = db.query(User).filter(User.id == case.created_by).first()
             creator_name = creator.real_name if creator else None
 
-        result.append(FailureCaseResponse(
-            **{c.name: getattr(case, c.name) for c in case.__table__.columns},
-            creator_name=creator_name
-        ))
+        result.append(
+            FailureCaseResponse(
+                **{c.name: getattr(case, c.name) for c in case.__table__.columns},
+                creator_name=creator_name,
+            )
+        )
 
     return PaginatedResponse(
-        items=result,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=result, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -130,7 +136,7 @@ def create_failure_case(
         final_result=request.final_result,
         lesson_learned=request.lesson_learned,
         keywords=request.keywords,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     save_obj(db, case)
@@ -158,5 +164,5 @@ def create_failure_case(
         created_by=case.created_by,
         created_at=case.created_at,
         updated_at=case.updated_at,
-        creator_name=current_user.real_name
+        creator_name=current_user.real_name,
     )

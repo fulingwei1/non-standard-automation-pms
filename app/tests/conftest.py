@@ -3,8 +3,9 @@
 测试配置文件
 提供共享的fixtures和测试配置
 """
-import pytest
 from unittest.mock import Mock
+
+import pytest
 from sqlalchemy.orm import Session
 
 
@@ -25,6 +26,7 @@ def mock_db_session():
 def mock_current_user():
     """提供模拟当前用户"""
     from app.models.user import User
+
     user = Mock(spec=User)
     user.id = 1
     user.username = "test_user"

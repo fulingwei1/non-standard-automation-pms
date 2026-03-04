@@ -3,8 +3,9 @@
 tests/unit/test_pc_base_cov51.py
 Unit tests for app/services/performance_collector/base.py
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.performance_collector.base import PerformanceDataCollectorBase

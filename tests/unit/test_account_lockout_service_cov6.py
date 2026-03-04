@@ -2,12 +2,14 @@
 """
 第六批覆盖测试 - account_lockout_service.py
 """
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.account_lockout_service import AccountLockoutService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -32,7 +34,9 @@ def mock_db():
     db.query.return_value.filter.return_value.first.return_value = None
     db.query.return_value.filter.return_value.count.return_value = 0
     db.query.return_value.filter.return_value.all.return_value = []
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     return db
 
 
@@ -67,9 +71,7 @@ class TestRecordFailedLogin:
         mock_get_redis.return_value = mock_redis
         mock_redis.incr.return_value = 2
         result = AccountLockoutService.record_failed_login(
-            username="testuser",
-            ip="127.0.0.1",
-            db=mock_db
+            username="testuser", ip="127.0.0.1", db=mock_db
         )
         assert isinstance(result, dict)
 
@@ -79,9 +81,7 @@ class TestRecordFailedLogin:
         # Simulate reaching the lockout threshold
         mock_redis.incr.return_value = AccountLockoutService.LOCKOUT_THRESHOLD
         result = AccountLockoutService.record_failed_login(
-            username="testuser",
-            ip="127.0.0.1",
-            db=mock_db
+            username="testuser", ip="127.0.0.1", db=mock_db
         )
         assert isinstance(result, dict)
 
@@ -90,9 +90,7 @@ class TestRecordFailedLogin:
         mock_get_redis.return_value = mock_redis
         mock_redis.incr.return_value = AccountLockoutService.CAPTCHA_THRESHOLD
         result = AccountLockoutService.record_failed_login(
-            username="testuser",
-            ip="127.0.0.1",
-            db=mock_db
+            username="testuser", ip="127.0.0.1", db=mock_db
         )
         assert isinstance(result, dict)
 
@@ -103,9 +101,7 @@ class TestRecordSuccessfulLogin:
         mock_get_redis.return_value = mock_redis
         # Should not raise
         AccountLockoutService.record_successful_login(
-            username="testuser",
-            ip="127.0.0.1",
-            db=mock_db
+            username="testuser", ip="127.0.0.1", db=mock_db
         )
         # Redis delete should be called to clear attempts
         assert mock_redis.delete.called or True  # may vary by impl
@@ -117,9 +113,7 @@ class TestUnlockAccount:
         mock_get_redis.return_value = mock_redis
         mock_redis.delete.return_value = 1
         result = AccountLockoutService.unlock_account(
-            username="testuser",
-            admin_user="admin",
-            db=mock_db
+            username="testuser", admin_user="admin", db=mock_db
         )
         assert isinstance(result, bool)
 

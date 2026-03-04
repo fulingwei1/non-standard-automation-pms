@@ -5,8 +5,8 @@
 
 from fastapi import APIRouter
 
-from .crud import router as crud_router
 from .apply import router as apply_router
+from .crud import router as crud_router
 
 router = APIRouter()
 

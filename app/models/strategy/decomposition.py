@@ -39,7 +39,9 @@ class DepartmentObjective(Base, TimestampMixin):
     kpis_config = Column(Text, comment="部门级 KPI 配置（JSON）")
 
     # 状态
-    status = Column(String(20), default="DRAFT", comment="状态：DRAFT/CONFIRMED/IN_PROGRESS/COMPLETED")
+    status = Column(
+        String(20), default="DRAFT", comment="状态：DRAFT/CONFIRMED/IN_PROGRESS/COMPLETED"
+    )
 
     # 责任人
     owner_user_id = Column(Integer, ForeignKey("users.id"), comment="部门负责人")
@@ -56,14 +58,23 @@ class DepartmentObjective(Base, TimestampMixin):
     department = relationship("Department")
     owner = relationship("User", foreign_keys=[owner_user_id])
     approver = relationship("User", foreign_keys=[approved_by])
-    personal_kpis = relationship("PersonalKPI", back_populates="department_objective", lazy="dynamic")
+    personal_kpis = relationship(
+        "PersonalKPI", back_populates="department_objective", lazy="dynamic"
+    )
 
     __table_args__ = (
         Index("idx_dept_objectives_strategy", "strategy_id"),
         Index("idx_dept_objectives_dept", "department_id"),
         Index("idx_dept_objectives_year", "year"),
         Index("idx_dept_objectives_status", "status"),
-        Index("idx_dept_objectives_unique", "strategy_id", "department_id", "year", "quarter", unique=True),
+        Index(
+            "idx_dept_objectives_unique",
+            "strategy_id",
+            "department_id",
+            "year",
+            "quarter",
+            unique=True,
+        ),
     )
 
     def __repr__(self):
@@ -83,11 +94,15 @@ class PersonalKPI(Base, TimestampMixin):
     quarter = Column(Integer, comment="季度")
 
     # 来源追溯
-    source_type = Column(String(20), nullable=False, comment="来源类型：CSF_KPI/DEPT_OBJECTIVE/ANNUAL_WORK")
+    source_type = Column(
+        String(20), nullable=False, comment="来源类型：CSF_KPI/DEPT_OBJECTIVE/ANNUAL_WORK"
+    )
     source_id = Column(Integer, comment="来源 ID")
 
     # 关联部门目标
-    department_objective_id = Column(Integer, ForeignKey("department_objectives.id"), comment="部门目标ID")
+    department_objective_id = Column(
+        Integer, ForeignKey("department_objectives.id"), comment="部门目标ID"
+    )
 
     # KPI 内容
     kpi_name = Column(String(200), nullable=False, comment="KPI 名称")
@@ -109,7 +124,9 @@ class PersonalKPI(Base, TimestampMixin):
     manager_comment = Column(Text, comment="主管评语")
 
     # 状态
-    status = Column(String(20), default="PENDING", comment="状态：PENDING/SELF_RATED/MANAGER_RATED/CONFIRMED")
+    status = Column(
+        String(20), default="PENDING", comment="状态：PENDING/SELF_RATED/MANAGER_RATED/CONFIRMED"
+    )
 
     # 软删除
     is_active = Column(Boolean, default=True, comment="是否激活")

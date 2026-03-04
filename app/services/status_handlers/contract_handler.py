@@ -2,11 +2,11 @@
 """合同签订状态处理器"""
 
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectStatusLog, Customer
+from app.models.project import Customer, Project, ProjectStatusLog
 from app.models.sales import Contract
 from app.utils.project_utils import generate_project_code, init_project_stages
 
@@ -46,9 +46,7 @@ class ContractStatusHandler:
 
         # 如果项目已存在，更新项目信息
         if contract.project_id:
-            project = (
-                self.db.query(Project).filter(Project.id == contract.project_id).first()
-            )
+            project = self.db.query(Project).filter(Project.id == contract.project_id).first()
             if project:
                 # 更新项目状态为 S3/ST08（合同签订后）
                 old_stage = project.stage
@@ -57,9 +55,7 @@ class ContractStatusHandler:
                 project.stage = "S3"
                 project.status = "ST08"
                 project.contract_date = contract.signing_date
-                project.contract_amount = (
-                    contract.contract_amount or project.contract_amount
-                )
+                project.contract_amount = contract.contract_amount or project.contract_amount
                 # 同步客户合同编号
                 if hasattr(contract, "customer_contract_no") and contract.customer_contract_no:
                     project.customer_contract_no = contract.customer_contract_no
@@ -89,9 +85,7 @@ class ContractStatusHandler:
         project_code = generate_project_code(self.db)
 
         # 获取客户信息
-        customer = (
-            self.db.query(Customer).filter(Customer.id == contract.customer_id).first()
-        )
+        customer = self.db.query(Customer).filter(Customer.id == contract.customer_id).first()
 
         # 创建项目
         fallback_name = getattr(contract, "contract_name", None)
@@ -107,10 +101,9 @@ class ContractStatusHandler:
         lead_id = None
         if contract.opportunity_id:
             from app.models.sales import Opportunity
+
             opportunity = (
-                self.db.query(Opportunity)
-                .filter(Opportunity.id == contract.opportunity_id)
-                .first()
+                self.db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
             )
             if opportunity and hasattr(opportunity, "lead_id"):
                 lead_id = opportunity.lead_id

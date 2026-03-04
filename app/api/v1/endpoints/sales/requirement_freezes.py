@@ -38,12 +38,17 @@ def list_lead_requirement_freezes(
     """
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    freezes = db.query(RequirementFreeze).filter(
-        and_(
-            RequirementFreeze.source_type == AssessmentSourceTypeEnum.LEAD.value,
-            RequirementFreeze.source_id == lead_id
+    freezes = (
+        db.query(RequirementFreeze)
+        .filter(
+            and_(
+                RequirementFreeze.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                RequirementFreeze.source_id == lead_id,
+            )
         )
-    ).order_by(desc(RequirementFreeze.freeze_time)).all()
+        .order_by(desc(RequirementFreeze.freeze_time))
+        .all()
+    )
 
     result = []
     for freeze in freezes:
@@ -53,14 +58,18 @@ def list_lead_requirement_freezes(
             frozen_by_name = user.real_name if user else None
 
         response_data = RequirementFreezeResponse.model_validate(freeze)
-        if hasattr(response_data, 'frozen_by_name'):
+        if hasattr(response_data, "frozen_by_name"):
             response_data.frozen_by_name = frozen_by_name
         result.append(response_data)
 
     return result
 
 
-@router.post("/leads/{lead_id}/requirement-freezes", response_model=RequirementFreezeResponse, status_code=201)
+@router.post(
+    "/leads/{lead_id}/requirement-freezes",
+    response_model=RequirementFreezeResponse,
+    status_code=201,
+)
 def create_lead_requirement_freeze(
     *,
     db: Session = Depends(deps.get_db),
@@ -74,9 +83,9 @@ def create_lead_requirement_freeze(
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查需求详情是否存在
-    requirement_detail = db.query(LeadRequirementDetail).filter(
-        LeadRequirementDetail.lead_id == lead_id
-    ).first()
+    requirement_detail = (
+        db.query(LeadRequirementDetail).filter(LeadRequirementDetail.lead_id == lead_id).first()
+    )
 
     if not requirement_detail:
         raise HTTPException(status_code=400, detail="需求详情不存在，请先创建需求详情")
@@ -89,7 +98,7 @@ def create_lead_requirement_freeze(
         version_number=freeze_in.version_number,
         requires_ecr=freeze_in.requires_ecr,
         description=freeze_in.description,
-        frozen_by=current_user.id
+        frozen_by=current_user.id,
     )
 
     db.add(freeze)
@@ -105,13 +114,15 @@ def create_lead_requirement_freeze(
 
     frozen_by_name = current_user.real_name
     response_data = RequirementFreezeResponse.model_validate(freeze)
-    if hasattr(response_data, 'frozen_by_name'):
+    if hasattr(response_data, "frozen_by_name"):
         response_data.frozen_by_name = frozen_by_name
 
     return response_data
 
 
-@router.get("/opportunities/{opp_id}/requirement-freezes", response_model=List[RequirementFreezeResponse])
+@router.get(
+    "/opportunities/{opp_id}/requirement-freezes", response_model=List[RequirementFreezeResponse]
+)
 def list_opportunity_requirement_freezes(
     *,
     db: Session = Depends(deps.get_db),
@@ -123,12 +134,17 @@ def list_opportunity_requirement_freezes(
     """
     get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
-    freezes = db.query(RequirementFreeze).filter(
-        and_(
-            RequirementFreeze.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
-            RequirementFreeze.source_id == opp_id
+    freezes = (
+        db.query(RequirementFreeze)
+        .filter(
+            and_(
+                RequirementFreeze.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                RequirementFreeze.source_id == opp_id,
+            )
         )
-    ).order_by(desc(RequirementFreeze.freeze_time)).all()
+        .order_by(desc(RequirementFreeze.freeze_time))
+        .all()
+    )
 
     result = []
     for freeze in freezes:
@@ -138,14 +154,18 @@ def list_opportunity_requirement_freezes(
             frozen_by_name = user.real_name if user else None
 
         response_data = RequirementFreezeResponse.model_validate(freeze)
-        if hasattr(response_data, 'frozen_by_name'):
+        if hasattr(response_data, "frozen_by_name"):
             response_data.frozen_by_name = frozen_by_name
         result.append(response_data)
 
     return result
 
 
-@router.post("/opportunities/{opp_id}/requirement-freezes", response_model=RequirementFreezeResponse, status_code=201)
+@router.post(
+    "/opportunities/{opp_id}/requirement-freezes",
+    response_model=RequirementFreezeResponse,
+    status_code=201,
+)
 def create_opportunity_requirement_freeze(
     *,
     db: Session = Depends(deps.get_db),
@@ -166,14 +186,14 @@ def create_opportunity_requirement_freeze(
         version_number=freeze_in.version_number,
         requires_ecr=freeze_in.requires_ecr,
         description=freeze_in.description,
-        frozen_by=current_user.id
+        frozen_by=current_user.id,
     )
 
     save_obj(db, freeze)
 
     frozen_by_name = current_user.real_name
     response_data = RequirementFreezeResponse.model_validate(freeze)
-    if hasattr(response_data, 'frozen_by_name'):
+    if hasattr(response_data, "frozen_by_name"):
         response_data.frozen_by_name = frozen_by_name
 
     return response_data

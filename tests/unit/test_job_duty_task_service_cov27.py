@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - job_duty_task_service 单元测试"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.job_duty_task_service")
 
 from app.services.job_duty_task_service import (
-    should_generate_task,
-    find_template_users,
-    create_task_from_template,
     check_task_exists,
+    create_task_from_template,
+    find_template_users,
+    should_generate_task,
 )
 
 
@@ -118,10 +119,7 @@ class TestShouldGenerateTaskYearly:
     def test_yearly_on_target_date(self):
         today = date(2024, 3, 15)
         template = make_template(
-            frequency="YEARLY",
-            month_of_year=3,
-            day_of_month=15,
-            generate_before_days=0
+            frequency="YEARLY", month_of_year=3, day_of_month=15, generate_before_days=0
         )
         should, target = should_generate_task(template, today)
         assert should is True
@@ -129,21 +127,14 @@ class TestShouldGenerateTaskYearly:
     def test_yearly_not_on_other_date(self):
         today = date(2024, 3, 10)
         template = make_template(
-            frequency="YEARLY",
-            month_of_year=3,
-            day_of_month=20,
-            generate_before_days=0
+            frequency="YEARLY", month_of_year=3, day_of_month=20, generate_before_days=0
         )
         should, target = should_generate_task(template, today)
         assert should is False
 
     def test_yearly_no_month_no_generate(self):
         today = date(2024, 3, 15)
-        template = make_template(
-            frequency="YEARLY",
-            month_of_year=None,
-            day_of_month=15
-        )
+        template = make_template(frequency="YEARLY", month_of_year=None, day_of_month=15)
         should, target = should_generate_task(template, today)
         assert should is False
 
@@ -154,6 +145,7 @@ class TestFindTemplateUsers:
         template = make_template(position_id=5)
 
         from unittest.mock import patch
+
         with patch("app.services.job_duty_task_service.User") as MockUser:
             MockUser.position_id = 5
             MockUser.is_active = True
@@ -167,9 +159,12 @@ class TestFindTemplateUsers:
         template = make_template(position_id=None, department_id=None)
 
         from unittest.mock import patch
+
         with patch("app.services.job_duty_task_service.User") as MockUser:
             # Simulate User having no position_id attribute
-            type(MockUser).position_id = property(lambda self: (_ for _ in ()).throw(AttributeError()))
+            type(MockUser).position_id = property(
+                lambda self: (_ for _ in ()).throw(AttributeError())
+            )
             try:
                 result = find_template_users(db, template)
                 assert result == []
@@ -185,7 +180,7 @@ class TestCreateTaskFromTemplate:
             duty_description="每日设备检查",
             deadline_offset_days=1,
             estimated_hours=2.0,
-            default_priority="HIGH"
+            default_priority="HIGH",
         )
         user = MagicMock()
         user.id = 42
@@ -241,9 +236,12 @@ class TestCheckTaskExists:
         target_date = date(2024, 6, 10)
 
         existing = MagicMock()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            existing
+        )
 
         from unittest.mock import patch
+
         with patch("app.services.job_duty_task_service.TaskUnified") as MockTask:
             MockTask.task_type = "JOB_DUTY"
             MockTask.source_type = "JOB_DUTY_TEMPLATE"
@@ -257,9 +255,12 @@ class TestCheckTaskExists:
         template = make_template(id=5)
         target_date = date(2024, 6, 10)
 
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
 
         from unittest.mock import patch
+
         with patch("app.services.job_duty_task_service.TaskUnified"):
             result = check_task_exists(db, template, target_date)
             assert isinstance(result, bool)

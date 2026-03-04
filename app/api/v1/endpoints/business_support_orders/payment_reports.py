@@ -20,12 +20,16 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/reports/payment", response_model=ResponseModel[PaymentReportResponse], summary="获取回款统计报表")
+@router.get(
+    "/reports/payment",
+    response_model=ResponseModel[PaymentReportResponse],
+    summary="获取回款统计报表",
+)
 async def get_payment_report(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD格式）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD格式）"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取回款统计报表"""
     try:
@@ -44,41 +48,81 @@ async def get_payment_report(
         report_date_str = f"{start_dt.strftime('%Y-%m-%d')} ~ {end_dt.strftime('%Y-%m-%d')}"
 
         # 回款汇总
-        total_planned_result = db.execute(text("""
+        total_planned_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount), 0) as planned
             FROM project_payment_plans
             WHERE planned_date >= :start_date
             AND planned_date <= :end_date
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchone()
-        total_planned_amount = Decimal(str(total_planned_result[0])) if total_planned_result and total_planned_result[0] else Decimal("0")
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchone()
+        total_planned_amount = (
+            Decimal(str(total_planned_result[0]))
+            if total_planned_result and total_planned_result[0]
+            else Decimal("0")
+        )
 
-        total_actual_result = db.execute(text("""
+        total_actual_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(actual_amount), 0) as actual
             FROM project_payment_plans
             WHERE planned_date >= :start_date
             AND planned_date <= :end_date
             AND actual_amount > 0
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchone()
-        total_actual_amount = Decimal(str(total_actual_result[0])) if total_actual_result and total_actual_result[0] else Decimal("0")
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchone()
+        total_actual_amount = (
+            Decimal(str(total_actual_result[0]))
+            if total_actual_result and total_actual_result[0]
+            else Decimal("0")
+        )
 
-        total_pending_result = db.execute(text("""
+        total_pending_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as pending
             FROM project_payment_plans
             WHERE planned_date >= :start_date
             AND planned_date <= :end_date
             AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchone()
-        total_pending_amount = Decimal(str(total_pending_result[0])) if total_pending_result and total_pending_result[0] else Decimal("0")
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchone()
+        total_pending_amount = (
+            Decimal(str(total_pending_result[0]))
+            if total_pending_result and total_pending_result[0]
+            else Decimal("0")
+        )
 
-        total_overdue_result = db.execute(text("""
+        total_overdue_result = db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
             FROM project_payment_plans
             WHERE planned_date < :end_date
             AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"end_date": end_dt.strftime("%Y-%m-%d")}).fetchone()
-        total_overdue_amount = Decimal(str(total_overdue_result[0])) if total_overdue_result and total_overdue_result[0] else Decimal("0")
+        """
+            ),
+            {"end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchone()
+        total_overdue_amount = (
+            Decimal(str(total_overdue_result[0]))
+            if total_overdue_result and total_overdue_result[0]
+            else Decimal("0")
+        )
 
-        completion_rate = (total_actual_amount / total_planned_amount * 100) if total_planned_amount > 0 else Decimal("0")
+        completion_rate = (
+            (total_actual_amount / total_planned_amount * 100)
+            if total_planned_amount > 0
+            else Decimal("0")
+        )
 
         # 按类型统计（简化处理）
         prepayment_planned = Decimal("0")
@@ -91,7 +135,9 @@ async def get_payment_report(
         warranty_payment_actual = Decimal("0")
 
         # 按客户统计（前10名）
-        top_customers_result = db.execute(text("""
+        top_customers_result = db.execute(
+            text(
+                """
             SELECT
                 c.customer_name,
                 COALESCE(SUM(ppp.actual_amount), 0) as receipt_amount
@@ -104,7 +150,10 @@ async def get_payment_report(
             GROUP BY c.id, c.customer_name
             ORDER BY receipt_amount DESC
             LIMIT 10
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchall()
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchall()
 
         top_customers = [
             {"customer_name": row[0], "receipt_amount": float(row[1])}
@@ -130,8 +179,8 @@ async def get_payment_report(
                 acceptance_payment_actual=acceptance_payment_actual,
                 warranty_payment_planned=warranty_payment_planned,
                 warranty_payment_actual=warranty_payment_actual,
-                top_customers=top_customers
-            )
+                top_customers=top_customers,
+            ),
         )
     except HTTPException:
         raise

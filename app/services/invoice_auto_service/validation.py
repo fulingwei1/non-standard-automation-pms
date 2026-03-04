@@ -2,9 +2,10 @@
 """
 发票自动服务 - 验证功能
 """
-from app.models.acceptance import AcceptanceOrder, AcceptanceIssue
-from app.models.project import ProjectPaymentPlan
 from typing import TYPE_CHECKING
+
+from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
+from app.models.project import ProjectPaymentPlan
 
 if TYPE_CHECKING:
     from app.services.invoice_auto_service import InvoiceAutoService
@@ -20,9 +21,8 @@ def check_deliverables_complete(service: "InvoiceAutoService", plan: ProjectPaym
         return True  # 如果没有合同，默认交付物齐全
 
     from app.models.sales import Contract
-    contract = service.db.query(Contract).filter(
-        Contract.id == plan.contract_id
-    ).first()
+
+    contract = service.db.query(Contract).filter(Contract.id == plan.contract_id).first()
 
     if not contract:
         return True
@@ -47,11 +47,15 @@ def check_acceptance_issues_resolved(service: "InvoiceAutoService", order: Accep
         bool: True表示所有阻塞问题已解决，可以开票；False表示存在未解决的阻塞问题
     """
     # 查找所有阻塞问题
-    blocking_issues = service.db.query(AcceptanceIssue).filter(
-        AcceptanceIssue.order_id == order.id,
-        AcceptanceIssue.is_blocking,
-        AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
-    ).all()
+    blocking_issues = (
+        service.db.query(AcceptanceIssue)
+        .filter(
+            AcceptanceIssue.order_id == order.id,
+            AcceptanceIssue.is_blocking,
+            AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"]),
+        )
+        .all()
+    )
 
     if not blocking_issues:
         return True  # 没有阻塞问题，可以开票

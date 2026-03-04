@@ -4,19 +4,20 @@
 """
 
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.schemas.sales_team import (
-    SalesRegionCreate,
-    SalesRegionUpdate,
-    SalesRegionResponse,
-    SalesRegionAssignTeam,
-)
-from app.schemas.common import ResponseModel
-from app.services.sales_team_service import SalesRegionService
 from app.core.security import require_permission
+from app.schemas.common import ResponseModel
+from app.schemas.sales_team import (
+    SalesRegionAssignTeam,
+    SalesRegionCreate,
+    SalesRegionResponse,
+    SalesRegionUpdate,
+)
+from app.services.sales_team_service import SalesRegionService
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ def create_region(
     *,
     db: Session = Depends(deps.get_db),
     region_in: SalesRegionCreate,
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """创建销售区域"""
     region = SalesRegionService.create_region(db, region_in, current_user.id)
@@ -41,7 +42,7 @@ def get_regions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     is_active: Optional[bool] = None,
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """获取销售区域列表"""
     regions = SalesRegionService.get_regions(
@@ -53,7 +54,7 @@ def get_regions(
     return ResponseModel(
         code=200,
         message="查询成功",
-        data=[SalesRegionResponse.from_orm(region) for region in regions]
+        data=[SalesRegionResponse.from_orm(region) for region in regions],
     )
 
 
@@ -62,7 +63,7 @@ def get_regions(
 def get_region(
     region_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """获取销售区域详情"""
     region = SalesRegionService.get_region(db, region_id)
@@ -77,7 +78,7 @@ def update_region(
     region_id: int,
     region_in: SalesRegionUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """更新销售区域"""
     region = SalesRegionService.update_region(db, region_id, region_in)
@@ -90,13 +91,10 @@ def assign_team(
     region_id: int,
     assign_data: SalesRegionAssignTeam,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """分配团队"""
     region = SalesRegionService.assign_team(
-        db,
-        region_id,
-        assign_data.team_id,
-        assign_data.leader_id
+        db, region_id, assign_data.team_id, assign_data.leader_id
     )
     return ResponseModel(code=200, message="分配成功", data=SalesRegionResponse.from_orm(region))

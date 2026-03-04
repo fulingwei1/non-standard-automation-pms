@@ -2,8 +2,9 @@
 """
 Unit tests for ConditionEvaluator (approval_engine/condition_parser.py) (第三十八批)
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.condition_parser", reason="导入失败，跳过")
 
@@ -47,8 +48,8 @@ class TestEvaluateSimpleConditions:
             "operator": "AND",
             "items": [
                 {"field": "amount", "op": ">=", "value": 1000},
-                {"field": "status", "op": "==", "value": "active"}
-            ]
+                {"field": "status", "op": "==", "value": "active"},
+            ],
         }
         context = {"amount": 5000, "status": "active"}
         try:
@@ -63,8 +64,8 @@ class TestEvaluateSimpleConditions:
             "operator": "OR",
             "items": [
                 {"field": "amount", "op": ">=", "value": 100000},
-                {"field": "is_vip", "op": "==", "value": True}
-            ]
+                {"field": "is_vip", "op": "==", "value": True},
+            ],
         }
         context = {"amount": 500, "is_vip": True}
         try:

@@ -37,7 +37,7 @@ class TestGetProjectMeetings:
         from app.services.project_meeting_service import ProjectMeetingService
 
         service = ProjectMeetingService(db_session)
-        result = service.get_project_meetings(1, status='COMPLETED')
+        result = service.get_project_meetings(1, status="COMPLETED")
 
         assert isinstance(result, list)
 
@@ -46,7 +46,7 @@ class TestGetProjectMeetings:
         from app.services.project_meeting_service import ProjectMeetingService
 
         service = ProjectMeetingService(db_session)
-        result = service.get_project_meetings(1, rhythm_level='WEEKLY')
+        result = service.get_project_meetings(1, rhythm_level="WEEKLY")
 
         assert isinstance(result, list)
 
@@ -56,9 +56,7 @@ class TestGetProjectMeetings:
 
         service = ProjectMeetingService(db_session)
         result = service.get_project_meetings(
-        1,
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            1, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
 
         assert isinstance(result, list)
@@ -78,68 +76,60 @@ class TestLinkMeetingToProject:
 
     def test_link_as_primary_project(self, db_session):
         """测试关联为主项目"""
-        from app.services.project_meeting_service import ProjectMeetingService
         from app.models.management_rhythm import StrategicMeeting
+        from app.services.project_meeting_service import ProjectMeetingService
 
         meeting = StrategicMeeting(
-        title='测试会议',
-        meeting_date=date(2025, 1, 15),
-        status='SCHEDULED'
+            title="测试会议", meeting_date=date(2025, 1, 15), status="SCHEDULED"
         )
         db_session.add(meeting)
         db_session.flush()
 
         service = ProjectMeetingService(db_session)
-        result = service.link_meeting_to_project(
-        meeting.id, 100, is_primary=True
-        )
+        result = service.link_meeting_to_project(meeting.id, 100, is_primary=True)
 
         assert result is True
         assert meeting.project_id == 100
 
     def test_link_as_related_project(self, db_session):
         """测试关联为关联项目"""
-        from app.services.project_meeting_service import ProjectMeetingService
         from app.models.management_rhythm import StrategicMeeting
+        from app.services.project_meeting_service import ProjectMeetingService
 
         meeting = StrategicMeeting(
-        title='测试会议',
-        meeting_date=date(2025, 1, 15),
-        status='SCHEDULED',
-        related_project_ids=[]
+            title="测试会议",
+            meeting_date=date(2025, 1, 15),
+            status="SCHEDULED",
+            related_project_ids=[],
         )
         db_session.add(meeting)
         db_session.flush()
 
         service = ProjectMeetingService(db_session)
-        result = service.link_meeting_to_project(
-        meeting.id, 200, is_primary=False
-        )
+        result = service.link_meeting_to_project(meeting.id, 200, is_primary=False)
 
         assert result is True
         assert 200 in meeting.related_project_ids
 
     def test_link_duplicate_related_project(self, db_session):
         """测试重复关联相关项目"""
-        from app.services.project_meeting_service import ProjectMeetingService
         from app.models.management_rhythm import StrategicMeeting
+        from app.services.project_meeting_service import ProjectMeetingService
 
         meeting = StrategicMeeting(
-        title='测试会议',
-        meeting_date=date(2025, 1, 15),
-        status='SCHEDULED',
-        related_project_ids=[200]
+            title="测试会议",
+            meeting_date=date(2025, 1, 15),
+            status="SCHEDULED",
+            related_project_ids=[200],
         )
         db_session.add(meeting)
         db_session.flush()
 
         service = ProjectMeetingService(db_session)
-        result = service.link_meeting_to_project(
-        meeting.id, 200, is_primary=False
-        )
+        result = service.link_meeting_to_project(meeting.id, 200, is_primary=False)
 
         assert result is True
-            # 不应重复添加
+        # 不应重复添加
         assert meeting.related_project_ids.count(200) == 1
 
 
@@ -157,14 +147,11 @@ class TestUnlinkMeetingFromProject:
 
     def test_unlink_primary_project(self, db_session):
         """测试取消主项目关联"""
-        from app.services.project_meeting_service import ProjectMeetingService
         from app.models.management_rhythm import StrategicMeeting
+        from app.services.project_meeting_service import ProjectMeetingService
 
         meeting = StrategicMeeting(
-        title='测试会议',
-        meeting_date=date(2025, 1, 15),
-        status='SCHEDULED',
-        project_id=100
+            title="测试会议", meeting_date=date(2025, 1, 15), status="SCHEDULED", project_id=100
         )
         db_session.add(meeting)
         db_session.flush()
@@ -177,14 +164,14 @@ class TestUnlinkMeetingFromProject:
 
     def test_unlink_related_project(self, db_session):
         """测试取消关联项目"""
-        from app.services.project_meeting_service import ProjectMeetingService
         from app.models.management_rhythm import StrategicMeeting
+        from app.services.project_meeting_service import ProjectMeetingService
 
         meeting = StrategicMeeting(
-        title='测试会议',
-        meeting_date=date(2025, 1, 15),
-        status='SCHEDULED',
-        related_project_ids=[100, 200, 300]
+            title="测试会议",
+            meeting_date=date(2025, 1, 15),
+            status="SCHEDULED",
+            related_project_ids=[100, 200, 300],
         )
         db_session.add(meeting)
         db_session.flush()
@@ -208,9 +195,9 @@ class TestGetProjectMeetingStatistics:
         service = ProjectMeetingService(db_session)
         result = service.get_project_meeting_statistics(99999)
 
-        assert result['total_meetings'] == 0
-        assert result['completed_meetings'] == 0
-        assert result['scheduled_meetings'] == 0
+        assert result["total_meetings"] == 0
+        assert result["completed_meetings"] == 0
+        assert result["scheduled_meetings"] == 0
 
     def test_statistics_structure(self, db_session):
         """测试统计结构"""
@@ -220,9 +207,15 @@ class TestGetProjectMeetingStatistics:
         result = service.get_project_meeting_statistics(1)
 
         expected_fields = [
-        'total_meetings', 'completed_meetings', 'scheduled_meetings',
-        'cancelled_meetings', 'completion_rate', 'total_action_items',
-        'completed_action_items', 'action_completion_rate', 'by_level'
+            "total_meetings",
+            "completed_meetings",
+            "scheduled_meetings",
+            "cancelled_meetings",
+            "completion_rate",
+            "total_action_items",
+            "completed_action_items",
+            "action_completion_rate",
+            "by_level",
         ]
 
         for field in expected_fields:
@@ -266,37 +259,37 @@ class TestMeetingStatusFiltering:
     def test_filter_completed(self):
         """测试过滤已完成会议"""
         meetings = [
-        {'id': 1, 'status': 'COMPLETED'},
-        {'id': 2, 'status': 'SCHEDULED'},
-        {'id': 3, 'status': 'COMPLETED'},
-        {'id': 4, 'status': 'CANCELLED'},
+            {"id": 1, "status": "COMPLETED"},
+            {"id": 2, "status": "SCHEDULED"},
+            {"id": 3, "status": "COMPLETED"},
+            {"id": 4, "status": "CANCELLED"},
         ]
 
-        completed = [m for m in meetings if m['status'] == 'COMPLETED']
+        completed = [m for m in meetings if m["status"] == "COMPLETED"]
         assert len(completed) == 2
 
     def test_filter_scheduled(self):
         """测试过滤已安排会议"""
         meetings = [
-        {'id': 1, 'status': 'COMPLETED'},
-        {'id': 2, 'status': 'SCHEDULED'},
-        {'id': 3, 'status': 'SCHEDULED'},
-        {'id': 4, 'status': 'CANCELLED'},
+            {"id": 1, "status": "COMPLETED"},
+            {"id": 2, "status": "SCHEDULED"},
+            {"id": 3, "status": "SCHEDULED"},
+            {"id": 4, "status": "CANCELLED"},
         ]
 
-        scheduled = [m for m in meetings if m['status'] == 'SCHEDULED']
+        scheduled = [m for m in meetings if m["status"] == "SCHEDULED"]
         assert len(scheduled) == 2
 
     def test_filter_cancelled(self):
         """测试过滤已取消会议"""
         meetings = [
-        {'id': 1, 'status': 'COMPLETED'},
-        {'id': 2, 'status': 'SCHEDULED'},
-        {'id': 3, 'status': 'CANCELLED'},
-        {'id': 4, 'status': 'CANCELLED'},
+            {"id": 1, "status": "COMPLETED"},
+            {"id": 2, "status": "SCHEDULED"},
+            {"id": 3, "status": "CANCELLED"},
+            {"id": 4, "status": "CANCELLED"},
         ]
 
-        cancelled = [m for m in meetings if m['status'] == 'CANCELLED']
+        cancelled = [m for m in meetings if m["status"] == "CANCELLED"]
         assert len(cancelled) == 2
 
 
@@ -341,14 +334,16 @@ class TestRelatedProjectsHandling:
             assert 200 not in related_ids
             assert len(related_ids) == 2
 
-
             # pytest fixtures
+
+
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

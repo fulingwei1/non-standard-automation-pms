@@ -12,17 +12,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from app.models.sales.contracts import ContractApproval
 
+import logging
+from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.contracts import Contract
+from app.models.user import User
+from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
-
-from datetime import datetime, timedelta
-from app.schemas.approval.instance import ApprovalInstanceCreate
-from app.models.user import User
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,15 +61,11 @@ class ContractApprovalAdapter(ApprovalAdapter):
             "contract_code": contract.contract_code,
             "customer_contract_no": contract.customer_contract_no,
             "status": contract.status,
-            "contract_amount": float(contract.contract_amount)
-            if contract.contract_amount
-            else 0,
+            "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
             "customer_id": contract.customer_id,
             "customer_name": contract.customer.name if contract.customer else None,
             "project_id": contract.project_id,
-            "signed_date": contract.signing_date.isoformat()
-            if contract.signing_date
-            else None,
+            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None,
             "owner_id": contract.owner_id,
             "owner_name": contract.owner.name if contract.owner else None,
             "payment_terms_summary": contract.payment_terms_summary,
@@ -179,14 +175,10 @@ class ContractApprovalAdapter(ApprovalAdapter):
         form_data = {
             "contract_id": contract.id,
             "contract_code": contract.contract_code,
-            "contract_amount": float(contract.contract_amount)
-            if contract.contract_amount
-            else 0,
+            "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
             "customer_id": contract.customer_id,
             "project_id": contract.project_id,
-            "signed_date": contract.signing_date.isoformat()
-            if contract.signing_date
-            else None,
+            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None,
             "payment_terms": contract.payment_terms_summary,
             "acceptance_summary": contract.acceptance_summary,
         }

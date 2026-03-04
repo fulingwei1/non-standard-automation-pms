@@ -12,8 +12,10 @@ from pydantic import BaseModel, Field
 
 # ==================== 标签字典 Schemas ====================
 
+
 class TagDictBase(BaseModel):
     """标签字典基础"""
+
     tag_code: str = Field(..., max_length=50, description="标签编码")
     tag_name: str = Field(..., max_length=100, description="标签名称")
     tag_type: str = Field(..., description="标签类型 (SKILL/DOMAIN/ATTITUDE/CHARACTER/SPECIAL)")
@@ -26,11 +28,13 @@ class TagDictBase(BaseModel):
 
 class TagDictCreate(TagDictBase):
     """创建标签"""
+
     pass
 
 
 class TagDictUpdate(BaseModel):
     """更新标签"""
+
     tag_name: Optional[str] = Field(None, max_length=100)
     parent_id: Optional[int] = None
     weight: Optional[Decimal] = None
@@ -42,6 +46,7 @@ class TagDictUpdate(BaseModel):
 
 class TagDictResponse(TagDictBase):
     """标签响应"""
+
     id: int
     is_active: bool
     created_at: datetime
@@ -53,6 +58,7 @@ class TagDictResponse(TagDictBase):
 
 class TagDictTreeNode(BaseModel):
     """标签树节点"""
+
     id: int
     tag_code: str
     tag_name: str
@@ -60,7 +66,7 @@ class TagDictTreeNode(BaseModel):
     weight: Decimal
     is_required: bool
     sort_order: int
-    children: List['TagDictTreeNode'] = []
+    children: List["TagDictTreeNode"] = []
 
     class Config:
         from_attributes = True
@@ -68,8 +74,10 @@ class TagDictTreeNode(BaseModel):
 
 # ==================== 员工标签评估 Schemas ====================
 
+
 class EmployeeTagEvaluationBase(BaseModel):
     """员工标签评估基础"""
+
     employee_id: int = Field(..., description="员工ID")
     tag_id: int = Field(..., description="标签ID")
     score: int = Field(..., ge=1, le=5, description="评分1-5")
@@ -79,11 +87,13 @@ class EmployeeTagEvaluationBase(BaseModel):
 
 class EmployeeTagEvaluationCreate(EmployeeTagEvaluationBase):
     """创建员工标签评估"""
+
     pass
 
 
 class EmployeeTagEvaluationBatch(BaseModel):
     """批量创建员工标签评估"""
+
     employee_id: int
     evaluations: List[dict] = Field(..., description="评估列表 [{tag_id, score, evidence}]")
     evaluate_date: date
@@ -91,6 +101,7 @@ class EmployeeTagEvaluationBatch(BaseModel):
 
 class EmployeeTagEvaluationUpdate(BaseModel):
     """更新员工标签评估"""
+
     score: Optional[int] = Field(None, ge=1, le=5)
     evidence: Optional[str] = None
     is_valid: Optional[bool] = None
@@ -98,6 +109,7 @@ class EmployeeTagEvaluationUpdate(BaseModel):
 
 class EmployeeTagEvaluationResponse(EmployeeTagEvaluationBase):
     """员工标签评估响应"""
+
     id: int
     evaluator_id: int
     is_valid: bool
@@ -113,8 +125,10 @@ class EmployeeTagEvaluationResponse(EmployeeTagEvaluationBase):
 
 # ==================== 员工扩展档案 Schemas ====================
 
+
 class TagScore(BaseModel):
     """标签得分"""
+
     tag_id: int
     tag_code: str
     tag_name: str
@@ -124,17 +138,20 @@ class TagScore(BaseModel):
 
 class EmployeeProfileBase(BaseModel):
     """员工档案基础"""
+
     employee_id: int
 
 
 class EmployeeProfileUpdate(BaseModel):
     """更新员工档案"""
+
     current_workload_pct: Optional[Decimal] = None
     available_hours: Optional[Decimal] = None
 
 
 class EmployeeProfileResponse(BaseModel):
     """员工档案响应"""
+
     id: int
     employee_id: int
 
@@ -166,6 +183,7 @@ class EmployeeProfileResponse(BaseModel):
 
 class EmployeeProfileSummary(BaseModel):
     """员工档案摘要（列表用）"""
+
     id: int
     employee_id: int
     employee_name: Optional[str] = None
@@ -193,8 +211,10 @@ class EmployeeProfileSummary(BaseModel):
 
 # ==================== 项目绩效历史 Schemas ====================
 
+
 class ProjectPerformanceBase(BaseModel):
     """项目绩效基础"""
+
     employee_id: int
     project_id: int
     role_code: str
@@ -203,6 +223,7 @@ class ProjectPerformanceBase(BaseModel):
 
 class ProjectPerformanceCreate(ProjectPerformanceBase):
     """创建项目绩效"""
+
     performance_score: Optional[Decimal] = None
     quality_score: Optional[Decimal] = None
     collaboration_score: Optional[Decimal] = None
@@ -215,6 +236,7 @@ class ProjectPerformanceCreate(ProjectPerformanceBase):
 
 class ProjectPerformanceUpdate(BaseModel):
     """更新项目绩效"""
+
     performance_score: Optional[Decimal] = None
     quality_score: Optional[Decimal] = None
     collaboration_score: Optional[Decimal] = None
@@ -226,6 +248,7 @@ class ProjectPerformanceUpdate(BaseModel):
 
 class ProjectPerformanceResponse(ProjectPerformanceBase):
     """项目绩效响应"""
+
     id: int
     performance_score: Optional[Decimal] = None
     quality_score: Optional[Decimal] = None
@@ -247,8 +270,10 @@ class ProjectPerformanceResponse(ProjectPerformanceBase):
 
 # ==================== 项目人员需求 Schemas ====================
 
+
 class SkillRequirement(BaseModel):
     """技能要求"""
+
     tag_id: int
     tag_code: Optional[str] = None
     tag_name: Optional[str] = None
@@ -257,6 +282,7 @@ class SkillRequirement(BaseModel):
 
 class StaffingNeedBase(BaseModel):
     """人员需求基础"""
+
     project_id: int
     role_code: str
     role_name: Optional[str] = None
@@ -265,12 +291,13 @@ class StaffingNeedBase(BaseModel):
 
 class StaffingNeedCreate(StaffingNeedBase):
     """创建人员需求"""
+
     required_skills: List[SkillRequirement] = Field(..., description="必需技能")
     preferred_skills: Optional[List[SkillRequirement]] = None
     required_domains: Optional[List[SkillRequirement]] = None
     required_attitudes: Optional[List[SkillRequirement]] = None
     min_level: Optional[str] = None
-    priority: str = Field('P3', description="优先级 P1-P5")
+    priority: str = Field("P3", description="优先级 P1-P5")
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     allocation_pct: Decimal = Field(100, ge=0, le=100)
@@ -279,6 +306,7 @@ class StaffingNeedCreate(StaffingNeedBase):
 
 class StaffingNeedUpdate(BaseModel):
     """更新人员需求"""
+
     role_name: Optional[str] = None
     headcount: Optional[int] = None
     required_skills: Optional[List[SkillRequirement]] = None
@@ -296,6 +324,7 @@ class StaffingNeedUpdate(BaseModel):
 
 class StaffingNeedResponse(StaffingNeedBase):
     """人员需求响应"""
+
     id: int
     required_skills: Optional[List[dict]] = None
     preferred_skills: Optional[List[dict]] = None
@@ -321,8 +350,10 @@ class StaffingNeedResponse(StaffingNeedBase):
 
 # ==================== AI匹配 Schemas ====================
 
+
 class DimensionScores(BaseModel):
     """维度得分"""
+
     skill: float = Field(..., description="技能匹配分 (30%权重)")
     domain: float = Field(..., description="领域匹配分 (15%权重)")
     attitude: float = Field(..., description="态度评分 (20%权重)")
@@ -333,6 +364,7 @@ class DimensionScores(BaseModel):
 
 class CandidateScore(BaseModel):
     """候选人得分"""
+
     employee_id: int
     employee_name: str
     employee_code: Optional[str] = None
@@ -350,6 +382,7 @@ class CandidateScore(BaseModel):
 
 class MatchingRequest(BaseModel):
     """匹配请求"""
+
     staffing_need_id: int
     top_n: int = Field(10, ge=1, le=50, description="返回候选人数量")
     include_overloaded: bool = Field(False, description="是否包含超负荷员工")
@@ -357,6 +390,7 @@ class MatchingRequest(BaseModel):
 
 class MatchingResult(BaseModel):
     """匹配结果"""
+
     request_id: str
     staffing_need_id: int
     project_id: int
@@ -373,6 +407,7 @@ class MatchingResult(BaseModel):
 
 class MatchingAcceptRequest(BaseModel):
     """采纳候选人请求"""
+
     matching_log_id: int
     staffing_need_id: int
     employee_id: int
@@ -380,12 +415,14 @@ class MatchingAcceptRequest(BaseModel):
 
 class MatchingRejectRequest(BaseModel):
     """拒绝候选人请求"""
+
     matching_log_id: int
     reject_reason: str
 
 
 class MatchingLogResponse(BaseModel):
     """匹配日志响应"""
+
     id: int
     request_id: str
     project_id: int
@@ -411,8 +448,10 @@ class MatchingLogResponse(BaseModel):
 
 # ==================== 统计和仪表板 Schemas ====================
 
+
 class TagStatistics(BaseModel):
     """标签统计"""
+
     tag_type: str
     total_count: int
     active_count: int
@@ -421,6 +460,7 @@ class TagStatistics(BaseModel):
 
 class MatchingStatistics(BaseModel):
     """匹配统计"""
+
     total_requests: int
     total_candidates_matched: int
     accepted_count: int
@@ -432,6 +472,7 @@ class MatchingStatistics(BaseModel):
 
 class StaffingDashboard(BaseModel):
     """人员匹配仪表板"""
+
     # 需求统计
     open_needs: int
     matching_needs: int
@@ -451,8 +492,10 @@ class StaffingDashboard(BaseModel):
 
 # ==================== 分页响应 ====================
 
+
 class PaginatedResponse(BaseModel):
     """分页响应"""
+
     items: List[Any]
     total: int
     page: int

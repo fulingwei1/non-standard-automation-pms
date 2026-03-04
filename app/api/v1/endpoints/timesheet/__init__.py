@@ -7,14 +7,15 @@
 
 from fastapi import APIRouter
 
-from .records import router as records_router
-from .pending import router as pending_router
-from .weekly import router as weekly_router
 from .monthly import router as monthly_router
-from .statistics import router as statistics_router
+from .pending import router as pending_router
+from .records import router as records_router
 from .reports import router as reports_router
 from .reports_unified import router as reports_unified_router
+from .statistics import router as statistics_router
+from .weekly import router as weekly_router
 from .workflow import router as workflow_router
+
 # 暂时禁用analytics（Pydantic递归错误）
 # from .analytics import router as analytics_router
 

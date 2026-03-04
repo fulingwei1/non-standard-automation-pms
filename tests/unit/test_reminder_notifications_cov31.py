@@ -41,6 +41,7 @@ def mock_task():
 # notify_timeout_warning
 # ---------------------------------------------------------------------------
 
+
 class TestNotifyTimeoutWarning:
     def test_sends_notification_with_correct_type(self, reminder, mock_task):
         reminder.notify_timeout_warning(mock_task, hours_remaining=3)
@@ -70,15 +71,14 @@ class TestNotifyTimeoutWarning:
 
     def test_extra_context_accepted(self, reminder, mock_task):
         """extra_context 参数不应导致异常"""
-        reminder.notify_timeout_warning(
-            mock_task, hours_remaining=4, extra_context={"foo": "bar"}
-        )
+        reminder.notify_timeout_warning(mock_task, hours_remaining=4, extra_context={"foo": "bar"})
         assert len(reminder._sent) == 1
 
 
 # ---------------------------------------------------------------------------
 # notify_remind
 # ---------------------------------------------------------------------------
+
 
 class TestNotifyRemind:
     def test_sends_remind_notification(self, reminder, mock_task):

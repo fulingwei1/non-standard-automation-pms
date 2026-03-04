@@ -2,12 +2,14 @@
 """
 第十六批：售前AI方案模板服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.presale_ai_template_service import PresaleAITemplateService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -44,8 +46,10 @@ class TestPresaleAITemplateService:
         db = make_db()
         svc = PresaleAITemplateService(db)
         data = {"name": "新模板", "industry": "制造业", "solution_content": "{}"}
-        with patch("app.services.presale_ai_template_service.save_obj") as mock_save, \
-             patch("app.services.presale_ai_template_service.PresaleAISolutionTemplate") as mock_cls:
+        with (
+            patch("app.services.presale_ai_template_service.save_obj") as mock_save,
+            patch("app.services.presale_ai_template_service.PresaleAISolutionTemplate") as mock_cls,
+        ):
             mock_cls.return_value = MagicMock()
             result = svc.create_template(data, user_id=1)
             mock_save.assert_called_once()

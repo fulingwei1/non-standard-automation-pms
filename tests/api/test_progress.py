@@ -26,7 +26,7 @@ class TestWbsTemplates:
         response = client.get(
             f"{settings.API_V1_PREFIX}/progress/wbs-templates",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -47,7 +47,7 @@ class TestWbsTemplates:
         response = client.get(
             f"{settings.API_V1_PREFIX}/progress/wbs-templates",
             params={"project_type": "TEST_EQUIPMENT"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -63,10 +63,7 @@ class TestWbsTemplates:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/wbs-templates/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/progress/wbs-templates/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have progress:read permission")
@@ -88,7 +85,7 @@ class TestProjectTasks:
         response = client.get(
             f"{settings.API_V1_PREFIX}/progress/tasks",
             params={"page": 1, "page_size": 20},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -107,9 +104,7 @@ class TestProjectTasks:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/tasks",
-            params={"project_id": 1},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/tasks", params={"project_id": 1}, headers=headers
         )
 
         if response.status_code == 403:
@@ -127,10 +122,7 @@ class TestProjectTasks:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/tasks/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/progress/tasks/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have progress:read permission")
@@ -150,8 +142,7 @@ class TestGanttChart:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/projects/1/gantt",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/projects/1/gantt", headers=headers
         )
 
         if response.status_code == 403:
@@ -174,8 +165,7 @@ class TestProgressBoard:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/projects/1/board",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/projects/1/board", headers=headers
         )
 
         if response.status_code == 403:
@@ -200,7 +190,7 @@ class TestProgressReports:
         response = client.get(
             f"{settings.API_V1_PREFIX}/progress/reports",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -217,8 +207,7 @@ class TestProgressReports:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/projects/1/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/projects/1/summary", headers=headers
         )
 
         if response.status_code == 403:
@@ -239,8 +228,7 @@ class TestProgressForecast:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/projects/1/forecast",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/projects/1/forecast", headers=headers
         )
 
         if response.status_code == 403:
@@ -261,8 +249,7 @@ class TestDependencyCheck:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/progress/projects/1/dependency-check",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/progress/projects/1/dependency-check", headers=headers
         )
 
         if response.status_code == 403:

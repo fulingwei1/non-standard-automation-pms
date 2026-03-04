@@ -10,7 +10,7 @@ from app.models.vendor import Vendor
 
 def init_suppliers(db: Session):
     """初始化供应商数据"""
-    
+
     suppliers_data = [
         {
             "vendor_code": "SUP_METAL_001",
@@ -23,7 +23,7 @@ def init_suppliers(db: Session):
             "credit_rating": "A",
             "payment_terms": "月结30天",
             "is_active": True,
-            "remark": "主要供应不锈钢板材"
+            "remark": "主要供应不锈钢板材",
         },
         {
             "vendor_code": "SUP_ALUMINUM_002",
@@ -36,7 +36,7 @@ def init_suppliers(db: Session):
             "credit_rating": "B+",
             "payment_terms": "货到付款",
             "is_active": True,
-            "remark": "铝合金型材专业供应商"
+            "remark": "铝合金型材专业供应商",
         },
         {
             "vendor_code": "SUP_MOTOR_003",
@@ -49,7 +49,7 @@ def init_suppliers(db: Session):
             "credit_rating": "A+",
             "payment_terms": "月结60天",
             "is_active": True,
-            "remark": "各类电机供应，质量可靠"
+            "remark": "各类电机供应，质量可靠",
         },
         {
             "vendor_code": "SUP_BEARING_004",
@@ -62,7 +62,7 @@ def init_suppliers(db: Session):
             "credit_rating": "A",
             "payment_terms": "月结45天",
             "is_active": True,
-            "remark": "进口和国产轴承供应"
+            "remark": "进口和国产轴承供应",
         },
         {
             "vendor_code": "SUP_ELECTRONIC_005",
@@ -75,7 +75,7 @@ def init_suppliers(db: Session):
             "credit_rating": "B",
             "payment_terms": "款到发货",
             "is_active": True,
-            "remark": "各类电子元器件"
+            "remark": "各类电子元器件",
         },
         {
             "vendor_code": "SUP_FASTENER_006",
@@ -88,7 +88,7 @@ def init_suppliers(db: Session):
             "credit_rating": "B+",
             "payment_terms": "月结30天",
             "is_active": True,
-            "remark": "各类标准件紧固件"
+            "remark": "各类标准件紧固件",
         },
         {
             "vendor_code": "SUP_PLASTIC_007",
@@ -101,7 +101,7 @@ def init_suppliers(db: Session):
             "credit_rating": "A-",
             "payment_terms": "月结30天",
             "is_active": True,
-            "remark": "工程塑料和塑料制品"
+            "remark": "工程塑料和塑料制品",
         },
         {
             "vendor_code": "SUP_RUBBER_008",
@@ -114,7 +114,7 @@ def init_suppliers(db: Session):
             "credit_rating": "B+",
             "payment_terms": "货到付款",
             "is_active": True,
-            "remark": "各类橡胶密封件"
+            "remark": "各类橡胶密封件",
         },
         {
             "vendor_code": "SUP_HYDRAULIC_009",
@@ -127,7 +127,7 @@ def init_suppliers(db: Session):
             "credit_rating": "A",
             "payment_terms": "月结45天",
             "is_active": True,
-            "remark": "液压气动元件"
+            "remark": "液压气动元件",
         },
         {
             "vendor_code": "SUP_SENSOR_010",
@@ -140,18 +140,18 @@ def init_suppliers(db: Session):
             "credit_rating": "A+",
             "payment_terms": "月结60天",
             "is_active": True,
-            "remark": "各类工业传感器"
-        }
+            "remark": "各类工业传感器",
+        },
     ]
-    
+
     created_count = 0
     updated_count = 0
-    
+
     for supplier_data in suppliers_data:
-        existing = db.query(Vendor).filter(
-            Vendor.vendor_code == supplier_data["vendor_code"]
-        ).first()
-        
+        existing = (
+            db.query(Vendor).filter(Vendor.vendor_code == supplier_data["vendor_code"]).first()
+        )
+
         if existing:
             # 更新现有供应商
             for key, value in supplier_data.items():
@@ -164,14 +164,14 @@ def init_suppliers(db: Session):
             db.add(supplier)
             created_count += 1
             print(f"  创建供应商: {supplier_data['vendor_name']}")
-    
+
     db.commit()
-    
+
     print(f"\n✅ 供应商数据初始化完成")
     print(f"   新创建: {created_count}个")
     print(f"   已更新: {updated_count}个")
     print(f"   总计: {created_count + updated_count}个供应商")
-    
+
     return created_count + updated_count
 
 

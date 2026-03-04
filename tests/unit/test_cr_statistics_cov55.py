@@ -2,9 +2,10 @@
 """
 Tests for app/services/collaboration_rating/statistics.py
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.collaboration_rating.statistics import RatingStatistics

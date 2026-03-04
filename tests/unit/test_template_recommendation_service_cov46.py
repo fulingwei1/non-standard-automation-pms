@@ -2,10 +2,10 @@
 """第四十六批 - 模板推荐服务单元测试"""
 import pytest
 
-pytest.importorskip("app.services.template_recommendation_service",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.template_recommendation_service", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock
+
 from app.services.template_recommendation_service import TemplateRecommendationService
 
 
@@ -46,7 +46,9 @@ class TestCalculateScore:
     def test_all_match_gives_high_score(self):
         db = MagicMock()
         svc = TemplateRecommendationService(db)
-        t = _make_template(project_type="NPD", product_category="电子", industry="制造", usage_count=0)
+        t = _make_template(
+            project_type="NPD", product_category="电子", industry="制造", usage_count=0
+        )
         score = svc._calculate_score(t, "NPD", "电子", "制造")
         assert score == pytest.approx(85.0)
 
@@ -88,7 +90,9 @@ class TestRecommendTemplates:
         db = MagicMock()
         # query chain for project_type match returns empty, fallback popular also empty
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         svc = TemplateRecommendationService(db)
         results = svc.recommend_templates()

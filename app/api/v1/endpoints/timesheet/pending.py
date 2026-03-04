@@ -17,22 +17,23 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
+from app.models.project import Project
 from app.models.timesheet import (
     Timesheet,
 )
-from app.models.project import Project
 from app.models.user import User
 from app.schemas.timesheet import (
     TimesheetListResponse,
     TimesheetResponse,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
 
 from fastapi import APIRouter
+
 from app.common.query_filters import apply_pagination
 
 router = APIRouter(prefix="/pending", tags=["pending"])
@@ -72,9 +73,9 @@ def get_pending_approval_timesheets(
         query = query.filter(Timesheet.project_id == project_id)
 
     total = query.count()
-    timesheets = (
-        apply_pagination(query.order_by(Timesheet.work_date.desc()), pagination.offset, pagination.limit).all()
-    )
+    timesheets = apply_pagination(
+        query.order_by(Timesheet.work_date.desc()), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for ts in timesheets:

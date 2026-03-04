@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 """第五批：inventory_management_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, call
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.inventory_management_service import (
-        InventoryManagementService,
         InsufficientStockError,
+        InventoryManagementService,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
 
-pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="inventory_management_service not importable")
+pytestmark = pytest.mark.skipif(
+    not HAS_MODULE, reason="inventory_management_service not importable"
+)
 
 
 def make_service(db=None):

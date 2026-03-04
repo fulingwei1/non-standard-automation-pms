@@ -20,13 +20,13 @@ class ContactCreate(BaseModel):
     name: str = Field(max_length=100, description="姓名")
     position: Optional[str] = Field(default=None, max_length=100, description="职位")
     department: Optional[str] = Field(default=None, max_length=100, description="部门")
-    
+
     # 联系方式
     mobile: Optional[str] = Field(default=None, max_length=20, description="手机号码")
     phone: Optional[str] = Field(default=None, max_length=20, description="座机")
     email: Optional[EmailStr] = Field(default=None, description="电子邮箱")
     wechat: Optional[str] = Field(default=None, max_length=100, description="微信号")
-    
+
     # 其他信息
     birthday: Optional[date] = Field(default=None, description="生日")
     hobbies: Optional[str] = Field(default=None, description="兴趣爱好")

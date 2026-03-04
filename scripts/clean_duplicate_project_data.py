@@ -36,14 +36,17 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
         print("\n" + "-" * 60)
         print("1. 清理重复的成本记录")
         print("-" * 60)
-        costs = db.query(ProjectCost).filter(
-            ProjectCost.project_id == project.id
-        ).order_by(ProjectCost.created_at).all()
+        costs = (
+            db.query(ProjectCost)
+            .filter(ProjectCost.project_id == project.id)
+            .order_by(ProjectCost.created_at)
+            .all()
+        )
 
         # 按类型、金额、描述分组，保留最早的一条
         cost_groups = defaultdict(list)
         for cost in costs:
-            key = (cost.cost_type, str(cost.amount), cost.description or '')
+            key = (cost.cost_type, str(cost.amount), cost.description or "")
             cost_groups[key].append(cost)
 
         duplicate_costs = []
@@ -53,9 +56,13 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
                 keep = group[0]
                 duplicates = group[1:]
                 duplicate_costs.extend(duplicates)
-                print(f"   保留: {keep.cost_type} - ¥{keep.amount} - {keep.description[:30] if keep.description else ''}")
+                print(
+                    f"   保留: {keep.cost_type} - ¥{keep.amount} - {keep.description[:30] if keep.description else ''}"
+                )
                 for dup in duplicates:
-                    print(f"   删除: {dup.cost_type} - ¥{dup.amount} - {dup.description[:30] if dup.description else ''} (ID: {dup.id})")
+                    print(
+                        f"   删除: {dup.cost_type} - ¥{dup.amount} - {dup.description[:30] if dup.description else ''} (ID: {dup.id})"
+                    )
 
         deleted_costs_count = len(duplicate_costs)
         if duplicate_costs:
@@ -70,9 +77,12 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
         print("\n" + "-" * 60)
         print("2. 清理重复的里程碑")
         print("-" * 60)
-        milestones = db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == project.id
-        ).order_by(ProjectMilestone.created_at).all()
+        milestones = (
+            db.query(ProjectMilestone)
+            .filter(ProjectMilestone.project_id == project.id)
+            .order_by(ProjectMilestone.created_at)
+            .all()
+        )
 
         # 按名称分组，保留最早的一条
         milestone_groups = defaultdict(list)
@@ -104,11 +114,13 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
         print("\n" + "-" * 60)
         print("3. 测试文档数据")
         print("-" * 60)
-        documents = db.query(ProjectDocument).filter(
-            ProjectDocument.project_id == project.id
-        ).all()
+        documents = db.query(ProjectDocument).filter(ProjectDocument.project_id == project.id).all()
 
-        test_docs = [doc for doc in documents if doc.file_path.startswith('/documents/') or doc.file_path.startswith('/docs/')]
+        test_docs = [
+            doc
+            for doc in documents
+            if doc.file_path.startswith("/documents/") or doc.file_path.startswith("/docs/")
+        ]
 
         deleted_docs_count = 0
         if test_docs:
@@ -118,7 +130,7 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
             print("   （建议：如果不需要演示数据，可以删除；如果需要保留演示效果，可以保留）")
 
             # 默认不删除测试文档，除非明确指定
-            if not dry_run and '--delete-test-docs' in sys.argv:
+            if not dry_run and "--delete-test-docs" in sys.argv:
                 print(f"\n   删除 {len(test_docs)} 个测试文档...")
                 for doc in test_docs:
                     print(f"   删除: {doc.doc_name} (ID: {doc.id})")
@@ -149,14 +161,17 @@ def clean_duplicate_project_data(project_code: str = "PJ250114", dry_run: bool =
             print("\n提示: 要执行删除，请运行:")
             print(f"  python3 scripts/clean_duplicate_project_data.py {project_code} --execute")
             print("\n如果要同时删除测试文档，请运行:")
-            print(f"  python3 scripts/clean_duplicate_project_data.py {project_code} --execute --delete-test-docs")
+            print(
+                f"  python3 scripts/clean_duplicate_project_data.py {project_code} --execute --delete-test-docs"
+            )
         else:
             print("\n" + "=" * 60)
             print("✓ 没有需要清理的数据")
             print("=" * 60)
 
+
 if __name__ == "__main__":
     project_code = sys.argv[1] if len(sys.argv) > 1 else "PJ250114"
-    dry_run = '--execute' not in sys.argv
+    dry_run = "--execute" not in sys.argv
 
     clean_duplicate_project_data(project_code, dry_run)

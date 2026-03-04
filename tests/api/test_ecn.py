@@ -21,10 +21,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -47,9 +44,7 @@ class TestEcnCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         assert response.status_code == 200
@@ -65,7 +60,7 @@ class TestEcnCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/ecns",
             params={"page": 1, "page_size": 10, "status": "DRAFT"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -90,11 +85,7 @@ class TestEcnCRUD:
             "expected_date": (date.today() + timedelta(days=7)).isoformat(),
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/ecns",
-            json=ecn_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/ecns", json=ecn_data, headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission")
@@ -112,9 +103,7 @@ class TestEcnCRUD:
 
         # 先获取 ECN 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -127,10 +116,7 @@ class TestEcnCRUD:
 
         ecn_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/ecns/{ecn_id}", headers=headers)
 
         assert response.status_code == 200
 
@@ -147,9 +133,7 @@ class TestEcnEvaluations:
 
         # 先获取 ECN 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -163,8 +147,7 @@ class TestEcnEvaluations:
         ecn_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/evaluations",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/evaluations", headers=headers
         )
 
         assert response.status_code == 200
@@ -180,9 +163,7 @@ class TestEcnEvaluations:
 
         # 先获取 ECN 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -196,8 +177,7 @@ class TestEcnEvaluations:
         ecn_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/evaluation-summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/evaluation-summary", headers=headers
         )
 
         assert response.status_code == 200
@@ -215,9 +195,7 @@ class TestEcnApprovals:
 
         # 先获取 ECN 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -230,10 +208,7 @@ class TestEcnApprovals:
 
         ecn_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/approvals",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/approvals", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -247,10 +222,7 @@ class TestEcnApprovals:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/ecn-approval-matrix",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/ecn-approval-matrix", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -269,9 +241,7 @@ class TestEcnTasks:
 
         # 先获取 ECN 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/ecns", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -284,10 +254,7 @@ class TestEcnTasks:
 
         ecn_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/tasks",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/ecns/{ecn_id}/tasks", headers=headers)
 
         assert response.status_code == 200
         data = response.json()

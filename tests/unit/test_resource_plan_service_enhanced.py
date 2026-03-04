@@ -11,17 +11,16 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from app.services.resource_plan_service import (
-    ResourcePlanService,
-    ResourcePlanningService,
-)
 from app.schemas.resource_plan import (
     ConflictProject,
     EmployeeBrief,
     ResourceConflict,
     ResourcePlanCreate,
 )
-
+from app.services.resource_plan_service import (
+    ResourcePlanningService,
+    ResourcePlanService,
+)
 
 # ==================== 测试夹具 ====================
 
@@ -150,7 +149,7 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 1, 31)
         start2 = date(2026, 2, 1)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result is None
 
@@ -160,7 +159,7 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 3, 31)
         start2 = date(2026, 2, 1)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result is None
 
@@ -170,7 +169,7 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 2, 15)
         start2 = date(2026, 2, 1)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result == (date(2026, 2, 1), date(2026, 2, 15))
 
@@ -180,7 +179,7 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 2, 28)
         start2 = date(2026, 2, 1)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result == (date(2026, 2, 1), date(2026, 2, 28))
 
@@ -190,13 +189,15 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 3, 31)
         start2 = date(2026, 2, 1)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result == (date(2026, 2, 1), date(2026, 2, 28))
 
     def test_missing_dates_returns_none(self):
         """缺少日期返回None"""
-        result = ResourcePlanService.calculate_date_overlap(None, date(2026, 2, 28), date(2026, 1, 1), date(2026, 1, 31))
+        result = ResourcePlanService.calculate_date_overlap(
+            None, date(2026, 2, 28), date(2026, 1, 1), date(2026, 1, 31)
+        )
         assert result is None
 
     def test_single_day_overlap(self):
@@ -205,7 +206,7 @@ class TestCalculateDateOverlap:
         end1 = date(2026, 1, 31)
         start2 = date(2026, 1, 31)
         end2 = date(2026, 2, 28)
-        
+
         result = ResourcePlanService.calculate_date_overlap(start1, end1, start2, end2)
         assert result == (date(2026, 1, 31), date(2026, 1, 31))
 
@@ -312,7 +313,7 @@ class TestAssignEmployee:
         mock_filter = mock_query.filter.return_value
         mock_filter.first.return_value = sample_resource_plan
 
-        with patch.object(ResourcePlanService, 'check_assignment_conflict', return_value=None):
+        with patch.object(ResourcePlanService, "check_assignment_conflict", return_value=None):
             plan, conflict = ResourcePlanService.assign_employee(mock_db, 1, 10, force=False)
 
             assert plan.assigned_employee_id == 10
@@ -327,7 +328,9 @@ class TestAssignEmployee:
         mock_filter.first.return_value = sample_resource_plan
 
         mock_conflict = MagicMock(spec=ResourceConflict)
-        with patch.object(ResourcePlanService, 'check_assignment_conflict', return_value=mock_conflict):
+        with patch.object(
+            ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict
+        ):
             plan, conflict = ResourcePlanService.assign_employee(mock_db, 1, 10, force=False)
 
             assert plan.assignment_status == "CONFLICT"
@@ -341,7 +344,9 @@ class TestAssignEmployee:
         mock_filter.first.return_value = sample_resource_plan
 
         mock_conflict = MagicMock(spec=ResourceConflict)
-        with patch.object(ResourcePlanService, 'check_assignment_conflict', return_value=mock_conflict):
+        with patch.object(
+            ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict
+        ):
             plan, conflict = ResourcePlanService.assign_employee(mock_db, 1, 10, force=True)
 
             assert plan.assigned_employee_id == 10
@@ -432,11 +437,11 @@ class TestCheckAssignmentConflict:
         existing_plan.planned_end = date(2026, 3, 31)
 
         mock_query = mock_db.query.return_value
-        
+
         # 第一次query: ProjectStageResourcePlan
         mock_filter1 = mock_query.filter.return_value
         mock_filter1.all.return_value = [existing_plan]
-        
+
         # 后续query会被调用但不会产生冲突
         result = ResourcePlanService.check_assignment_conflict(
             mock_db, 10, 100, date(2026, 3, 1), date(2026, 3, 31), Decimal("50")
@@ -471,10 +476,10 @@ class TestCheckAssignmentConflict:
 
         # Setup query side_effect
         def query_side_effect(model):
+            from app.models.project import Project
             from app.models.project.resource_plan import ProjectStageResourcePlan
             from app.models.user import User
-            from app.models.project import Project
-            
+
             if model == ProjectStageResourcePlan:
                 return mock_assignments_query
             elif model == User:
@@ -559,19 +564,19 @@ class TestDetectEmployeeConflicts:
 
         mock_project_query = MagicMock()
         mock_project_filter = mock_project_query.filter.return_value
-        
+
         # Return different projects based on filter
         def project_first_side_effect():
             # This is a simplified approach - in real scenario you'd need more complex logic
             return sample_project
-        
+
         mock_project_filter.first.side_effect = [sample_project, project2]
 
         def query_side_effect(model):
+            from app.models.project import Project
             from app.models.project.resource_plan import ProjectStageResourcePlan
             from app.models.user import User
-            from app.models.project import Project
-            
+
             if model == ProjectStageResourcePlan:
                 return mock_assignments_query
             elif model == User:
@@ -600,7 +605,7 @@ class TestDetectProjectConflicts:
         result = ResourcePlanService.detect_project_conflicts(mock_db, 100)
         assert result == []
 
-    @patch.object(ResourcePlanService, 'detect_employee_conflicts')
+    @patch.object(ResourcePlanService, "detect_employee_conflicts")
     def test_project_with_employee_conflicts(self, mock_detect, mock_db):
         """项目包含员工冲突"""
         plan = MagicMock()
@@ -673,8 +678,8 @@ class TestResourcePlanningService:
         mock_filter.first.return_value = None
 
         result = planning_service.analyze_user_workload(999)
-        assert 'error' in result
-        assert result['error'] == '用户不存在'
+        assert "error" in result
+        assert result["error"] == "用户不存在"
 
     @pytest.mark.skip(reason="源代码使用了不存在的Task.assignee_id字段，需要先修复源代码")
     def test_analyze_user_workload_success(self, planning_service, mock_db, sample_user):
@@ -719,11 +724,11 @@ class TestResourcePlanningService:
         mock_project_filter.first.return_value = mock_project
 
         def query_side_effect(model):
-            from app.models.user import User
             from app.models.progress import Task
-            from app.models.timesheet import Timesheet
             from app.models.project import Project
-            
+            from app.models.timesheet import Timesheet
+            from app.models.user import User
+
             if model == User:
                 return mock_user_query
             elif model == Task:
@@ -738,11 +743,11 @@ class TestResourcePlanningService:
 
         result = planning_service.analyze_user_workload(10, date(2026, 3, 1), date(2026, 3, 31))
 
-        assert 'error' not in result
-        assert result['user_id'] == 10
-        assert 'total_hours' in result
-        assert 'load_rate' in result
-        assert 'project_loads' in result
+        assert "error" not in result
+        assert result["user_id"] == 10
+        assert "total_hours" in result
+        assert "load_rate" in result
+        assert "project_loads" in result
 
     def test_predict_project_resource_needs_project_not_found(self, planning_service, mock_db):
         """项目不存在时返回错误"""
@@ -751,10 +756,12 @@ class TestResourcePlanningService:
         mock_filter.first.return_value = None
 
         result = planning_service.predict_project_resource_needs(999)
-        assert 'error' in result
-        assert result['error'] == '项目不存在'
+        assert "error" in result
+        assert result["error"] == "项目不存在"
 
-    def test_predict_project_resource_needs_success(self, planning_service, mock_db, sample_project, sample_task, sample_user):
+    def test_predict_project_resource_needs_success(
+        self, planning_service, mock_db, sample_project, sample_task, sample_user
+    ):
         """成功预测项目资源需求"""
         # Mock Project query
         mock_project_query = MagicMock()
@@ -772,10 +779,10 @@ class TestResourcePlanningService:
         mock_user_filter.first.return_value = sample_user
 
         def query_side_effect(model):
-            from app.models.project import Project
             from app.models.progress import Task
+            from app.models.project import Project
             from app.models.user import User
-            
+
             if model == Project:
                 return mock_project_query
             elif model == Task:
@@ -788,11 +795,11 @@ class TestResourcePlanningService:
 
         result = planning_service.predict_project_resource_needs(100)
 
-        assert 'error' not in result
-        assert result['project_id'] == 100
-        assert result['total_hours'] > 0
-        assert result['total_personnel'] > 0
-        assert 'resource_needs' in result
+        assert "error" not in result
+        assert result["project_id"] == 100
+        assert result["total_hours"] > 0
+        assert result["total_personnel"] > 0
+        assert "resource_needs" in result
 
     def test_get_department_workload_stats_department_not_found(self, planning_service, mock_db):
         """部门不存在时返回错误"""
@@ -801,8 +808,8 @@ class TestResourcePlanningService:
         mock_filter.first.return_value = None
 
         result = planning_service.get_department_workload_stats(999)
-        assert 'error' in result
-        assert result['error'] == '部门不存在'
+        assert "error" in result
+        assert result["error"] == "部门不存在"
 
     def test_get_department_workload_stats_no_users(self, planning_service, mock_db):
         """部门无成员时返回空统计"""
@@ -821,7 +828,7 @@ class TestResourcePlanningService:
         def query_side_effect(model):
             from app.models.organization import Department
             from app.models.user import User
-            
+
             if model == Department:
                 return mock_dept_query
             elif model == User:
@@ -832,10 +839,10 @@ class TestResourcePlanningService:
 
         result = planning_service.get_department_workload_stats(1)
 
-        assert 'error' not in result
-        assert result['department_id'] == 1
-        assert result['total_users'] == 0
-        assert result['total_hours'] == 0
+        assert "error" not in result
+        assert result["department_id"] == 1
+        assert result["total_users"] == 0
+        assert result["total_hours"] == 0
 
 
 # ==================== 边界条件和异常测试 ====================
@@ -864,6 +871,6 @@ class TestEdgeCases:
         """测试大数量的填充率计算"""
         reqs = [MagicMock(headcount=100, assignment_status="ASSIGNED") for _ in range(50)]
         reqs += [MagicMock(headcount=100, assignment_status="PENDING") for _ in range(50)]
-        
+
         result = ResourcePlanService.calculate_fill_rate(reqs)
         assert result == 50.0

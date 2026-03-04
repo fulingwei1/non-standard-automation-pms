@@ -20,8 +20,7 @@ from .config import settings
 # 保留日志格式常量，供外部引用
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 DETAILED_LOG_FORMAT = (
-    "%(asctime)s - %(name)s - %(levelname)s"
-    " - %(pathname)s:%(lineno)d - %(message)s"
+    "%(asctime)s - %(name)s - %(levelname)s" " - %(pathname)s:%(lineno)d - %(message)s"
 )
 
 # 日志级别映射
@@ -130,8 +129,7 @@ def setup_logging() -> None:
         # 开发环境：详细日志
         log_level = logging.DEBUG
         log_format = (
-            "%(asctime)s - %(name)s - %(levelname)s - "
-            "%(filename)s:%(lineno)d - %(message)s"
+            "%(asctime)s - %(name)s - %(levelname)s - " "%(filename)s:%(lineno)d - %(message)s"
         )
     else:
         # 生产环境：WARNING及以上级别
@@ -158,9 +156,7 @@ def setup_logging() -> None:
     root_logger.addHandler(console_handler)
 
     # 第三方库日志级别控制（减少噪音）
-    logging.getLogger("uvicorn").setLevel(
-        logging.INFO if settings.DEBUG else logging.WARNING
-    )
+    logging.getLogger("uvicorn").setLevel(logging.INFO if settings.DEBUG else logging.WARNING)
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("passlib").setLevel(logging.WARNING)
@@ -204,7 +200,7 @@ def log_error_with_context(
     message: str,
     error: Exception,
     context: Optional[Dict[str, Any]] = None,
-    exc_info: bool = True
+    exc_info: bool = True,
 ) -> None:
     """
     记录错误并包含上下文信息
@@ -233,17 +229,11 @@ def log_error_with_context(
     extra["error_type"] = type(error).__name__
     extra["error_message"] = str(error)
 
-    logger.error(
-        message,
-        exc_info=exc_info,
-        extra=extra
-    )
+    logger.error(message, exc_info=exc_info, extra=extra)
 
 
 def log_warning_with_context(
-    logger: logging.Logger,
-    message: str,
-    context: Optional[Dict[str, Any]] = None
+    logger: logging.Logger, message: str, context: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     记录警告并包含上下文信息
@@ -268,9 +258,7 @@ def log_warning_with_context(
 
 
 def log_info_with_context(
-    logger: logging.Logger,
-    message: str,
-    context: Optional[Dict[str, Any]] = None
+    logger: logging.Logger, message: str, context: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     记录信息并包含上下文信息

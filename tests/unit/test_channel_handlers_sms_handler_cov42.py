@@ -5,14 +5,18 @@ import pytest
 pytest.importorskip("app.services.channel_handlers.sms_handler")
 
 from unittest.mock import MagicMock, patch
+
+from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
 from app.services.channel_handlers.sms_handler import SMSChannelHandler
-from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
 
 
 def make_request(**kwargs):
     defaults = dict(
-        recipient_id=1, notification_type="ALERT", category="test",
-        title="短信标题", content="短信内容",
+        recipient_id=1,
+        notification_type="ALERT",
+        category="test",
+        title="短信标题",
+        content="短信内容",
     )
     defaults.update(kwargs)
     return NotificationRequest(**defaults)
@@ -25,6 +29,7 @@ def make_handler(sms_enabled=True):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_is_enabled_when_setting_true():
     handler, _ = make_handler()

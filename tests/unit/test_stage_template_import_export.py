@@ -95,14 +95,18 @@ class TestImportTemplate:
         data = {
             "template_code": "T001",
             "template_name": "模板1",
-            "stages": [{
-                "stage_code": "S01",
-                "stage_name": "阶段1",
-                "nodes": [{
-                    "node_code": "N01",
-                    "node_name": "节点1",
-                }]
-            }]
+            "stages": [
+                {
+                    "stage_code": "S01",
+                    "stage_name": "阶段1",
+                    "nodes": [
+                        {
+                            "node_code": "N01",
+                            "node_name": "节点1",
+                        }
+                    ],
+                }
+            ],
         }
 
         result = m.import_template(data, created_by=1)
@@ -127,14 +131,20 @@ class TestImportTemplate:
         data = {
             "template_code": "T001",
             "template_name": "模板1",
-            "stages": [{
-                "stage_code": "S01",
-                "stage_name": "阶段1",
-                "nodes": [
-                    {"node_code": "N01", "node_name": "节点1"},
-                    {"node_code": "N02", "node_name": "节点2", "dependency_node_codes": ["N01"]},
-                ]
-            }]
+            "stages": [
+                {
+                    "stage_code": "S01",
+                    "stage_name": "阶段1",
+                    "nodes": [
+                        {"node_code": "N01", "node_name": "节点1"},
+                        {
+                            "node_code": "N02",
+                            "node_name": "节点2",
+                            "dependency_node_codes": ["N01"],
+                        },
+                    ],
+                }
+            ],
         }
 
         m.import_template(data)

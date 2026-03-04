@@ -2,11 +2,13 @@
 """
 第十六批：外协订单审批适配器 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.outsourcing import OutsourcingOrderApprovalAdapter
+
     SKIP = False
 except Exception:
     SKIP = True

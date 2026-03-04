@@ -8,7 +8,7 @@
 
 from typing import Optional
 
-from sqlalchemy import Column, ForeignKey, Index, JSON, Integer, String, Text
+from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship, validates
 
 from .base import Base, TimestampMixin, VendorBaseMixin
@@ -32,9 +32,7 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # 覆盖 VendorBaseMixin 中的字段，添加 unique 约束
-    supplier_code = Column(
-        String(50), unique=True, nullable=False, comment="供应商编码"
-    )
+    supplier_code = Column(String(50), unique=True, nullable=False, comment="供应商编码")
     supplier_name = Column(String(200), nullable=False, comment="供应商名称")
 
     # 供应商类型 - 区分物料供应商和外协商
@@ -62,17 +60,11 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
 
     # 关系 - 统一关联
     # 物料关联
-    materials = relationship(
-        "MaterialSupplier", back_populates="vendor", lazy="dynamic"
-    )
+    materials = relationship("MaterialSupplier", back_populates="vendor", lazy="dynamic")
     # 采购订单关联（物料供应商）
-    purchase_orders = relationship(
-        "PurchaseOrder", back_populates="vendor", lazy="dynamic"
-    )
+    purchase_orders = relationship("PurchaseOrder", back_populates="vendor", lazy="dynamic")
     # 外协订单关联（外协商）
-    outsourcing_orders = relationship(
-        "OutsourcingOrder", back_populates="vendor", lazy="dynamic"
-    )
+    outsourcing_orders = relationship("OutsourcingOrder", back_populates="vendor", lazy="dynamic")
     # 外协评价关联
     outsourcing_evaluations = relationship(
         "OutsourcingEvaluation", back_populates="vendor", lazy="dynamic"
@@ -103,9 +95,7 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
         # Older call-sites pass supplier_type instead, so normalize here.
         vendor_type = kwargs.pop("vendor_type", None)
         supplier_type = kwargs.get("supplier_type")
-        kwargs["vendor_type"] = self._normalize_vendor_type(
-            vendor_type or supplier_type
-        )
+        kwargs["vendor_type"] = self._normalize_vendor_type(vendor_type or supplier_type)
         super().__init__(*args, **kwargs)
 
     @staticmethod

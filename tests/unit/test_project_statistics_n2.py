@@ -1,30 +1,40 @@
 # -*- coding: utf-8 -*-
 """
 项目统计服务 N2 深度覆盖测试
-覆盖: ProjectStatisticsServiceBase 所有方法, CostStatisticsService, 
+覆盖: ProjectStatisticsServiceBase 所有方法, CostStatisticsService,
       TimesheetStatisticsService, build_project_statistics with group_by
 """
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.services.project_statistics_service import (
-    calculate_status_statistics,
-    calculate_stage_statistics,
-    calculate_health_statistics,
-    calculate_pm_statistics,
-    calculate_customer_statistics,
-    calculate_monthly_statistics,
-    build_project_statistics,
     CostStatisticsService,
     TimesheetStatisticsService,
+    build_project_statistics,
+    calculate_customer_statistics,
+    calculate_health_statistics,
+    calculate_monthly_statistics,
+    calculate_pm_statistics,
+    calculate_stage_statistics,
+    calculate_status_statistics,
 )
 
 
-def make_project(status=None, stage=None, health=None, pm_id=None, pm_name=None,
-                 customer_id=None, customer_name=None, contract_amount=None,
-                 created_at=None, progress_pct=None):
+def make_project(
+    status=None,
+    stage=None,
+    health=None,
+    pm_id=None,
+    pm_name=None,
+    customer_id=None,
+    customer_name=None,
+    contract_amount=None,
+    created_at=None,
+    progress_pct=None,
+):
     p = MagicMock()
     p.status = status
     p.stage = stage
@@ -47,6 +57,7 @@ def make_query(projects):
 
 
 # ======================= 函数级统计 =======================
+
 
 class TestCalculateMonthlyStatisticsEdgeCases:
     """月度统计边缘情况"""
@@ -79,11 +90,18 @@ class TestBuildProjectStatisticsGroupBy:
 
     def test_group_by_customer(self):
         projects = [
-            make_project(status="ST10", stage="DESIGN", health="H1",
-                         pm_id=1, pm_name="Alice", progress_pct=50.0,
-                         customer_id=10, customer_name="Acme",
-                         contract_amount=Decimal("100000"),
-                         created_at=datetime(2025, 1, 1)),
+            make_project(
+                status="ST10",
+                stage="DESIGN",
+                health="H1",
+                pm_id=1,
+                pm_name="Alice",
+                progress_pct=50.0,
+                customer_id=10,
+                customer_name="Acme",
+                contract_amount=Decimal("100000"),
+                created_at=datetime(2025, 1, 1),
+            ),
         ]
         q = make_query(projects)
         db = MagicMock()
@@ -93,16 +111,22 @@ class TestBuildProjectStatisticsGroupBy:
 
     def test_group_by_month(self):
         projects = [
-            make_project(status="ST10", stage="DESIGN", health="H1",
-                         pm_id=1, pm_name="Alice", progress_pct=30.0,
-                         contract_amount=Decimal("200000"),
-                         created_at=datetime(2025, 3, 10)),
+            make_project(
+                status="ST10",
+                stage="DESIGN",
+                health="H1",
+                pm_id=1,
+                pm_name="Alice",
+                progress_pct=30.0,
+                contract_amount=Decimal("200000"),
+                created_at=datetime(2025, 3, 10),
+            ),
         ]
         q = make_query(projects)
         db = MagicMock()
-        result = build_project_statistics(db, q, group_by="month",
-                                          start_date=date(2025, 1, 1),
-                                          end_date=date(2025, 12, 31))
+        result = build_project_statistics(
+            db, q, group_by="month", start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
+        )
         assert "by_month" in result
 
     def test_no_group_by_has_no_customer_key(self):
@@ -115,8 +139,10 @@ class TestBuildProjectStatisticsGroupBy:
 
 # ======================= ProjectStatisticsServiceBase =======================
 
+
 class ConcreteService(CostStatisticsService):
     """使用 CostStatisticsService 作为具体实现来测试基类"""
+
     pass
 
 
@@ -143,10 +169,7 @@ class TestProjectStatisticsServiceBase:
         q = MagicMock()
         q.filter.return_value = q
         result = self.service.apply_date_filter(
-            q,
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 12, 31),
-            date_field="created_at"
+            q, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31), date_field="created_at"
         )
         assert q.filter.call_count == 2
 
@@ -167,9 +190,7 @@ class TestProjectStatisticsServiceBase:
         """不存在的字段时，不过滤"""
         q = MagicMock()
         result = self.service.apply_date_filter(
-            q,
-            start_date=date(2025, 1, 1),
-            date_field="nonexistent_field_xyz"
+            q, start_date=date(2025, 1, 1), date_field="nonexistent_field_xyz"
         )
         assert result is q
 
@@ -223,6 +244,7 @@ class TestProjectStatisticsServiceBase:
 
 # ======================= CostStatisticsService =======================
 
+
 class TestCostStatisticsService:
     def setup_method(self):
         self.db = MagicMock()
@@ -265,6 +287,7 @@ class TestCostStatisticsService:
 
 
 # ======================= TimesheetStatisticsService =======================
+
 
 class TestTimesheetStatisticsService:
     def setup_method(self):

@@ -8,12 +8,13 @@
 - 用户状态管理
 """
 
-import pytest
-from sqlalchemy.orm import Session
 from datetime import datetime
 
-from app.models.user import User, Role, UserRole, RoleApiPermission, ApiPermission
-from app.core.auth import verify_password, get_password_hash
+import pytest
+from sqlalchemy.orm import Session
+
+from app.core.auth import get_password_hash, verify_password
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 
 
 @pytest.mark.unit

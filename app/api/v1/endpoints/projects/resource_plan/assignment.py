@@ -20,8 +20,8 @@ from app.schemas.resource_plan import (
     ResourcePlanResponse,
 )
 from app.services.resource_plan_service import ResourcePlanService
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -41,9 +41,7 @@ def assign_employee(
     - 如果存在冲突，返回 409 状态码和冲突详情
     - 使用 force=true 可以强制分配（忽略冲突）
     """
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限为该项目分配资源"
-    )
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限为该项目分配资源")
 
     # 验证计划存在且属于该项目
     plan = (
@@ -101,9 +99,7 @@ def release_employee(
 
     将计划状态改为 RELEASED，清除分配的员工
     """
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限释放该项目的资源"
-    )
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限释放该项目的资源")
 
     # 验证计划存在且属于该项目
     plan = (

@@ -24,11 +24,11 @@ def generate_ecn_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=Ecn,
-        no_field='ecn_no',
-        prefix='ECN',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="ecn_no",
+        prefix="ECN",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
@@ -74,7 +74,7 @@ def build_ecn_response(db: Session, ecn: Ecn) -> EcnResponse:
         applied_at=ecn.applied_at,
         approval_result=ecn.approval_result,
         created_at=ecn.created_at,
-        updated_at=ecn.updated_at
+        updated_at=ecn.updated_at,
     )
 
 
@@ -101,7 +101,7 @@ def build_ecn_list_response(db: Session, ecn: Ecn) -> EcnListResponse:
         priority=ecn.priority,
         applicant_name=applicant_name,
         applied_at=ecn.applied_at,
-        created_at=ecn.created_at
+        created_at=ecn.created_at,
     )
 
 

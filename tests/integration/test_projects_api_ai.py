@@ -40,9 +40,7 @@ class TestProjectsCRUDAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/projects/", params=params, resource_type="projects_list"
-        )
+        response = self.helper.get("/projects/", params=params, resource_type="projects_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -63,9 +61,7 @@ class TestProjectsCRUDAPI:
             "description": "客户定制ICT测试设备",
         }
 
-        response = self.helper.post(
-            "/projects/", project_data, resource_type="project"
-        )
+        response = self.helper.post("/projects/", project_data, resource_type="project")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -86,9 +82,7 @@ class TestProjectsCRUDAPI:
         self.helper.print_info("测试获取项目详情...")
 
         project_id = 1
-        response = self.helper.get(
-            f"/projects/{project_id}", resource_type=f"project_{project_id}"
-        )
+        response = self.helper.get(f"/projects/{project_id}", resource_type=f"project_{project_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

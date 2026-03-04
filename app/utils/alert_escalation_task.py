@@ -8,9 +8,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-
-from app.models.alert import AlertRecord
 from app.dependencies import get_db_session
+from app.models.alert import AlertRecord
 from app.models.enums import AlertLevelEnum
 from app.services.alert_rule_engine import AlertRuleEngine
 from app.services.notification_service import AlertNotificationService
@@ -25,6 +24,7 @@ def check_alert_timeout_escalation():
         dict: 执行结果统计
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     try:
@@ -35,10 +35,14 @@ def check_alert_timeout_escalation():
             escalated_count = 0
 
             # 查询待处理或已确认的预警
-            pending_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status.in_(['PENDING', 'ACKNOWLEDGED']),
-                not AlertRecord.is_escalated  # 未升级过的预警
-            ).all()
+            pending_alerts = (
+                db.query(AlertRecord)
+                .filter(
+                    AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"]),
+                    not AlertRecord.is_escalated,  # 未升级过的预警
+                )
+                .all()
+            )
 
             for alert in pending_alerts:
                 # 计算预警持续时间
@@ -63,7 +67,9 @@ def check_alert_timeout_escalation():
                     # 确定新的预警级别
                     new_level = _determine_escalated_level(alert.alert_level)
 
-                    if new_level and engine.level_priority(new_level) > engine.level_priority(alert.alert_level):
+                    if new_level and engine.level_priority(new_level) > engine.level_priority(
+                        alert.alert_level
+                    ):
                         # 升级预警
                         old_level = alert.alert_level
                         alert.alert_level = new_level
@@ -71,12 +77,12 @@ def check_alert_timeout_escalation():
                         alert.escalated_at = now
 
                         # 更新预警内容
-                        alert.alert_title = f'[已升级] {alert.alert_title}'
+                        alert.alert_title = f"[已升级] {alert.alert_title}"
                         alert.alert_content = (
-                            f'{alert.alert_content}\n\n'
-                            f'【自动升级】\n'
-                            f'预警已超时 {duration.total_seconds() / 3600:.1f} 小时未处理，'
-                            f'级别从 {old_level} 自动提升至 {new_level}'
+                            f"{alert.alert_content}\n\n"
+                            f"【自动升级】\n"
+                            f"预警已超时 {duration.total_seconds() / 3600:.1f} 小时未处理，"
+                            f"级别从 {old_level} 自动提升至 {new_level}"
                         )
 
                         db.add(alert)
@@ -85,8 +91,7 @@ def check_alert_timeout_escalation():
                         # 发送升级通知
                         try:
                             notification_service.send_alert_notification(
-                                alert=alert,
-                                force_send=True  # 升级通知强制发送
+                                alert=alert, force_send=True  # 升级通知强制发送
                             )
                         except Exception as e:
                             logger.error(f"升级通知发送失败 (预警 {alert.alert_no}): {e}")
@@ -105,15 +110,16 @@ def check_alert_timeout_escalation():
                 )
 
             return {
-                'checked_count': len(pending_alerts),
-                'escalated_count': escalated_count,
-                'timestamp': datetime.now().isoformat()
+                "checked_count": len(pending_alerts),
+                "escalated_count": escalated_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 预警超时升级服务失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def _determine_escalated_level(current_level: str) -> Optional[str]:

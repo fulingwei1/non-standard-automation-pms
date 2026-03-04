@@ -2,9 +2,10 @@
 """
 Unit tests for PermissionCRUDService (第三十八批)
 """
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.permission_crud_service", reason="导入失败，跳过")
 
@@ -16,8 +17,12 @@ except ImportError:
 
 
 def make_mock_permission(
-    id=1, perm_code="view_project", perm_name="查看项目",
-    module="project", action="view", is_active=True
+    id=1,
+    perm_code="view_project",
+    perm_name="查看项目",
+    module="project",
+    action="view",
+    is_active=True,
 ):
     p = MagicMock()
     p.id = id

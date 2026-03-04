@@ -2,9 +2,10 @@
 """
 Tests for app/services/work_log_ai/core.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.work_log_ai.core import WorkLogAICore
@@ -63,12 +64,14 @@ def test_analyze_work_log_returns_dict(mock_db):
     with patch("app.services.work_log_ai.core.USE_AI", False):
         core = WorkLogAICore(db=mock_db)
         core._get_user_projects = MagicMock(return_value=[])
-        core._analyze_with_rules = MagicMock(return_value={
-            "work_items": [],
-            "suggested_projects": [],
-            "total_hours": 8,
-            "confidence": 0.8
-        })
+        core._analyze_with_rules = MagicMock(
+            return_value={
+                "work_items": [],
+                "suggested_projects": [],
+                "total_hours": 8,
+                "confidence": 0.8,
+            }
+        )
         result = core.analyze_work_log("任何内容", user_id=2, work_date=date.today())
         assert isinstance(result, dict)
 

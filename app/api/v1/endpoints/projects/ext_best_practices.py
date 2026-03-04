@@ -12,10 +12,10 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.best_practices import BestPracticesService
 
 router = APIRouter()
@@ -89,9 +89,7 @@ class BestPracticeApply(BaseModel):
 # ============ API 端点 ============
 
 
-@router.get(
-    "/best-practices/popular", response_model=ResponseModel[BestPracticeListResponse]
-)
+@router.get("/best-practices/popular", response_model=ResponseModel[BestPracticeListResponse])
 def get_popular_best_practices(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -158,9 +156,7 @@ def get_best_practices(
         return ResponseModel(code=500, message=f"获取最佳实践列表失败: {str(e)}")
 
 
-@router.get(
-    "/best-practices/{practice_id}", response_model=ResponseModel[BestPracticeResponse]
-)
+@router.get("/best-practices/{practice_id}", response_model=ResponseModel[BestPracticeResponse])
 def get_best_practice_detail(
     practice_id: int,
     db: Session = Depends(get_db),
@@ -187,9 +183,7 @@ def get_best_practice_detail(
         return ResponseModel(code=500, message=f"获取最佳实践详情失败: {str(e)}")
 
 
-@router.post(
-    "/project-reviews/best-practices/{practice_id}/apply", response_model=ResponseModel
-)
+@router.post("/project-reviews/best-practices/{practice_id}/apply", response_model=ResponseModel)
 def apply_best_practice(
     practice_id: int,
     apply_data: BestPracticeApply,
@@ -201,9 +195,7 @@ def apply_best_practice(
     """
     try:
         service = BestPracticesService(db)
-        service.apply_practice(
-            practice_id, apply_data.target_project_id, apply_data.notes
-        )
+        service.apply_practice(practice_id, apply_data.target_project_id, apply_data.notes)
 
         return ResponseModel(code=200, message="最佳实践应用成功")
     except ValueError as ve:

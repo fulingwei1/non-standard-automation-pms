@@ -9,21 +9,27 @@ from fastapi import APIRouter
 
 # 导入所有模块
 from . import (
+    accountability,
     assessments,
-    contracts,
-    customers,
     contacts,
-    customer_tags,
+    contracts,
     cost_management,
+    cost_overrun,
+    cross_analysis,
+    customer_tags,
+    customers,
+    delay_analysis,
     disputes,
     expenses,
+    health,
+    information_gap,
     invoices,
     leads,
     loss_analysis,
     opportunities,
     payments,
+    pipeline_analysis,
     priority,
-    quotes,
     quote_approval,
     quote_cost_analysis,
     quote_cost_breakdown,
@@ -35,20 +41,14 @@ from . import (
     quote_status,
     quote_templates,
     quote_versions,
-    statistics,
-    team,
-    targets,
-    requirements,
-    pipeline_analysis,
-    accountability,
-    health,
-    delay_analysis,
-    cost_overrun,
-    information_gap,
-    cross_analysis,
-    workflows,
+    quotes,
     receivables,
+    requirements,
+    statistics,
+    targets,
+    team,
     templates,
+    workflows,
 )
 from .contracts import contracts as contracts_contracts
 
@@ -112,7 +112,7 @@ router.include_router(quote_templates.router, tags=["sales-quote-templates"])
 router.include_router(quote_versions.router, tags=["sales-quote-versions"])
 
 # 新增AI销售助手、报价智能化、销售自动化路由
-from app.api.v1.endpoints import ai_sales_assistant, sales_intelligent_quote, sales_automation
+from app.api.v1.endpoints import ai_sales_assistant, sales_automation, sales_intelligent_quote
 
 router.include_router(ai_sales_assistant.router, prefix="/ai", tags=["sales-ai-assistant"])
 router.include_router(sales_intelligent_quote.router, tags=["sales-intelligent-quote"])
@@ -120,44 +120,71 @@ router.include_router(sales_automation.router, tags=["sales-automation"])
 
 # 销售漏斗优化路由
 from app.api.v1.endpoints import sales_funnel_optimization
-router.include_router(sales_funnel_optimization.router, prefix="/funnel", tags=["sales-funnel-optimization"])
+
+router.include_router(
+    sales_funnel_optimization.router, prefix="/funnel", tags=["sales-funnel-optimization"]
+)
 
 # 客户 360°画像路由
 from app.api.v1.endpoints import customer_360
+
 router.include_router(customer_360.router, prefix="/customer-360", tags=["sales-customer-360"])
 
 # 销售绩效与激励路由
 from app.api.v1.endpoints import sales_performance
-router.include_router(sales_performance.router, prefix="/performance", tags=["sales-performance-incentive"])
+
+router.include_router(
+    sales_performance.router, prefix="/performance", tags=["sales-performance-incentive"]
+)
 
 # 销售协同路由
 from app.api.v1.endpoints import sales_collaboration
-router.include_router(sales_collaboration.router, prefix="/collaboration", tags=["sales-collaboration"])
+
+router.include_router(
+    sales_collaboration.router, prefix="/collaboration", tags=["sales-collaboration"]
+)
 
 # 移动端支持路由
 from app.api.v1.endpoints import sales_mobile
+
 router.include_router(sales_mobile.router, prefix="/mobile", tags=["sales-mobile"])
 
 # 销售预测仪表盘路由
 from app.api.v1.endpoints import sales_forecast
+
 router.include_router(sales_forecast.router, prefix="/forecast", tags=["sales-forecast-dashboard"])
 
 # 增强版销售预测路由
 from app.api.v1.endpoints import sales_forecast_enhanced
-router.include_router(sales_forecast_enhanced.router, prefix="/forecast-enhanced", tags=["sales-forecast-enhanced"])
+
+router.include_router(
+    sales_forecast_enhanced.router, prefix="/forecast-enhanced", tags=["sales-forecast-enhanced"]
+)
 
 # 商务关系成熟度路由
 from app.api.v1.endpoints import relationship_maturity
-router.include_router(relationship_maturity.router, prefix="/relationship", tags=["sales-relationship-maturity"])
+
+router.include_router(
+    relationship_maturity.router, prefix="/relationship", tags=["sales-relationship-maturity"]
+)
 
 # 综合赢单率预测路由
 from app.api.v1.endpoints import win_rate_prediction
-router.include_router(win_rate_prediction.router, prefix="/win-rate", tags=["sales-win-rate-prediction"])
+
+router.include_router(
+    win_rate_prediction.router, prefix="/win-rate", tags=["sales-win-rate-prediction"]
+)
 
 # 竞争对手分析路由
 from app.api.v1.endpoints import competitor_analysis
-router.include_router(competitor_analysis.router, prefix="/competitor", tags=["sales-competitor-analysis"])
+
+router.include_router(
+    competitor_analysis.router, prefix="/competitor", tags=["sales-competitor-analysis"]
+)
 
 # 销售组织架构路由
 from app.api.v1.endpoints import sales_organization
-router.include_router(sales_organization.router, prefix="/organization", tags=["sales-organization"])
+
+router.include_router(
+    sales_organization.router, prefix="/organization", tags=["sales-organization"]
+)

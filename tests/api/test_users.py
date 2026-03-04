@@ -15,8 +15,8 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_paginated_response,
+    assert_success_response,
     extract_data,
     extract_items,
 )
@@ -68,11 +68,7 @@ def _cleanup_user(db_session: Session, user_id: int) -> None:
 
 def _ensure_super_admin_role(db_session: Session) -> Role:
     """确保存在 system_admin 角色"""
-    role = (
-        db_session.query(Role)
-        .filter(Role.role_code == "system_admin")
-        .first()
-    )
+    role = db_session.query(Role).filter(Role.role_code == "system_admin").first()
     if role:
         return role
     role = Role(
@@ -98,9 +94,7 @@ class TestUserCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/users/", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         assert response.status_code == 200
@@ -118,7 +112,7 @@ class TestUserCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/users/",
             params={"page": 1, "page_size": 10, "keyword": "admin"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -138,11 +132,7 @@ class TestUserCRUD:
             "is_active": True,
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/users/",
-            json=user_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/users/", json=user_data, headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission to create user")
@@ -165,10 +155,7 @@ class TestUserCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取用户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -182,10 +169,7 @@ class TestUserCRUD:
 
         user_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/users/{user_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/users/{user_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -199,10 +183,7 @@ class TestUserCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/users/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/users/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -214,10 +195,7 @@ class TestUserCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取用户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -236,9 +214,7 @@ class TestUserCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/users/{user_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/users/{user_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -258,10 +234,7 @@ class TestUserRoles:
         headers = _auth_headers(admin_token)
 
         # 先获取用户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -280,9 +253,7 @@ class TestUserRoles:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/users/{user_id}/roles",
-            json=roles_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/users/{user_id}/roles", json=roles_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -363,7 +334,9 @@ class TestUserPermissionEnforcement:
             )
             if user_resp.status_code not in (200, 201):
                 pytest.skip(f"Failed to create user: {user_resp.text}")
-            user_data = assert_success_response(user_resp.json(), expected_code=user_resp.status_code)
+            user_data = assert_success_response(
+                user_resp.json(), expected_code=user_resp.status_code
+            )
             user_id = user_data["id"]
 
             perm_resp = client.put(
@@ -444,7 +417,9 @@ class TestUserPermissionEnforcement:
             )
             if create_resp.status_code not in (200, 201):
                 pytest.skip(f"Failed to create user: {create_resp.text}")
-            user_data = assert_success_response(create_resp.json(), expected_code=create_resp.status_code)
+            user_data = assert_success_response(
+                create_resp.json(), expected_code=create_resp.status_code
+            )
             user_id = user_data["id"]
 
             # 默认情况下没有 USER_VIEW，应被拒绝
@@ -497,10 +472,7 @@ class TestUserOperations:
         headers = _auth_headers(admin_token)
 
         # 先获取用户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -525,7 +497,7 @@ class TestUserOperations:
         response = client.put(
             f"{settings.API_V1_PREFIX}/users/{user_id}/toggle-active",
             json={},  # Empty body to satisfy request
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -543,10 +515,7 @@ class TestUserOperations:
         headers = _auth_headers(admin_token)
 
         # 先获取用户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -561,8 +530,7 @@ class TestUserOperations:
         user_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/users/{user_id}/time-allocation",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/users/{user_id}/time-allocation", headers=headers
         )
 
         assert response.status_code == 200
@@ -577,9 +545,6 @@ class TestUserDelete:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/users/99999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/users/99999", headers=headers)
 
         assert response.status_code in [404, 403]

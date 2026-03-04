@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.dashboard_adapters.assembly_kit")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 def make_adapter():
@@ -13,10 +13,12 @@ def make_adapter():
     user = MagicMock()
     user.id = 1
     from app.services.dashboard_adapters.assembly_kit import AssemblyKitDashboardAdapter
+
     return AssemblyKitDashboardAdapter(db, user), db
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_module_id():
     adapter, _ = make_adapter()
@@ -37,6 +39,7 @@ def test_get_stats_mocked_result():
     adapter, db = make_adapter()
     # patch get_stats to return known value, avoiding Pydantic schema issues
     from unittest.mock import patch as mpatch
+
     mock_card = MagicMock()
     mock_card.key = "total_projects"
     mock_card.value = 0
@@ -64,6 +67,7 @@ def test_get_stats_counts_correctly():
     mock_card.value = 2
 
     from unittest.mock import patch as mpatch
+
     with mpatch.object(adapter, "get_stats", return_value=[mock_card]):
         stats = adapter.get_stats()
     total_card = next(c for c in stats if c.key == "total_projects")
@@ -72,7 +76,9 @@ def test_get_stats_counts_correctly():
 
 def test_get_widgets_returns_list():
     adapter, db = make_adapter()
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
     widgets = adapter.get_widgets()
     assert isinstance(widgets, list)

@@ -30,11 +30,36 @@ customers = [
         "next_followup": "2026-03-05",
         "tags": ["动力电池", "储能", "头部客户", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "曾毓群", "title": "董事长", "contact": "138****0001", "attitude": "neutral"},
-            "TB": {"name": "吴凯", "title": "首席科学家", "contact": "138****0002", "attitude": "supportive"},
-            "PB": {"name": "李平", "title": "采购总监", "contact": "138****0003", "attitude": "neutral"},
-            "UB": {"name": "赵伟", "title": "生产总监", "contact": "138****0004", "attitude": "supportive"},
-            "Coach": {"name": "钱七", "title": "设备工程师", "contact": "138****0005", "attitude": "supportive"},
+            "EB": {
+                "name": "曾毓群",
+                "title": "董事长",
+                "contact": "138****0001",
+                "attitude": "neutral",
+            },
+            "TB": {
+                "name": "吴凯",
+                "title": "首席科学家",
+                "contact": "138****0002",
+                "attitude": "supportive",
+            },
+            "PB": {
+                "name": "李平",
+                "title": "采购总监",
+                "contact": "138****0003",
+                "attitude": "neutral",
+            },
+            "UB": {
+                "name": "赵伟",
+                "title": "生产总监",
+                "contact": "138****0004",
+                "attitude": "supportive",
+            },
+            "Coach": {
+                "name": "钱七",
+                "title": "设备工程师",
+                "contact": "138****0005",
+                "attitude": "supportive",
+            },
         },
     },
     {
@@ -55,11 +80,36 @@ customers = [
         "next_followup": "2026-03-03",
         "tags": ["新能源汽车", "电池", "整车", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "王传福", "title": "董事长", "contact": "139****0001", "attitude": "supportive"},
-            "TB": {"name": "廉玉波", "title": "副总裁", "contact": "139****0002", "attitude": "supportive"},
-            "PB": {"name": "何志健", "title": "采购总经理", "contact": "139****0003", "attitude": "supportive"},
-            "UB": {"name": "张强", "title": "工厂厂长", "contact": "139****0004", "attitude": "supportive"},
-            "Coach": {"name": "刘工", "title": "设备主管", "contact": "139****0005", "attitude": "supportive"},
+            "EB": {
+                "name": "王传福",
+                "title": "董事长",
+                "contact": "139****0001",
+                "attitude": "supportive",
+            },
+            "TB": {
+                "name": "廉玉波",
+                "title": "副总裁",
+                "contact": "139****0002",
+                "attitude": "supportive",
+            },
+            "PB": {
+                "name": "何志健",
+                "title": "采购总经理",
+                "contact": "139****0003",
+                "attitude": "supportive",
+            },
+            "UB": {
+                "name": "张强",
+                "title": "工厂厂长",
+                "contact": "139****0004",
+                "attitude": "supportive",
+            },
+            "Coach": {
+                "name": "刘工",
+                "title": "设备主管",
+                "contact": "139****0005",
+                "attitude": "supportive",
+            },
         },
     },
     {
@@ -80,10 +130,30 @@ customers = [
         "next_followup": "2026-03-04",
         "tags": ["动力电池", "储能", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "刘静瑜", "title": "董事长", "contact": "137****0001", "attitude": "neutral"},
-            "TB": {"name": "陈工", "title": "技术总监", "contact": "137****0002", "attitude": "neutral"},
-            "PB": {"name": "王采购", "title": "采购经理", "contact": "137****0003", "attitude": "neutral"},
-            "UB": {"name": "李生产", "title": "生产经理", "contact": "137****0004", "attitude": "supportive"},
+            "EB": {
+                "name": "刘静瑜",
+                "title": "董事长",
+                "contact": "137****0001",
+                "attitude": "neutral",
+            },
+            "TB": {
+                "name": "陈工",
+                "title": "技术总监",
+                "contact": "137****0002",
+                "attitude": "neutral",
+            },
+            "PB": {
+                "name": "王采购",
+                "title": "采购经理",
+                "contact": "137****0003",
+                "attitude": "neutral",
+            },
+            "UB": {
+                "name": "李生产",
+                "title": "生产经理",
+                "contact": "137****0004",
+                "attitude": "supportive",
+            },
             "Coach": None,
         },
     },
@@ -105,11 +175,36 @@ customers = [
         "next_followup": "2026-03-06",
         "tags": ["消费电池", "动力电池", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "刘金成", "title": "董事长", "contact": "136****0001", "attitude": "supportive"},
-            "TB": {"name": "技术总", "title": "技术总监", "contact": "136****0002", "attitude": "supportive"},
-            "PB": {"name": "采购总", "title": "采购总监", "contact": "136****0003", "attitude": "neutral"},
-            "UB": {"name": "生产总", "title": "生产总监", "contact": "136****0004", "attitude": "supportive"},
-            "Coach": {"name": "内部人", "title": "工程师", "contact": "136****0005", "attitude": "supportive"},
+            "EB": {
+                "name": "刘金成",
+                "title": "董事长",
+                "contact": "136****0001",
+                "attitude": "supportive",
+            },
+            "TB": {
+                "name": "技术总",
+                "title": "技术总监",
+                "contact": "136****0002",
+                "attitude": "supportive",
+            },
+            "PB": {
+                "name": "采购总",
+                "title": "采购总监",
+                "contact": "136****0003",
+                "attitude": "neutral",
+            },
+            "UB": {
+                "name": "生产总",
+                "title": "生产总监",
+                "contact": "136****0004",
+                "attitude": "supportive",
+            },
+            "Coach": {
+                "name": "内部人",
+                "title": "工程师",
+                "contact": "136****0005",
+                "attitude": "supportive",
+            },
         },
     },
     {
@@ -130,8 +225,18 @@ customers = [
         "next_followup": "2026-03-02",
         "tags": ["消费电池", "动力电池"],
         "decision_chain": {
-            "EB": {"name": "王威", "title": "总经理", "contact": "135****0001", "attitude": "unknown"},
-            "TB": {"name": "技术总", "title": "技术总监", "contact": "135****0002", "attitude": "neutral"},
+            "EB": {
+                "name": "王威",
+                "title": "总经理",
+                "contact": "135****0001",
+                "attitude": "unknown",
+            },
+            "TB": {
+                "name": "技术总",
+                "title": "技术总监",
+                "contact": "135****0002",
+                "attitude": "neutral",
+            },
             "PB": None,
             "UB": None,
             "Coach": None,
@@ -155,7 +260,12 @@ customers = [
         "next_followup": "2026-03-03",
         "tags": ["动力电池", "储能"],
         "decision_chain": {
-            "EB": {"name": "杨红新", "title": "董事长", "contact": "134****0001", "attitude": "unknown"},
+            "EB": {
+                "name": "杨红新",
+                "title": "董事长",
+                "contact": "134****0001",
+                "attitude": "unknown",
+            },
             "TB": None,
             "PB": None,
             "UB": None,
@@ -180,7 +290,12 @@ customers = [
         "next_followup": "2026-03-10",
         "tags": ["动力电池", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "李缜", "title": "董事长", "contact": "133****0001", "attitude": "unknown"},
+            "EB": {
+                "name": "李缜",
+                "title": "董事长",
+                "contact": "133****0001",
+                "attitude": "unknown",
+            },
             "TB": None,
             "PB": None,
             "UB": None,
@@ -205,11 +320,36 @@ customers = [
         "next_followup": "2026-03-07",
         "tags": ["消费电池", "笔记本电脑", "上市公司"],
         "decision_chain": {
-            "EB": {"name": "徐延铭", "title": "董事长", "contact": "132****0001", "attitude": "supportive"},
-            "TB": {"name": "技术总", "title": "技术总监", "contact": "132****0002", "attitude": "supportive"},
-            "PB": {"name": "采购总", "title": "采购经理", "contact": "132****0003", "attitude": "neutral"},
-            "UB": {"name": "生产总", "title": "生产经理", "contact": "132****0004", "attitude": "supportive"},
-            "Coach": {"name": "内部人", "title": "工程师", "contact": "132****0005", "attitude": "supportive"},
+            "EB": {
+                "name": "徐延铭",
+                "title": "董事长",
+                "contact": "132****0001",
+                "attitude": "supportive",
+            },
+            "TB": {
+                "name": "技术总",
+                "title": "技术总监",
+                "contact": "132****0002",
+                "attitude": "supportive",
+            },
+            "PB": {
+                "name": "采购总",
+                "title": "采购经理",
+                "contact": "132****0003",
+                "attitude": "neutral",
+            },
+            "UB": {
+                "name": "生产总",
+                "title": "生产经理",
+                "contact": "132****0004",
+                "attitude": "supportive",
+            },
+            "Coach": {
+                "name": "内部人",
+                "title": "工程师",
+                "contact": "132****0005",
+                "attitude": "supportive",
+            },
         },
     },
 ]
@@ -443,9 +583,17 @@ relationship_assessments = [
         "maturity_level": "L4",
         "maturity_level_name": "战略级",
         "dimensions": {
-            "decision_chain": {"score": 16, "max": 20, "details": "EB/TB/PB/UB 已覆盖，Coach 已建立"},
+            "decision_chain": {
+                "score": 16,
+                "max": 20,
+                "details": "EB/TB/PB/UB 已覆盖，Coach 已建立",
+            },
             "interaction": {"score": 12, "max": 15, "details": "每周 2.8 次，频率良好"},
-            "relationship_depth": {"score": 14, "max": 20, "details": "L4 信任级，客户主动分享信息"},
+            "relationship_depth": {
+                "score": 14,
+                "max": 20,
+                "details": "L4 信任级，客户主动分享信息",
+            },
             "information": {"score": 13, "max": 15, "details": "预算/流程/时间表清楚"},
             "support": {"score": 16, "max": 20, "details": "TB/UB支持，EB/PB中立"},
             "executive": {"score": 7, "max": 10, "details": "VP 级交流，需提升至 CEO"},
@@ -679,11 +827,41 @@ win_rate_assessments = [
 # ========== 5. 销售数据 ==========
 
 sales_reps = [
-    {"id": 101, "name": "张三", "team": "华南大区", "territory": "福建/广东", "quota_annual": 50000000},
-    {"id": 102, "name": "李四", "team": "华东大区", "territory": "江苏/浙江", "quota_annual": 45000000},
-    {"id": 103, "name": "王五", "team": "华南大区", "territory": "广东/广西", "quota_annual": 40000000},
-    {"id": 104, "name": "赵六", "team": "华东大区", "territory": "江苏/安徽", "quota_annual": 35000000},
-    {"id": 105, "name": "钱七", "team": "华北大区", "territory": "安徽/湖北", "quota_annual": 30000000},
+    {
+        "id": 101,
+        "name": "张三",
+        "team": "华南大区",
+        "territory": "福建/广东",
+        "quota_annual": 50000000,
+    },
+    {
+        "id": 102,
+        "name": "李四",
+        "team": "华东大区",
+        "territory": "江苏/浙江",
+        "quota_annual": 45000000,
+    },
+    {
+        "id": 103,
+        "name": "王五",
+        "team": "华南大区",
+        "territory": "广东/广西",
+        "quota_annual": 40000000,
+    },
+    {
+        "id": 104,
+        "name": "赵六",
+        "team": "华东大区",
+        "territory": "江苏/安徽",
+        "quota_annual": 35000000,
+    },
+    {
+        "id": 105,
+        "name": "钱七",
+        "team": "华北大区",
+        "territory": "安徽/湖北",
+        "quota_annual": 30000000,
+    },
 ]
 
 # ========== 输出数据 ==========

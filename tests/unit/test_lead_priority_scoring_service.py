@@ -45,7 +45,7 @@ def create_lead(db_session: Session):
         contact_person="测试联系人",
         contact_phone="13800000000",
         description="测试描述",
-        lead_code="LD-TEST-001"
+        lead_code="LD-TEST-001",
     )
     db_session.add(lead)
     db_session.commit()
@@ -76,12 +76,8 @@ class TestLeadPriorityScoringServiceInit:
 
 
 class TestCalculateLeadScore:
-    def test_calculate_score_new_lead_no_followup(
-        self, lead_priority_scoring_service, create_lead
-    ):
-        score, details = lead_priority_scoring_service.calculate_lead_score(
-        create_lead.id
-        )
+    def test_calculate_score_new_lead_no_followup(self, lead_priority_scoring_service, create_lead):
+        score, details = lead_priority_scoring_service.calculate_lead_score(create_lead.id)
 
         assert isinstance(score, int)
         assert isinstance(details, dict)
@@ -89,9 +85,7 @@ class TestCalculateLeadScore:
     def test_calculate_score_new_lead_with_recent_followup(
         self, lead_priority_scoring_service, create_lead, create_followup
     ):
-        score, details = lead_priority_scoring_service.calculate_lead_score(
-        create_lead.id
-        )
+        score, details = lead_priority_scoring_service.calculate_lead_score(create_lead.id)
 
         assert isinstance(score, int)
         assert score > 0
@@ -101,18 +95,18 @@ class TestCalculateLeadScore:
 
         user = UserFactory()
         lead = Lead(
-        owner_id=user.id,
-        customer_name="已转换线索",
-        status="CONVERTED",
-        customer_type="POTENTIAL",
-        expected_value=Decimal("100000"),
-        source="ONLINE",
-        product_interest="测试产品",
-        contact_person="测试联系人",
-        contact_phone="13800000000",
-        converted_at=datetime.now(),
-        lead_code="LD-TEST-001"
-    )
+            owner_id=user.id,
+            customer_name="已转换线索",
+            status="CONVERTED",
+            customer_type="POTENTIAL",
+            expected_value=Decimal("100000"),
+            source="ONLINE",
+            product_interest="测试产品",
+            contact_person="测试联系人",
+            contact_phone="13800000000",
+            converted_at=datetime.now(),
+            lead_code="LD-TEST-001",
+        )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -126,18 +120,18 @@ class TestCalculateLeadScore:
 
         user = UserFactory()
         lead = Lead(
-        owner_id=user.id,
-        customer_name="已丢失线索",
-        status="LOST",
-        customer_type="POTENTIAL",
-        expected_value=Decimal("100000"),
-        source="ONLINE",
-        product_interest="测试产品",
-        contact_person="测试联系人",
-        contact_phone="13800000000",
-        lost_reason="预算不足",
-        lead_code="LD-TEST-001"
-    )
+            owner_id=user.id,
+            customer_name="已丢失线索",
+            status="LOST",
+            customer_type="POTENTIAL",
+            expected_value=Decimal("100000"),
+            source="ONLINE",
+            product_interest="测试产品",
+            contact_person="测试联系人",
+            contact_phone="13800000000",
+            lost_reason="预算不足",
+            lead_code="LD-TEST-001",
+        )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -149,9 +143,7 @@ class TestCalculateLeadScore:
 
 class TestGetPriorityLevel:
     def test_get_priority_level_high(self, lead_priority_scoring_service, create_lead):
-        score, details = lead_priority_scoring_service.calculate_lead_score(
-        create_lead.id
-        )
+        score, details = lead_priority_scoring_service.calculate_lead_score(create_lead.id)
         level = lead_priority_scoring_service.get_priority_level(score)
 
         assert level in ["HIGH", "MEDIUM", "LOW"]
@@ -161,18 +153,18 @@ class TestGetPriorityLevel:
 
         user = UserFactory()
         lead = Lead(
-        owner_id=user.id,
-        customer_name="中等优先级线索",
-        status="NEW",
-        customer_type="POTENTIAL",
-        expected_value=Decimal("50000"),
-        source="REFERRAL",
-        product_interest="测试产品",
-        contact_person="测试联系人",
-        contact_phone="13800000000",
-        days_since_last_followup=15,
-        lead_code="LD-TEST-001"
-    )
+            owner_id=user.id,
+            customer_name="中等优先级线索",
+            status="NEW",
+            customer_type="POTENTIAL",
+            expected_value=Decimal("50000"),
+            source="REFERRAL",
+            product_interest="测试产品",
+            contact_person="测试联系人",
+            contact_phone="13800000000",
+            days_since_last_followup=15,
+            lead_code="LD-TEST-001",
+        )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -187,18 +179,18 @@ class TestGetPriorityLevel:
 
         user = UserFactory()
         lead = Lead(
-        owner_id=user.id,
-        customer_name="低优先级线索",
-        status="NEW",
-        customer_type="POTENTIAL",
-        expected_value=Decimal("10000"),
-        source="COLD_CALL",
-        product_interest="测试产品",
-        contact_person="测试联系人",
-        contact_phone="13800000000",
-        days_since_last_followup=30,
-        lead_code="LD-TEST-001"
-    )
+            owner_id=user.id,
+            customer_name="低优先级线索",
+            status="NEW",
+            customer_type="POTENTIAL",
+            expected_value=Decimal("10000"),
+            source="COLD_CALL",
+            product_interest="测试产品",
+            contact_person="测试联系人",
+            contact_phone="13800000000",
+            days_since_last_followup=30,
+            lead_code="LD-TEST-001",
+        )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)
@@ -210,11 +202,8 @@ class TestGetPriorityLevel:
 
 
 class TestBatchCalculation:
-    def test_batch_calculate_scores(
-        self, lead_priority_scoring_service, db_session: Session
-    ):
-        from tests.factories import UserFactory
-        from tests.factories import LeadFactory
+    def test_batch_calculate_scores(self, lead_priority_scoring_service, db_session: Session):
+        from tests.factories import LeadFactory, UserFactory
 
         user1 = UserFactory()
         user2 = UserFactory()
@@ -223,19 +212,17 @@ class TestBatchCalculation:
         leads = []
         for i, user in enumerate([user1, user2, user3]):
             lead = LeadFactory(
-            owner_id=user.id,
-            lead_name=f"测试线索{i}",
-            status="NEW" if i < 2 else "NEGOTIATING",
-            customer_type="POTENTIAL",
-            expected_value=Decimal("100000") * (i + 1),
+                owner_id=user.id,
+                lead_name=f"测试线索{i}",
+                status="NEW" if i < 2 else "NEGOTIATING",
+                customer_type="POTENTIAL",
+                expected_value=Decimal("100000") * (i + 1),
             )
             db_session.add(lead)
             leads.append(lead)
             db_session.commit()
 
-            results = lead_priority_scoring_service.batch_calculate_scores(
-            [l.id for l in leads]
-            )
+            results = lead_priority_scoring_service.batch_calculate_scores([l.id for l in leads])
 
             assert len(results) == 3
             assert all("score" in r for r in results)
@@ -252,13 +239,13 @@ class TestEdgeCases:
 
         user = UserFactory()
         lead = Lead(
-        owner_id=user.id,
-        customer_name="线索无期望值",
-        status="NEW",
-        customer_type="POTENTIAL",
-        source="ONLINE",
-        lead_code="LD-TEST-001"
-    )
+            owner_id=user.id,
+            customer_name="线索无期望值",
+            status="NEW",
+            customer_type="POTENTIAL",
+            source="ONLINE",
+            lead_code="LD-TEST-001",
+        )
         db_session.add(lead)
         db_session.commit()
         db_session.refresh(lead)

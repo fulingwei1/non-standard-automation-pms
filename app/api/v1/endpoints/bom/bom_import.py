@@ -11,10 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.import_export_engine import ImportExportEngine
 from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.import_export_engine import ImportExportEngine
 from app.utils.db_helpers import get_or_404
 
 # 尝试导入Excel处理库
@@ -40,9 +40,7 @@ async def import_bom_from_excel(
     支持格式：物料编码、物料名称、规格型号、数量、单价、单位等
     """
     if not EXCEL_AVAILABLE:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
+        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl")
 
     bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
@@ -82,36 +80,22 @@ async def import_bom_from_excel(
 
                 # 尝试查找物料
                 material = (
-                    db.query(Material)
-                    .filter(Material.material_code == material_code)
-                    .first()
+                    db.query(Material).filter(Material.material_code == material_code).first()
                 )
                 material_id = material.id if material else None
 
                 # 获取其他字段
                 specification = (
-                    str(row.get("规格型号", "")).strip()
-                    if pd.notna(row.get("规格型号"))
-                    else None
+                    str(row.get("规格型号", "")).strip() if pd.notna(row.get("规格型号")) else None
                 )
-                unit = (
-                    str(row.get("单位", "件")).strip()
-                    if pd.notna(row.get("单位"))
-                    else "件"
-                )
-                unit_price = (
-                    float(row.get("单价", 0)) if pd.notna(row.get("单价")) else 0
-                )
+                unit = str(row.get("单位", "件")).strip() if pd.notna(row.get("单位")) else "件"
+                unit_price = float(row.get("单价", 0)) if pd.notna(row.get("单价")) else 0
                 amount = quantity * unit_price
                 source_type = (
-                    row.get("来源类型", "PURCHASE")
-                    if pd.notna(row.get("来源类型"))
-                    else "PURCHASE"
+                    row.get("来源类型", "PURCHASE") if pd.notna(row.get("来源类型")) else "PURCHASE"
                 )
                 is_key_item = (
-                    bool(row.get("是否关键", False))
-                    if pd.notna(row.get("是否关键"))
-                    else False
+                    bool(row.get("是否关键", False)) if pd.notna(row.get("是否关键")) else False
                 )
 
                 # 获取当前最大行号
@@ -148,8 +132,7 @@ async def import_bom_from_excel(
         # 更新BOM统计
         bom.total_items = bom.items.count()
         total_amount = (
-            db.query(func.sum(BomItem.amount)).filter(BomItem.bom_id == bom_id).scalar()
-            or 0
+            db.query(func.sum(BomItem.amount)).filter(BomItem.bom_id == bom_id).scalar() or 0
         )
         bom.total_amount = total_amount
 

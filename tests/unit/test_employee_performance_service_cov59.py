@@ -50,9 +50,7 @@ class TestEmployeePerformanceService(unittest.TestCase):
         mock_target_user = MagicMock()
         mock_target_user.department_id = 2
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_target_user
 
         result = self.service.check_performance_view_permission(mock_user, 2)
         self.assertFalse(result)
@@ -92,9 +90,7 @@ class TestEmployeePerformanceService(unittest.TestCase):
         mock_dept = MagicMock()
         mock_dept.name = "技术部"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_team_name(1)
         self.assertEqual(result, "技术部")
@@ -104,9 +100,7 @@ class TestEmployeePerformanceService(unittest.TestCase):
         mock_dept = MagicMock()
         mock_dept.name = "产品部"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_department_name(2)
         self.assertEqual(result, "产品部")
@@ -148,9 +142,7 @@ class TestEmployeePerformanceService(unittest.TestCase):
 
         # Mock 查询返回已存在的记录
         mock_existing = MagicMock()
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
         with self.assertRaises(HTTPException) as context:
             self.service.create_monthly_work_summary(mock_user, mock_summary_in)
@@ -173,9 +165,7 @@ class TestEmployeePerformanceService(unittest.TestCase):
         # Mock 查询返回 None（不存在）
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = self.service.save_monthly_summary_draft(
-            mock_user, "2025-02", mock_summary_update
-        )
+        result = self.service.save_monthly_summary_draft(mock_user, "2025-02", mock_summary_update)
 
         # 验证调用了 add 和 commit
         self.mock_db.add.assert_called_once()
@@ -198,13 +188,9 @@ class TestEmployeePerformanceService(unittest.TestCase):
         mock_existing.status = "DRAFT"
         mock_existing.work_content = "旧内容"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
-        result = self.service.save_monthly_summary_draft(
-            mock_user, "2025-02", mock_summary_update
-        )
+        result = self.service.save_monthly_summary_draft(mock_user, "2025-02", mock_summary_update)
 
         # 验证调用了 commit（不应该调用 add）
         self.mock_db.commit.assert_called_once()
@@ -221,14 +207,10 @@ class TestEmployeePerformanceService(unittest.TestCase):
         mock_existing = MagicMock()
         mock_existing.status = "SUBMITTED"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
         with self.assertRaises(HTTPException) as context:
-            self.service.save_monthly_summary_draft(
-                mock_user, "2025-02", mock_summary_update
-            )
+            self.service.save_monthly_summary_draft(mock_user, "2025-02", mock_summary_update)
 
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("只能更新草稿状态", context.exception.detail)

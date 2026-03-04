@@ -37,28 +37,22 @@ __all__ = [
     "find_users_by_role",
     "find_users_by_department",
     "create_notification",
-
     # Milestone reminders
     "notify_milestone_upcoming",
     "notify_milestone_overdue",
-
     # Payment reminders
     "notify_payment_plan_upcoming",
     "notify_payment_overdue",
-
     # Contract reminders
     "notify_contract_signed",
     "notify_contract_expiring",
-
     # Invoice reminders
     "notify_invoice_issued",
-
     # Sales flow reminders
     "notify_gate_timeout",
     "notify_quote_expiring",
     "notify_approval_pending",
-
     # Scanners
     "scan_and_notify_all",
-    "scan_sales_reminders"
+    "scan_sales_reminders",
 ]

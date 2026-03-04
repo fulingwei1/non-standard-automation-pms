@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 项目管理模块 - 阶段门校验单元测试
@@ -40,9 +41,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -50,8 +49,7 @@ class TestProjectGateCheck:
 
             # 检查G1门（S1→S2）
             gate_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2", headers=headers
             )
 
             assert gate_response.status_code == 200
@@ -60,7 +58,9 @@ class TestProjectGateCheck:
             assert gate_data["passed"] == True
             assert gate_data["failed_conditions"] == 0
 
-    def test_gate_s1_to_s2_fail_missing_customer(self, client: TestClient, admin_token: str, db_session):
+    def test_gate_s1_to_s2_fail_missing_customer(
+        self, client: TestClient, admin_token: str, db_session
+    ):
         """测试G1门校验失败场景 - 缺少客户信息"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -76,9 +76,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -86,8 +84,7 @@ class TestProjectGateCheck:
 
             # 检查G1门（S1→S2）
             gate_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2", headers=headers
             )
 
             assert gate_response.status_code == 200
@@ -113,9 +110,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -126,8 +121,7 @@ class TestProjectGateCheck:
 
             # 检查G2门（S2→S3）
             gate_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S3",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S3", headers=headers
             )
 
             assert gate_response.status_code == 200
@@ -153,9 +147,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -163,8 +155,7 @@ class TestProjectGateCheck:
 
             # 检查G5门（S5→S6）
             gate_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S6",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S6", headers=headers
             )
 
             assert gate_response.status_code == 200
@@ -173,7 +164,9 @@ class TestProjectGateCheck:
             # 由于没有实际BOM，这里可能失败，但至少API应该返回正确的结构
             assert "conditions" in gate_data
 
-    def test_advance_stage_with_gate_check_pass(self, client: TestClient, admin_token: str, db_session):
+    def test_advance_stage_with_gate_check_pass(
+        self, client: TestClient, admin_token: str, db_session
+    ):
         """测试阶段推进 - Gate校验通过"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -193,9 +186,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -210,14 +201,16 @@ class TestProjectGateCheck:
             advance_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/advance-stage",
                 json=advance_data,
-                headers=headers
+                headers=headers,
             )
 
             # 如果Gate校验通过，应该成功推进
             # 如果Gate校验失败，应该返回400或422
             assert advance_response.status_code in [200, 400, 422]
 
-    def test_advance_stage_with_gate_check_fail(self, client: TestClient, admin_token: str, db_session):
+    def test_advance_stage_with_gate_check_fail(
+        self, client: TestClient, admin_token: str, db_session
+    ):
         """测试阶段推进 - Gate校验失败"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -233,9 +226,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -250,13 +241,15 @@ class TestProjectGateCheck:
             advance_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/advance-stage",
                 json=advance_data,
-                headers=headers
+                headers=headers,
             )
 
             # Gate校验失败，应该返回400或422
             assert advance_response.status_code in [400, 422]
 
-    def test_advance_stage_skip_gate_check_admin(self, client: TestClient, admin_token: str, db_session):
+    def test_advance_stage_skip_gate_check_admin(
+        self, client: TestClient, admin_token: str, db_session
+    ):
         """测试阶段推进 - 管理员跳过Gate校验"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -271,9 +264,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -288,7 +279,7 @@ class TestProjectGateCheck:
             advance_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/advance-stage",
                 json=advance_data,
-                headers=headers
+                headers=headers,
             )
 
             # 即使Gate校验失败，管理员跳过应该成功
@@ -309,9 +300,7 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -319,8 +308,7 @@ class TestProjectGateCheck:
 
             # 检查无效阶段（S1没有前置门）
             gate_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S1",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S1", headers=headers
             )
 
             assert gate_response.status_code == 200
@@ -343,22 +331,20 @@ class TestProjectGateCheck:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
             project_id = response.json()["id"]
 
             # 测试所有阶段门
-            gates = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
-            gate_codes = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8']
+            gates = ["S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
+            gate_codes = ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"]
 
             for target_stage, expected_gate_code in zip(gates, gate_codes):
                 gate_response = client.get(
                     f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/{target_stage}",
-                    headers=headers
+                    headers=headers,
                 )
 
                 assert gate_response.status_code == 200

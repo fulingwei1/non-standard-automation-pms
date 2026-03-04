@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """ProjectRiskService 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.services.project.project_risk_service import ProjectRiskService
 
@@ -125,7 +126,7 @@ class TestAutoUpgradeRiskLevel:
         # For history query, first() should return None (no previous)
         # But we share the mock chain, so override with side_effect:
         # We need smarter mocking. Let's patch calculate_project_risk instead.
-        with patch.object(svc, 'calculate_project_risk') as mock_calc:
+        with patch.object(svc, "calculate_project_risk") as mock_calc:
             mock_calc.return_value = {
                 "project_id": 1,
                 "project_code": "P001",
@@ -154,8 +155,10 @@ class TestAutoUpgradeRiskLevel:
         old_history.new_risk_level = "LOW"
         query_mock.first.return_value = old_history
 
-        with patch.object(svc, 'calculate_project_risk') as mock_calc, \
-             patch.object(svc, '_send_risk_upgrade_notification') as mock_notify:
+        with (
+            patch.object(svc, "calculate_project_risk") as mock_calc,
+            patch.object(svc, "_send_risk_upgrade_notification") as mock_notify,
+        ):
             mock_calc.return_value = {
                 "project_id": 1,
                 "project_code": "P001",
@@ -177,29 +180,35 @@ class TestBatchCalculateRisks:
 
     def test_batch_with_ids(self):
         svc, db = _make_service()
-        p1 = MagicMock(); p1.id = 1; p1.project_code = "P1"
-        p2 = MagicMock(); p2.id = 2; p2.project_code = "P2"
+        p1 = MagicMock()
+        p1.id = 1
+        p1.project_code = "P1"
+        p2 = MagicMock()
+        p2.id = 2
+        p2.project_code = "P2"
 
         query_mock = MagicMock()
         db.query.return_value = query_mock
         query_mock.filter.return_value = query_mock
         query_mock.all.return_value = [p1, p2]
 
-        with patch.object(svc, 'auto_upgrade_risk_level') as mock_auto:
+        with patch.object(svc, "auto_upgrade_risk_level") as mock_auto:
             mock_auto.return_value = {"project_id": 1, "risk_level": "LOW"}
             results = svc.batch_calculate_risks(project_ids=[1, 2])
             assert len(results) == 2
 
     def test_batch_with_error(self):
         svc, db = _make_service()
-        p1 = MagicMock(); p1.id = 1; p1.project_code = "P1"
+        p1 = MagicMock()
+        p1.id = 1
+        p1.project_code = "P1"
 
         query_mock = MagicMock()
         db.query.return_value = query_mock
         query_mock.filter.return_value = query_mock
         query_mock.all.return_value = [p1]
 
-        with patch.object(svc, 'auto_upgrade_risk_level', side_effect=Exception("fail")):
+        with patch.object(svc, "auto_upgrade_risk_level", side_effect=Exception("fail")):
             results = svc.batch_calculate_risks(project_ids=[1])
             assert len(results) == 1
             assert "error" in results[0]
@@ -209,7 +218,7 @@ class TestCreateRiskSnapshot:
 
     def test_creates_snapshot(self):
         svc, db = _make_service()
-        with patch.object(svc, 'calculate_project_risk') as mock_calc:
+        with patch.object(svc, "calculate_project_risk") as mock_calc:
             mock_calc.return_value = {
                 "project_id": 1,
                 "risk_level": "MEDIUM",
@@ -309,9 +318,12 @@ class TestPmoRiskFactors:
         db.query.return_value = chain
         chain.filter.return_value = chain
 
-        r1 = MagicMock(); r1.risk_level = "HIGH"
-        r2 = MagicMock(); r2.risk_level = "CRITICAL"
-        r3 = MagicMock(); r3.risk_level = "MEDIUM"
+        r1 = MagicMock()
+        r1.risk_level = "HIGH"
+        r2 = MagicMock()
+        r2.risk_level = "CRITICAL"
+        r3 = MagicMock()
+        r3.risk_level = "MEDIUM"
         chain.all.return_value = [r1, r2, r3]
 
         factors = svc._calculate_pmo_risk_factors(1)
@@ -346,4 +358,7 @@ class TestProgressFactors:
 class TestRiskLevelOrder:
 
     def test_order(self):
-        assert ProjectRiskService.RISK_LEVEL_ORDER["LOW"] < ProjectRiskService.RISK_LEVEL_ORDER["CRITICAL"]
+        assert (
+            ProjectRiskService.RISK_LEVEL_ORDER["LOW"]
+            < ProjectRiskService.RISK_LEVEL_ORDER["CRITICAL"]
+        )

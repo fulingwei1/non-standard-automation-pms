@@ -39,6 +39,7 @@ def make_alert(
 
 # ─── get_material_supplier ────────────────────────────────────────────────────
 
+
 class TestGetMaterialSupplier:
     def test_returns_preferred_supplier(self, mock_db):
         from app.services.urgent_purchase_from_shortage_service import get_material_supplier
@@ -58,8 +59,8 @@ class TestGetMaterialSupplier:
 
         # preferred = None, material has default
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            None,     # no preferred
-            material, # material with default_supplier_id
+            None,  # no preferred
+            material,  # material with default_supplier_id
         ]
 
         result = get_material_supplier(mock_db, 1)
@@ -75,9 +76,9 @@ class TestGetMaterialSupplier:
         first_supplier.supplier_id = 30
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            None,           # no preferred
-            material,       # material without default
-            first_supplier, # first active supplier
+            None,  # no preferred
+            material,  # material without default
+            first_supplier,  # first active supplier
         ]
 
         result = get_material_supplier(mock_db, 1)
@@ -90,9 +91,9 @@ class TestGetMaterialSupplier:
         material.default_supplier_id = None
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            None,     # no preferred
-            material, # material without default
-            None,     # no active supplier
+            None,  # no preferred
+            material,  # material without default
+            None,  # no active supplier
         ]
 
         result = get_material_supplier(mock_db, 1)
@@ -100,6 +101,7 @@ class TestGetMaterialSupplier:
 
 
 # ─── get_material_price ───────────────────────────────────────────────────────
+
 
 class TestGetMaterialPrice:
     def test_returns_supplier_price(self, mock_db):
@@ -158,8 +160,8 @@ class TestGetMaterialPrice:
         material.standard_price = None
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            None,     # no supplier relation
-            material, # material without prices
+            None,  # no supplier relation
+            material,  # material without prices
         ]
 
         result = get_material_price(mock_db, 1)
@@ -180,12 +182,15 @@ class TestGetMaterialPrice:
 
 # ─── create_urgent_purchase_request_from_alert ────────────────────────────────
 
+
 class TestCreateUrgentPurchaseRequestFromAlert:
     def test_no_material_id_returns_none(self, mock_db):
-        from app.services.urgent_purchase_from_shortage_service import (
-            create_urgent_purchase_request_from_alert
-        )
         import json
+
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_alert,
+        )
+
         alert = make_alert(target_id=None, alert_data=json.dumps({}))
         result = create_urgent_purchase_request_from_alert(
             mock_db, alert, current_user_id=1, generate_request_no_func=MagicMock()
@@ -193,14 +198,13 @@ class TestCreateUrgentPurchaseRequestFromAlert:
         assert result is None
 
     def test_material_not_found_returns_none(self, mock_db):
-        from app.services.urgent_purchase_from_shortage_service import (
-            create_urgent_purchase_request_from_alert
-        )
         import json
-        alert = make_alert(
-            target_id=999,
-            alert_data=json.dumps({"shortage_qty": "10"})
+
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_alert,
         )
+
+        alert = make_alert(target_id=999, alert_data=json.dumps({"shortage_qty": "10"}))
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = create_urgent_purchase_request_from_alert(
             mock_db, alert, current_user_id=1, generate_request_no_func=MagicMock()
@@ -209,22 +213,20 @@ class TestCreateUrgentPurchaseRequestFromAlert:
 
     def test_no_supplier_marks_pending(self, mock_db):
         """找不到供应商时更新预警状态并返回 None"""
-        from app.services.urgent_purchase_from_shortage_service import (
-            create_urgent_purchase_request_from_alert
-        )
         import json
 
-        alert = make_alert(
-            target_id=1,
-            alert_data=json.dumps({"shortage_qty": "5"})
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_alert,
         )
+
+        alert = make_alert(target_id=1, alert_data=json.dumps({"shortage_qty": "5"}))
 
         mock_material = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             mock_material,  # material found
-            None,           # no preferred supplier
+            None,  # no preferred supplier
             mock_material,  # material again for default supplier check
-            None,           # no active supplier
+            None,  # no active supplier
         ]
 
         result = create_urgent_purchase_request_from_alert(
@@ -235,14 +237,15 @@ class TestCreateUrgentPurchaseRequestFromAlert:
 
     def test_creates_purchase_request(self, mock_db):
         """成功创建紧急采购申请"""
-        from app.services.urgent_purchase_from_shortage_service import (
-            create_urgent_purchase_request_from_alert
-        )
         import json
+
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_alert,
+        )
 
         alert = make_alert(
             target_id=1,
-            alert_data=json.dumps({"shortage_qty": "10", "required_date": "2024-02-01"})
+            alert_data=json.dumps({"shortage_qty": "10", "required_date": "2024-02-01"}),
         )
 
         mock_material = MagicMock()
@@ -258,15 +261,17 @@ class TestCreateUrgentPurchaseRequestFromAlert:
 
         # material_id found, preferred_supplier, supplier price
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_material,       # Material
+            mock_material,  # Material
             preferred_supplier,  # preferred MaterialSupplier (for get_material_supplier)
             preferred_supplier,  # MaterialSupplier with price (for get_material_price)
         ]
 
         generate_no = MagicMock(return_value="PR-2024-001")
 
-        with patch("app.services.urgent_purchase_from_shortage_service.PurchaseRequest") as MockPR, \
-             patch("app.services.urgent_purchase_from_shortage_service.PurchaseRequestItem"):
+        with (
+            patch("app.services.urgent_purchase_from_shortage_service.PurchaseRequest") as MockPR,
+            patch("app.services.urgent_purchase_from_shortage_service.PurchaseRequestItem"),
+        ):
             MockPR.return_value = mock_request
             result = create_urgent_purchase_request_from_alert(
                 mock_db, alert, current_user_id=1, generate_request_no_func=generate_no
@@ -277,10 +282,11 @@ class TestCreateUrgentPurchaseRequestFromAlert:
 
 # ─── auto_trigger_urgent_purchase_for_alerts ─────────────────────────────────
 
+
 class TestAutoTriggerUrgentPurchase:
     def test_no_alerts_returns_zero_counts(self, mock_db):
-        from unittest.mock import patch as _patch
         import sys
+        from unittest.mock import patch as _patch
 
         # Patch the problematic import inside the function
         mock_generate = MagicMock(return_value="PR-001")
@@ -289,8 +295,9 @@ class TestAutoTriggerUrgentPurchase:
 
         with _patch.dict(sys.modules, {"app.api.v1.endpoints.purchase": fake_module}):
             from app.services.urgent_purchase_from_shortage_service import (
-                auto_trigger_urgent_purchase_for_alerts
+                auto_trigger_urgent_purchase_for_alerts,
             )
+
             mock_db.query.return_value.filter.return_value.all.return_value = []
             result = auto_trigger_urgent_purchase_for_alerts(mock_db, current_user_id=1)
 
@@ -309,8 +316,9 @@ class TestAutoTriggerUrgentPurchase:
 
         with _patch.dict(sys.modules, {"app.api.v1.endpoints.purchase": fake_module}):
             from app.services.urgent_purchase_from_shortage_service import (
-                auto_trigger_urgent_purchase_for_alerts
+                auto_trigger_urgent_purchase_for_alerts,
             )
+
             alert = make_alert(alert_data=json.dumps({"related_po_no": "PR-001"}))
             alert.alert_no = "ALERT-001"
             alert.target_no = "MAT-001"

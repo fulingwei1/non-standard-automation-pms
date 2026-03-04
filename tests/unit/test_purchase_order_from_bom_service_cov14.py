@@ -2,11 +2,13 @@
 """
 第十四批：从BOM创建采购订单服务 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services import purchase_order_from_bom_service as pobs
+
     SKIP = False
 except Exception:
     SKIP = True

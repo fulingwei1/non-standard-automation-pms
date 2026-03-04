@@ -10,10 +10,10 @@
 """
 
 from app.services.report_framework.formatters.builtin import (
-    format_status_badge,
-    format_percentage,
     format_currency,
     format_date,
+    format_percentage,
+    format_status_badge,
 )
 
 __all__ = [

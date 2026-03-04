@@ -50,6 +50,7 @@ def _default_paths() -> ExportPaths:
         output_path=output_path,
     )
 
+
 EXCLUDED_ROLE_CODES = {"ROLE_01FD11"}
 EXCLUDED_ROLE_NAMES = {"测试角色-01fd11"}
 
@@ -88,7 +89,11 @@ def _autosize_columns(writer: pd.ExcelWriter, df: pd.DataFrame, sheet_name: str)
     ws = writer.sheets[sheet_name]
     for idx, col in enumerate(df.columns, start=1):
         series = df[col].astype(str).fillna("")
-        max_len = max([len(str(col))] + [len(v) for v in series.values.tolist()]) if len(series) else len(str(col))
+        max_len = (
+            max([len(str(col))] + [len(v) for v in series.values.tolist()])
+            if len(series)
+            else len(str(col))
+        )
         # cap width to avoid insane columns
         width = min(max(10, max_len + 2), 60)
         ws.column_dimensions[chr(64 + idx)].width = width if idx <= 26 else width
@@ -177,10 +182,17 @@ def main() -> None:
     if not role_perm_df.empty:
         role_perm_agg = (
             role_perm_df.groupby(["role_id", "role_code"])["perm_code"]
-            .agg(permission_count="count", permission_codes=lambda s: ", ".join(sorted(set(s.astype(str).tolist()))))
+            .agg(
+                permission_count="count",
+                permission_codes=lambda s: ", ".join(sorted(set(s.astype(str).tolist()))),
+            )
             .reset_index()
         )
-        roles_df = roles_df.merge(role_perm_agg[["role_id", "permission_count", "permission_codes"]], on="role_id", how="left")
+        roles_df = roles_df.merge(
+            role_perm_agg[["role_id", "permission_count", "permission_codes"]],
+            on="role_id",
+            how="left",
+        )
     else:
         roles_df["permission_count"] = 0
         roles_df["permission_codes"] = ""
@@ -254,10 +266,15 @@ def main() -> None:
     if not user_role_df.empty:
         user_roles_agg = (
             user_role_df.groupby(["user_id", "username"])["role_code"]
-            .agg(role_count="count", role_codes=lambda s: ", ".join(sorted(set(s.astype(str).tolist()))))
+            .agg(
+                role_count="count",
+                role_codes=lambda s: ", ".join(sorted(set(s.astype(str).tolist()))),
+            )
             .reset_index()
         )
-        users_df = users_df.merge(user_roles_agg[["user_id", "role_count", "role_codes"]], on="user_id", how="left")
+        users_df = users_df.merge(
+            user_roles_agg[["user_id", "role_count", "role_codes"]], on="user_id", how="left"
+        )
     else:
         users_df["role_count"] = 0
         users_df["role_codes"] = ""

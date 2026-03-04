@@ -146,9 +146,7 @@ def get_visit_preparation(
 # ==================== 快速估价 ====================
 
 
-@router.post(
-    "/quick-estimate", response_model=QuickEstimateResponse, summary="现场快速估价"
-)
+@router.post("/quick-estimate", response_model=QuickEstimateResponse, summary="现场快速估价")
 async def quick_estimate(
     request: QuickEstimateRequest,
     db: Session = Depends(get_db),

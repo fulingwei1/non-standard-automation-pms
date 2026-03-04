@@ -28,10 +28,11 @@ class TestHealthCalculationPerformance:
 
         # 获取所有活跃项目
         project_ids = [
-            p.id for p in db.query(Project.id).filter(
-                Project.is_active == True,
-                Project.is_archived == False
-            ).limit(1000).all()
+            p.id
+            for p in db.query(Project.id)
+            .filter(Project.is_active == True, Project.is_archived == False)
+            .limit(1000)
+            .all()
         ]
 
         if not project_ids:
@@ -53,10 +54,12 @@ class TestHealthCalculationPerformance:
         calculator = HealthCalculator(db)
 
         # 获取少量项目进行测试
-        projects = db.query(Project).filter(
-            Project.is_active == True,
-            Project.is_archived == False
-        ).limit(10).all()
+        projects = (
+            db.query(Project)
+            .filter(Project.is_active == True, Project.is_archived == False)
+            .limit(10)
+            .all()
+        )
 
         if not projects:
             pytest.skip("没有测试数据")
@@ -74,9 +77,7 @@ class TestHealthCalculationPerformance:
         """测试单个项目健康度计算性能"""
         calculator = HealthCalculator(db)
 
-        project = db.query(Project).filter(
-            Project.is_active == True
-        ).first()
+        project = db.query(Project).filter(Project.is_active == True).first()
 
         if not project:
             pytest.skip("没有测试数据")

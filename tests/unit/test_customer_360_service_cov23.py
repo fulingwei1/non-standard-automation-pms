@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十三批：customer_360_service 单元测试"""
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.customer_360_service")
 
@@ -52,6 +53,7 @@ class TestCustomer360ServiceBuildOverview:
         customer = _mock_customer()
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -68,7 +70,9 @@ class TestCustomer360ServiceBuildOverview:
         svc = Customer360Service(db)
         # build_overview will call _build_summary internally
         # Patch _build_summary to avoid deep model dependencies
-        with patch.object(svc, "_build_summary", return_value={"total_contract": 0}) as mock_summary:
+        with patch.object(
+            svc, "_build_summary", return_value={"total_contract": 0}
+        ) as mock_summary:
             result = svc.build_overview(1)
         mock_summary.assert_called_once()
         assert result is not None

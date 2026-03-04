@@ -2,15 +2,16 @@
 """
 Unit tests for app/services/strategy/kpi_service/snapshot.py
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.strategy.kpi_service.snapshot import (
-        _get_current_period,
         _calculate_trend,
+        _get_current_period,
         create_kpi_snapshot,
     )
 except ImportError as e:
@@ -20,6 +21,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # _get_current_period
 # ---------------------------------------------------------------------------
+
 
 def test_get_current_period_daily():
     result = _get_current_period("DAILY")
@@ -52,11 +54,15 @@ def test_get_current_period_other():
 # _calculate_trend
 # ---------------------------------------------------------------------------
 
+
 def test_calculate_trend_up():
     db = MagicMock()
     h1 = MagicMock(value=Decimal("100"))
     h2 = MagicMock(value=Decimal("80"))
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+        h1,
+        h2,
+    ]
     trend = _calculate_trend(db, 1)
     assert trend == "UP"
 
@@ -65,7 +71,10 @@ def test_calculate_trend_down():
     db = MagicMock()
     h1 = MagicMock(value=Decimal("50"))
     h2 = MagicMock(value=Decimal("80"))
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+        h1,
+        h2,
+    ]
     trend = _calculate_trend(db, 1)
     assert trend == "DOWN"
 
@@ -74,14 +83,19 @@ def test_calculate_trend_stable():
     db = MagicMock()
     h1 = MagicMock(value=Decimal("70"))
     h2 = MagicMock(value=Decimal("70"))
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+        h1,
+        h2,
+    ]
     trend = _calculate_trend(db, 1)
     assert trend == "STABLE"
 
 
 def test_calculate_trend_insufficient_history():
     db = MagicMock()
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
     trend = _calculate_trend(db, 1)
     assert trend is None
 
@@ -89,6 +103,7 @@ def test_calculate_trend_insufficient_history():
 # ---------------------------------------------------------------------------
 # create_kpi_snapshot
 # ---------------------------------------------------------------------------
+
 
 def test_create_kpi_snapshot_returns_none_when_kpi_missing():
     db = MagicMock()
@@ -99,6 +114,7 @@ def test_create_kpi_snapshot_returns_none_when_kpi_missing():
 
 def test_create_kpi_snapshot_creates_history():
     import sys
+
     db = MagicMock()
     kpi_mock = MagicMock()
     kpi_mock.current_value = Decimal("75")

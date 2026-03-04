@@ -8,25 +8,26 @@
 3. 达到70%+覆盖率（686行）
 """
 
-import unittest
-from unittest.mock import MagicMock, Mock, patch
-from datetime import datetime, timedelta
-from fastapi import HTTPException
 import json
+import unittest
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, Mock, patch
 
-from app.services.production.exception.exception_enhancement_service import (
-    ExceptionEnhancementService,
-)
+from fastapi import HTTPException
+
 from app.models.production import (
+    EscalationLevel,
     ExceptionHandlingFlow,
     ExceptionKnowledge,
     ExceptionPDCA,
     FlowStatus,
-    EscalationLevel,
     PDCAStage,
     ProductionException,
 )
 from app.models.user import User
+from app.services.production.exception.exception_enhancement_service import (
+    ExceptionEnhancementService,
+)
 
 
 class TestExceptionEscalation(unittest.TestCase):
@@ -45,9 +46,12 @@ class TestExceptionEscalation(unittest.TestCase):
             title="设备故障",
             status="REPORTED",
         )
-        
+
         # Mock get_or_404返回异常对象
-        with patch("app.services.production.exception.exception_enhancement_service.get_or_404", return_value=exception):
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.get_or_404",
+            return_value=exception,
+        ):
             # Mock query - 第一次查询flow返回None，第二次查询user返回user对象
             flow_mock = MagicMock()
             flow_mock.id = 10
@@ -59,27 +63,25 @@ class TestExceptionEscalation(unittest.TestCase):
             flow_mock.escalated_at = datetime.now()
             flow_mock.created_at = datetime.now()
             flow_mock.updated_at = datetime.now()
-            
+
             # Mock db.refresh将flow.id设置为10
             def mock_refresh(obj):
                 if isinstance(obj, ExceptionHandlingFlow):
                     obj.id = 10
-            
+
             self.db.refresh.side_effect = mock_refresh
             self.db.query.return_value.filter.return_value.first.side_effect = [
                 None,  # 第一次查询flow
-                User(id=100, username="李经理",
-        password_hash="test_hash_123"
-    )  # 第二次查询user
+                User(id=100, username="李经理", password_hash="test_hash_123"),  # 第二次查询user
             ]
-            
+
             result = self.service.escalate_exception(
                 exception_id=1,
                 escalation_level="LEVEL_2",
                 reason="问题严重，需要上级处理",
                 escalated_to_id=100,
             )
-            
+
             # 验证
             self.assertEqual(result.exception_id, 1)
             self.assertEqual(result.escalation_level, "LEVEL_2")
@@ -96,7 +98,7 @@ class TestExceptionEscalation(unittest.TestCase):
             exception_no="EXC-001",
             status="REPORTED",
         )
-        
+
         flow = ExceptionHandlingFlow(
             id=10,
             exception_id=1,
@@ -105,18 +107,21 @@ class TestExceptionEscalation(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
-        with patch("app.services.production.exception.exception_enhancement_service.get_or_404", return_value=exception):
+
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.get_or_404",
+            return_value=exception,
+        ):
             # Mock返回已存在的flow
             self.db.query.return_value.filter.return_value.first.side_effect = [flow, None]
-            
+
             result = self.service.escalate_exception(
                 exception_id=1,
                 escalation_level="LEVEL_1",
                 reason="初级升级",
                 escalated_to_id=None,
             )
-            
+
             # 验证flow被更新
             self.assertEqual(flow.escalation_level, EscalationLevel.LEVEL_1)
             self.assertEqual(flow.escalation_reason, "初级升级")
@@ -138,14 +143,10 @@ class TestFlowTracking(unittest.TestCase):
             exception_no="EXC-001",
             title="设备故障",
         )
-        
-        user = User(id=100, username="张三",
-        password_hash="test_hash_123"
-    )
-        verifier = User(id=200, username="李四",
-        password_hash="test_hash_123"
-    )
-        
+
+        user = User(id=100, username="张三", password_hash="test_hash_123")
+        verifier = User(id=200, username="李四", password_hash="test_hash_123")
+
         flow = ExceptionHandlingFlow(
             id=10,
             exception_id=1,
@@ -164,13 +165,13 @@ class TestFlowTracking(unittest.TestCase):
         flow.exception = exception
         flow.escalated_to = user
         flow.verifier = verifier
-        
+
         # Mock query
         mock_query = self.db.query.return_value
         mock_query.options.return_value.filter.return_value.first.return_value = flow
-        
+
         result = self.service.get_exception_flow(exception_id=1)
-        
+
         # 验证
         self.assertEqual(result.id, 10)
         self.assertEqual(result.exception_id, 1)
@@ -183,27 +184,29 @@ class TestFlowTracking(unittest.TestCase):
 
     def test_get_exception_flow_not_found(self):
         """测试流程不存在"""
-        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = None
-        
+        self.db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            None
+        )
+
         with self.assertRaises(HTTPException) as context:
             self.service.get_exception_flow(exception_id=999)
-        
+
         self.assertEqual(context.exception.status_code, 404)
         self.assertEqual(context.exception.detail, "未找到处理流程")
 
     def test_calculate_flow_duration(self):
         """测试计算流程时长"""
         base_time = datetime(2024, 1, 1, 10, 0, 0)
-        
+
         flow = ExceptionHandlingFlow(
             pending_at=base_time,
             processing_at=base_time + timedelta(minutes=30),
             resolved_at=base_time + timedelta(hours=2),
             closed_at=base_time + timedelta(hours=3),
         )
-        
+
         self.service.calculate_flow_duration(flow)
-        
+
         # 验证时长计算
         self.assertEqual(flow.pending_duration_minutes, 30)  # 30分钟
         self.assertEqual(flow.processing_duration_minutes, 90)  # 1.5小时
@@ -230,7 +233,7 @@ class TestKnowledgeManagement(unittest.TestCase):
         request.keywords = "过热,冷却"
         request.source_exception_id = 100
         request.attachments = json.dumps([])  # JSON字符串
-        
+
         # Mock save_obj - 设置保存后的id
         def mock_save(db, obj):
             obj.id = 1
@@ -239,13 +242,16 @@ class TestKnowledgeManagement(unittest.TestCase):
             obj.is_approved = False
             obj.created_at = datetime.now()
             obj.updated_at = datetime.now()
-        
-        with patch("app.services.production.exception.exception_enhancement_service.save_obj", side_effect=mock_save):
+
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.save_obj",
+            side_effect=mock_save,
+        ):
             # Mock User查询
             self.db.query.return_value.filter.return_value.first.return_value = None
-            
+
             result = self.service.create_knowledge(request, creator_id=1)
-            
+
             # 验证
             self.assertEqual(result.title, "设备过热处理方案")
             self.assertEqual(result.exception_type, "EQUIPMENT_FAILURE")
@@ -268,7 +274,7 @@ class TestKnowledgeManagement(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
+
         knowledge2 = ExceptionKnowledge(
             id=2,
             title="冷却液不足",
@@ -284,20 +290,22 @@ class TestKnowledgeManagement(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
+
         # Mock query
         mock_query = self.db.query.return_value
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 2
-        
+
         # Mock apply_pagination
-        with patch("app.services.production.exception.exception_enhancement_service.apply_pagination") as mock_pagination:
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.apply_pagination"
+        ) as mock_pagination:
             mock_pagination.return_value.all.return_value = [knowledge1, knowledge2]
-            
+
             # Mock User查询返回None
             self.db.query.return_value.filter.return_value.first.return_value = None
-            
+
             result = self.service.search_knowledge(
                 keyword="冷却",
                 exception_type=None,
@@ -308,7 +316,7 @@ class TestKnowledgeManagement(unittest.TestCase):
                 page=1,
                 page_size=10,
             )
-            
+
             # 验证
             self.assertEqual(result.total, 2)
             self.assertEqual(len(result.items), 2)
@@ -316,13 +324,9 @@ class TestKnowledgeManagement(unittest.TestCase):
 
     def test_build_knowledge_response_with_users(self):
         """测试构建知识库响应（包含用户信息）"""
-        creator = User(id=1, username="创建者",
-        password_hash="test_hash_123"
-    )
-        approver = User(id=2, username="审批者",
-        password_hash="test_hash_123"
-    )
-        
+        creator = User(id=1, username="创建者", password_hash="test_hash_123")
+        approver = User(id=2, username="审批者", password_hash="test_hash_123")
+
         knowledge = ExceptionKnowledge(
             id=1,
             title="测试知识",
@@ -338,12 +342,12 @@ class TestKnowledgeManagement(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
+
         # Mock User查询
         self.db.query.return_value.filter.return_value.first.side_effect = [creator, approver]
-        
+
         result = self.service.build_knowledge_response(knowledge)
-        
+
         self.assertEqual(result.creator_name, "创建者")
         self.assertEqual(result.approver_name, "审批者")
 
@@ -358,58 +362,65 @@ class TestStatisticsAnalysis(unittest.TestCase):
     def test_get_exception_statistics_full(self):
         """测试完整的异常统计"""
         # 使用patch直接mock数据库查询方法
-        with patch.object(self.db, 'query') as mock_query:
+        with patch.object(self.db, "query") as mock_query:
             # Mock总数查询 - ProductionException的count
             mock_exception_base = MagicMock()
             mock_exception_base.filter.return_value = mock_exception_base
             mock_exception_base.count.return_value = 100
-            
+
             # Mock类型统计
             mock_type_query = MagicMock()
             mock_type_query.filter.return_value = mock_type_query
             mock_type_query.group_by.return_value.all.return_value = [
-                ("EQUIPMENT_FAILURE", 40), ("QUALITY_ISSUE", 30), ("SAFETY_INCIDENT", 30)
+                ("EQUIPMENT_FAILURE", 40),
+                ("QUALITY_ISSUE", 30),
+                ("SAFETY_INCIDENT", 30),
             ]
-            
+
             # Mock级别统计
             mock_level_query = MagicMock()
             mock_level_query.filter.return_value = mock_level_query
             mock_level_query.group_by.return_value.all.return_value = [
-                ("HIGH", 20), ("MEDIUM", 50), ("LOW", 30)
+                ("HIGH", 20),
+                ("MEDIUM", 50),
+                ("LOW", 30),
             ]
-            
+
             # Mock状态统计
             mock_status_query = MagicMock()
             mock_status_query.filter.return_value = mock_status_query
             mock_status_query.group_by.return_value.all.return_value = [
-                ("REPORTED", 10), ("PROCESSING", 30), ("RESOLVED", 60)
+                ("REPORTED", 10),
+                ("PROCESSING", 30),
+                ("RESOLVED", 60),
             ]
-            
+
             # Mock TOP异常统计
             mock_top_query = MagicMock()
             mock_top_query.filter.return_value = mock_top_query
             mock_top_query.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
                 ("EQUIPMENT_FAILURE", "设备故障", 15),
-                ("QUALITY_ISSUE", "质量问题", 10)
+                ("QUALITY_ISSUE", "质量问题", 10),
             ]
-            
+
             # Mock流程查询 - 平均解决时长
             flow1 = ExceptionHandlingFlow(total_duration_minutes=60)
             flow2 = ExceptionHandlingFlow(total_duration_minutes=120)
-            
+
             mock_flow_avg = MagicMock()
             mock_flow_avg.join.return_value = mock_flow_avg
             mock_flow_avg.filter.return_value = mock_flow_avg
             mock_flow_avg.all.return_value = [flow1, flow2]
-            
+
             # Mock流程查询 - 升级数量
             mock_flow_escalation = MagicMock()
             mock_flow_escalation.join.return_value = mock_flow_escalation
             mock_flow_escalation.filter.return_value = mock_flow_escalation
             mock_flow_escalation.count.return_value = 20
-            
+
             # 设置query的side_effect，根据调用次数返回不同的mock
             call_count = [0]
+
             def query_side_effect(*args, **kwargs):
                 call_count[0] += 1
                 if call_count[0] == 1:  # 第一次：总数查询
@@ -426,14 +437,14 @@ class TestStatisticsAnalysis(unittest.TestCase):
                     return mock_flow_escalation
                 else:  # 第七次：TOP异常
                     return mock_top_query
-            
+
             mock_query.side_effect = query_side_effect
-            
+
             result = self.service.get_exception_statistics(
                 start_date=datetime.now() - timedelta(days=30),
                 end_date=datetime.now(),
             )
-            
+
             # 验证
             self.assertEqual(result.total_count, 100)
             self.assertEqual(result.by_type["EQUIPMENT_FAILURE"], 40)
@@ -454,7 +465,7 @@ class TestPDCAManagement(unittest.TestCase):
     def test_create_pdca(self):
         """测试创建PDCA记录"""
         exception = ProductionException(id=1, exception_no="EXC-001")
-        
+
         request = MagicMock()
         request.exception_id = 1
         request.plan_description = "制定改进计划"
@@ -463,20 +474,26 @@ class TestPDCAManagement(unittest.TestCase):
         request.plan_measures = json.dumps(["更换设备", "培训人员"])  # JSON字符串
         request.plan_owner_id = 100
         request.plan_deadline = datetime.now() + timedelta(days=30)
-        
+
         def mock_save(db, obj):
             obj.id = 1
             obj.is_completed = False
             obj.created_at = datetime.now()
             obj.updated_at = datetime.now()
-        
-        with patch("app.services.production.exception.exception_enhancement_service.get_or_404", return_value=exception):
-            with patch("app.services.production.exception.exception_enhancement_service.save_obj", side_effect=mock_save):
+
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.get_or_404",
+            return_value=exception,
+        ):
+            with patch(
+                "app.services.production.exception.exception_enhancement_service.save_obj",
+                side_effect=mock_save,
+            ):
                 # Mock User查询
                 self.db.query.return_value.filter.return_value.first.return_value = None
-                
+
                 result = self.service.create_pdca(request, current_user_id=1)
-                
+
                 # 验证
                 self.assertEqual(result.exception_id, 1)
                 self.assertIn("PDCA-", result.pdca_no)
@@ -494,20 +511,23 @@ class TestPDCAManagement(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
+
         request = MagicMock()
         request.stage = "DO"
         request.do_action_taken = "已执行设备更换"
         request.do_resources_used = "新设备一台"
         request.do_difficulties = "安装调试困难"
         request.do_owner_id = 100
-        
-        with patch("app.services.production.exception.exception_enhancement_service.get_or_404", return_value=pdca):
+
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.get_or_404",
+            return_value=pdca,
+        ):
             # Mock User查询
             self.db.query.return_value.filter.return_value.first.return_value = None
-            
+
             result = self.service.advance_pdca_stage(pdca_id=1, request=request)
-            
+
             # 验证
             self.assertEqual(result.current_stage, "DO")
             self.assertEqual(pdca.current_stage, PDCAStage.DO)
@@ -523,14 +543,17 @@ class TestPDCAManagement(unittest.TestCase):
             pdca_no="PDCA-001",
             is_completed=False,
         )
-        
+
         request = MagicMock()
         request.stage = "CHECK"  # 不能从PLAN直接跳到CHECK
-        
-        with patch("app.services.production.exception.exception_enhancement_service.get_or_404", return_value=pdca):
+
+        with patch(
+            "app.services.production.exception.exception_enhancement_service.get_or_404",
+            return_value=pdca,
+        ):
             with self.assertRaises(HTTPException) as context:
                 self.service.advance_pdca_stage(pdca_id=1, request=request)
-            
+
             self.assertEqual(context.exception.status_code, 400)
 
 
@@ -544,7 +567,7 @@ class TestRecurrenceAnalysis(unittest.TestCase):
     def test_analyze_recurrence(self):
         """测试重复异常分析"""
         now = datetime.now()
-        
+
         exceptions = [
             ProductionException(
                 id=1,
@@ -565,12 +588,12 @@ class TestRecurrenceAnalysis(unittest.TestCase):
                 report_time=now - timedelta(days=3),
             ),
         ]
-        
+
         # Mock第一次query返回ProductionException对象
         mock_exception_query = MagicMock()
         mock_exception_query.filter.return_value = mock_exception_query
         mock_exception_query.all.return_value = exceptions
-        
+
         # Mock第二次query返回PDCA对象
         pdca = ExceptionPDCA(
             id=1,
@@ -580,11 +603,11 @@ class TestRecurrenceAnalysis(unittest.TestCase):
             plan_root_cause="冷却系统故障",
             is_completed=False,
         )
-        
+
         mock_pdca_query = MagicMock()
         mock_pdca_query.filter.return_value = mock_pdca_query
         mock_pdca_query.all.return_value = [pdca]
-        
+
         # 设置query的side_effect
         def query_side_effect(*args, **kwargs):
             model = args[0] if args else None
@@ -593,19 +616,21 @@ class TestRecurrenceAnalysis(unittest.TestCase):
             elif model == ExceptionPDCA:
                 return mock_pdca_query
             return MagicMock()
-        
+
         self.db.query.side_effect = query_side_effect
-        
+
         result = self.service.analyze_recurrence(
             exception_type=None,
             days=7,
         )
-        
+
         # 验证
         self.assertEqual(len(result), 2)  # 两种类型
-        
+
         # 找到EQUIPMENT_FAILURE的结果
-        equipment_result = next((r for r in result if r.exception_type == "EQUIPMENT_FAILURE"), None)
+        equipment_result = next(
+            (r for r in result if r.exception_type == "EQUIPMENT_FAILURE"), None
+        )
         self.assertIsNotNone(equipment_result)
         self.assertEqual(equipment_result.total_occurrences, 2)
 
@@ -617,9 +642,9 @@ class TestRecurrenceAnalysis(unittest.TestCase):
             ProductionException(id=3, title="产品 质量 不合格"),
             ProductionException(id=4, title="质量 不合格 问题"),
         ]
-        
+
         result = self.service.find_similar_exceptions(exceptions)
-        
+
         # 验证相似组（"设备 过热 故障"相似度应该>60%）
         # Jaccard相似度计算：{"设备", "过热", "故障", "问题"} vs {"设备", "过热", "故障"}
         # 交集3个，并集4个，相似度3/4=0.75 > 0.6
@@ -628,31 +653,49 @@ class TestRecurrenceAnalysis(unittest.TestCase):
     def test_analyze_time_trend(self):
         """测试时间趋势分析"""
         now = datetime.now()
-        
+
         exceptions = [
             ProductionException(id=1, report_time=now - timedelta(days=1)),
             ProductionException(id=2, report_time=now - timedelta(days=1)),
             ProductionException(id=3, report_time=now - timedelta(days=3)),
         ]
-        
+
         result = self.service.analyze_time_trend(exceptions, days=7)
-        
+
         # 验证趋势数据
         self.assertEqual(len(result), 7)  # 7天的数据
 
     def test_extract_common_root_causes(self):
         """测试提取常见根因"""
-        pdca1 = ExceptionPDCA(id=1, exception_id=1, pdca_no="P1", current_stage=PDCAStage.PLAN, 
-                              plan_root_cause="设备老化", is_completed=False)
-        pdca2 = ExceptionPDCA(id=2, exception_id=2, pdca_no="P2", current_stage=PDCAStage.PLAN,
-                              plan_root_cause="操作不当", is_completed=False)
-        pdca3 = ExceptionPDCA(id=3, exception_id=3, pdca_no="P3", current_stage=PDCAStage.PLAN,
-                              plan_root_cause="材料问题", is_completed=False)
-        
+        pdca1 = ExceptionPDCA(
+            id=1,
+            exception_id=1,
+            pdca_no="P1",
+            current_stage=PDCAStage.PLAN,
+            plan_root_cause="设备老化",
+            is_completed=False,
+        )
+        pdca2 = ExceptionPDCA(
+            id=2,
+            exception_id=2,
+            pdca_no="P2",
+            current_stage=PDCAStage.PLAN,
+            plan_root_cause="操作不当",
+            is_completed=False,
+        )
+        pdca3 = ExceptionPDCA(
+            id=3,
+            exception_id=3,
+            pdca_no="P3",
+            current_stage=PDCAStage.PLAN,
+            plan_root_cause="材料问题",
+            is_completed=False,
+        )
+
         self.db.query.return_value.filter.return_value.all.return_value = [pdca1, pdca2, pdca3]
-        
+
         result = self.service.extract_common_root_causes([1, 2, 3])
-        
+
         # 验证
         self.assertEqual(len(result), 3)
         self.assertIn("设备老化", result)
@@ -672,9 +715,9 @@ class TestEdgeCases(unittest.TestCase):
             processing_at=None,
             resolved_at=None,
         )
-        
+
         self.service.calculate_flow_duration(flow)
-        
+
         # 不应该有时长
         self.assertIsNone(flow.pending_duration_minutes)
         self.assertIsNone(flow.total_duration_minutes)
@@ -695,50 +738,53 @@ class TestEdgeCases(unittest.TestCase):
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        
+
         # Mock返回None（用户不存在）
         self.db.query.return_value.filter.return_value.first.return_value = None
-        
+
         result = self.service.build_knowledge_response(knowledge)
-        
+
         self.assertIsNone(result.creator_name)
 
     def test_statistics_with_none_duration(self):
         """测试包含None时长的统计"""
         flow1 = ExceptionHandlingFlow(total_duration_minutes=60)
         flow3 = ExceptionHandlingFlow(total_duration_minutes=120)
-        
+
         # 使用patch直接mock
-        with patch.object(self.db, 'query') as mock_query:
+        with patch.object(self.db, "query") as mock_query:
             # Mock异常总数查询
             mock_exception_base = MagicMock()
             mock_exception_base.filter.return_value = mock_exception_base
             mock_exception_base.count.return_value = 3
-            
+
             # Mock类型、级别、状态统计（返回空）
             mock_stats_query = MagicMock()
             mock_stats_query.filter.return_value = mock_stats_query
             mock_stats_query.group_by.return_value.all.return_value = []
-            
+
             # Mock流程查询 - 只返回非None的flow
             mock_flow_avg = MagicMock()
             mock_flow_avg.join.return_value = mock_flow_avg
             mock_flow_avg.filter.return_value = mock_flow_avg
             mock_flow_avg.all.return_value = [flow1, flow3]  # 只返回有时长的
-            
+
             # Mock升级数量查询
             mock_flow_escalation = MagicMock()
             mock_flow_escalation.join.return_value = mock_flow_escalation
             mock_flow_escalation.filter.return_value = mock_flow_escalation
             mock_flow_escalation.count.return_value = 0
-            
+
             # Mock TOP异常查询
             mock_top_query = MagicMock()
             mock_top_query.filter.return_value = mock_top_query
-            mock_top_query.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-            
+            mock_top_query.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                []
+            )
+
             # 设置query的side_effect
             call_count = [0]
+
             def query_side_effect(*args, **kwargs):
                 call_count[0] += 1
                 if call_count[0] == 1:  # 总数查询
@@ -751,11 +797,11 @@ class TestEdgeCases(unittest.TestCase):
                     return mock_flow_escalation
                 else:  # TOP异常
                     return mock_top_query
-            
+
             mock_query.side_effect = query_side_effect
-            
+
             result = self.service.get_exception_statistics(None, None)
-            
+
             # 应该只计算非None的值：(60+120)/2 = 90
             self.assertEqual(result.avg_resolution_time_minutes, 90)
 

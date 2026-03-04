@@ -4,10 +4,11 @@ Tests for dashboard_adapter
 Covers: app/services/dashboard_adapter.py
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
-from sqlalchemy.orm import Session
 from typing import List
+from unittest.mock import MagicMock, Mock
+
+import pytest
+from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.schemas.dashboard import DashboardStatCard, DashboardWidget

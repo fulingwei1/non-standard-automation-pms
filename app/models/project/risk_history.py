@@ -49,7 +49,7 @@ class ProjectRiskHistory(Base, TimestampMixin):
         Index("idx_project_risk_history_project", "project_id"),
         Index("idx_project_risk_history_triggered_at", "triggered_at"),
         Index("idx_project_risk_history_level", "new_risk_level"),
-        {"comment": "项目风险历史表"}
+        {"comment": "项目风险历史表"},
     )
 
     def __repr__(self):
@@ -89,5 +89,5 @@ class ProjectRiskSnapshot(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_project_risk_snapshot_project", "project_id"),
         Index("idx_project_risk_snapshot_date", "snapshot_date"),
-        {"comment": "项目风险快照表"}
+        {"comment": "项目风险快照表"},
     )

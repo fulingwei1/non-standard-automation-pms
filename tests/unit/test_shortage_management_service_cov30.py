@@ -33,14 +33,14 @@ def mock_user():
 # get_shortage_list
 # ---------------------------------------------------------------------------
 
+
 class TestGetShortageList:
     @patch("app.services.shortage.shortage_management_service.apply_keyword_filter")
     @patch("app.services.shortage.shortage_management_service.apply_pagination")
     @patch("app.services.shortage.shortage_management_service.get_pagination_params")
     def test_returns_paginated_list(self, mock_params, mock_apag, mock_kw, service, mock_db):
         mock_params.return_value = MagicMock(
-            page=1, page_size=20, offset=0, limit=20,
-            pages_for_total=lambda t: 1
+            page=1, page_size=20, offset=0, limit=20, pages_for_total=lambda t: 1
         )
         mock_query = MagicMock()
         mock_db.query.return_value = mock_query
@@ -77,8 +77,7 @@ class TestGetShortageList:
     @patch("app.services.shortage.shortage_management_service.get_pagination_params")
     def test_filter_by_status(self, mock_params, mock_apag, mock_kw, service, mock_db):
         mock_params.return_value = MagicMock(
-            page=1, page_size=20, offset=0, limit=20,
-            pages_for_total=lambda t: 0
+            page=1, page_size=20, offset=0, limit=20, pages_for_total=lambda t: 0
         )
         mock_query = MagicMock()
         mock_db.query.return_value = mock_query
@@ -98,8 +97,7 @@ class TestGetShortageList:
     @patch("app.services.shortage.shortage_management_service.get_pagination_params")
     def test_with_project_name_lookup(self, mock_params, mock_apag, mock_kw, service, mock_db):
         mock_params.return_value = MagicMock(
-            page=1, page_size=20, offset=0, limit=20,
-            pages_for_total=lambda t: 1
+            page=1, page_size=20, offset=0, limit=20, pages_for_total=lambda t: 1
         )
         mock_query = MagicMock()
         mock_kw.return_value = mock_query
@@ -130,6 +128,7 @@ class TestGetShortageList:
 
         def db_query_side_effect(model):
             from app.models.shortage import ShortageReport
+
             if model is ShortageReport:
                 return mock_query
             inner = MagicMock()
@@ -145,6 +144,7 @@ class TestGetShortageList:
 # ---------------------------------------------------------------------------
 # create_shortage_record
 # ---------------------------------------------------------------------------
+
 
 class TestCreateShortageRecord:
     @patch("app.services.shortage.shortage_management_service.save_obj")
@@ -166,6 +166,7 @@ class TestCreateShortageRecord:
         material.material_name = "零件A"
 
         call_count = [0]
+
         def query_side_effect(model):
             call_count[0] += 1
             inner = MagicMock()
@@ -193,6 +194,7 @@ class TestCreateShortageRecord:
 # ---------------------------------------------------------------------------
 # get_shortage_statistics
 # ---------------------------------------------------------------------------
+
 
 class TestGetShortageStatistics:
     def test_returns_statistics_dict(self, service, mock_db):

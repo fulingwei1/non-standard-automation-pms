@@ -20,10 +20,7 @@ class AIAnalysisMixin(AIPromptMixin):
     """AI分析功能混入类"""
 
     def _analyze_with_ai_sync(
-        self,
-        content: str,
-        user_projects: List[Dict[str, Any]],
-        work_date: date
+        self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> Dict[str, Any]:
         """
         使用AI分析工作日志内容（同步版本）
@@ -55,12 +52,9 @@ class AIAnalysisMixin(AIPromptMixin):
             "messages": [
                 {
                     "role": "system",
-                    "content": "你是一个专业的工时分析助手，擅长从工作日志中提取工作项、工时和项目关联信息。请严格按照JSON格式输出结果。"
+                    "content": "你是一个专业的工时分析助手，擅长从工作日志中提取工作项、工时和项目关联信息。请严格按照JSON格式输出结果。",
                 },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,  # 降低温度，提高准确性
         }
@@ -78,10 +72,7 @@ class AIAnalysisMixin(AIPromptMixin):
                 raise ValueError(f"AI API返回格式异常: {data}")
 
     async def _analyze_with_ai(
-        self,
-        content: str,
-        user_projects: List[Dict[str, Any]],
-        work_date: date
+        self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> Dict[str, Any]:
         """
         使用AI分析工作日志内容（异步版本）
@@ -107,15 +98,12 @@ class AIAnalysisMixin(AIPromptMixin):
             "messages": [
                 {
                     "role": "system",
-                    "content": "你是一个专业的工时分析助手，擅长从工作日志中提取工作项、工时和项目关联信息。请严格按照JSON格式输出结果。"
+                    "content": "你是一个专业的工时分析助手，擅长从工作日志中提取工作项、工时和项目关联信息。请严格按照JSON格式输出结果。",
                 },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,  # 降低温度，提高准确性
-            "response_format": {"type": "json_object"}  # 强制JSON输出
+            "response_format": {"type": "json_object"},  # 强制JSON输出
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 class ContentTypeConfig(BaseModel):
     """内容类型配置"""
+
     enabled: bool = Field(default=True, description="是否启用")
     max_count: int = Field(default=10, ge=1, le=50, description="最大显示数量")
     priority: int = Field(default=0, description="优先级（数字越大越优先）")
@@ -17,6 +18,7 @@ class ContentTypeConfig(BaseModel):
 
 class PlaySettings(BaseModel):
     """播放设置"""
+
     auto_play: bool = Field(default=True, description="是否自动播放")
     interval: int = Field(default=5000, ge=1000, le=60000, description="播放间隔（毫秒）")
     show_controls: bool = Field(default=True, description="是否显示控制按钮")
@@ -25,6 +27,7 @@ class PlaySettings(BaseModel):
 
 class CultureWallConfigBase(BaseModel):
     """文化墙配置基础模型"""
+
     config_name: str = Field(..., max_length=100, description="配置名称")
     description: Optional[str] = Field(None, max_length=500, description="配置描述")
     is_enabled: bool = Field(default=True, description="是否启用")
@@ -39,25 +42,23 @@ class CultureWallConfigBase(BaseModel):
             "PERSONAL_GOAL": ContentTypeConfig(enabled=True, max_count=5, priority=6),
             "NOTIFICATION": ContentTypeConfig(enabled=True, max_count=10, priority=7),
         },
-        description="内容类型配置"
+        description="内容类型配置",
     )
     visible_roles: List[str] = Field(
-        default_factory=list,
-        description="可见角色列表（空数组表示所有角色）"
+        default_factory=list, description="可见角色列表（空数组表示所有角色）"
     )
-    play_settings: PlaySettings = Field(
-        default_factory=PlaySettings,
-        description="播放设置"
-    )
+    play_settings: PlaySettings = Field(default_factory=PlaySettings, description="播放设置")
 
 
 class CultureWallConfigCreate(CultureWallConfigBase):
     """创建文化墙配置"""
+
     pass
 
 
 class CultureWallConfigUpdate(BaseModel):
     """更新文化墙配置"""
+
     config_name: Optional[str] = Field(None, max_length=100, description="配置名称")
     description: Optional[str] = Field(None, max_length=500, description="配置描述")
     is_enabled: Optional[bool] = Field(None, description="是否启用")
@@ -69,6 +70,7 @@ class CultureWallConfigUpdate(BaseModel):
 
 class CultureWallConfigResponse(CultureWallConfigBase):
     """文化墙配置响应"""
+
     id: int
     created_by: Optional[int] = None
     created_at: Optional[str] = None

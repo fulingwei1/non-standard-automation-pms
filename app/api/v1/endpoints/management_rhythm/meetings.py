@@ -16,9 +16,9 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.enums import (
     ActionItemStatus,
 )
@@ -43,17 +43,14 @@ from .permission_utils import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/meetings",
-    tags=["meetings"]
-)
+router = APIRouter(prefix="/meetings", tags=["meetings"])
 
 # 共 5 个路由
 
 # ==================== 战略会议 ====================
+
 
 @router.get("/strategic-meetings", response_model=PaginatedResponse)
 def read_strategic_meetings(
@@ -95,61 +92,81 @@ def read_strategic_meetings(
     total = query.count()
 
     # 统计行动项数量
-    meetings = apply_pagination(query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)), pagination.offset, pagination.limit).all()
+    meetings = apply_pagination(
+        query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for meeting in meetings:
         # 统计行动项
-        action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-        completed_count = db.query(MeetingActionItem).filter(
-            and_(
-                MeetingActionItem.meeting_id == meeting.id,
-                MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+        action_items_count = (
+            db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+        )
+        completed_count = (
+            db.query(MeetingActionItem)
+            .filter(
+                and_(
+                    MeetingActionItem.meeting_id == meeting.id,
+                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+                )
             )
-        ).count()
+            .count()
+        )
 
-        items.append(StrategicMeetingResponse(
-            id=meeting.id,
-            project_id=meeting.project_id,
-            rhythm_config_id=meeting.rhythm_config_id,
-            rhythm_level=meeting.rhythm_level,
-            cycle_type=meeting.cycle_type,
-            meeting_name=meeting.meeting_name,
-            meeting_type=meeting.meeting_type,
-            meeting_date=meeting.meeting_date,
-            start_time=meeting.start_time,
-            end_time=meeting.end_time,
-            location=meeting.location,
-            organizer_id=meeting.organizer_id,
-            organizer_name=meeting.organizer_name,
-            attendees=meeting.attendees if meeting.attendees else [],
-            agenda=meeting.agenda,
-            minutes=meeting.minutes,
-            decisions=meeting.decisions,
-            strategic_context=meeting.strategic_context if meeting.strategic_context else {},
-            strategic_structure=meeting.strategic_structure if meeting.strategic_structure else {},
-            key_decisions=meeting.key_decisions if meeting.key_decisions else [],
-            resource_allocation=meeting.resource_allocation if meeting.resource_allocation else {},
-            metrics_snapshot=meeting.metrics_snapshot if meeting.metrics_snapshot else {},
-            attachments=meeting.attachments if meeting.attachments else [],
-            status=meeting.status,
-            created_by=meeting.created_by,
-            created_at=meeting.created_at,
-            updated_at=meeting.updated_at,
-            action_items_count=action_items_count,
-            completed_action_items_count=completed_count,
-        ))
+        items.append(
+            StrategicMeetingResponse(
+                id=meeting.id,
+                project_id=meeting.project_id,
+                rhythm_config_id=meeting.rhythm_config_id,
+                rhythm_level=meeting.rhythm_level,
+                cycle_type=meeting.cycle_type,
+                meeting_name=meeting.meeting_name,
+                meeting_type=meeting.meeting_type,
+                meeting_date=meeting.meeting_date,
+                start_time=meeting.start_time,
+                end_time=meeting.end_time,
+                location=meeting.location,
+                organizer_id=meeting.organizer_id,
+                organizer_name=meeting.organizer_name,
+                attendees=meeting.attendees if meeting.attendees else [],
+                agenda=meeting.agenda,
+                minutes=meeting.minutes,
+                decisions=meeting.decisions,
+                strategic_context=meeting.strategic_context if meeting.strategic_context else {},
+                strategic_structure=(
+                    meeting.strategic_structure if meeting.strategic_structure else {}
+                ),
+                key_decisions=meeting.key_decisions if meeting.key_decisions else [],
+                resource_allocation=(
+                    meeting.resource_allocation if meeting.resource_allocation else {}
+                ),
+                metrics_snapshot=meeting.metrics_snapshot if meeting.metrics_snapshot else {},
+                attachments=meeting.attachments if meeting.attachments else [],
+                status=meeting.status,
+                created_by=meeting.created_by,
+                created_at=meeting.created_at,
+                updated_at=meeting.updated_at,
+                action_items_count=action_items_count,
+                completed_action_items_count=completed_count,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.post("/strategic-meetings", response_model=StrategicMeetingResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/strategic-meetings",
+    response_model=StrategicMeetingResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_strategic_meeting(
     meeting_data: StrategicMeetingCreate,
     db: Session = Depends(deps.get_db),
@@ -235,13 +252,19 @@ def read_strategic_meeting(
         raise HTTPException(status_code=403, detail="您没有权限访问该会议")
 
     # 统计行动项
-    action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-    completed_count = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.meeting_id == meeting.id,
-            MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+    action_items_count = (
+        db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+    )
+    completed_count = (
+        db.query(MeetingActionItem)
+        .filter(
+            and_(
+                MeetingActionItem.meeting_id == meeting.id,
+                MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+            )
         )
-    ).count()
+        .count()
+    )
 
     return StrategicMeetingResponse(
         id=meeting.id,
@@ -298,13 +321,19 @@ def update_strategic_meeting(
     db.refresh(meeting)
 
     # 统计行动项
-    action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-    completed_count = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.meeting_id == meeting.id,
-            MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+    action_items_count = (
+        db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+    )
+    completed_count = (
+        db.query(MeetingActionItem)
+        .filter(
+            and_(
+                MeetingActionItem.meeting_id == meeting.id,
+                MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+            )
         )
-    ).count()
+        .count()
+    )
 
     return StrategicMeetingResponse(
         id=meeting.id,
@@ -367,13 +396,19 @@ def update_meeting_minutes(
     db.refresh(meeting)
 
     # 统计行动项
-    action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-    completed_count = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.meeting_id == meeting.id,
-            MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+    action_items_count = (
+        db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+    )
+    completed_count = (
+        db.query(MeetingActionItem)
+        .filter(
+            and_(
+                MeetingActionItem.meeting_id == meeting.id,
+                MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+            )
         )
-    ).count()
+        .count()
+    )
 
     return StrategicMeetingResponse(
         id=meeting.id,
@@ -406,5 +441,3 @@ def update_meeting_minutes(
         action_items_count=action_items_count,
         completed_action_items_count=completed_count,
     )
-
-

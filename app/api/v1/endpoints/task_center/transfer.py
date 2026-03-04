@@ -35,22 +35,21 @@ from .detail import get_task_detail
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+from fastapi import APIRouter
+
 # 使用统一的编码生成工具和日志工具
 from .batch_helpers import log_task_operation
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="",
-    tags=["transfer"]
-)
+router = APIRouter(prefix="", tags=["transfer"])
 
 # 共 1 个路由
 
 # ==================== 任务转办 ====================
 
-@router.post("/tasks/{task_id}/transfer", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/tasks/{task_id}/transfer", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK
+)
 def transfer_task(
     *,
     db: Session = Depends(deps.get_db),
@@ -95,11 +94,14 @@ def transfer_task(
     db.refresh(task)
 
     log_task_operation(
-        db, task.id, "TRANSFER",
+        db,
+        task.id,
+        "TRANSFER",
         f"转办任务：{old_assignee_name} -> {task.assignee_name}，原因：{transfer_in.transfer_reason}",
-        current_user.id, current_user.real_name or current_user.username,
+        current_user.id,
+        current_user.real_name or current_user.username,
         old_value={"assignee_id": old_assignee_id, "assignee_name": old_assignee_name},
-        new_value={"assignee_id": transfer_in.target_user_id, "assignee_name": task.assignee_name}
+        new_value={"assignee_id": transfer_in.target_user_id, "assignee_name": task.assignee_name},
     )
 
     # 发送通知给目标用户
@@ -116,7 +118,10 @@ def transfer_task(
                 source_id=task.id,
                 link_url=f"/tasks/{task.id}",
                 priority="HIGH",
-                extra_data={"task_id": task.id, "from_user": current_user.real_name or current_user.username}
+                extra_data={
+                    "task_id": task.id,
+                    "from_user": current_user.real_name or current_user.username,
+                },
             )
             db.commit()
     except Exception:

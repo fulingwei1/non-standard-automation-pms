@@ -2,12 +2,14 @@
 """
 第六批覆盖测试 - presale_ai_integration.py
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.presale_ai_integration import PresaleAIIntegrationService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -32,14 +34,13 @@ def service(mock_db):
 
 class TestRecordUsage:
     def test_create_new_stat(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
         with patch("app.services.presale_ai_integration.save_obj") as mock_save:
             mock_save.return_value = MagicMock()
             result = service.record_usage(
-                user_id=1,
-                ai_function="REQUIREMENT_ANALYSIS",
-                success=True,
-                response_time=500
+                user_id=1, ai_function="REQUIREMENT_ANALYSIS", success=True, response_time=500
             )
         assert True  # Just check no crash
 
@@ -48,7 +49,9 @@ class TestRecordUsage:
         existing.total_calls = 5
         existing.success_calls = 4
         existing.avg_response_time = 400
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            existing
+        )
         result = service.record_usage(
             user_id=1,
             ai_function="KNOWLEDGE_SEARCH",
@@ -64,11 +67,10 @@ class TestGetUsageStats:
         assert isinstance(result, list)
 
     def test_with_date_filter(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
-        result = service.get_usage_stats(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
         )
+        result = service.get_usage_stats(start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
         assert isinstance(result, list)
 
     def test_with_user_ids(self, service, mock_db):
@@ -126,9 +128,7 @@ class TestStartWorkflow:
             mock_save.return_value = MagicMock(id=1)
             try:
                 result = service.start_workflow(
-                    presale_ticket_id=1,
-                    user_id=1,
-                    workflow_type="ANALYSIS"
+                    presale_ticket_id=1, user_id=1, workflow_type="ANALYSIS"
                 )
                 assert True
             except Exception:

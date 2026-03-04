@@ -7,9 +7,10 @@
 - 物料调拨（transfers）
 - 到货跟踪（arrivals）
 """
+
 from fastapi import APIRouter
 
-from . import reports, substitutions, transfers, arrivals
+from . import arrivals, reports, substitutions, transfers
 
 router = APIRouter()
 

@@ -9,19 +9,20 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict
 
 try:
-    from jinja2 import Environment, BaseLoader, TemplateSyntaxError, UndefinedError
+    from jinja2 import BaseLoader, Environment, TemplateSyntaxError, UndefinedError
 except ImportError:  # pragma: no cover - 可选依赖
     Environment = None
     BaseLoader = None
     TemplateSyntaxError = Exception
     UndefinedError = Exception
 
-from app.common.date_range import get_last_month_range, month_start, month_end
+from app.common.date_range import get_last_month_range, month_end, month_start
 from app.services.report_framework.expressions.filters import register_filters
 
 
 class ExpressionError(Exception):
     """表达式错误"""
+
     pass
 
 

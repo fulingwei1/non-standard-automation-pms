@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - report_framework/adapters/rd_expense 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.adapters.rd_expense")
 
@@ -16,7 +17,10 @@ def db():
 
 @pytest.fixture
 def adapter(db):
-    with patch("app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__", return_value=None):
+    with patch(
+        "app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__",
+        return_value=None,
+    ):
         svc = RdExpenseReportAdapter.__new__(RdExpenseReportAdapter)
         svc.db = db
         svc.report_type = "RD_AUXILIARY_LEDGER"
@@ -25,9 +29,13 @@ def adapter(db):
 
 # ── get_report_code ───────────────────────────────────────────────────────────
 
+
 class TestGetReportCode:
     def test_known_type_returns_mapped_code(self, db):
-        with patch("app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__", return_value=None):
+        with patch(
+            "app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__",
+            return_value=None,
+        ):
             svc = RdExpenseReportAdapter.__new__(RdExpenseReportAdapter)
             svc.db = db
             svc.report_type = "RD_AUXILIARY_LEDGER"
@@ -42,14 +50,20 @@ class TestGetReportCode:
             "RD_PERSONNEL",
         ]
         for rtype in known_types:
-            with patch("app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__", return_value=None):
+            with patch(
+                "app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__",
+                return_value=None,
+            ):
                 svc = RdExpenseReportAdapter.__new__(RdExpenseReportAdapter)
                 svc.db = db
                 svc.report_type = rtype
             assert svc.get_report_code() == rtype
 
     def test_unknown_type_returns_itself(self, db):
-        with patch("app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__", return_value=None):
+        with patch(
+            "app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__",
+            return_value=None,
+        ):
             svc = RdExpenseReportAdapter.__new__(RdExpenseReportAdapter)
             svc.db = db
             svc.report_type = "CUSTOM_TYPE"
@@ -57,6 +71,7 @@ class TestGetReportCode:
 
 
 # ── REPORT_TYPE_MAP ───────────────────────────────────────────────────────────
+
 
 class TestReportTypeMap:
     def test_map_contains_all_expected_types(self):
@@ -76,9 +91,13 @@ class TestReportTypeMap:
 
 # ── generate_data ─────────────────────────────────────────────────────────────
 
+
 class TestGenerateData:
     def _make_adapter(self, db, report_type):
-        with patch("app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__", return_value=None):
+        with patch(
+            "app.services.report_framework.adapters.rd_expense.BaseReportAdapter.__init__",
+            return_value=None,
+        ):
             svc = RdExpenseReportAdapter.__new__(RdExpenseReportAdapter)
             svc.db = db
             svc.report_type = report_type

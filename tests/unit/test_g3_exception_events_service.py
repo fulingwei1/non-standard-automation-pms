@@ -3,14 +3,13 @@
 G3组 - 异常事件服务单元测试
 目标文件: app/services/alert/exception_events_service.py
 """
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import ANY, MagicMock, patch
 
+import pytest
 from fastapi import HTTPException
 
 from app.services.alert.exception_events_service import ExceptionEventsService
-
 
 # 模块级别的 patch target
 SERVICE_MODULE = "app.services.alert.exception_events_service"
@@ -35,20 +34,18 @@ class TestGetExceptionEvent:
     def test_get_existing_event(self):
         mock_event = MagicMock()
         mock_event.id = 1
-        (self.db.query.return_value
-            .options.return_value
-            .filter.return_value
-            .first.return_value) = mock_event
+        (self.db.query.return_value.options.return_value.filter.return_value.first.return_value) = (
+            mock_event
+        )
 
         with patch(f"{SERVICE_MODULE}.joinedload"):
             result = self.service.get_exception_event(1)
         assert result is mock_event
 
     def test_get_nonexistent_event_returns_none(self):
-        (self.db.query.return_value
-            .options.return_value
-            .filter.return_value
-            .first.return_value) = None
+        (self.db.query.return_value.options.return_value.filter.return_value.first.return_value) = (
+            None
+        )
 
         with patch(f"{SERVICE_MODULE}.joinedload"):
             result = self.service.get_exception_event(999)
@@ -82,11 +79,14 @@ class TestCreateExceptionEvent:
         mock_event_instance.reported_by = 10
         mock_event_instance.status = "pending"
 
-        with patch(f"{SERVICE_MODULE}.ExceptionEvent",
-                   return_value=mock_event_instance) as MockEvent, \
-             patch(f"{SERVICE_MODULE}.save_obj") as mock_save, \
-             patch.object(self.service, "_auto_assign_handler") as mock_assign, \
-             patch.object(self.service, "_send_exception_notification") as mock_notify:
+        with (
+            patch(
+                f"{SERVICE_MODULE}.ExceptionEvent", return_value=mock_event_instance
+            ) as MockEvent,
+            patch(f"{SERVICE_MODULE}.save_obj") as mock_save,
+            patch.object(self.service, "_auto_assign_handler") as mock_assign,
+            patch.object(self.service, "_send_exception_notification") as mock_notify,
+        ):
             result = self.service.create_exception_event(event_data, current_user)
 
         mock_save.assert_called_once()
@@ -112,10 +112,12 @@ class TestCreateExceptionEvent:
 
         mock_event = MagicMock()
 
-        with patch(f"{SERVICE_MODULE}.ExceptionEvent", return_value=mock_event), \
-             patch(f"{SERVICE_MODULE}.save_obj"), \
-             patch.object(self.service, "_auto_assign_handler"), \
-             patch.object(self.service, "_send_exception_notification"):
+        with (
+            patch(f"{SERVICE_MODULE}.ExceptionEvent", return_value=mock_event),
+            patch(f"{SERVICE_MODULE}.save_obj"),
+            patch.object(self.service, "_auto_assign_handler"),
+            patch.object(self.service, "_send_exception_notification"),
+        ):
             result = self.service.create_exception_event(event_data, current_user)
 
         # ExceptionEvent 应该被调用
@@ -162,7 +164,7 @@ class TestUpdateExceptionEvent:
             "id": 999,
             "reported_by": 888,
             "created_at": "2026-01-01",
-            "severity": "LOW"
+            "severity": "LOW",
         }
 
         current_user = MagicMock()
@@ -211,8 +213,10 @@ class TestResolveExceptionEvent:
         current_user = MagicMock()
         current_user.id = 3
 
-        with patch.object(self.service, "get_exception_event", return_value=mock_event), \
-             patch.object(self.service, "_send_exception_notification") as mock_notify:
+        with (
+            patch.object(self.service, "get_exception_event", return_value=mock_event),
+            patch.object(self.service, "_send_exception_notification") as mock_notify,
+        ):
             result = self.service.resolve_exception_event(1, resolve_data, current_user)
 
         assert result is mock_event
@@ -291,10 +295,12 @@ class TestGetExceptionEvents:
         mock_query.count.return_value = 0
         mock_query.all.return_value = []
 
-        with patch(f"{SERVICE_MODULE}.joinedload"), \
-             patch(f"{SERVICE_MODULE}.apply_keyword_filter", return_value=mock_query), \
-             patch(f"{SERVICE_MODULE}.apply_pagination", return_value=mock_query), \
-             patch(f"{SERVICE_MODULE}.get_pagination_params") as mock_pp:
+        with (
+            patch(f"{SERVICE_MODULE}.joinedload"),
+            patch(f"{SERVICE_MODULE}.apply_keyword_filter", return_value=mock_query),
+            patch(f"{SERVICE_MODULE}.apply_pagination", return_value=mock_query),
+            patch(f"{SERVICE_MODULE}.get_pagination_params") as mock_pp,
+        ):
             mock_pp.return_value.page = 1
             mock_pp.return_value.page_size = 20
             mock_pp.return_value.offset = 0
@@ -315,10 +321,12 @@ class TestGetExceptionEvents:
         mock_query.count.return_value = 2
         mock_query.all.return_value = []
 
-        with patch(f"{SERVICE_MODULE}.joinedload"), \
-             patch(f"{SERVICE_MODULE}.apply_keyword_filter", return_value=mock_query), \
-             patch(f"{SERVICE_MODULE}.apply_pagination", return_value=mock_query), \
-             patch(f"{SERVICE_MODULE}.get_pagination_params") as mock_pp:
+        with (
+            patch(f"{SERVICE_MODULE}.joinedload"),
+            patch(f"{SERVICE_MODULE}.apply_keyword_filter", return_value=mock_query),
+            patch(f"{SERVICE_MODULE}.apply_pagination", return_value=mock_query),
+            patch(f"{SERVICE_MODULE}.get_pagination_params") as mock_pp,
+        ):
             mock_pp.return_value.page = 1
             mock_pp.return_value.page_size = 10
             mock_pp.return_value.offset = 0

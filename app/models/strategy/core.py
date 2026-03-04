@@ -54,8 +54,12 @@ class Strategy(Base, TimestampMixin):
     approver = relationship("User", foreign_keys=[approved_by])
     csfs = relationship("CSF", back_populates="strategy", lazy="dynamic")
     reviews = relationship("StrategyReview", back_populates="strategy", lazy="dynamic")
-    calendar_events = relationship("StrategyCalendarEvent", back_populates="strategy", lazy="dynamic")
-    department_objectives = relationship("DepartmentObjective", back_populates="strategy", lazy="dynamic")
+    calendar_events = relationship(
+        "StrategyCalendarEvent", back_populates="strategy", lazy="dynamic"
+    )
+    department_objectives = relationship(
+        "DepartmentObjective", back_populates="strategy", lazy="dynamic"
+    )
 
     __table_args__ = (
         Index("idx_strategies_code", "code"),
@@ -77,13 +81,17 @@ class CSF(Base, TimestampMixin):
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 基本信息
-    dimension = Column(String(20), nullable=False, comment="BSC维度：FINANCIAL/CUSTOMER/INTERNAL/LEARNING")
+    dimension = Column(
+        String(20), nullable=False, comment="BSC维度：FINANCIAL/CUSTOMER/INTERNAL/LEARNING"
+    )
     code = Column(String(50), nullable=False, comment="CSF 编码，如 CSF-F-001")
     name = Column(String(200), nullable=False, comment="要素名称")
     description = Column(Text, comment="详细描述")
 
     # 导出方法
-    derivation_method = Column(String(50), comment="导出方法：FOUR_PARAM/FIVE_SOURCE/VALUE_CHAIN/INTANGIBLE")
+    derivation_method = Column(
+        String(50), comment="导出方法：FOUR_PARAM/FIVE_SOURCE/VALUE_CHAIN/INTANGIBLE"
+    )
 
     # 权重与排序
     weight = Column(Numeric(5, 2), default=0, comment="权重占比（%）")
@@ -129,7 +137,9 @@ class KPI(Base, TimestampMixin):
     description = Column(Text, comment="指标描述")
 
     # IPOOC 分类
-    ipooc_type = Column(String(20), nullable=False, comment="IPOOC类型：INPUT/PROCESS/OUTPUT/OUTCOME")
+    ipooc_type = Column(
+        String(20), nullable=False, comment="IPOOC类型：INPUT/PROCESS/OUTPUT/OUTCOME"
+    )
 
     # 指标定义
     unit = Column(String(20), comment="单位（%、万元、天、个）")
@@ -146,11 +156,15 @@ class KPI(Base, TimestampMixin):
     warning_threshold = Column(Numeric(14, 2), comment="警告阈值")
 
     # 数据源配置
-    data_source_type = Column(String(20), default="MANUAL", comment="数据源类型：MANUAL/AUTO/FORMULA")
+    data_source_type = Column(
+        String(20), default="MANUAL", comment="数据源类型：MANUAL/AUTO/FORMULA"
+    )
     data_source_config = Column(Text, comment="数据源配置（JSON）")
 
     # 更新频率
-    frequency = Column(String(20), default="MONTHLY", comment="更新频率：DAILY/WEEKLY/MONTHLY/QUARTERLY")
+    frequency = Column(
+        String(20), default="MONTHLY", comment="更新频率：DAILY/WEEKLY/MONTHLY/QUARTERLY"
+    )
     last_collected_at = Column(DateTime, comment="最后采集时间")
 
     # 权重

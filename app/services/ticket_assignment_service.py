@@ -15,7 +15,7 @@ def get_project_members_for_ticket(
     db: Session,
     project_ids: List[int],
     include_roles: Optional[List[str]] = None,
-    exclude_user_id: Optional[int] = None
+    exclude_user_id: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """
     获取项目相关人员（去重）
@@ -44,8 +44,7 @@ def get_project_members_for_ticket(
 
     # 查询项目成员
     query = db.query(ProjectMember).filter(
-        ProjectMember.project_id.in_(project_ids),
-        ProjectMember.is_active
+        ProjectMember.project_id.in_(project_ids), ProjectMember.is_active
     )
 
     if include_roles:
@@ -78,7 +77,7 @@ def get_project_members_for_ticket(
                 "role_name": member.role_type.role_name if member.role_type else member.role_code,
                 "projects": [],
                 "is_lead": member.is_lead,
-                "allocation_pct": float(member.allocation_pct or 100)
+                "allocation_pct": float(member.allocation_pct or 100),
             }
 
         # 添加项目信息
@@ -88,7 +87,7 @@ def get_project_members_for_ticket(
             "project_code": project.project_code if project else None,
             "project_name": project.project_name if project else None,
             "role_code": member.role_code,
-            "is_lead": member.is_lead
+            "is_lead": member.is_lead,
         }
 
         # 避免重复添加同一项目
@@ -96,26 +95,16 @@ def get_project_members_for_ticket(
             user_members[user_id]["projects"].append(project_info)
 
     # 按角色优先级和姓名排序
-    role_priority = {
-        "PM": 1, "PMC": 2, "ME": 3, "EE": 4,
-        "SW": 5, "DEBUG": 6, "QA": 7, "SALES": 8
-    }
+    role_priority = {"PM": 1, "PMC": 2, "ME": 3, "EE": 4, "SW": 5, "DEBUG": 6, "QA": 7, "SALES": 8}
 
     sorted_members = sorted(
-        user_members.values(),
-        key=lambda x: (
-            role_priority.get(x["role_code"], 99),
-            x["real_name"]
-        )
+        user_members.values(), key=lambda x: (role_priority.get(x["role_code"], 99), x["real_name"])
     )
 
     return sorted_members
 
 
-def get_ticket_related_projects(
-    db: Session,
-    ticket_id: int
-) -> Dict[str, Any]:
+def get_ticket_related_projects(db: Session, ticket_id: int) -> Dict[str, Any]:
     """
     获取工单关联的所有项目
 
@@ -130,10 +119,7 @@ def get_ticket_related_projects(
 
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
-        return {
-            "primary_project": None,
-            "related_projects": []
-        }
+        return {"primary_project": None, "related_projects": []}
 
     # 获取主项目
     primary_project = None
@@ -143,27 +129,26 @@ def get_ticket_related_projects(
             primary_project = {
                 "id": project.id,
                 "project_code": project.project_code,
-                "project_name": project.project_name
+                "project_name": project.project_name,
             }
 
     # 获取关联项目
-    ticket_projects = db.query(ServiceTicketProject).filter(
-        ServiceTicketProject.ticket_id == ticket_id
-    ).all()
+    ticket_projects = (
+        db.query(ServiceTicketProject).filter(ServiceTicketProject.ticket_id == ticket_id).all()
+    )
 
     related_projects = []
     for tp in ticket_projects:
         if tp.project_id != ticket.project_id:  # 排除主项目
             project = db.query(Project).filter(Project.id == tp.project_id).first()
             if project:
-                related_projects.append({
-                    "id": project.id,
-                    "project_code": project.project_code,
-                    "project_name": project.project_name,
-                    "is_primary": tp.is_primary
-                })
+                related_projects.append(
+                    {
+                        "id": project.id,
+                        "project_code": project.project_code,
+                        "project_name": project.project_name,
+                        "is_primary": tp.is_primary,
+                    }
+                )
 
-    return {
-        "primary_project": primary_project,
-        "related_projects": related_projects
-    }
+    return {"primary_project": primary_project, "related_projects": related_projects}

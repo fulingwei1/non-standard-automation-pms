@@ -63,7 +63,9 @@ class TestMaterialStatusHandler:
 
     def test_log_status_change_with_callback(self):
         callback = MagicMock()
-        self.handler._log_status_change(1, old_stage="S4", new_stage="S5", log_status_change=callback)
+        self.handler._log_status_change(
+            1, old_stage="S4", new_stage="S5", log_status_change=callback
+        )
         callback.assert_called_once()
 
     def test_log_status_change_creates_log(self):

@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/tenant.py"""
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.tenant import (
-    TenantBase,
-    TenantCreate,
-    TenantUpdate,
-    TenantResponse,
-    TenantInitRequest,
-    TenantStatsResponse,
     RoleTemplateBase,
     RoleTemplateResponse,
+    TenantBase,
+    TenantCreate,
+    TenantInitRequest,
+    TenantResponse,
+    TenantStatsResponse,
+    TenantUpdate,
 )
 
 
@@ -53,9 +54,14 @@ class TestTenantUpdate:
 class TestTenantResponse:
     def test_valid(self):
         t = TenantResponse(
-            id=1, tenant_code="T001", tenant_name="Corp",
-            status="ACTIVE", max_users=100, max_roles=20,
-            max_storage_gb=10, created_at=datetime.now(),
+            id=1,
+            tenant_code="T001",
+            tenant_name="Corp",
+            status="ACTIVE",
+            max_users=100,
+            max_roles=20,
+            max_storage_gb=10,
+            created_at=datetime.now(),
         )
         assert t.user_count is None
 
@@ -66,7 +72,9 @@ class TestTenantResponse:
 
 class TestTenantInitRequest:
     def test_valid(self):
-        r = TenantInitRequest(admin_username="admin", admin_password="123456", admin_email="a@b.com")
+        r = TenantInitRequest(
+            admin_username="admin", admin_password="123456", admin_email="a@b.com"
+        )
         assert r.copy_role_templates is True
 
     def test_short_username(self):
@@ -81,9 +89,13 @@ class TestTenantInitRequest:
 class TestTenantStatsResponse:
     def test_valid(self):
         s = TenantStatsResponse(
-            tenant_id=1, tenant_code="T001",
-            user_count=10, role_count=5, project_count=3,
-            storage_used_mb=100.5, plan_limits={},
+            tenant_id=1,
+            tenant_code="T001",
+            user_count=10,
+            role_count=5,
+            project_count=3,
+            storage_used_mb=100.5,
+            plan_limits={},
         )
         assert s.storage_used_mb == 100.5
 
@@ -105,7 +117,10 @@ class TestRoleTemplateBase:
 class TestRoleTemplateResponse:
     def test_valid(self):
         r = RoleTemplateResponse(
-            id=1, role_code="R001", role_name="Admin",
-            is_active=True, created_at=datetime.now(),
+            id=1,
+            role_code="R001",
+            role_name="Admin",
+            is_active=True,
+            created_at=datetime.now(),
         )
         assert r.is_active is True

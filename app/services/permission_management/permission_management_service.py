@@ -7,7 +7,7 @@
 """
 
 import logging
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -24,14 +24,14 @@ logger = logging.getLogger(__name__)
 
 class PermissionManagementService:
     """权限管理服务"""
-    
+
     def __init__(self, db: Session):
         self.db = db
-    
+
     # ============================================================
     # 权限 CRUD 业务逻辑
     # ============================================================
-    
+
     def list_permissions(
         self,
         tenant_id: int,
@@ -44,16 +44,16 @@ class PermissionManagementService:
     ) -> Dict[str, Any]:
         """
         获取权限列表（支持多租户隔离）
-        
+
         返回: {"items": [...], "total": int}
         """
         query = self.db.query(ApiPermission).filter(
             or_(
                 ApiPermission.tenant_id.is_(None),  # 系统级权限
-                ApiPermission.tenant_id == tenant_id  # 租户级权限
+                ApiPermission.tenant_id == tenant_id,  # 租户级权限
             )
         )
-        
+
         # 筛选条件
         if module:
             query = query.filter(ApiPermission.module == module)
@@ -69,7 +69,7 @@ class PermissionManagementService:
                     ApiPermission.description.contains(keyword),
                 )
             )
-        
+
         # 分页查询
         total = query.count()
         permissions = (
@@ -78,60 +78,59 @@ class PermissionManagementService:
             .limit(page_size)
             .all()
         )
-        
+
         return {
             "items": permissions,
             "total": total,
         }
-    
+
     def list_modules(self, tenant_id: int) -> List[str]:
         """获取所有权限模块列表（去重）"""
         modules = (
             self.db.query(ApiPermission.module)
             .filter(
                 ApiPermission.module.isnot(None),
-                or_(
-                    ApiPermission.tenant_id.is_(None),
-                    ApiPermission.tenant_id == tenant_id
-                )
+                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
             )
             .distinct()
             .order_by(ApiPermission.module)
             .all()
         )
-        
+
         return [m[0] for m in modules if m[0]]
-    
+
     def get_permission(
         self,
         permission_id: int,
         tenant_id: int,
     ) -> Optional[ApiPermission]:
         """获取权限详情"""
-        return self.db.query(ApiPermission).filter(
-            ApiPermission.id == permission_id,
-            or_(
-                ApiPermission.tenant_id.is_(None),
-                ApiPermission.tenant_id == tenant_id
+        return (
+            self.db.query(ApiPermission)
+            .filter(
+                ApiPermission.id == permission_id,
+                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
             )
-        ).first()
-    
+            .first()
+        )
+
     def check_permission_code_exists(
         self,
         perm_code: str,
         tenant_id: int,
     ) -> bool:
         """检查权限编码是否已存在"""
-        existing = self.db.query(ApiPermission).filter(
-            ApiPermission.perm_code == perm_code,
-            or_(
-                ApiPermission.tenant_id.is_(None),
-                ApiPermission.tenant_id == tenant_id
+        existing = (
+            self.db.query(ApiPermission)
+            .filter(
+                ApiPermission.perm_code == perm_code,
+                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
             )
-        ).first()
-        
+            .first()
+        )
+
         return existing is not None
-    
+
     def create_permission(
         self,
         tenant_id: int,
@@ -156,13 +155,13 @@ class PermissionManagementService:
             is_active=True,
             is_system=False,
         )
-        
+
         self.db.add(permission)
         self.db.commit()
         self.db.refresh(permission)
-        
+
         return permission
-    
+
     def update_permission(
         self,
         permission: ApiPermission,
@@ -186,41 +185,41 @@ class PermissionManagementService:
             permission.description = description
         if is_active is not None:
             permission.is_active = is_active
-        
+
         self.db.commit()
         self.db.refresh(permission)
-        
+
         return permission
-    
+
     def count_roles_using_permission(self, permission_id: int) -> int:
         """统计使用该权限的角色数量"""
-        return self.db.query(RoleApiPermission).filter(
-            RoleApiPermission.permission_id == permission_id
-        ).count()
-    
+        return (
+            self.db.query(RoleApiPermission)
+            .filter(RoleApiPermission.permission_id == permission_id)
+            .count()
+        )
+
     def delete_permission(self, permission: ApiPermission) -> None:
         """删除权限"""
         self.db.delete(permission)
         self.db.commit()
-    
+
     # ============================================================
     # 角色权限关联业务逻辑
     # ============================================================
-    
+
     def get_role(
         self,
         role_id: int,
         tenant_id: int,
     ) -> Optional[Role]:
         """获取角色（支持多租户隔离）"""
-        return self.db.query(Role).filter(
-            Role.id == role_id,
-            or_(
-                Role.tenant_id.is_(None),
-                Role.tenant_id == tenant_id
-            )
-        ).first()
-    
+        return (
+            self.db.query(Role)
+            .filter(Role.id == role_id, or_(Role.tenant_id.is_(None), Role.tenant_id == tenant_id))
+            .first()
+        )
+
     def get_role_permissions(self, role_id: int) -> List[ApiPermission]:
         """获取角色的所有权限"""
         return (
@@ -231,7 +230,7 @@ class PermissionManagementService:
             .order_by(ApiPermission.module, ApiPermission.perm_code)
             .all()
         )
-    
+
     def assign_role_permissions(
         self,
         role_id: int,
@@ -240,33 +239,32 @@ class PermissionManagementService:
     ) -> int:
         """
         为角色分配权限（覆盖式更新）
-        
+
         返回: 成功分配的权限数量
         """
         # 删除现有权限关联
-        self.db.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == role_id
-        ).delete()
-        
+        self.db.query(RoleApiPermission).filter(RoleApiPermission.role_id == role_id).delete()
+
         # 验证权限ID并添加新的关联
         valid_count = 0
         for perm_id in permission_ids:
-            permission = self.db.query(ApiPermission).filter(
-                ApiPermission.id == perm_id,
-                or_(
-                    ApiPermission.tenant_id.is_(None),
-                    ApiPermission.tenant_id == tenant_id
+            permission = (
+                self.db.query(ApiPermission)
+                .filter(
+                    ApiPermission.id == perm_id,
+                    or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
                 )
-            ).first()
-            
+                .first()
+            )
+
             if permission:
                 self.db.add(RoleApiPermission(role_id=role_id, permission_id=perm_id))
                 valid_count += 1
-        
+
         self.db.commit()
-        
+
         return valid_count
-    
+
     def invalidate_permission_cache(
         self,
         role_id: int,
@@ -275,19 +273,20 @@ class PermissionManagementService:
         """清除权限缓存"""
         try:
             from app.services.permission_cache_service import get_permission_cache_service
+
             cache_service = get_permission_cache_service()
             cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
         except Exception as e:
             logger.warning(f"清除权限缓存失败: {e}")
-    
+
     # ============================================================
     # 用户权限查询业务逻辑
     # ============================================================
-    
+
     def get_user(self, user_id: int) -> Optional[User]:
         """获取用户"""
         return self.db.query(User).filter(User.id == user_id).first()
-    
+
     def get_user_permissions(
         self,
         user_id: int,
@@ -295,28 +294,23 @@ class PermissionManagementService:
     ) -> List[ApiPermission]:
         """
         获取用户的所有权限（通过角色继承）
-        
+
         - 包含直接分配的角色权限
         - 支持角色继承（如果启用）
         - 返回去重后的权限列表
         """
         from app.services.permission_service import PermissionService
-        
-        permission_codes = PermissionService.get_user_permissions(
-            self.db, user_id, tenant_id
-        )
-        
+
+        permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
+
         # 获取权限详情
         return (
             self.db.query(ApiPermission)
-            .filter(
-                ApiPermission.perm_code.in_(permission_codes),
-                ApiPermission.is_active
-            )
+            .filter(ApiPermission.perm_code.in_(permission_codes), ApiPermission.is_active)
             .order_by(ApiPermission.module, ApiPermission.perm_code)
             .all()
         )
-    
+
     def check_user_permission(
         self,
         user_id: int,
@@ -326,7 +320,7 @@ class PermissionManagementService:
     ) -> bool:
         """检查用户是否有指定权限"""
         from app.services.permission_service import PermissionService
-        
+
         return PermissionService.check_permission(
             self.db, user_id, permission_code, user, tenant_id
         )

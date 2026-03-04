@@ -61,14 +61,14 @@ def get_project_workspace(
     document_info = build_document_info(db, project_id)
 
     return {
-        'project': project_info,
-        'team': team_info,
-        'tasks': task_info,
-        'bonus': bonus_info,
-        'meetings': meeting_info,
-        'issues': issue_info,
-        'solutions': solution_info,
-        'documents': document_info,
+        "project": project_info,
+        "team": team_info,
+        "tasks": task_info,
+        "bonus": bonus_info,
+        "meetings": meeting_info,
+        "issues": issue_info,
+        "solutions": solution_info,
+        "documents": document_info,
     }
 
 
@@ -82,31 +82,32 @@ def get_project_bonuses(
     获取项目奖金信息
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     bonus_service = ProjectBonusService(db)
 
     return {
-        'rules': [
+        "rules": [
             {
-                'id': r.id,
-                'rule_name': r.rule_name,
-                'bonus_type': r.bonus_type,
+                "id": r.id,
+                "rule_name": r.rule_name,
+                "bonus_type": r.bonus_type,
             }
             for r in bonus_service.get_project_bonus_rules(project_id)
         ],
-        'calculations': [
+        "calculations": [
             {
-                'id': c.id,
-                'calculation_code': c.calculation_code,
-                'user_name': c.user.real_name or c.user.username if c.user else 'Unknown',
-                'calculated_amount': float(c.calculated_amount or 0),
-                'status': c.status,
+                "id": c.id,
+                "calculation_code": c.calculation_code,
+                "user_name": c.user.real_name or c.user.username if c.user else "Unknown",
+                "calculated_amount": float(c.calculated_amount or 0),
+                "status": c.status,
             }
             for c in bonus_service.get_project_bonus_calculations(project_id)
         ],
-        'statistics': bonus_service.get_project_bonus_statistics(project_id),
-        'member_summary': bonus_service.get_project_member_bonus_summary(project_id),
+        "statistics": bonus_service.get_project_bonus_statistics(project_id),
+        "member_summary": bonus_service.get_project_member_bonus_summary(project_id),
     }
 
 
@@ -122,32 +123,31 @@ def get_project_meetings(
     获取项目关联的会议列表
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     meeting_service = ProjectMeetingService(db)
     meetings = meeting_service.get_project_meetings(
-        project_id,
-        status=status,
-        rhythm_level=rhythm_level
+        project_id, status=status, rhythm_level=rhythm_level
     )
 
     return {
-        'meetings': [
+        "meetings": [
             {
-                'id': m.id,
-                'meeting_name': m.meeting_name,
-                'meeting_date': m.meeting_date.isoformat() if m.meeting_date else None,
-                'rhythm_level': m.rhythm_level,
-                'status': m.status,
-                'organizer_name': m.organizer_name,
-                'minutes': m.minutes,
-                'decisions': m.decisions,
-                'has_minutes': bool(m.minutes),
-                'has_decisions': bool(m.decisions),
+                "id": m.id,
+                "meeting_name": m.meeting_name,
+                "meeting_date": m.meeting_date.isoformat() if m.meeting_date else None,
+                "rhythm_level": m.rhythm_level,
+                "status": m.status,
+                "organizer_name": m.organizer_name,
+                "minutes": m.minutes,
+                "decisions": m.decisions,
+                "has_minutes": bool(m.minutes),
+                "has_decisions": bool(m.decisions),
             }
             for m in meetings
         ],
-        'statistics': meeting_service.get_project_meeting_statistics(project_id),
+        "statistics": meeting_service.get_project_meeting_statistics(project_id),
     }
 
 
@@ -163,14 +163,11 @@ def link_meeting_to_project(
     将会议关联到项目
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     meeting_service = ProjectMeetingService(db)
-    success = meeting_service.link_meeting_to_project(
-        meeting_id,
-        project_id,
-        is_primary=is_primary
-    )
+    success = meeting_service.link_meeting_to_project(meeting_id, project_id, is_primary=is_primary)
 
     if not success:
         raise HTTPException(status_code=400, detail="关联失败")
@@ -189,6 +186,7 @@ def get_project_issues(
     获取项目问题列表
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     query = db.query(Issue).filter(Issue.project_id == project_id)
@@ -199,18 +197,18 @@ def get_project_issues(
     issues = query.order_by(Issue.report_date.desc()).all()
 
     return {
-        'issues': [
+        "issues": [
             {
-                'id': i.id,
-                'issue_no': i.issue_no,
-                'title': i.title,
-                'status': i.status,
-                'severity': i.severity,
-                'priority': i.priority,
-                'solution': i.solution,
-                'has_solution': bool(i.solution),
-                'assignee_name': i.assignee_name,
-                'report_date': i.report_date.isoformat() if i.report_date else None,
+                "id": i.id,
+                "issue_no": i.issue_no,
+                "title": i.title,
+                "status": i.status,
+                "severity": i.severity,
+                "priority": i.priority,
+                "solution": i.solution,
+                "has_solution": bool(i.solution),
+                "assignee_name": i.assignee_name,
+                "report_date": i.report_date.isoformat() if i.report_date else None,
             }
             for i in issues
         ],
@@ -229,15 +227,14 @@ def get_project_solutions(
     获取项目解决方案库
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     solution_service = ProjectSolutionService(db)
 
     return {
-        'solutions': solution_service.get_project_solutions(
-            project_id,
-            issue_type=issue_type,
-            category=category
+        "solutions": solution_service.get_project_solutions(
+            project_id, issue_type=issue_type, category=category
         ),
-        'statistics': solution_service.get_project_solution_statistics(project_id),
+        "statistics": solution_service.get_project_solution_statistics(project_id),
     }

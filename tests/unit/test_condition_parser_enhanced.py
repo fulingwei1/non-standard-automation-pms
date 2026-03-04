@@ -6,8 +6,9 @@
 """
 
 import unittest
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+
 from app.services.approval_engine.condition_parser import (
     ConditionEvaluator,
     ConditionParseError,
@@ -108,9 +109,7 @@ class TestJinja2Filters(unittest.TestCase):
                 {"status": "DONE"},
             ]
         }
-        result = self.evaluator.evaluate(
-            "{{ items | count_by('status', 'DONE') }}", context
-        )
+        result = self.evaluator.evaluate("{{ items | count_by('status', 'DONE') }}", context)
         self.assertEqual(result, 2)
 
     def test_count_by_filter_all(self):
@@ -444,29 +443,19 @@ class TestCompareValues(unittest.TestCase):
     def test_contains_operator(self):
         """测试contains操作符"""
         self.assertTrue(self.evaluator._compare_values("hello world", "contains", "world"))
-        self.assertFalse(
-            self.evaluator._compare_values("hello world", "contains", "test")
-        )
+        self.assertFalse(self.evaluator._compare_values("hello world", "contains", "test"))
         self.assertFalse(self.evaluator._compare_values(None, "contains", "test"))
 
     def test_starts_with_operator(self):
         """测试starts_with操作符"""
-        self.assertTrue(
-            self.evaluator._compare_values("hello world", "starts_with", "hello")
-        )
-        self.assertFalse(
-            self.evaluator._compare_values("hello world", "starts_with", "world")
-        )
+        self.assertTrue(self.evaluator._compare_values("hello world", "starts_with", "hello"))
+        self.assertFalse(self.evaluator._compare_values("hello world", "starts_with", "world"))
         self.assertFalse(self.evaluator._compare_values(None, "starts_with", "hello"))
 
     def test_ends_with_operator(self):
         """测试ends_with操作符"""
-        self.assertTrue(
-            self.evaluator._compare_values("hello world", "ends_with", "world")
-        )
-        self.assertFalse(
-            self.evaluator._compare_values("hello world", "ends_with", "hello")
-        )
+        self.assertTrue(self.evaluator._compare_values("hello world", "ends_with", "world"))
+        self.assertFalse(self.evaluator._compare_values("hello world", "ends_with", "hello"))
         self.assertFalse(self.evaluator._compare_values(None, "ends_with", "world"))
 
     def test_is_null_operator(self):
@@ -477,9 +466,7 @@ class TestCompareValues(unittest.TestCase):
 
     def test_regex_operator(self):
         """测试regex操作符"""
-        self.assertTrue(
-            self.evaluator._compare_values("hello123", "regex", r"hello\d+")
-        )
+        self.assertTrue(self.evaluator._compare_values("hello123", "regex", r"hello\d+"))
         self.assertFalse(self.evaluator._compare_values("hello", "regex", r"hello\d+"))
         self.assertFalse(self.evaluator._compare_values(None, "regex", r"test"))
 
@@ -524,17 +511,13 @@ class TestSQLLikeEvaluation(unittest.TestCase):
     def test_in_operator(self):
         """测试IN操作符"""
         context = {"form": {"status": "DONE"}}
-        result = self.evaluator._parse_sql_condition(
-            "form.status IN (DONE, PENDING)", context
-        )
+        result = self.evaluator._parse_sql_condition("form.status IN (DONE, PENDING)", context)
         self.assertTrue(result)
 
     def test_between_operator(self):
         """测试BETWEEN操作符"""
         context = {"form": {"value": 5}}
-        result = self.evaluator._parse_sql_condition(
-            "form.value BETWEEN 1 AND 10", context
-        )
+        result = self.evaluator._parse_sql_condition("form.value BETWEEN 1 AND 10", context)
         self.assertTrue(result)
 
     def test_parse_value_integer(self):

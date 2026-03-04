@@ -52,9 +52,7 @@ async def get_team_members(
     members = (
         db.query(ProjectMember)
         .options(joinedload(ProjectMember.user))
-        .filter(
-            ProjectMember.lead_member_id == member_id, ProjectMember.is_active
-        )
+        .filter(ProjectMember.lead_member_id == member_id, ProjectMember.is_active)
         .all()
     )
 

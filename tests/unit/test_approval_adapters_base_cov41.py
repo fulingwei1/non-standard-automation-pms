@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 class ConcreteAdapter:
     """Concrete implementation for testing abstract base."""
+
     entity_type = "TEST"
 
     def __init__(self, db):
@@ -110,8 +111,10 @@ def test_get_department_manager_user_id_no_dept():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = None
     adapter = _make_adapter(db)
-    with patch("app.models.organization.Department", create=True), \
-         patch("app.models.organization.Employee", create=True), \
-         patch("app.models.user.User", create=True):
+    with (
+        patch("app.models.organization.Department", create=True),
+        patch("app.models.organization.Employee", create=True),
+        patch("app.models.user.User", create=True),
+    ):
         result = adapter.get_department_manager_user_id("非存在部门")
         assert result is None

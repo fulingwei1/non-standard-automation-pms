@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from app.services.sales_team_service import SalesTeamService, SalesRegionService
+from app.services.sales_team_service import SalesRegionService, SalesTeamService
 
 
 @pytest.fixture
@@ -18,6 +18,7 @@ def mock_db():
 # ---------------------------------------------------------------------------
 # SalesTeamService
 # ---------------------------------------------------------------------------
+
 
 class TestSalesTeamServiceCreate:
     @patch("app.services.sales_team_service.save_obj")
@@ -55,7 +56,9 @@ class TestSalesTeamServiceGet:
 
     def test_get_teams_with_filters(self, mock_db):
         teams = [MagicMock(), MagicMock()]
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = teams
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            teams
+        )
 
         result = SalesTeamService.get_teams(mock_db, team_type="SALES", is_active=True)
         assert result is not None
@@ -163,6 +166,7 @@ class TestSalesTeamTree:
 # ---------------------------------------------------------------------------
 # SalesRegionService
 # ---------------------------------------------------------------------------
+
 
 class TestSalesRegionService:
     @patch("app.services.sales_team_service.save_obj")

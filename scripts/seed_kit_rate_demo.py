@@ -248,14 +248,62 @@ def main():
 
         if bom.items.count() == 0:
             bom_items_payload = [
-                {"code": "MAT-KIT-001", "qty": Decimal("4"), "price": Decimal("1200"), "received": Decimal("4"), "key": True},
-                {"code": "MAT-KIT-002", "qty": Decimal("3"), "price": Decimal("3500"), "received": Decimal("1"), "key": True},
-                {"code": "MAT-KIT-003", "qty": Decimal("5"), "price": Decimal("800"), "received": Decimal("0"), "key": False},
-                {"code": "MAT-KIT-004", "qty": Decimal("6"), "price": Decimal("150"), "received": Decimal("0"), "key": False},
-                {"code": "MAT-KIT-005", "qty": Decimal("2"), "price": Decimal("220"), "received": Decimal("2"), "key": False},
-                {"code": "MAT-KIT-006", "qty": Decimal("1"), "price": Decimal("980"), "received": Decimal("1"), "key": True},
-                {"code": "MAT-KIT-007", "qty": Decimal("2"), "price": Decimal("540"), "received": Decimal("0"), "key": False},
-                {"code": "MAT-KIT-008", "qty": Decimal("4"), "price": Decimal("300"), "received": Decimal("0"), "key": False},
+                {
+                    "code": "MAT-KIT-001",
+                    "qty": Decimal("4"),
+                    "price": Decimal("1200"),
+                    "received": Decimal("4"),
+                    "key": True,
+                },
+                {
+                    "code": "MAT-KIT-002",
+                    "qty": Decimal("3"),
+                    "price": Decimal("3500"),
+                    "received": Decimal("1"),
+                    "key": True,
+                },
+                {
+                    "code": "MAT-KIT-003",
+                    "qty": Decimal("5"),
+                    "price": Decimal("800"),
+                    "received": Decimal("0"),
+                    "key": False,
+                },
+                {
+                    "code": "MAT-KIT-004",
+                    "qty": Decimal("6"),
+                    "price": Decimal("150"),
+                    "received": Decimal("0"),
+                    "key": False,
+                },
+                {
+                    "code": "MAT-KIT-005",
+                    "qty": Decimal("2"),
+                    "price": Decimal("220"),
+                    "received": Decimal("2"),
+                    "key": False,
+                },
+                {
+                    "code": "MAT-KIT-006",
+                    "qty": Decimal("1"),
+                    "price": Decimal("980"),
+                    "received": Decimal("1"),
+                    "key": True,
+                },
+                {
+                    "code": "MAT-KIT-007",
+                    "qty": Decimal("2"),
+                    "price": Decimal("540"),
+                    "received": Decimal("0"),
+                    "key": False,
+                },
+                {
+                    "code": "MAT-KIT-008",
+                    "qty": Decimal("4"),
+                    "price": Decimal("300"),
+                    "received": Decimal("0"),
+                    "key": False,
+                },
             ]
 
             total_amount = Decimal("0")
@@ -306,8 +354,18 @@ def main():
 
         if purchase_order.items.count() == 0:
             po_items_payload = [
-                {"code": "MAT-KIT-002", "qty": Decimal("1"), "price": Decimal("3500"), "received": Decimal("0")},
-                {"code": "MAT-KIT-003", "qty": Decimal("2"), "price": Decimal("800"), "received": Decimal("0")},
+                {
+                    "code": "MAT-KIT-002",
+                    "qty": Decimal("1"),
+                    "price": Decimal("3500"),
+                    "received": Decimal("0"),
+                },
+                {
+                    "code": "MAT-KIT-003",
+                    "qty": Decimal("2"),
+                    "price": Decimal("800"),
+                    "received": Decimal("0"),
+                },
             ]
 
             po_total = Decimal("0")

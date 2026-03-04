@@ -11,13 +11,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.api.v1.endpoints.base_crud_router_sync import create_crud_router_sync
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.schemas.response import (
-    SuccessResponse,
     PaginatedResponse,
-    success_response,
+    SuccessResponse,
     paginated_response,
+    success_response,
 )
 from app.models.user import User
 from app.schemas.project.customer import (
@@ -26,7 +27,6 @@ from app.schemas.project.customer import (
     CustomerUpdate,
 )
 from app.services.customer_service import CustomerService
-from app.api.v1.endpoints.base_crud_router_sync import create_crud_router_sync
 
 # 创建通用CRUD路由
 crud_router = create_crud_router_sync(
@@ -57,11 +57,12 @@ router.include_router(crud_router)
 
 # ========== 覆盖列表查询端点（支持额外筛选参数） ==========
 
+
 @router.get(
     "/",
     response_model=PaginatedResponse[CustomerResponse],
     summary="客户列表",
-    description="分页查询客户列表，支持筛选、搜索、排序"
+    description="分页查询客户列表，支持筛选、搜索、排序",
 )
 def list_customers(
     db: Session = Depends(deps.get_db),
@@ -73,7 +74,7 @@ def list_customers(
 ) -> PaginatedResponse[CustomerResponse]:
     """
     获取客户列表（支持分页、搜索、筛选）
-    
+
     - **keyword**: 关键词搜索（客户名称/编码）
     - **industry**: 行业筛选
     - **is_active**: 是否启用
@@ -90,18 +91,19 @@ def list_customers(
         items=result["items"],
         total=result["total"],
         page=result["page"],
-        page_size=result["page_size"]
+        page_size=result["page_size"],
     )
 
 
 # ========== 覆盖创建端点（支持自动生成编码） ==========
+
 
 @router.post(
     "/",
     response_model=SuccessResponse[CustomerResponse],
     status_code=201,
     summary="创建客户",
-    description="创建新客户，如果未提供客户编码，系统将自动生成"
+    description="创建新客户，如果未提供客户编码，系统将自动生成",
 )
 def create_customer(
     *,
@@ -111,31 +113,28 @@ def create_customer(
 ) -> SuccessResponse[CustomerResponse]:
     """
     创建新客户
-    
+
     如果未提供客户编码，系统将自动生成 CUS-xxxxxxx 格式的编码
     """
     service = CustomerService(db)
     if not customer_in.customer_code:
         customer_in.customer_code = service.generate_code()
-    
+
     customer_data = service.create(
         customer_in, check_unique={"customer_code": customer_in.customer_code}
     )
-    
-    return success_response(
-        data=customer_data,
-        message="客户创建成功",
-        code=201
-    )
+
+    return success_response(data=customer_data, message="客户创建成功", code=201)
 
 
 # ========== 覆盖更新端点（支持自动同步） ==========
+
 
 @router.put(
     "/{customer_id}",
     response_model=SuccessResponse[CustomerResponse],
     summary="更新客户",
-    description="更新客户信息，支持自动同步客户信息到关联的项目和合同"
+    description="更新客户信息，支持自动同步客户信息到关联的项目和合同",
 )
 def update_customer(
     *,
@@ -147,7 +146,7 @@ def update_customer(
 ) -> SuccessResponse[CustomerResponse]:
     """
     更新客户信息
-    
+
     支持自动同步客户信息到关联的项目和合同
     """
     service = CustomerService(db)
@@ -155,22 +154,20 @@ def update_customer(
     # 为了保持透明度，我们在 service 中增加相关的处理
     if hasattr(service, "set_auto_sync"):
         service.set_auto_sync(auto_sync)
-    
+
     customer_data = service.update(customer_id, customer_in)
-    return success_response(
-        data=customer_data,
-        message="客户更新成功"
-    )
+    return success_response(data=customer_data, message="客户更新成功")
 
 
 # ========== 覆盖删除端点（支持软删除） ==========
+
 
 @router.delete(
     "/{customer_id}",
     response_model=SuccessResponse,
     status_code=200,
     summary="删除客户",
-    description="删除客户（建议使用软删除）"
+    description="删除客户（建议使用软删除）",
 )
 def delete_customer(
     *,
@@ -183,7 +180,4 @@ def delete_customer(
     """
     service = CustomerService(db)
     service.delete(customer_id, soft_delete=True)
-    return success_response(
-        data=None,
-        message="客户已删除"
-    )
+    return success_response(data=None, message="客户已删除")

@@ -17,9 +17,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.common.query_filters import apply_like_filter
 from app.core import security
-from app.common.date_range import get_month_range
 from app.models.presale import (
     PresaleSolution,
     PresaleSupportTicket,
@@ -89,17 +89,14 @@ def generate_tender_no(db: Session) -> str:
     return f"TENDER-{today}-{seq:03d}"
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/statistics",
-    tags=["statistics"]
-)
+router = APIRouter(prefix="/statistics", tags=["statistics"])
 
 # 共 4 个路由
 
 # ==================== 售前统计 ====================
+
 
 @router.get("/stats/workload", response_model=ResponseModel)
 def get_workload_stats(
@@ -121,8 +118,7 @@ def get_workload_stats(
         _, end_date = get_month_range(today)
 
     query = db.query(PresaleWorkload).filter(
-        PresaleWorkload.stat_date >= start_date,
-        PresaleWorkload.stat_date <= end_date
+        PresaleWorkload.stat_date >= start_date, PresaleWorkload.stat_date <= end_date
     )
 
     if user_id:
@@ -150,7 +146,7 @@ def get_workload_stats(
                 "total_tickets": total_pending + total_processing + total_completed,
                 "planned_hours": round(total_planned_hours, 2),
                 "actual_hours": round(total_actual_hours, 2),
-                "solutions_count": total_solutions
+                "solutions_count": total_solutions,
             },
             "by_user": [
                 {
@@ -160,11 +156,11 @@ def get_workload_stats(
                     "completed_tickets": w.completed_tickets or 0,
                     "planned_hours": float(w.planned_hours or 0),
                     "actual_hours": float(w.actual_hours or 0),
-                    "solutions_count": w.solutions_count or 0
+                    "solutions_count": w.solutions_count or 0,
                 }
                 for w in workloads
-            ]
-        }
+            ],
+        },
     )
 
 
@@ -187,11 +183,15 @@ def get_response_time_stats(
         _, end_date = get_month_range(today)
 
     # 统计接单响应时间（从申请到接单的时间差）
-    tickets = db.query(PresaleSupportTicket).filter(
-        PresaleSupportTicket.apply_time >= datetime.combine(start_date, datetime.min.time()),
-        PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time()),
-        PresaleSupportTicket.accept_time.isnot(None)
-    ).all()
+    tickets = (
+        db.query(PresaleSupportTicket)
+        .filter(
+            PresaleSupportTicket.apply_time >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time()),
+            PresaleSupportTicket.accept_time.isnot(None),
+        )
+        .all()
+    )
 
     response_times = []
     for ticket in tickets:
@@ -220,15 +220,19 @@ def get_response_time_stats(
                 "total_tickets": len(tickets),
                 "avg_response_hours": round(avg_response_time, 2),
                 "min_response_hours": round(min(response_times), 2) if response_times else 0.0,
-                "max_response_hours": round(max(response_times), 2) if response_times else 0.0
+                "max_response_hours": round(max(response_times), 2) if response_times else 0.0,
             },
             "completion_time": {
                 "total_completed": len(completed_tickets),
                 "avg_completion_hours": round(avg_completion_time, 2),
-                "min_completion_hours": round(min(completion_times), 2) if completion_times else 0.0,
-                "max_completion_hours": round(max(completion_times), 2) if completion_times else 0.0
-            }
-        }
+                "min_completion_hours": (
+                    round(min(completion_times), 2) if completion_times else 0.0
+                ),
+                "max_completion_hours": (
+                    round(max(completion_times), 2) if completion_times else 0.0
+                ),
+            },
+        },
     )
 
 
@@ -251,34 +255,51 @@ def get_conversion_stats(
         _, end_date = get_month_range(today)
 
     # 统计方案数量
-    total_solutions = db.query(PresaleSolution).filter(
-        PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-        PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-    ).count()
+    total_solutions = (
+        db.query(PresaleSolution)
+        .filter(
+            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
+        )
+        .count()
+    )
 
     # 统计关联商机的方案
-    solutions_with_opp = db.query(PresaleSolution).filter(
-        PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-        PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
-        PresaleSolution.opportunity_id.isnot(None)
-    ).count()
+    solutions_with_opp = (
+        db.query(PresaleSolution)
+        .filter(
+            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
+            PresaleSolution.opportunity_id.isnot(None),
+        )
+        .count()
+    )
 
     # 统计转化为项目的方案（通过商机 -> 合同 -> 项目）
     from app.models.sales import Contract
-    solutions_with_opp_list = db.query(PresaleSolution).filter(
-        PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-        PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
-        PresaleSolution.opportunity_id.isnot(None)
-    ).all()
+
+    solutions_with_opp_list = (
+        db.query(PresaleSolution)
+        .filter(
+            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
+            PresaleSolution.opportunity_id.isnot(None),
+        )
+        .all()
+    )
 
     converted_count = 0
     for solution in solutions_with_opp_list:
         if solution.opportunity_id:
             # 查找该商机是否有合同，且合同关联了项目
-            contract = db.query(Contract).filter(
-                Contract.opportunity_id == solution.opportunity_id,
-                Contract.project_id.isnot(None)
-            ).first()
+            contract = (
+                db.query(Contract)
+                .filter(
+                    Contract.opportunity_id == solution.opportunity_id,
+                    Contract.project_id.isnot(None),
+                )
+                .first()
+            )
             if contract:
                 converted_count += 1
 
@@ -292,8 +313,8 @@ def get_conversion_stats(
             "total_solutions": total_solutions,
             "solutions_with_opportunity": solutions_with_opp,
             "converted_to_projects": converted_count,
-            "conversion_rate": round(conversion_rate, 2)
-        }
+            "conversion_rate": round(conversion_rate, 2),
+        },
     )
 
 
@@ -325,42 +346,59 @@ def get_performance_stats(
     performance_list = []
     for user in users:
         # 统计工单
-        tickets = db.query(PresaleSupportTicket).filter(
-            PresaleSupportTicket.assignee_id == user.id,
-            PresaleSupportTicket.apply_time >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time())
-        ).all()
+        tickets = (
+            db.query(PresaleSupportTicket)
+            .filter(
+                PresaleSupportTicket.assignee_id == user.id,
+                PresaleSupportTicket.apply_time
+                >= datetime.combine(start_date, datetime.min.time()),
+                PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time()),
+            )
+            .all()
+        )
 
-        completed_tickets = [t for t in tickets if t.status == 'COMPLETED']
+        completed_tickets = [t for t in tickets if t.status == "COMPLETED"]
         total_hours = sum(float(t.actual_hours or 0) for t in completed_tickets)
 
         # 统计方案
-        solutions = db.query(PresaleSolution).filter(
-            PresaleSolution.author_id == user.id,
-            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-        ).count()
+        solutions = (
+            db.query(PresaleSolution)
+            .filter(
+                PresaleSolution.author_id == user.id,
+                PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+                PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
+            )
+            .count()
+        )
 
         # 统计满意度
         rated_tickets = [t for t in completed_tickets if t.satisfaction_score]
-        avg_satisfaction = sum(t.satisfaction_score for t in rated_tickets) / len(rated_tickets) if rated_tickets else 0.0
+        avg_satisfaction = (
+            sum(t.satisfaction_score for t in rated_tickets) / len(rated_tickets)
+            if rated_tickets
+            else 0.0
+        )
 
-        performance_list.append({
-            "user_id": user.id,
-            "user_name": user.real_name or user.username,
-            "total_tickets": len(tickets),
-            "completed_tickets": len(completed_tickets),
-            "completion_rate": (len(completed_tickets) / len(tickets) * 100) if tickets else 0.0,
-            "total_hours": round(total_hours, 2),
-            "solutions_count": solutions,
-            "avg_satisfaction": round(avg_satisfaction, 2)
-        })
+        performance_list.append(
+            {
+                "user_id": user.id,
+                "user_name": user.real_name or user.username,
+                "total_tickets": len(tickets),
+                "completed_tickets": len(completed_tickets),
+                "completion_rate": (
+                    (len(completed_tickets) / len(tickets) * 100) if tickets else 0.0
+                ),
+                "total_hours": round(total_hours, 2),
+                "solutions_count": solutions,
+                "avg_satisfaction": round(avg_satisfaction, 2),
+            }
+        )
 
     return ResponseModel(
         code=200,
         message="success",
         data={
             "period": {"start": str(start_date), "end": str(end_date)},
-            "performance": performance_list
-        }
+            "performance": performance_list,
+        },
     )

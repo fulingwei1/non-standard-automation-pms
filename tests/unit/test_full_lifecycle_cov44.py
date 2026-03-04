@@ -7,6 +7,7 @@ try:
     from app.services.preset_stage_templates.templates.full_lifecycle import (
         FULL_LIFECYCLE_TEMPLATE,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

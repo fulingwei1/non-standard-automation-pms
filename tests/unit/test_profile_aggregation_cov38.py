@@ -2,9 +2,10 @@
 """
 Unit tests for ProfileAggregator (第三十八批)
 """
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.staff_matching.profile_aggregation", reason="导入失败，跳过")
 
@@ -85,8 +86,10 @@ class TestAggregateEmployeeProfile:
     def test_creates_new_profile_when_not_found(self, mock_db):
         """不存在档案时创建新档案"""
         profile_q, eval_q = self._setup_db_for_profile(mock_db, existing_profile=None)
-        
-        with patch("app.services.staff_matching.profile_aggregation.HrEmployeeProfile") as MockProfile:
+
+        with patch(
+            "app.services.staff_matching.profile_aggregation.HrEmployeeProfile"
+        ) as MockProfile:
             new_profile = make_profile()
             MockProfile.return_value = new_profile
             result = ProfileAggregator.aggregate_employee_profile(mock_db, employee_id=1)

@@ -21,10 +21,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -50,7 +47,7 @@ class TestTimesheetCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/timesheets",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -70,7 +67,7 @@ class TestTimesheetCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/timesheets",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -95,9 +92,7 @@ class TestTimesheetCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheets",
-            json=timesheet_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/timesheets", json=timesheet_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -120,7 +115,7 @@ class TestTimesheetCRUD:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/timesheets",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -134,8 +129,7 @@ class TestTimesheetCRUD:
         timesheet_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheets/{timesheet_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/timesheets/{timesheet_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -150,10 +144,7 @@ class TestTimesheetViews:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheets/week",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/timesheets/week", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have timesheet:read permission")
@@ -170,10 +161,7 @@ class TestTimesheetViews:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheets/month-summary",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/timesheets/month-summary", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have timesheet:read permission")
@@ -190,10 +178,7 @@ class TestTimesheetViews:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheets/statistics",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/timesheets/statistics", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have timesheet:read permission")
@@ -215,8 +200,7 @@ class TestTimesheetApproval:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheets/pending-approval",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/timesheets/pending-approval", headers=headers
         )
 
         if response.status_code == 403:

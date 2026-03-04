@@ -6,6 +6,7 @@
 """
 
 import pytest
+
 pytestmark = pytest.mark.skip(reason="Missing factory classes - needs implementation")
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -17,7 +18,6 @@ from app.api.v1.endpoints.acceptance.utils import (
     validate_completion_rules,
     validate_edit_rules,
 )
-
 
 # ==================== Test Fixtures ====================
 
@@ -83,7 +83,7 @@ class TestValidateAcceptanceRules:
         """FAT 验收必须指定设备 ID"""
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session, "FAT", project_id=test_project.id, machine_id=None
+                db_session, "FAT", project_id=test_project.id, machine_id=None
             )
             assert exc_info.value.status_code == 400
             assert "必须指定设备" in str(exc_info.value.detail)
@@ -92,42 +92,38 @@ class TestValidateAcceptanceRules:
         """FAT 验收指定的设备不存在应抛出 404"""
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session, "FAT", project_id=test_project.id, machine_id=99999
+                db_session, "FAT", project_id=test_project.id, machine_id=99999
             )
             assert exc_info.value.status_code == 404
             assert "设备不存在" in str(exc_info.value.detail)
 
-    def test_fat_machine_wrong_stage(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_fat_machine_wrong_stage(self, db_session: Session, test_project, test_machine):
         """设备未达到 S5 阶段时 FAT 验收应该抛出 400"""
         test_machine.stage = "S3"
         db_session.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session,
-            "FAT",
-            project_id=test_project.id,
-            machine_id=test_machine.id,
+                db_session,
+                "FAT",
+                project_id=test_project.id,
+                machine_id=test_machine.id,
             )
             assert exc_info.value.status_code == 400
             assert "尚未完成调试" in str(exc_info.value.detail)
             assert "S5" in str(exc_info.value.detail)
 
-    def test_fat_project_wrong_stage(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_fat_project_wrong_stage(self, db_session: Session, test_project, test_machine):
         """项目未进入 S5 阶段时 FAT 验收应该抛出 400"""
         test_project.stage = "S4"
         db_session.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session,
-            "FAT",
-            project_id=test_project.id,
-            machine_id=test_machine.id,
+                db_session,
+                "FAT",
+                project_id=test_project.id,
+                machine_id=test_machine.id,
             )
             assert exc_info.value.status_code == 400
             assert "尚未进入调试出厂阶段" in str(exc_info.value.detail)
@@ -140,21 +136,19 @@ class TestValidateAcceptanceRules:
 
         # 不应该抛出异常
         validate_acceptance_rules(
-        db_session, "FAT", project_id=test_project.id, machine_id=test_machine.id
+            db_session, "FAT", project_id=test_project.id, machine_id=test_machine.id
         )
 
     def test_sat_without_machine_id(self, db_session: Session, test_project):
         """SAT 验收必须指定设备 ID"""
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session, "SAT", project_id=test_project.id, machine_id=None
+                db_session, "SAT", project_id=test_project.id, machine_id=None
             )
             assert exc_info.value.status_code == 400
             assert "必须指定设备" in str(exc_info.value.detail)
 
-    def test_sat_without_fat_completed(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_sat_without_fat_completed(self, db_session: Session, test_project, test_machine):
         """SAT 验收在 FAT 未通过时应该抛出 400"""
         test_machine.stage = "S7"
         test_project.stage = "S7"
@@ -162,27 +156,25 @@ class TestValidateAcceptanceRules:
 
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session,
-            "SAT",
-            project_id=test_project.id,
-            machine_id=test_machine.id,
+                db_session,
+                "SAT",
+                project_id=test_project.id,
+                machine_id=test_machine.id,
             )
             assert exc_info.value.status_code == 400
             assert "SAT验收必须在FAT验收通过后" in str(exc_info.value.detail)
 
-    def test_sat_project_wrong_stage(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_sat_project_wrong_stage(self, db_session: Session, test_project, test_machine):
         """项目未进入 S7 阶段时 SAT 验收应该抛出 400"""
         # 创建通过的 FAT 验收单
         from tests.factories import AcceptanceOrderFactory
 
         fat_order = AcceptanceOrderFactory.create(
-        project=test_project,
-        machine=test_machine,
-        acceptance_type="FAT",
-        status="COMPLETED",
-        overall_result="PASSED",
+            project=test_project,
+            machine=test_machine,
+            acceptance_type="FAT",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.commit()
 
@@ -191,27 +183,25 @@ class TestValidateAcceptanceRules:
 
         with pytest.raises(HTTPException) as exc_info:
             validate_acceptance_rules(
-            db_session,
-            "SAT",
-            project_id=test_project.id,
-            machine_id=test_machine.id,
+                db_session,
+                "SAT",
+                project_id=test_project.id,
+                machine_id=test_machine.id,
             )
             assert exc_info.value.status_code == 400
             assert "尚未进入现场安装阶段" in str(exc_info.value.detail)
 
-    def test_sat_success_after_fat(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_sat_success_after_fat(self, db_session: Session, test_project, test_machine):
         """SAT 验收在 FAT 通过后应该可以"""
         # 准备通过的 FAT 验收单
         from tests.factories import AcceptanceOrderFactory
 
         fat_order = AcceptanceOrderFactory.create(
-        project=test_project,
-        machine=test_machine,
-        acceptance_type="FAT",
-        status="COMPLETED",
-        overall_result="PASSED",
+            project=test_project,
+            machine=test_machine,
+            acceptance_type="FAT",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.commit()
 
@@ -221,7 +211,7 @@ class TestValidateAcceptanceRules:
 
         # 不应该抛出异常
         validate_acceptance_rules(
-        db_session, "SAT", project_id=test_project.id, machine_id=test_machine.id
+            db_session, "SAT", project_id=test_project.id, machine_id=test_machine.id
         )
 
     def test_final_without_machines(self, db_session: Session, test_project):
@@ -234,9 +224,7 @@ class TestValidateAcceptanceRules:
             assert exc_info.value.status_code == 400
             assert "项目中没有设备" in str(exc_info.value.detail)
 
-    def test_final_without_sat_completed(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_final_without_sat_completed(self, db_session: Session, test_project, test_machine):
         """终验收在 SAT 未通过时应该抛出 400"""
         test_project.stage = "S8"
         db_session.commit()
@@ -246,19 +234,17 @@ class TestValidateAcceptanceRules:
             assert exc_info.value.status_code == 400
             assert "尚未通过SAT验收" in str(exc_info.value.detail)
 
-    def test_final_project_wrong_stage(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_final_project_wrong_stage(self, db_session: Session, test_project, test_machine):
         """项目未进入 S8 阶段时终验收应该抛出 400"""
         # 准备通过的 SAT 验收单
         from tests.factories import AcceptanceOrderFactory
 
         sat_order = AcceptanceOrderFactory.create(
-        project=test_project,
-        machine=test_machine,
-        acceptance_type="SAT",
-        status="COMPLETED",
-        overall_result="PASSED",
+            project=test_project,
+            machine=test_machine,
+            acceptance_type="SAT",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.commit()
 
@@ -270,19 +256,17 @@ class TestValidateAcceptanceRules:
             assert exc_info.value.status_code == 400
             assert "尚未进入验收结项阶段" in str(exc_info.value.detail)
 
-    def test_final_success_after_all_sat(
-        self, db_session: Session, test_project, test_machine
-    ):
+    def test_final_success_after_all_sat(self, db_session: Session, test_project, test_machine):
         """终验收在所有设备 SAT 通过后应该可以"""
         # 准备通过的 SAT 验收单
         from tests.factories import AcceptanceOrderFactory
 
         sat_order = AcceptanceOrderFactory.create(
-        project=test_project,
-        machine=test_machine,
-        acceptance_type="SAT",
-        status="COMPLETED",
-        overall_result="PASSED",
+            project=test_project,
+            machine=test_machine,
+            acceptance_type="SAT",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.commit()
 
@@ -311,7 +295,7 @@ class TestValidateCompletionRules:
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order, is_blocking=True, status="OPEN"
+            order=test_acceptance_order, is_blocking=True, status="OPEN"
         )
         db_session.commit()
 
@@ -320,14 +304,12 @@ class TestValidateCompletionRules:
             assert exc_info.value.status_code == 400
             assert "未闭环的阻塞问题" in str(exc_info.value.detail)
 
-    def test_blocking_processing_issue(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_blocking_processing_issue(self, db_session: Session, test_acceptance_order):
         """处理中的阻塞问题应该抛出 400 错误"""
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order, is_blocking=True, status="PROCESSING"
+            order=test_acceptance_order, is_blocking=True, status="PROCESSING"
         )
         db_session.commit()
 
@@ -340,7 +322,7 @@ class TestValidateCompletionRules:
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order, is_blocking=True, status="DEFERRED"
+            order=test_acceptance_order, is_blocking=True, status="DEFERRED"
         )
         db_session.commit()
 
@@ -355,10 +337,10 @@ class TestValidateCompletionRules:
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order,
-        is_blocking=True,
-        status="RESOLVED",
-        verified_result="PENDING",
+            order=test_acceptance_order,
+            is_blocking=True,
+            status="RESOLVED",
+            verified_result="PENDING",
         )
         db_session.commit()
 
@@ -367,40 +349,34 @@ class TestValidateCompletionRules:
             assert exc_info.value.status_code == 400
             assert "未闭环的阻塞问题" in str(exc_info.value.detail)
 
-    def test_verified_blocking_issue_allowed(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_verified_blocking_issue_allowed(self, db_session: Session, test_acceptance_order):
         """已验证通过的阻塞问题应该允许完成验收"""
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order,
-        is_blocking=True,
-        status="RESOLVED",
-        verified_result="VERIFIED",
+            order=test_acceptance_order,
+            is_blocking=True,
+            status="RESOLVED",
+            verified_result="VERIFIED",
         )
         db_session.commit()
 
         # 不应该抛出异常
         validate_completion_rules(db_session, order_id=test_acceptance_order.id)
 
-    def test_non_blocking_issue_allowed(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_non_blocking_issue_allowed(self, db_session: Session, test_acceptance_order):
         """非阻塞问题应该允许完成验收"""
         from tests.factories import AcceptanceIssueFactory
 
         issue = AcceptanceIssueFactory.create(
-        order=test_acceptance_order, is_blocking=False, status="OPEN"
+            order=test_acceptance_order, is_blocking=False, status="OPEN"
         )
         db_session.commit()
 
         # 不应该抛出异常
         validate_completion_rules(db_session, order_id=test_acceptance_order.id)
 
-    def test_no_blocking_issues_allowed(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_no_blocking_issues_allowed(self, db_session: Session, test_acceptance_order):
         """没有阻塞问题应该允许完成验收"""
         # 不应该抛出异常
         validate_completion_rules(db_session, order_id=test_acceptance_order.id)
@@ -419,9 +395,7 @@ class TestValidateEditRules:
             assert exc_info.value.status_code == 404
             assert "验收单不存在" in str(exc_info.value.detail)
 
-    def test_customer_signed_not_editable(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_customer_signed_not_editable(self, db_session: Session, test_acceptance_order):
         """客户已签字后验收单不可修改"""
         test_acceptance_order.customer_signed_at = "2025-01-20"
         db_session.commit()
@@ -431,9 +405,7 @@ class TestValidateEditRules:
             assert exc_info.value.status_code == 400
             assert "客户已签字确认" in str(exc_info.value.detail)
 
-    def test_customer_signer_not_editable(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_customer_signer_not_editable(self, db_session: Session, test_acceptance_order):
         """有客户签字人后验收单不可修改"""
         test_acceptance_order.customer_signer = "客户姓名"
         db_session.commit()
@@ -443,9 +415,7 @@ class TestValidateEditRules:
             assert exc_info.value.status_code == 400
             assert "客户已签字确认" in str(exc_info.value.detail)
 
-    def test_officially_completed_not_editable(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_officially_completed_not_editable(self, db_session: Session, test_acceptance_order):
         """验收单已正式完成（已上传客户签署文件）不可修改"""
         test_acceptance_order.is_officially_completed = True
         db_session.commit()
@@ -496,10 +466,10 @@ class TestGenerateOrderNo:
 
         # 创建第一个验收单
         AcceptanceOrderFactory.create(
-        project=test_project,
-        machine=test_machine,
-        acceptance_type="FAT",
-        order_no="FAT-P2025001-M01-001",
+            project=test_project,
+            machine=test_machine,
+            acceptance_type="FAT",
+            order_no="FAT-P2025001-M01-001",
         )
         db_session.commit()
 
@@ -554,9 +524,7 @@ class TestGenerateIssueNo:
         issue_no = generate_issue_no(db_session, test_acceptance_order.order_no)
         assert issue_no.startswith("AI-SAT002-")
 
-    def test_issue_no_from_final_order(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_issue_no_from_final_order(self, db_session: Session, test_acceptance_order):
         """终验收单的问题编号格式正确"""
         test_acceptance_order.order_no = "FIN-P2025001-001"
         db_session.commit()
@@ -572,18 +540,14 @@ class TestGenerateIssueNo:
         db_session.commit()
 
         # 创建第一个问题
-        AcceptanceIssueFactory.create(
-        order=test_acceptance_order, issue_no="AI-FAT001-001"
-        )
+        AcceptanceIssueFactory.create(order=test_acceptance_order, issue_no="AI-FAT001-001")
         db_session.commit()
 
         # 生成新的问题号
         issue_no = generate_issue_no(db_session, test_acceptance_order.order_no)
         assert issue_no == "AI-FAT001-002"
 
-    def test_issue_no_with_abnormal_format(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_issue_no_with_abnormal_format(self, db_session: Session, test_acceptance_order):
         """异常格式的验收单号使用简化规则"""
         test_acceptance_order.order_no = "ABNORMAL"
         db_session.commit()
@@ -591,9 +555,7 @@ class TestGenerateIssueNo:
         issue_no = generate_issue_no(db_session, test_acceptance_order.order_no)
         assert issue_no.startswith("AI-")
 
-    def test_issue_no_with_short_format(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_issue_no_with_short_format(self, db_session: Session, test_acceptance_order):
         """过短的验收单号使用简化规则"""
         test_acceptance_order.order_no = "AB"
         db_session.commit()
@@ -601,9 +563,7 @@ class TestGenerateIssueNo:
         issue_no = generate_issue_no(db_session, test_acceptance_order.order_no)
         assert len(issue_no) >= 3
 
-    def test_issue_no_sequence_formatting(
-        self, db_session: Session, test_acceptance_order
-    ):
+    def test_issue_no_sequence_formatting(self, db_session: Session, test_acceptance_order):
         """序号格式化为三位数字"""
         test_acceptance_order.order_no = "FAT-P2025001-M01-001"
         db_session.commit()

@@ -17,28 +17,23 @@ from decimal import Decimal
 
 import pytest
 
-from tests.fixtures.industry_data import KPI_BENCHMARKS, SAMPLE_PROJECTS
-
-from app.services.business_rules import (
-    # FAT 验收
-    evaluate_fat_result,
+from app.services.business_rules import (  # FAT 验收; 结项毛利; 工期偏差; BOM 套件率 & 缺料预警
     FATResult,
-    # 结项毛利
-    calc_final_margin,
-    requires_margin_review,
-    # 工期偏差
-    analyze_delay_root_causes,
-    recalculate_delivery_date,
-    # BOM 套件率 & 缺料预警
-    calc_bom_kit_rate,
-    generate_shortage_alert,
     ShortageAlert,
+    analyze_delay_root_causes,
+    calc_bom_kit_rate,
+    calc_final_margin,
+    evaluate_fat_result,
+    generate_shortage_alert,
+    recalculate_delivery_date,
+    requires_margin_review,
 )
-
+from tests.fixtures.industry_data import KPI_BENCHMARKS, SAMPLE_PROJECTS
 
 # ===========================================================================
 # 1. FAT 验收判定规则
 # ===========================================================================
+
 
 class TestFATAcceptanceRules:
     """
@@ -53,9 +48,9 @@ class TestFATAcceptanceRules:
     def test_fat_pass_all_items(self):
         """所有测试项通过 → FAT PASSED，允许发货"""
         test_items = [
-            {"name": "ICT测试通过率",  "result": "PASS", "level": "CRITICAL"},
-            {"name": "节拍时间",        "result": "PASS", "level": "MAJOR"},
-            {"name": "外观检查",        "result": "PASS", "level": "MINOR"},
+            {"name": "ICT测试通过率", "result": "PASS", "level": "CRITICAL"},
+            {"name": "节拍时间", "result": "PASS", "level": "MAJOR"},
+            {"name": "外观检查", "result": "PASS", "level": "MINOR"},
         ]
         fat_result = evaluate_fat_result(test_items)
 
@@ -66,8 +61,8 @@ class TestFATAcceptanceRules:
     def test_fat_fail_on_critical(self):
         """CRITICAL 项不通过 → FAT FAILED，禁止发货"""
         test_items = [
-            {"name": "ICT测试通过率",  "result": "FAIL", "level": "CRITICAL"},
-            {"name": "外观检查",        "result": "PASS", "level": "MINOR"},
+            {"name": "ICT测试通过率", "result": "FAIL", "level": "CRITICAL"},
+            {"name": "外观检查", "result": "PASS", "level": "MINOR"},
         ]
         fat_result = evaluate_fat_result(test_items)
 
@@ -79,7 +74,7 @@ class TestFATAcceptanceRules:
         """MAJOR 项不通过 → FAT FAILED，禁止发货"""
         test_items = [
             {"name": "节拍时间（45s目标）", "result": "FAIL", "level": "MAJOR"},
-            {"name": "外观检查",             "result": "PASS", "level": "MINOR"},
+            {"name": "外观检查", "result": "PASS", "level": "MINOR"},
         ]
         fat_result = evaluate_fat_result(test_items)
 
@@ -90,14 +85,14 @@ class TestFATAcceptanceRules:
     def test_fat_conditional_pass_minor_only(self):
         """仅有 MINOR 不通过 → CONDITIONAL_PASS，可发货但需整改"""
         test_items = [
-            {"name": "ICT测试",   "result": "PASS", "level": "CRITICAL"},
-            {"name": "节拍时间",   "result": "PASS", "level": "MAJOR"},
-            {"name": "标签位置",   "result": "FAIL", "level": "MINOR"},  # 细节问题
+            {"name": "ICT测试", "result": "PASS", "level": "CRITICAL"},
+            {"name": "节拍时间", "result": "PASS", "level": "MAJOR"},
+            {"name": "标签位置", "result": "FAIL", "level": "MINOR"},  # 细节问题
         ]
         fat_result = evaluate_fat_result(test_items)
 
         assert fat_result.status == "CONDITIONAL_PASS"
-        assert fat_result.can_ship is True   # 允许发货
+        assert fat_result.can_ship is True  # 允许发货
         assert "标签位置" in fat_result.conditional_items
         assert fat_result.failed_items == []  # 无阻塞项
 
@@ -113,9 +108,9 @@ class TestFATAcceptanceRules:
     def test_fat_multiple_critical_failures(self):
         """多个 CRITICAL 项不通过 → 所有失败项都记录在 failed_items"""
         test_items = [
-            {"name": "ICT测试通过率",  "result": "FAIL", "level": "CRITICAL"},
-            {"name": "安全回路检测",    "result": "FAIL", "level": "CRITICAL"},
-            {"name": "外观检查",        "result": "PASS", "level": "MINOR"},
+            {"name": "ICT测试通过率", "result": "FAIL", "level": "CRITICAL"},
+            {"name": "安全回路检测", "result": "FAIL", "level": "CRITICAL"},
+            {"name": "外观检查", "result": "PASS", "level": "MINOR"},
         ]
         fat_result = evaluate_fat_result(test_items)
 
@@ -126,10 +121,10 @@ class TestFATAcceptanceRules:
     def test_fat_conditional_multiple_minor_failures(self):
         """多个 MINOR 不通过 → 仍为有条件通过，所有 MINOR 问题记录到 conditional_items"""
         test_items = [
-            {"name": "ICT测试",   "result": "PASS", "level": "CRITICAL"},
-            {"name": "标签位置",   "result": "FAIL", "level": "MINOR"},
-            {"name": "铭牌字体",   "result": "FAIL", "level": "MINOR"},
-            {"name": "线缆整理",   "result": "FAIL", "level": "MINOR"},
+            {"name": "ICT测试", "result": "PASS", "level": "CRITICAL"},
+            {"name": "标签位置", "result": "FAIL", "level": "MINOR"},
+            {"name": "铭牌字体", "result": "FAIL", "level": "MINOR"},
+            {"name": "线缆整理", "result": "FAIL", "level": "MINOR"},
         ]
         fat_result = evaluate_fat_result(test_items)
 
@@ -141,6 +136,7 @@ class TestFATAcceptanceRules:
 # ===========================================================================
 # 2. 项目毛利核算（结项时）
 # ===========================================================================
+
 
 class TestProjectFinalMarginCalculation:
     """
@@ -156,14 +152,14 @@ class TestProjectFinalMarginCalculation:
         project_data = {
             "contract_amount": 168000,
             "costs": {
-                "hardware":  75000,   # 硬件
-                "labor":     28000,   # 人工（3人×1.5月）
-                "outsource": 12000,   # 外协
-                "travel":     3000,   # 差旅
-            }
+                "hardware": 75000,  # 硬件
+                "labor": 28000,  # 人工（3人×1.5月）
+                "outsource": 12000,  # 外协
+                "travel": 3000,  # 差旅
+            },
         }
         margin = calc_final_margin(project_data)
-        expected = (168000 - 75000 - 28000 - 12000 - 3000) / 168000  # = 50000/168000 ≈ 29.76%... 
+        expected = (168000 - 75000 - 28000 - 12000 - 3000) / 168000  # = 50000/168000 ≈ 29.76%...
         # 注：实际验证计算正确性，并验证与 KPI 目标的关系
         assert margin == pytest.approx(expected, abs=1e-6)
         # 毛利 = 50000/168000 ≈ 29.76%，超过 20% 警戒线，无需审查
@@ -175,11 +171,11 @@ class TestProjectFinalMarginCalculation:
         project_data = {
             "contract_amount": 320000,
             "costs": {
-                "hardware":  175000,   # 实际硬件成本
-                "labor":      72000,   # 人工成本（5人×2月）
-                "outsource":  28000,   # 外协超预算（原预算25000）
-                "travel":      8500,   # 差旅
-            }
+                "hardware": 175000,  # 实际硬件成本
+                "labor": 72000,  # 人工成本（5人×2月）
+                "outsource": 28000,  # 外协超预算（原预算25000）
+                "travel": 8500,  # 差旅
+            },
         }
         margin = calc_final_margin(project_data)
         expected = (320000 - 175000 - 72000 - 28000 - 8500) / 320000  # = 36500/320000 ≈ 11.4%
@@ -194,10 +190,10 @@ class TestProjectFinalMarginCalculation:
             "contract_amount": 300000,
             "costs": {
                 "hardware": 210000,
-                "labor":     60000,
+                "labor": 60000,
                 "outsource": 15000,
-                "travel":     5000,
-            }
+                "travel": 5000,
+            },
         }
         # 毛利 = (300000 - 290000) / 300000 ≈ 3.3%
         margin = calc_final_margin(project_data)
@@ -237,10 +233,10 @@ class TestProjectFinalMarginCalculation:
             "contract_amount": 520000,  # 对应 SAMPLE_PROJECTS[2]
             "costs": {
                 "hardware": 250000,
-                "labor":     80000,
+                "labor": 80000,
                 "outsource": 30000,
-                "travel":    10000,
-            }
+                "travel": 10000,
+            },
         }
         margin = calc_final_margin(project_data)
         # 毛利 = (520000-370000)/520000 ≈ 28.8%
@@ -251,6 +247,7 @@ class TestProjectFinalMarginCalculation:
 # ===========================================================================
 # 3. 工期偏差分析
 # ===========================================================================
+
 
 class TestScheduleDelayAnalysis:
     """
@@ -264,16 +261,16 @@ class TestScheduleDelayAnalysis:
         """延期根因分析：物料缺货出现最多应排首位"""
         delays = [
             {"reason": "物料缺货", "days": 15, "project_id": 1},
-            {"reason": "物料缺货", "days":  8, "project_id": 2},
-            {"reason": "技术问题", "days":  5, "project_id": 3},
+            {"reason": "物料缺货", "days": 8, "project_id": 2},
+            {"reason": "技术问题", "days": 5, "project_id": 3},
             {"reason": "物料缺货", "days": 12, "project_id": 4},
         ]
         analysis = analyze_delay_root_causes(delays)
         top_cause = analysis[0]
 
         assert top_cause["reason"] == "物料缺货"
-        assert top_cause["frequency"] == 3       # 出现 3 次
-        assert top_cause["total_days"] == 35     # 共延误 35 天
+        assert top_cause["frequency"] == 3  # 出现 3 次
+        assert top_cause["total_days"] == 35  # 共延误 35 天
         assert top_cause["avg_days"] == pytest.approx(35 / 3, abs=0.1)
 
     def test_delay_root_cause_single_entry(self):
@@ -291,10 +288,10 @@ class TestScheduleDelayAnalysis:
     def test_delay_root_cause_order_by_frequency(self):
         """多种原因混合 → 按频次降序排列"""
         delays = [
-            {"reason": "技术问题",   "days": 30, "project_id": 1},
-            {"reason": "物料缺货",   "days": 10, "project_id": 2},
-            {"reason": "物料缺货",   "days": 10, "project_id": 3},
-            {"reason": "客户变更",   "days":  5, "project_id": 4},
+            {"reason": "技术问题", "days": 30, "project_id": 1},
+            {"reason": "物料缺货", "days": 10, "project_id": 2},
+            {"reason": "物料缺货", "days": 10, "project_id": 3},
+            {"reason": "客户变更", "days": 5, "project_id": 4},
         ]
         analysis = analyze_delay_root_causes(delays)
 
@@ -337,6 +334,7 @@ class TestScheduleDelayAnalysis:
 # 4. BOM 套件率预警触发
 # ===========================================================================
 
+
 class TestBOMKitRateAndShortageAlert:
     """
     套件率预警规则：
@@ -350,9 +348,9 @@ class TestBOMKitRateAndShortageAlert:
     def test_kit_rate_below_target_triggers_alert(self):
         """套件率低于95%自动触发缺料预警（NI机箱缺货 → CRITICAL）"""
         bom_items = [
-            {"material": "NI机箱",   "required": 1, "available": 0},  # 缺货！
-            {"material": "气缸",      "required": 8, "available": 8},
-            {"material": "工业相机",  "required": 2, "available": 1},  # 缺1个
+            {"material": "NI机箱", "required": 1, "available": 0},  # 缺货！
+            {"material": "气缸", "required": 8, "available": 8},
+            {"material": "工业相机", "required": 2, "available": 1},  # 缺1个
         ]
         kit_rate = calc_bom_kit_rate(bom_items)
         assert kit_rate < KPI_BENCHMARKS["kit_rate_target"]  # < 0.95
@@ -360,14 +358,14 @@ class TestBOMKitRateAndShortageAlert:
         alert = generate_shortage_alert(bom_items, project_id=1)
         assert alert is not None
         assert "NI机箱" in alert.missing_materials
-        assert alert.severity == "CRITICAL"        # 关键物料完全缺货
+        assert alert.severity == "CRITICAL"  # 关键物料完全缺货
 
     def test_kit_rate_perfect_supply(self):
         """所有物料齐备 → 套件率100%，无预警"""
         bom_items = [
-            {"material": "NI机箱",   "required": 1, "available": 1},
-            {"material": "气缸",      "required": 8, "available": 8},
-            {"material": "工业相机",  "required": 2, "available": 2},
+            {"material": "NI机箱", "required": 1, "available": 1},
+            {"material": "气缸", "required": 8, "available": 8},
+            {"material": "工业相机", "required": 2, "available": 2},
         ]
         kit_rate = calc_bom_kit_rate(bom_items)
         assert kit_rate == pytest.approx(1.0, abs=1e-9)
@@ -378,9 +376,9 @@ class TestBOMKitRateAndShortageAlert:
     def test_kit_rate_partial_shortage_warning(self):
         """部分缺货（但不为零库存）→ WARNING 等级"""
         bom_items = [
-            {"material": "气缸",      "required": 8, "available": 7},  # 缺1个
-            {"material": "工业相机",  "required": 2, "available": 2},
-            {"material": "伺服驱动",  "required": 4, "available": 4},
+            {"material": "气缸", "required": 8, "available": 7},  # 缺1个
+            {"material": "工业相机", "required": 2, "available": 2},
+            {"material": "伺服驱动", "required": 4, "available": 4},
         ]
         kit_rate = calc_bom_kit_rate(bom_items)
         # min(7/8, 1.0, 1.0) = 0.875 < 0.95
@@ -389,7 +387,7 @@ class TestBOMKitRateAndShortageAlert:
 
         alert = generate_shortage_alert(bom_items, project_id=3)
         assert alert is not None
-        assert alert.severity == "WARNING"   # 部分缺货，非零库存
+        assert alert.severity == "WARNING"  # 部分缺货，非零库存
         assert "气缸" in alert.missing_materials
 
     def test_kit_rate_exactly_at_target_no_alert(self):
@@ -412,9 +410,9 @@ class TestBOMKitRateAndShortageAlert:
     def test_shortage_alert_records_all_missing(self):
         """多种物料缺货 → 所有缺料物料都记录在 missing_materials"""
         bom_items = [
-            {"material": "NI机箱",         "required": 1, "available": 0},
-            {"material": "NI数字IO板卡",   "required": 2, "available": 0},
-            {"material": "气缸",            "required": 8, "available": 8},  # 足够
+            {"material": "NI机箱", "required": 1, "available": 0},
+            {"material": "NI数字IO板卡", "required": 2, "available": 0},
+            {"material": "气缸", "required": 8, "available": 8},  # 足够
         ]
         alert = generate_shortage_alert(bom_items, project_id=5)
 
@@ -434,4 +432,4 @@ class TestBOMKitRateAndShortageAlert:
 
         assert alert is not None
         detail = next(d for d in alert.details if d["material"] == "工业相机")
-        assert detail["shortage"] == 3   # 需要4台，只有1台，缺3台
+        assert detail["shortage"] == 3  # 需要4台，只有1台，缺3台

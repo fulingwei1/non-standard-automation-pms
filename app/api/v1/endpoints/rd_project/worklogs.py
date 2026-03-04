@@ -12,12 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.rd_project import RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.query_filters import apply_pagination
 from app.schemas.timesheet import (
     TimesheetCreate,
     TimesheetListResponse,
@@ -32,6 +32,7 @@ router = APIRouter()
 # 共 2 个路由
 
 # ==================== 研发项目工作日志 ====================
+
 
 @router.get("/{project_id}/worklogs", response_model=ResponseModel)
 def get_rd_project_worklogs(
@@ -62,29 +63,35 @@ def get_rd_project_worklogs(
         query = query.filter(Timesheet.status == worklog_status)
 
     total = query.count()
-    timesheets = apply_pagination(query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)), pagination.offset, pagination.limit).all()
+    timesheets = apply_pagination(
+        query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for ts in timesheets:
-        items.append(TimesheetResponse(
-            id=ts.id,
-            user_id=ts.user_id,
-            user_name=ts.user_name,
-            project_id=ts.project_id,
-            project_name=ts.project_name,
-            task_id=ts.task_id,
-            task_name=ts.task_name,
-            work_date=ts.work_date,
-            work_hours=ts.hours or Decimal("0"),
-            work_type=ts.overtime_type or "NORMAL",
-            description=ts.work_content,
-            is_billable=True,
-            status=ts.status or "DRAFT",
-            approved_by=ts.approver_id,
-            approved_at=ts.approve_time,
-            created_at=ts.created_at,
-            updated_at=ts.updated_at
-        ))
+        items.append(
+            TimesheetResponse(
+                id=ts.id,
+                user_id=ts.user_id,
+                user_name=ts.user_name,
+                project_id=ts.project_id,
+                project_name=ts.project_name,
+                task_id=ts.task_id,
+                task_name=ts.task_name,
+                work_date=ts.work_date,
+                work_hours=ts.hours or Decimal("0"),
+                work_type=ts.overtime_type or "NORMAL",
+                description=ts.work_content,
+                is_billable=True,
+                status=ts.status or "DRAFT",
+                approved_by=ts.approver_id,
+                approved_at=ts.approve_time,
+                created_at=ts.created_at,
+                updated_at=ts.updated_at,
+            )
+        )
 
     return ResponseModel(
         code=200,
@@ -94,12 +101,14 @@ def get_rd_project_worklogs(
             total=total,
             page=pagination.page,
             page_size=pagination.page_size,
-            pages=pagination.pages_for_total(total)
-        )
+            pages=pagination.pages_for_total(total),
+        ),
     )
 
 
-@router.post("/{project_id}/worklogs", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/worklogs", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
+)
 def create_rd_project_worklog(
     *,
     db: Session = Depends(deps.get_db),
@@ -113,12 +122,16 @@ def create_rd_project_worklog(
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 检查同一天是否已有记录
-    existing = db.query(Timesheet).filter(
-        Timesheet.user_id == current_user.id,
-        Timesheet.work_date == worklog_in.work_date,
-        Timesheet.rd_project_id == project_id,
-        Timesheet.status != "REJECTED"
-    ).first()
+    existing = (
+        db.query(Timesheet)
+        .filter(
+            Timesheet.user_id == current_user.id,
+            Timesheet.work_date == worklog_in.work_date,
+            Timesheet.rd_project_id == project_id,
+            Timesheet.status != "REJECTED",
+        )
+        .first()
+    )
 
     if existing:
         raise HTTPException(status_code=400, detail="该日期已有工作日志记录，请更新或删除后重试")
@@ -134,7 +147,7 @@ def create_rd_project_worklog(
         overtime_type=worklog_in.work_type,
         work_content=worklog_in.description,
         status="DRAFT",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     save_obj(db, timesheet)
@@ -159,9 +172,6 @@ def create_rd_project_worklog(
             approved_by=timesheet.approver_id,
             approved_at=timesheet.approve_time,
             created_at=timesheet.created_at,
-            updated_at=timesheet.updated_at
-        )
+            updated_at=timesheet.updated_at,
+        ),
     )
-
-
-

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
+
 from app.services.performance_collector.bom_collector import BomCollector
 
 
@@ -16,7 +17,8 @@ class TestBomCollector:
         assert result["bom_timeliness_rate"] == 0.0
 
     def test_with_bom_data(self):
-        pm = MagicMock(); pm.project_id = 1
+        pm = MagicMock()
+        pm.project_id = 1
         self.db.query.return_value.filter.return_value.all.side_effect = [
             [pm],  # project members
         ]
@@ -32,9 +34,7 @@ class TestBomCollector:
         query_mock.filter.return_value.join.return_value.filter.return_value.all.return_value = []
         self.db.query.return_value = query_mock
         # Re-init since query mock changed
-        self.db.query.return_value.filter.return_value.all.side_effect = [
-            [pm], [bom1, bom2]
-        ]
+        self.db.query.return_value.filter.return_value.all.side_effect = [[pm], [bom1, bom2]]
         # Simplified: just test error handling path
         result = self.collector.collect_bom_data(1, date(2024, 1, 1), date(2024, 3, 1))
         assert "total_bom" in result

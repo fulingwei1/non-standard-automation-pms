@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """ApprovalDelegateService 单元测试"""
 
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestApprovalDelegateService:
 
     def _make_service(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         db = MagicMock()
         return ApprovalDelegateService(db), db
 
@@ -57,7 +59,7 @@ class TestApprovalDelegateService:
         svc, db = self._make_service()
         task = MagicMock()
         task.instance = MagicMock(template_id=1)
-        with patch.object(svc, 'get_active_delegate', return_value=None):
+        with patch.object(svc, "get_active_delegate", return_value=None):
             result = svc.apply_delegation(task, 1)
         assert result is None
 
@@ -69,7 +71,7 @@ class TestApprovalDelegateService:
         user = MagicMock(real_name="李四", username="lisi")
         db.query.return_value.filter.return_value.first.return_value = user
 
-        with patch.object(svc, 'get_active_delegate', return_value=delegate_config):
+        with patch.object(svc, "get_active_delegate", return_value=delegate_config):
             result = svc.apply_delegation(task, 1)
         assert result == task
         assert task.assignee_id == 5
@@ -81,8 +83,10 @@ class TestApprovalDelegateService:
         svc, db = self._make_service()
         db.query.return_value.filter.return_value.first.return_value = None  # no overlap
         result = svc.create_delegate(
-            user_id=1, delegate_id=2,
-            start_date=date(2026, 1, 1), end_date=date(2026, 1, 31),
+            user_id=1,
+            delegate_id=2,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 31),
         )
         db.add.assert_called_once()
         db.flush.assert_called_once()
@@ -133,7 +137,9 @@ class TestApprovalDelegateService:
     def test_get_user_delegates(self):
         svc, db = self._make_service()
         delegates = [MagicMock(), MagicMock()]
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = delegates
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            delegates
+        )
         result = svc.get_user_delegates(1)
         assert len(result) == 2
 
@@ -149,7 +155,9 @@ class TestApprovalDelegateService:
     def test_get_delegated_to_user(self):
         svc, db = self._make_service()
         delegates = [MagicMock()]
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = delegates
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            delegates
+        )
         result = svc.get_delegated_to_user(2)
         assert len(result) == 1
 
@@ -179,7 +187,7 @@ class TestApprovalDelegateService:
         log = MagicMock(delegate_config_id=1)
         config = MagicMock(notify_original=True)
         db.query.return_value.filter.return_value.first.side_effect = [log, config]
-        with patch.object(svc, '_send_delegate_notification'):
+        with patch.object(svc, "_send_delegate_notification"):
             svc.notify_original_user(1)
         assert log.original_notified is True
 

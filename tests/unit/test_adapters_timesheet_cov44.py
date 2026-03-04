@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 工时报表适配器"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.adapters.timesheet import TimesheetReportAdapter
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -43,6 +45,7 @@ class TestTimesheetReportAdapter:
 
     def test_adapter_inherits_base(self, adapter):
         from app.services.report_framework.adapters.base import BaseReportAdapter
+
         assert isinstance(adapter, BaseReportAdapter)
 
     def test_generate_uses_engine_first(self, adapter):

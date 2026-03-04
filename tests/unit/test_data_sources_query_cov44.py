@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - SQL 查询数据源"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.data_sources.query import QueryDataSource
     from app.services.report_framework.data_sources.base import DataSourceError
+    from app.services.report_framework.data_sources.query import QueryDataSource
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -63,10 +65,13 @@ class TestQueryDataSource:
         db = MagicMock()
         db.execute.side_effect = Exception("DB error")
         ds = QueryDataSource(db=db, config=config)
-        with patch("app.services.report_framework.data_sources.query.text"), \
-             pytest.raises(DataSourceError):
+        with (
+            patch("app.services.report_framework.data_sources.query.text"),
+            pytest.raises(DataSourceError),
+        ):
             ds.fetch({})
 
     def test_inherits_datasource(self):
         from app.services.report_framework.data_sources.base import DataSource
+
         assert issubclass(QueryDataSource, DataSource)

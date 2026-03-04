@@ -25,7 +25,11 @@ from .utils import build_sales_order_response
 router = APIRouter()
 
 
-@router.get("/sales-orders", response_model=ResponseModel[PaginatedResponse[SalesOrderResponse]], summary="获取销售订单列表")
+@router.get(
+    "/sales-orders",
+    response_model=ResponseModel[PaginatedResponse[SalesOrderResponse]],
+    summary="获取销售订单列表",
+)
 async def get_sales_orders(
     pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
@@ -34,7 +38,7 @@ async def get_sales_orders(
     order_status: Optional[str] = Query(None, description="订单状态筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取销售订单列表"""
     try:
@@ -51,7 +55,9 @@ async def get_sales_orders(
             query = query.filter(SalesOrder.order_status == order_status)
 
         # 使用统一的关键词过滤
-        query = apply_keyword_filter(query, SalesOrder, search, ["order_no", "customer_name", "contract_no"])
+        query = apply_keyword_filter(
+            query, SalesOrder, search, ["order_no", "customer_name", "contract_no"]
+        )
 
         # 总数
         total = query.count()
@@ -75,18 +81,20 @@ async def get_sales_orders(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取销售订单列表失败: {str(e)}")
 
 
-@router.post("/sales-orders", response_model=ResponseModel[SalesOrderResponse], summary="创建销售订单")
+@router.post(
+    "/sales-orders", response_model=ResponseModel[SalesOrderResponse], summary="创建销售订单"
+)
 async def create_sales_order(
     order_data: SalesOrderCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """创建销售订单"""
     try:
@@ -127,7 +135,7 @@ async def create_sales_order(
             sales_person_id=order_data.sales_person_id,
             sales_person_name=order_data.sales_person_name,
             support_person_id=current_user.id,
-            remark=order_data.remark
+            remark=order_data.remark,
         )
 
         db.add(sales_order)
@@ -144,7 +152,7 @@ async def create_sales_order(
                     unit=item_data.unit,
                     unit_price=item_data.unit_price,
                     amount=item_data.amount,
-                    remark=item_data.remark
+                    remark=item_data.remark,
                 )
                 db.add(order_item)
 
@@ -152,9 +160,7 @@ async def create_sales_order(
         db.refresh(sales_order)
 
         return ResponseModel(
-            code=200,
-            message="创建销售订单成功",
-            data=build_sales_order_response(sales_order)
+            code=200, message="创建销售订单成功", data=build_sales_order_response(sales_order)
         )
     except HTTPException:
         raise
@@ -163,20 +169,22 @@ async def create_sales_order(
         raise HTTPException(status_code=500, detail=f"创建销售订单失败: {str(e)}")
 
 
-@router.get("/sales-orders/{order_id}", response_model=ResponseModel[SalesOrderResponse], summary="获取销售订单详情")
+@router.get(
+    "/sales-orders/{order_id}",
+    response_model=ResponseModel[SalesOrderResponse],
+    summary="获取销售订单详情",
+)
 async def get_sales_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取销售订单详情"""
     try:
         sales_order = get_or_404(db, SalesOrder, order_id, "销售订单不存在")
 
         return ResponseModel(
-            code=200,
-            message="获取销售订单详情成功",
-            data=build_sales_order_response(sales_order)
+            code=200, message="获取销售订单详情成功", data=build_sales_order_response(sales_order)
         )
     except HTTPException:
         raise
@@ -184,12 +192,16 @@ async def get_sales_order(
         raise HTTPException(status_code=500, detail=f"获取销售订单详情失败: {str(e)}")
 
 
-@router.put("/sales-orders/{order_id}", response_model=ResponseModel[SalesOrderResponse], summary="更新销售订单")
+@router.put(
+    "/sales-orders/{order_id}",
+    response_model=ResponseModel[SalesOrderResponse],
+    summary="更新销售订单",
+)
 async def update_sales_order(
     order_id: int,
     order_data: SalesOrderUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """更新销售订单"""
     try:
@@ -204,9 +216,7 @@ async def update_sales_order(
         db.refresh(sales_order)
 
         return ResponseModel(
-            code=200,
-            message="更新销售订单成功",
-            data=build_sales_order_response(sales_order)
+            code=200, message="更新销售订单成功", data=build_sales_order_response(sales_order)
         )
     except HTTPException:
         raise

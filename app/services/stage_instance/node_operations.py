@@ -20,9 +20,11 @@ class NodeOperationsMixin:
         node_instance_id: int,
     ) -> ProjectNodeInstance:
         """开始节点"""
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")
@@ -37,9 +39,9 @@ class NodeOperationsMixin:
         node.status = StageStatusEnum.IN_PROGRESS.value
 
         # 更新项目的当前节点
-        self.db.query(Project).filter(
-            Project.id == node.project_id
-        ).update({"current_node_instance_id": node_instance_id})
+        self.db.query(Project).filter(Project.id == node.project_id).update(
+            {"current_node_instance_id": node_instance_id}
+        )
 
         # 如果所属阶段还未开始，自动开始阶段
         stage = node.stage_instance
@@ -72,9 +74,11 @@ class NodeOperationsMixin:
         Returns:
             ProjectNodeInstance: 更新后的节点实例
         """
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")
@@ -115,9 +119,11 @@ class NodeOperationsMixin:
         reason: Optional[str] = None,
     ) -> ProjectNodeInstance:
         """跳过节点"""
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")
@@ -148,9 +154,11 @@ class NodeOperationsMixin:
         Returns:
             ProjectNodeInstance: 更新后的节点实例
         """
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")

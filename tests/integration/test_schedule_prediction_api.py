@@ -3,15 +3,16 @@
 进度预测API集成测试
 """
 
+from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, date
-from unittest.mock import patch, MagicMock
 
 from app.main import app
 from app.models.project.schedule_prediction import (
-    ProjectSchedulePrediction,
     CatchUpSolution,
+    ProjectSchedulePrediction,
     ScheduleAlert,
 )
 
@@ -42,16 +43,20 @@ class TestSchedulePredictionAPI:
             "include_solutions": False,
         }
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             # 模拟数据库和用户
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
 
             # 模拟服务
-            with patch("app.services.schedule_prediction_service.SchedulePredictionService.predict_completion_date") as mock_predict:
+            with patch(
+                "app.services.schedule_prediction_service.SchedulePredictionService.predict_completion_date"
+            ) as mock_predict:
                 mock_predict.return_value = {
                     "prediction_id": 1,
                     "project_id": project_id,
@@ -88,16 +93,20 @@ class TestSchedulePredictionAPI:
             "include_solutions": True,  # 请求生成方案
         }
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
 
-            with patch("app.services.schedule_prediction_service.SchedulePredictionService") as MockService:
+            with patch(
+                "app.services.schedule_prediction_service.SchedulePredictionService"
+            ) as MockService:
                 mock_service = MockService.return_value
-                
+
                 # 模拟预测结果（有延期）
                 mock_service.predict_completion_date.return_value = {
                     "prediction_id": 1,
@@ -139,9 +148,11 @@ class TestSchedulePredictionAPI:
         """测试获取项目预警列表"""
         project_id = 1
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
@@ -161,7 +172,9 @@ class TestSchedulePredictionAPI:
                 )
             ]
 
-            mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = mock_alerts
+            mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                mock_alerts
+            )
             mock_db.query.return_value.filter.return_value.count.return_value = 1
 
             response = client.get(
@@ -176,9 +189,11 @@ class TestSchedulePredictionAPI:
         project_id = 1
         alert_id = 1
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user_obj = MagicMock(id=1)
@@ -205,9 +220,11 @@ class TestSchedulePredictionAPI:
         """测试获取赶工方案列表"""
         project_id = 1
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
@@ -231,7 +248,9 @@ class TestSchedulePredictionAPI:
                 )
             ]
 
-            mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = mock_solutions
+            mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+                mock_solutions
+            )
 
             response = client.get(
                 f"/api/v1/projects/{project_id}/schedule/solutions",
@@ -250,9 +269,11 @@ class TestSchedulePredictionAPI:
             "comment": "批准实施",
         }
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user_obj = MagicMock(id=1)
@@ -285,9 +306,11 @@ class TestSchedulePredictionAPI:
             "include_recommendations": True,
         }
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
@@ -300,7 +323,9 @@ class TestSchedulePredictionAPI:
                 risk_level="medium",
                 confidence=0.8,
             )
-            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_prediction
+            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                mock_prediction
+            )
 
             response = client.post(
                 f"/api/v1/projects/{project_id}/schedule/report",
@@ -312,14 +337,18 @@ class TestSchedulePredictionAPI:
 
     def test_get_risk_overview(self, client, auth_headers):
         """测试获取风险概览"""
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
 
-            with patch("app.services.schedule_prediction_service.SchedulePredictionService.get_risk_overview") as mock_overview:
+            with patch(
+                "app.services.schedule_prediction_service.SchedulePredictionService.get_risk_overview"
+            ) as mock_overview:
                 mock_overview.return_value = {
                     "total_projects": 10,
                     "at_risk": 3,
@@ -344,9 +373,11 @@ class TestSchedulePredictionAPI:
         """测试获取历史预测记录"""
         project_id = 1
 
-        with patch("app.api.deps.get_db") as mock_get_db, \
-             patch("app.core.security.get_current_active_user") as mock_user:
-            
+        with (
+            patch("app.api.deps.get_db") as mock_get_db,
+            patch("app.core.security.get_current_active_user") as mock_user,
+        ):
+
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
             mock_user.return_value = MagicMock(id=1)
@@ -373,7 +404,9 @@ class TestSchedulePredictionAPI:
                 ),
             ]
 
-            mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = mock_predictions
+            mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                mock_predictions
+            )
 
             response = client.get(
                 f"/api/v1/projects/{project_id}/schedule/predictions/history",

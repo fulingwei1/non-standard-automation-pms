@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/strategy/csf_service.py"""
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.services.strategy.csf_service import (
-    create_csf, get_csf, list_csfs, update_csf, delete_csf,
+    create_csf,
+    delete_csf,
+    get_csf,
+    list_csfs,
+    update_csf,
 )
 
 

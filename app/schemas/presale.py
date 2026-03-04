@@ -12,8 +12,10 @@ from app.schemas.common import TimestampSchema
 
 # ==================== 支持工单 ====================
 
+
 class TicketCreate(BaseModel):
     """创建支持工单"""
+
     title: str = Field(..., description="工单标题")
     ticket_type: str = Field(..., description="工单类型")
     urgency: str = Field(default="NORMAL", description="紧急程度")
@@ -24,7 +26,7 @@ class TicketCreate(BaseModel):
     project_id: Optional[int] = Field(None, description="关联项目ID")
     expected_date: Optional[date] = Field(None, description="期望完成日期")
     deadline: Optional[datetime] = Field(None, description="截止时间")
-    
+
     # PM介入策略判断所需字段（2026-02-15新增）
     estimated_amount: Optional[float] = Field(0, description="预估项目金额（万元）")
     industry: Optional[str] = Field("", description="客户行业")
@@ -35,6 +37,7 @@ class TicketCreate(BaseModel):
 
 class TicketUpdate(BaseModel):
     """更新工单"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     urgency: Optional[str] = None
@@ -44,18 +47,21 @@ class TicketUpdate(BaseModel):
 
 class TicketAcceptRequest(BaseModel):
     """接单请求"""
+
     assignee_id: Optional[int] = Field(None, description="指派处理人ID（默认当前用户）")
     notes: Optional[str] = Field(None, description="接单备注")
 
 
 class TicketProgressUpdate(BaseModel):
     """更新进度"""
+
     progress_note: str = Field(..., description="进度说明")
     progress_percent: Optional[int] = Field(None, ge=0, le=100, description="进度百分比")
 
 
 class DeliverableCreate(BaseModel):
     """创建交付物"""
+
     deliverable_name: str = Field(..., description="交付物名称")
     deliverable_type: str = Field(..., description="交付物类型")
     file_path: Optional[str] = Field(None, description="文件路径")
@@ -65,12 +71,14 @@ class DeliverableCreate(BaseModel):
 
 class TicketRatingRequest(BaseModel):
     """工单评价请求"""
+
     satisfaction_score: int = Field(..., ge=1, le=5, description="满意度评分(1-5)")
     feedback: Optional[str] = Field(None, description="反馈意见")
 
 
 class TicketResponse(TimestampSchema):
     """工单响应"""
+
     id: int
     ticket_no: str
     title: str
@@ -95,11 +103,13 @@ class TicketResponse(TimestampSchema):
     actual_hours: Optional[float] = None
     satisfaction_score: Optional[int] = None
     feedback: Optional[str] = None
-    
+
     # PM介入策略结果（2026-02-15新增）
     pm_involvement_required: Optional[bool] = Field(False, description="是否需要PM提前介入")
     pm_involvement_risk_level: Optional[str] = Field(None, description="风险等级（高/低）")
-    pm_involvement_risk_factors: Optional[List[str]] = Field(default_factory=list, description="风险因素列表")
+    pm_involvement_risk_factors: Optional[List[str]] = Field(
+        default_factory=list, description="风险因素列表"
+    )
     pm_involvement_checked_at: Optional[datetime] = Field(None, description="PM介入检查时间")
     pm_assigned: Optional[bool] = Field(False, description="PM是否已分配")
     pm_user_id: Optional[int] = Field(None, description="分配的PM用户ID")
@@ -108,6 +118,7 @@ class TicketResponse(TimestampSchema):
 
 class DeliverableResponse(TimestampSchema):
     """交付物响应"""
+
     id: int
     ticket_id: int
     deliverable_name: str
@@ -119,6 +130,7 @@ class DeliverableResponse(TimestampSchema):
 
 class TicketBoardResponse(BaseModel):
     """工单看板响应"""
+
     pending: List[TicketResponse] = []
     accepted: List[TicketResponse] = []
     in_progress: List[TicketResponse] = []
@@ -127,8 +139,10 @@ class TicketBoardResponse(BaseModel):
 
 # ==================== 技术方案 ====================
 
+
 class SolutionCreate(BaseModel):
     """创建技术方案"""
+
     name: str = Field(..., description="方案名称")
     solution_type: str = Field(default="CUSTOM", description="方案类型")
     industry: Optional[str] = Field(None, description="所属行业")
@@ -147,6 +161,7 @@ class SolutionCreate(BaseModel):
 
 class SolutionUpdate(BaseModel):
     """更新技术方案"""
+
     name: Optional[str] = None
     requirement_summary: Optional[str] = None
     solution_overview: Optional[str] = None
@@ -159,12 +174,14 @@ class SolutionUpdate(BaseModel):
 
 class SolutionReviewRequest(BaseModel):
     """方案审核请求"""
+
     review_status: str = Field(..., description="审核状态")
     review_comment: Optional[str] = Field(None, description="审核意见")
 
 
 class SolutionResponse(TimestampSchema):
     """方案响应"""
+
     id: int
     solution_no: str
     name: str
@@ -193,6 +210,7 @@ class SolutionResponse(TimestampSchema):
 
 class SolutionCostResponse(BaseModel):
     """方案成本响应"""
+
     solution_id: int
     total_cost: float
     breakdown: List[Dict[str, Any]] = []
@@ -200,8 +218,10 @@ class SolutionCostResponse(BaseModel):
 
 # ==================== 方案模板 ====================
 
+
 class TemplateCreate(BaseModel):
     """创建方案模板"""
+
     name: str = Field(..., description="模板名称")
     industry: Optional[str] = Field(None, description="所属行业")
     test_type: Optional[str] = Field(None, description="测试类型")
@@ -213,6 +233,7 @@ class TemplateCreate(BaseModel):
 
 class TemplateResponse(TimestampSchema):
     """模板响应"""
+
     id: int
     template_no: str
     name: str
@@ -225,8 +246,10 @@ class TemplateResponse(TimestampSchema):
 
 # ==================== 投标管理 ====================
 
+
 class TenderCreate(BaseModel):
     """创建投标记录"""
+
     tender_no: Optional[str] = Field(None, description="招标编号（可选，自动生成）")
     tender_name: str = Field(..., description="投标项目名称")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
@@ -246,6 +269,7 @@ class TenderCreate(BaseModel):
 
 class TenderResultUpdate(BaseModel):
     """更新投标结果"""
+
     result: str = Field(..., description="投标结果")
     result_reason: Optional[str] = Field(None, description="中标/落标原因分析")
     technical_score: Optional[Decimal] = Field(None, description="技术得分")
@@ -255,6 +279,7 @@ class TenderResultUpdate(BaseModel):
 
 class TenderResponse(TimestampSchema):
     """投标响应"""
+
     id: int
     ticket_id: Optional[int] = None
     opportunity_id: Optional[int] = None
@@ -272,4 +297,3 @@ class TenderResponse(TimestampSchema):
     result: str
     result_reason: Optional[str] = None
     leader_id: Optional[int] = None
-

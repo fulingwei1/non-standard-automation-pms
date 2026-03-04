@@ -8,14 +8,14 @@ File Size: 48 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
+
 import app.services.spec_match_service
-
-
 
 
 class TestSpecMatchService:
@@ -25,43 +25,43 @@ class TestSpecMatchService:
         """测试 get_project_requirements 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import get_project_requirements
-        pass
 
+        pass
 
     def test_check_po_item_match(self):
         """测试 check_po_item_match 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import check_po_item_match
-        pass
 
+        pass
 
     def test_check_bom_item_match(self):
         """测试 check_bom_item_match 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import check_bom_item_match
-        pass
 
+        pass
 
     def test_check_all_po_items(self):
         """测试 check_all_po_items 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import check_all_po_items
-        pass
 
+        pass
 
     def test_check_all_bom_items(self):
         """测试 check_all_bom_items 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import check_all_bom_items
-        pass
 
+        pass
 
     def test_calculate_match_statistics(self):
         """测试 calculate_match_statistics 函数"""
         # TODO: 实现测试逻辑
         from app.services.spec_match_service import calculate_match_statistics
-        pass
 
+        pass
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

@@ -9,11 +9,13 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-import requests
 import json
+
+import requests
 
 # 禁用警告
 import urllib3
+
 urllib3.disable_warnings()
 
 BASE_URL = "http://127.0.0.1:8000"
@@ -22,11 +24,8 @@ BASE_URL = "http://127.0.0.1:8000"
 print("=== 步骤1: 获取Token ===")
 response = requests.post(
     f"{BASE_URL}/api/v1/auth/login",
-    data={
-        "username": "admin",
-        "password": "admin123"
-    },
-    headers={"Content-Type": "application/x-www-form-urlencoded"}
+    data={"username": "admin", "password": "admin123"},
+    headers={"Content-Type": "application/x-www-form-urlencoded"},
 )
 
 print(f"状态码: {response.status_code}")
@@ -41,10 +40,7 @@ print(f"\n✅ Token获取成功: {token[:50]}...")
 
 # 2. 测试/auth/me
 print("\n=== 步骤2: 测试 GET /api/v1/auth/me ===")
-response = requests.get(
-    f"{BASE_URL}/api/v1/auth/me",
-    headers={"Authorization": f"Bearer {token}"}
-)
+response = requests.get(f"{BASE_URL}/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
 
 print(f"状态码: {response.status_code}")
 try:
@@ -62,10 +58,11 @@ print("\n=== 步骤4: 直接测试auth模块 ===")
 try:
     from app.core.auth import get_current_user
     from app.models.base import get_session
-    
+
     db = get_session()
     try:
         import asyncio
+
         user = asyncio.run(get_current_user(token=token, db=db))
         print(f"✅ 用户: {user.username} (ID: {user.id})")
     except Exception as e:
@@ -75,19 +72,17 @@ try:
 except Exception as e:
     print(f"❌ 导入错误: {type(e).__name__}: {e}")
     import traceback
+
     traceback.print_exc()
 
 # 5. 检查token内容
 print("\n=== 步骤5: 解析Token内容 ===")
 try:
     import jwt
+
     from app.core.config import settings
-    
-    payload = jwt.decode(
-        token,
-        settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM]
-    )
+
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     print(f"Token payload: {json.dumps(payload, indent=2)}")
 except Exception as e:
     print(f"❌ 解析错误: {e}")
@@ -96,7 +91,7 @@ except Exception as e:
 print("\n=== 步骤6: 检查Token是否被撤销 ===")
 try:
     from app.core.auth import is_token_revoked
-    
+
     revoked = is_token_revoked(token)
     print(f"Token是否被撤销: {revoked}")
 except Exception as e:

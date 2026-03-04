@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class QuoteCostTemplateCreate(BaseModel):
     """创建成本模板"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     name: str = Field(description="模板名称")
@@ -22,6 +23,7 @@ class QuoteCostTemplateCreate(BaseModel):
 
 class QuoteCostTemplateUpdate(BaseModel):
     """更新成本模板"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     name: Optional[str] = Field(default=None, description="模板名称")
@@ -32,6 +34,7 @@ class QuoteCostTemplateUpdate(BaseModel):
 
 class QuoteCostTemplateResponse(BaseModel):
     """成本模板响应"""
+
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
@@ -45,6 +48,7 @@ class QuoteCostTemplateResponse(BaseModel):
 
 class PurchaseMaterialCostCreate(BaseModel):
     """创建采购物料成本"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     material_id: int = Field(description="物料ID")
@@ -55,6 +59,7 @@ class PurchaseMaterialCostCreate(BaseModel):
 
 class PurchaseMaterialCostUpdate(BaseModel):
     """更新采购物料成本"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     unit_price: Optional[Decimal] = Field(default=None, description="单价")
@@ -63,6 +68,7 @@ class PurchaseMaterialCostUpdate(BaseModel):
 
 class PurchaseMaterialCostResponse(BaseModel):
     """采购物料成本响应"""
+
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: Optional[int] = None
@@ -95,6 +101,7 @@ class PurchaseMaterialCostResponse(BaseModel):
 
 class MaterialCostMatchRequest(BaseModel):
     """物料成本匹配请求"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     material_ids: List[int] = Field(description="物料ID列表")
@@ -102,6 +109,7 @@ class MaterialCostMatchRequest(BaseModel):
 
 class MaterialCostMatchResponse(BaseModel):
     """物料成本匹配响应"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     matched: List[dict] = Field(default_factory=list, description="匹配结果")
@@ -110,6 +118,7 @@ class MaterialCostMatchResponse(BaseModel):
 
 class MaterialCostUpdateReminderResponse(BaseModel):
     """物料成本更新提醒响应"""
+
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
@@ -121,6 +130,7 @@ class MaterialCostUpdateReminderResponse(BaseModel):
 
 class MaterialCostUpdateReminderUpdate(BaseModel):
     """更新物料成本更新提醒"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     status: Optional[str] = Field(default=None, description="状态")
@@ -129,6 +139,7 @@ class MaterialCostUpdateReminderUpdate(BaseModel):
 
 class CostMatchSuggestion(BaseModel):
     """成本匹配建议"""
+
     model_config = ConfigDict(populate_by_name=True)
 
     item_id: Optional[int] = Field(default=None, description="报价项ID")
@@ -142,4 +153,6 @@ class CostMatchSuggestion(BaseModel):
     suggested_cost_category: Optional[str] = Field(default=None, description="建议成本分类")
     reason: Optional[str] = Field(default=None, description="匹配原因")
     warnings: List[str] = Field(default_factory=list, description="警告信息")
-    matched_cost_record: Optional[PurchaseMaterialCostResponse] = Field(default=None, description="匹配的成本记录")
+    matched_cost_record: Optional[PurchaseMaterialCostResponse] = Field(
+        default=None, description="匹配的成本记录"
+    )

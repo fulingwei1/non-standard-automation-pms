@@ -4,8 +4,9 @@
 支持 4 层层级：销售 → 销售经理 → 销售总监 → 销售总经理
 """
 
-from typing import Any
 from datetime import date
+from typing import Any
+
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 组织架构数据模型 ==========
 
+
 @router.get("/organization/structure", summary="组织架构结构")
 def get_organization_structure(
     db: Session = Depends(deps.get_db),
@@ -25,19 +27,18 @@ def get_organization_structure(
 ) -> Any:
     """
     获取完整的销售组织架构
-    
+
     4 层层级：
     - L1: 销售总经理 (GM) - 管理整个销售团队
     - L2: 销售总监 (Director) - 每个分公司/子公司 1 名
     - L3: 销售经理 (Manager) - 带领 3-5 人
     - L4: 销售 (Sales) - 销售工程师/销售助理
     """
-    
+
     structure = {
         "organization_name": "金凯博自动化测试 - 销售总部",
         "total_members": 28,
         "levels": 4,
-        
         # 组织层级定义
         "level_definitions": [
             {
@@ -76,7 +77,6 @@ def get_organization_structure(
                 "roles": ["销售工程师", "销售助理"],
             },
         ],
-        
         # 完整组织树
         "organization_tree": {
             "id": 1,
@@ -294,11 +294,12 @@ def get_organization_structure(
             ],
         },
     }
-    
+
     return structure
 
 
 # ========== 2. 层级数据汇总 API ==========
+
 
 @router.get("/organization/rollup/{level}/{person_id}", summary="层级数据汇总")
 def get_hierarchy_rollup(
@@ -310,14 +311,14 @@ def get_hierarchy_rollup(
 ) -> Any:
     """
     获取指定层级的数据汇总
-    
+
     支持：
     - 销售总经理：汇总所有总监数据
     - 销售总监：汇总所有经理数据
     - 销售经理：汇总所有销售数据
     - 销售：个人数据
     """
-    
+
     # 示例：销售经理视图
     if level == "Manager" and person_id == 5:
         return {
@@ -328,7 +329,6 @@ def get_hierarchy_rollup(
                 "team": "华南一区",
                 "direct_reports": 3,
             },
-            
             # 个人业绩
             "personal_metrics": {
                 "quota": 50000000,
@@ -337,7 +337,6 @@ def get_hierarchy_rollup(
                 "opportunities": 3,
                 "pipeline": 3500000,
             },
-            
             # 团队汇总（下属 3 人）
             "team_rollup": {
                 "total_members": 3,
@@ -348,7 +347,6 @@ def get_hierarchy_rollup(
                 "pipeline_total": 65000000,
                 "pipeline_weighted": 45000000,
             },
-            
             # 下属明细
             "team_members": [
                 {
@@ -382,7 +380,6 @@ def get_hierarchy_rollup(
                     "top_opportunity": "某客户 测试线 (150 万)",
                 },
             ],
-            
             # 团队排名
             "team_ranking": {
                 "vs_company": {
@@ -397,7 +394,6 @@ def get_hierarchy_rollup(
                     "director": "张总监（深圳）",
                 },
             },
-            
             # 风险预警
             "alerts": [
                 {
@@ -412,7 +408,7 @@ def get_hierarchy_rollup(
                 },
             ],
         }
-    
+
     # 示例：销售总监视图
     elif level == "Director" and person_id == 2:
         return {
@@ -423,7 +419,6 @@ def get_hierarchy_rollup(
                 "branch": "深圳分公司",
                 "direct_reports": 3,  # 3 个销售经理
             },
-            
             # 分公司汇总
             "branch_metrics": {
                 "quota_annual": 300000000,
@@ -433,7 +428,6 @@ def get_hierarchy_rollup(
                 "pipeline_total": 180000000,
                 "pipeline_weighted": 120000000,
             },
-            
             # 下属经理汇总
             "managers_rollup": [
                 {
@@ -467,7 +461,6 @@ def get_hierarchy_rollup(
                     "rank": 3,
                 },
             ],
-            
             # 分公司对比
             "branch_comparison": [
                 {"branch": "深圳分公司", "rate": 66.0, "rank": 1},
@@ -475,7 +468,7 @@ def get_hierarchy_rollup(
                 {"branch": "合肥分公司", "rate": 63.2, "rank": 3},
             ],
         }
-    
+
     # 示例：销售总经理视图
     elif level == "GM":
         return {
@@ -485,7 +478,6 @@ def get_hierarchy_rollup(
                 "title": "销售总经理",
                 "direct_reports": 3,  # 3 个总监
             },
-            
             # 公司整体
             "company_metrics": {
                 "quota_annual": 800000000,
@@ -496,7 +488,6 @@ def get_hierarchy_rollup(
                 "pipeline_total": 450000000,
                 "pipeline_weighted": 285000000,
             },
-            
             # 总监汇总
             "directors_rollup": [
                 {
@@ -533,18 +524,18 @@ def get_hierarchy_rollup(
                     "rank": 3,
                 },
             ],
-            
             # 战略机会
             "strategic_opportunities": [
                 {"name": "宁德时代 战略合作", "value": 50000000, "owner": "张三", "win_rate": 75},
                 {"name": "比亚迪 二期", "value": 40000000, "owner": "李四", "win_rate": 82},
             ],
         }
-    
+
     return {}
 
 
 # ========== 3. 组织绩效对比 ==========
+
 
 @router.get("/organization/performance-comparison", summary="组织绩效对比")
 def get_organization_performance_comparison(
@@ -554,16 +545,15 @@ def get_organization_performance_comparison(
 ) -> Any:
     """
     组织绩效对比分析
-    
+
     支持：
     - 分公司对比（总监级）
     - 团队对比（经理级）
     - 个人对比（销售级）
     """
-    
+
     comparison = {
         "analysis_date": date.today().isoformat(),
-        
         # 分公司对比（总监级）
         "branch_comparison": [
             {
@@ -600,7 +590,6 @@ def get_organization_performance_comparison(
                 "rank": 3,
             },
         ],
-        
         # 团队对比（经理级）
         "team_comparison": [
             {
@@ -664,7 +653,6 @@ def get_organization_performance_comparison(
                 "rank": 6,
             },
         ],
-        
         # 个人对比（销售级）- Top 10
         "individual_ranking": [
             {"rank": 1, "name": "李小妹", "team": "华南一区", "rate": 73.3, "quota": 30000000},
@@ -674,5 +662,5 @@ def get_organization_performance_comparison(
             {"rank": 5, "name": "钱七", "team": "华南二区", "rate": 60.0, "quota": 30000000},
         ],
     }
-    
+
     return comparison

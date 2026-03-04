@@ -34,35 +34,23 @@ class TestProjectBonusService:
         rules = service.get_project_bonus_rules(project_id=99999)
         assert rules == []
 
-    def test_get_project_bonus_rules_with_project(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_project_bonus_rules_with_project(self, db_session: Session, mock_project):
         """测试获取项目适用的奖金规则"""
         service = ProjectBonusService(db_session)
         rules = service.get_project_bonus_rules(project_id=mock_project.id)
         # 没有奖金规则时返回空列表
         assert isinstance(rules, list)
 
-    def test_get_project_bonus_rules_active_only(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_project_bonus_rules_active_only(self, db_session: Session, mock_project):
         """测试只获取启用的奖金规则"""
         service = ProjectBonusService(db_session)
-        rules = service.get_project_bonus_rules(
-        project_id=mock_project.id,
-        is_active=True
-        )
+        rules = service.get_project_bonus_rules(project_id=mock_project.id, is_active=True)
         assert isinstance(rules, list)
 
-    def test_get_project_bonus_rules_include_inactive(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_project_bonus_rules_include_inactive(self, db_session: Session, mock_project):
         """测试获取所有奖金规则（包括停用的）"""
         service = ProjectBonusService(db_session)
-        rules = service.get_project_bonus_rules(
-        project_id=mock_project.id,
-        is_active=False
-        )
+        rules = service.get_project_bonus_rules(project_id=mock_project.id, is_active=False)
         assert isinstance(rules, list)
 
 
@@ -80,9 +68,7 @@ class TestIsRuleApplicable:
         result = service._is_rule_applicable(mock_rule, mock_project)
         assert result is True
 
-    def test_rule_not_applicable_future_start_date(
-        self, db_session: Session, mock_project
-    ):
+    def test_rule_not_applicable_future_start_date(self, db_session: Session, mock_project):
         """测试未来生效的规则不应该适用"""
         service = ProjectBonusService(db_session)
         mock_rule = MagicMock()
@@ -93,9 +79,7 @@ class TestIsRuleApplicable:
         result = service._is_rule_applicable(mock_rule, mock_project)
         assert result is False
 
-    def test_rule_not_applicable_past_end_date(
-        self, db_session: Session, mock_project
-    ):
+    def test_rule_not_applicable_past_end_date(self, db_session: Session, mock_project):
         """测试已过期的规则不应该适用"""
         service = ProjectBonusService(db_session)
         mock_rule = MagicMock()
@@ -106,9 +90,7 @@ class TestIsRuleApplicable:
         result = service._is_rule_applicable(mock_rule, mock_project)
         assert result is False
 
-    def test_rule_applicable_within_date_range(
-        self, db_session: Session, mock_project
-    ):
+    def test_rule_applicable_within_date_range(self, db_session: Session, mock_project):
         """测试在有效期内的规则应该适用"""
         service = ProjectBonusService(db_session)
         mock_rule = MagicMock()
@@ -126,42 +108,32 @@ class TestGetProjectBonusCalculations:
     def test_get_calculations_empty(self, db_session: Session, mock_project):
         """测试无计算记录时返回空列表"""
         service = ProjectBonusService(db_session)
-        calculations = service.get_project_bonus_calculations(
-        project_id=mock_project.id
-        )
+        calculations = service.get_project_bonus_calculations(project_id=mock_project.id)
         assert calculations == []
 
-    def test_get_calculations_with_user_filter(
-        self, db_session: Session, mock_project, test_user
-    ):
+    def test_get_calculations_with_user_filter(self, db_session: Session, mock_project, test_user):
         """测试按用户筛选计算记录"""
         service = ProjectBonusService(db_session)
         calculations = service.get_project_bonus_calculations(
-        project_id=mock_project.id,
-        user_id=test_user.id
+            project_id=mock_project.id, user_id=test_user.id
         )
         assert isinstance(calculations, list)
 
-    def test_get_calculations_with_status_filter(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_calculations_with_status_filter(self, db_session: Session, mock_project):
         """测试按状态筛选计算记录"""
         service = ProjectBonusService(db_session)
         calculations = service.get_project_bonus_calculations(
-        project_id=mock_project.id,
-        status="PENDING"
+            project_id=mock_project.id, status="PENDING"
         )
         assert isinstance(calculations, list)
 
-    def test_get_calculations_with_date_range(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_calculations_with_date_range(self, db_session: Session, mock_project):
         """测试按日期范围筛选计算记录"""
         service = ProjectBonusService(db_session)
         calculations = service.get_project_bonus_calculations(
-        project_id=mock_project.id,
-        start_date=date.today() - timedelta(days=30),
-        end_date=date.today()
+            project_id=mock_project.id,
+            start_date=date.today() - timedelta(days=30),
+            end_date=date.today(),
         )
         assert isinstance(calculations, list)
 
@@ -173,24 +145,19 @@ class TestGetProjectBonusDistributions:
         """测试无发放记录时返回空列表"""
         service = ProjectBonusService(db_session)
         try:
-            distributions = service.get_project_bonus_distributions(
-            project_id=mock_project.id
-            )
+            distributions = service.get_project_bonus_distributions(project_id=mock_project.id)
             assert distributions == []
         except AttributeError as e:
             if "distributed_at" in str(e):
                 pytest.skip("服务代码使用了不存在的字段 distributed_at（应为 paid_at）")
                 raise
 
-    def test_get_distributions_with_user_filter(
-        self, db_session: Session, mock_project, test_user
-    ):
+    def test_get_distributions_with_user_filter(self, db_session: Session, mock_project, test_user):
         """测试按用户筛选发放记录"""
         service = ProjectBonusService(db_session)
         try:
             distributions = service.get_project_bonus_distributions(
-            project_id=mock_project.id,
-            user_id=test_user.id
+                project_id=mock_project.id, user_id=test_user.id
             )
             assert isinstance(distributions, list)
         except AttributeError as e:
@@ -198,15 +165,12 @@ class TestGetProjectBonusDistributions:
                 pytest.skip("服务代码使用了不存在的字段 distributed_at（应为 paid_at）")
                 raise
 
-    def test_get_distributions_with_status_filter(
-        self, db_session: Session, mock_project
-    ):
+    def test_get_distributions_with_status_filter(self, db_session: Session, mock_project):
         """测试按状态筛选发放记录"""
         service = ProjectBonusService(db_session)
         try:
             distributions = service.get_project_bonus_distributions(
-            project_id=mock_project.id,
-            status="PAID"
+                project_id=mock_project.id, status="PAID"
             )
             assert isinstance(distributions, list)
         except AttributeError as e:
@@ -222,9 +186,7 @@ class TestGetProjectMemberBonusSummary:
         """测试无奖金数据时返回空列表"""
         service = ProjectBonusService(db_session)
         try:
-            summary = service.get_project_member_bonus_summary(
-            project_id=mock_project.id
-            )
+            summary = service.get_project_member_bonus_summary(project_id=mock_project.id)
             assert summary == []
         except AttributeError as e:
             if "distributed_at" in str(e):
@@ -235,9 +197,7 @@ class TestGetProjectMemberBonusSummary:
         """测试成员奖金汇总的数据结构"""
         service = ProjectBonusService(db_session)
         try:
-            summary = service.get_project_member_bonus_summary(
-                project_id=mock_project.id
-            )
+            summary = service.get_project_member_bonus_summary(project_id=mock_project.id)
             assert isinstance(summary, list)
             # 如果有数据，验证结构
             for item in summary:

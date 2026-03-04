@@ -14,7 +14,7 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from app.services.acceptance_approval.service import AcceptanceApprovalService
 
@@ -56,10 +56,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
 
         # 执行
         results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1,
-            urgency="NORMAL",
-            comment="请审批"
+            order_ids=[1], initiator_id=1, urgency="NORMAL", comment="请审批"
         )
 
         # 验证
@@ -85,10 +82,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = None
 
         # 执行
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[999],
-            initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[999], initiator_id=1)
 
         # 验证
         self.assertEqual(len(results), 0)
@@ -106,10 +100,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = mock_order
 
         # 执行
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         # 验证
         self.assertEqual(len(results), 0)
@@ -127,10 +118,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = mock_order
 
         # 执行
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         # 验证
         self.assertEqual(len(results), 0)
@@ -157,7 +145,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
 
         # 创建简单的调用计数器
         call_count = [0]
-        
+
         def first_side_effect():
             call_count[0] += 1
             # 第一次调用返回订单1，第二次调用返回None
@@ -178,8 +166,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
 
         # 执行
         results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1, 999],
-            initiator_id=1
+            order_ids=[1, 999], initiator_id=1
         )
 
         # 验证
@@ -211,10 +198,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
         self.service.engine.submit = MagicMock(side_effect=Exception("审批流程配置错误"))
 
         # 执行
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         # 验证
         self.assertEqual(len(results), 0)
@@ -241,16 +225,16 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
         mock_instance.entity_id = 1
         mock_instance.urgency = "NORMAL"
         mock_instance.created_at = datetime(2024, 1, 1, 10, 0, 0)
-        
+
         # Mock发起人
         mock_initiator = MagicMock()
         mock_initiator.real_name = "张三"
         mock_instance.initiator = mock_initiator
-        
+
         # Mock节点
         mock_node = MagicMock()
         mock_node.node_name = "部门经理审批"
-        
+
         mock_task.instance = mock_instance
         mock_task.node = mock_node
 
@@ -260,12 +244,12 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
         mock_order.acceptance_type = "FAT"
         mock_order.overall_result = "PASSED"
         mock_order.pass_rate = Decimal("95.50")
-        
+
         # Mock项目和设备
         mock_project = MagicMock()
         mock_project.project_name = "测试项目"
         mock_order.project = mock_project
-        
+
         mock_machine = MagicMock()
         mock_machine.machine_code = "M001"
         mock_order.machine = mock_machine
@@ -335,7 +319,7 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
 
         # Mock查询 - 使用调用计数器交替返回不同的订单
         call_count = [0]
-        
+
         def first_side_effect():
             call_count[0] += 1
             # 奇数次返回order1，偶数次返回order2
@@ -350,10 +334,7 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
 
         # 执行 - 只要FAT类型
         items, total = self.service.get_pending_tasks(
-            user_id=1,
-            acceptance_type="FAT",
-            offset=0,
-            limit=20
+            user_id=1, acceptance_type="FAT", offset=0, limit=20
         )
 
         # 验证 - 只应返回FAT类型的任务
@@ -382,6 +363,7 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
         # Mock验收单
         def query_side_effect(*args):
             mock = MagicMock()
+
             def filter_side_effect(*filter_args):
                 mock_filter = MagicMock()
                 filter_str = str(filter_args)
@@ -397,28 +379,21 @@ class TestAcceptanceApprovalServicePendingTasks(unittest.TestCase):
                         mock_filter.first.return_value = mock_order
                         break
                 return mock_filter
+
             mock.filter.side_effect = filter_side_effect
             return mock
 
         self.mock_db.query.side_effect = query_side_effect
 
         # 执行 - 第一页，每页2条
-        items, total = self.service.get_pending_tasks(
-            user_id=1,
-            offset=0,
-            limit=2
-        )
+        items, total = self.service.get_pending_tasks(user_id=1, offset=0, limit=2)
 
         # 验证
         self.assertEqual(total, 3)
         self.assertEqual(len(items), 2)
 
         # 执行 - 第二页
-        items, total = self.service.get_pending_tasks(
-            user_id=1,
-            offset=2,
-            limit=2
-        )
+        items, total = self.service.get_pending_tasks(user_id=1, offset=2, limit=2)
 
         # 验证
         self.assertEqual(total, 3)
@@ -450,10 +425,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
         # 执行
         result = self.service.perform_approval_action(
-            task_id=1,
-            action="approve",
-            approver_id=1,
-            comment="同意"
+            task_id=1, action="approve", approver_id=1, comment="同意"
         )
 
         # 验证
@@ -461,9 +433,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
         self.assertEqual(result["action"], "approve")
         self.assertEqual(result["instance_status"], "APPROVED")
         self.service.engine.approve.assert_called_once_with(
-            task_id=1,
-            approver_id=1,
-            comment="同意"
+            task_id=1, approver_id=1, comment="同意"
         )
 
     def test_perform_approval_action_reject(self):
@@ -474,10 +444,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
         # 执行
         result = self.service.perform_approval_action(
-            task_id=1,
-            action="reject",
-            approver_id=1,
-            comment="不同意"
+            task_id=1, action="reject", approver_id=1, comment="不同意"
         )
 
         # 验证
@@ -489,11 +456,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
         """测试执行审批操作 - 无效操作"""
         # 执行 - 应该抛出异常
         with self.assertRaises(ValueError) as context:
-            self.service.perform_approval_action(
-                task_id=1,
-                action="invalid_action",
-                approver_id=1
-            )
+            self.service.perform_approval_action(task_id=1, action="invalid_action", approver_id=1)
 
         self.assertIn("不支持的操作类型", str(context.exception))
 
@@ -503,10 +466,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
         # 执行
         results, errors = self.service.batch_approval(
-            task_ids=[1, 2, 3],
-            action="approve",
-            approver_id=1,
-            comment="批量同意"
+            task_ids=[1, 2, 3], action="approve", approver_id=1, comment="批量同意"
         )
 
         # 验证
@@ -516,6 +476,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
     def test_batch_approval_mixed_results(self):
         """测试批量审批 - 部分失败"""
+
         # Mock第2个失败
         def approve_side_effect(task_id, approver_id, comment):
             if task_id == 2:
@@ -526,9 +487,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
         # 执行
         results, errors = self.service.batch_approval(
-            task_ids=[1, 2, 3],
-            action="approve",
-            approver_id=1
+            task_ids=[1, 2, 3], action="approve", approver_id=1
         )
 
         # 验证
@@ -539,11 +498,7 @@ class TestAcceptanceApprovalServiceActions(unittest.TestCase):
 
     def test_batch_approval_invalid_action(self):
         """测试批量审批 - 无效操作"""
-        results, errors = self.service.batch_approval(
-            task_ids=[1],
-            action="invalid",
-            approver_id=1
-        )
+        results, errors = self.service.batch_approval(task_ids=[1], action="invalid", approver_id=1)
 
         # 验证
         self.assertEqual(len(results), 0)
@@ -583,11 +538,11 @@ class TestAcceptanceApprovalServiceStatus(unittest.TestCase):
         mock_task.action = None
         mock_task.comment = None
         mock_task.completed_at = None
-        
+
         mock_node = MagicMock()
         mock_node.node_name = "部门经理审批"
         mock_task.node = mock_node
-        
+
         mock_assignee = MagicMock()
         mock_assignee.real_name = "张三"
         mock_task.assignee = mock_assignee
@@ -595,14 +550,16 @@ class TestAcceptanceApprovalServiceStatus(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
             elif "ApprovalInstance" in str(model):
-                mock_query.filter.return_value.order_by.return_value.first.return_value = mock_instance
+                mock_query.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_instance
+                )
             elif "ApprovalTask" in str(model):
                 mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_task]
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
@@ -630,12 +587,12 @@ class TestAcceptanceApprovalServiceStatus(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
             elif "ApprovalInstance" in str(model):
                 mock_query.filter.return_value.order_by.return_value.first.return_value = None
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
@@ -683,12 +640,12 @@ class TestAcceptanceApprovalServiceWithdraw(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
             elif "ApprovalInstance" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_instance
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
@@ -697,20 +654,13 @@ class TestAcceptanceApprovalServiceWithdraw(unittest.TestCase):
         self.service.engine.withdraw = MagicMock()
 
         # 执行
-        result = self.service.withdraw_approval(
-            order_id=1,
-            user_id=1,
-            reason="需要修改"
-        )
+        result = self.service.withdraw_approval(order_id=1, user_id=1, reason="需要修改")
 
         # 验证
         self.assertEqual(result["order_id"], 1)
         self.assertEqual(result["order_no"], "ACC-001")
         self.assertEqual(result["status"], "withdrawn")
-        self.service.engine.withdraw.assert_called_once_with(
-            instance_id=101,
-            user_id=1
-        )
+        self.service.engine.withdraw.assert_called_once_with(instance_id=101, user_id=1)
 
     def test_withdraw_approval_order_not_found(self):
         """测试撤回审批 - 验收单不存在"""
@@ -732,12 +682,12 @@ class TestAcceptanceApprovalServiceWithdraw(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
             elif "ApprovalInstance" in str(model):
                 mock_query.filter.return_value.first.return_value = None  # 没有进行中的实例
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
@@ -763,12 +713,12 @@ class TestAcceptanceApprovalServiceWithdraw(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
             elif "ApprovalInstance" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_instance
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
@@ -811,27 +761,25 @@ class TestAcceptanceApprovalServiceHistory(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "ApprovalTask" in str(model):
                 mock_join = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.count.return_value = 1
-                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
+                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+                    mock_task
+                ]
                 mock_join.filter.return_value = mock_filter
                 mock_query.join.return_value = mock_join
             elif "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
 
         # 执行
-        items, total = self.service.get_approval_history(
-            user_id=1,
-            offset=0,
-            limit=20
-        )
+        items, total = self.service.get_approval_history(user_id=1, offset=0, limit=20)
 
         # 验证
         self.assertEqual(total, 1)
@@ -864,27 +812,26 @@ class TestAcceptanceApprovalServiceHistory(unittest.TestCase):
         # Mock查询链
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "ApprovalTask" in str(model):
                 mock_join = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.count.return_value = 1
-                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
+                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+                    mock_task
+                ]
                 mock_join.filter.return_value = mock_filter
                 mock_query.join.return_value = mock_join
             elif "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
 
         # 执行 - 指定FAT类型
         items, total = self.service.get_approval_history(
-            user_id=1,
-            acceptance_type="FAT",
-            offset=0,
-            limit=20
+            user_id=1, acceptance_type="FAT", offset=0, limit=20
         )
 
         # 验证
@@ -913,33 +860,32 @@ class TestAcceptanceApprovalServiceHistory(unittest.TestCase):
         # Mock查询链 - 注意状态过滤会在query中体现
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "ApprovalTask" in str(model):
                 mock_join = MagicMock()
-                
+
                 # 创建一个可链式调用的filter mock
                 def create_filter_chain():
                     mock_filter = MagicMock()
                     mock_filter.filter.return_value = mock_filter  # 支持链式filter
                     mock_filter.count.return_value = 1
-                    mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
+                    mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+                        mock_task
+                    ]
                     return mock_filter
-                
+
                 mock_join.filter.return_value = create_filter_chain()
                 mock_query.join.return_value = mock_join
             elif "AcceptanceOrder" in str(model):
                 mock_query.filter.return_value.first.return_value = mock_order
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect
 
         # 执行
         items, total = self.service.get_approval_history(
-            user_id=1,
-            status_filter="APPROVED",
-            offset=0,
-            limit=20
+            user_id=1, status_filter="APPROVED", offset=0, limit=20
         )
 
         # 验证
@@ -948,18 +894,21 @@ class TestAcceptanceApprovalServiceHistory(unittest.TestCase):
 
     def test_get_approval_history_empty(self):
         """测试获取审批历史 - 空列表"""
+
         # Mock查询链返回空
         def query_side_effect(model):
             mock_query = MagicMock()
-            
+
             if "ApprovalTask" in str(model):
                 mock_join = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.count.return_value = 0
-                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+                mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+                    []
+                )
                 mock_join.filter.return_value = mock_filter
                 mock_query.join.return_value = mock_join
-            
+
             return mock_query
 
         self.mock_db.query.side_effect = query_side_effect

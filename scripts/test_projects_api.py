@@ -172,11 +172,7 @@ def test_all_projects(token: str, project_codes: list):
     print("=" * 60)
 
     for code, result in results.items():
-        status = (
-            "✅"
-            if result["found"] and result["list_api"] and result["detail_api"]
-            else "❌"
-        )
+        status = "✅" if result["found"] and result["list_api"] and result["detail_api"] else "❌"
         print(f"{status} {code}:")
         print(f"   - 列表API: {'✅' if result['list_api'] else '❌'}")
         print(f"   - 详情API: {'✅' if result['detail_api'] else '❌'}")

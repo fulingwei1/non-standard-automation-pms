@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 MODULE = "app.utils.scheduled_tasks.project"
 
 
 # ============================================================================
 # 辅助
 # ============================================================================
+
 
 def make_mock_db_ctx():
     mock_session = MagicMock()
@@ -36,47 +36,55 @@ class TestProjectModuleImports:
     def test_module_imports_successfully(self):
         """模块可以正常导入"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert project_module is not None
 
     def test_calculate_project_health_exported(self):
         """calculate_project_health 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "calculate_project_health")
         assert callable(project_module.calculate_project_health)
 
     def test_daily_health_snapshot_exported(self):
         """daily_health_snapshot 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "daily_health_snapshot")
         assert callable(project_module.daily_health_snapshot)
 
     def test_check_overdue_issues_exported(self):
         """check_overdue_issues 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "check_overdue_issues")
         assert callable(project_module.check_overdue_issues)
 
     def test_check_blocking_issues_exported(self):
         """check_blocking_issues 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "check_blocking_issues")
         assert callable(project_module.check_blocking_issues)
 
     def test_check_timeout_issues_exported(self):
         """check_timeout_issues 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "check_timeout_issues")
         assert callable(project_module.check_timeout_issues)
 
     def test_daily_issue_statistics_snapshot_exported(self):
         """daily_issue_statistics_snapshot 从子模块导出"""
         import app.utils.scheduled_tasks.project as project_module
+
         assert hasattr(project_module, "daily_issue_statistics_snapshot")
         assert callable(project_module.daily_issue_statistics_snapshot)
 
     def test_all_exports_defined(self):
         """__all__ 中所有名称都已定义"""
         import app.utils.scheduled_tasks.project as project_module
+
         all_exports = project_module.__all__
         for name in all_exports:
             obj = getattr(project_module, name, None)

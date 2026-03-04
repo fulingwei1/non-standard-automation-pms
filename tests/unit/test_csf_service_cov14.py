@@ -2,11 +2,13 @@
 """
 第十四批：CSF关键成功要素服务 单元测试
 """
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.strategy import csf_service
+
     SKIP = False
 except Exception:
     SKIP = True

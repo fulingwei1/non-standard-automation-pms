@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - ApprovalAdapter 基类 (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.base import ApprovalAdapter
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False
@@ -15,6 +17,7 @@ pytestmark = pytest.mark.skipif(not _IMPORT_OK, reason="Import failed for Approv
 
 class _ConcreteAdapter(ApprovalAdapter):
     """用于测试的具体实现"""
+
     entity_type = "TEST_ENTITY"
 
     def get_entity(self, entity_id):

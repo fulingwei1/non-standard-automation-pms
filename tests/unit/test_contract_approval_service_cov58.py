@@ -8,7 +8,7 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from app.services.contract_approval import ContractApprovalService
 
@@ -122,7 +122,7 @@ class TestContractApprovalService(unittest.TestCase):
         # 准备测试数据
         mock_task = MagicMock()
         mock_task.id = 1
-        
+
         mock_instance = MagicMock()
         mock_instance.entity_id = 10
         mock_instance.id = 100
@@ -130,7 +130,7 @@ class TestContractApprovalService(unittest.TestCase):
         mock_instance.urgency = "NORMAL"
         mock_instance.initiator.real_name = "张三"
         mock_task.instance = mock_instance
-        
+
         mock_contract = MagicMock()
         mock_contract.id = 10
         mock_contract.contract_code = "CT-001"
@@ -139,7 +139,7 @@ class TestContractApprovalService(unittest.TestCase):
         mock_contract.contract_amount = Decimal("50000.00")
         mock_contract.customer.name = "测试客户"
         mock_contract.project.project_name = "测试项目"
-        
+
         mock_task.node.node_name = "部门审批"
 
         # 模拟 engine 返回任务
@@ -225,6 +225,7 @@ class TestContractApprovalService(unittest.TestCase):
 
     def test_batch_approve_or_reject_with_errors(self):
         """测试批量审批部分失败"""
+
         # 第2个任务失败
         def approve_side_effect(task_id, approver_id, comment):
             if task_id == 2:
@@ -288,8 +289,12 @@ class TestContractApprovalService(unittest.TestCase):
 
         # 模拟查询
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
-        self.mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_instance
-        self.mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_task]
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_instance
+        )
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_task
+        ]
 
         # 执行
         result = self.service.get_contract_approval_status(1)
@@ -319,15 +324,15 @@ class TestContractApprovalService(unittest.TestCase):
 
         # 第一次查询返回合同，第二次查询返回 None（无审批实例）
         query_mock = self.mock_db.query.return_value.filter.return_value
-        
+
         # 配置不同的调用返回不同的值
         def first_side_effect():
             # 第一次调用返回合同，后续返回 None
-            if not hasattr(first_side_effect, 'called'):
+            if not hasattr(first_side_effect, "called"):
                 first_side_effect.called = True
                 return mock_contract
             return None
-        
+
         query_mock.first.side_effect = first_side_effect
         query_mock.order_by.return_value.first.return_value = None
 
@@ -351,7 +356,7 @@ class TestContractApprovalService(unittest.TestCase):
 
         # 模拟查询
         query_mock = self.mock_db.query.return_value.filter.return_value
-        
+
         # 第一次返回合同，第二次返回审批实例
         query_mock.first.side_effect = [mock_contract, mock_instance]
 
@@ -430,14 +435,12 @@ class TestContractApprovalService(unittest.TestCase):
         mock_contract.customer.name = "测试客户"
 
         # 模拟查询
-        query_chain = (
-            self.mock_db.query.return_value
-            .join.return_value
-            .filter.return_value
-        )
+        query_chain = self.mock_db.query.return_value.join.return_value.filter.return_value
         query_chain.count.return_value = 1
-        query_chain.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
-        
+        query_chain.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            mock_task
+        ]
+
         # 模拟合同查询
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
 
@@ -458,13 +461,12 @@ class TestContractApprovalService(unittest.TestCase):
         """测试获取审批历史带状态筛选"""
         # 模拟空结果
         query_chain = (
-            self.mock_db.query.return_value
-            .join.return_value
-            .filter.return_value
-            .filter.return_value
+            self.mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value
         )
         query_chain.count.return_value = 0
-        query_chain.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        query_chain.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         # 执行
         items, total = self.service.get_approval_history(

@@ -115,7 +115,9 @@ class TestAnalyzeRootCause:
         from app.services.delay_root_cause_service import DelayRootCauseService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         service = DelayRootCauseService(mock_db)
         result = service.analyze_root_cause(
@@ -292,9 +294,7 @@ class TestAnalyzeTrends:
         result = service.analyze_trends(months=1)
 
         # 应该有当月的统计，1/2=50%延期率
-        current_month_data = next(
-            (t for t in result["trends"] if t["month"] == month_key), None
-        )
+        current_month_data = next((t for t in result["trends"] if t["month"] == month_key), None)
         if current_month_data:
             assert current_month_data["delay_rate"] == 50.0
 

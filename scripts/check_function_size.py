@@ -12,7 +12,6 @@ import os
 import sys
 from pathlib import Path
 
-
 # 函数行数限制
 MAX_FUNCTION_LINES = 50
 

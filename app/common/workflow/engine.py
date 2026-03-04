@@ -3,8 +3,8 @@
 Workflow Engine for handling status transitions and side effects.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
 import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +21,7 @@ class WorkflowEngine:
         # {(model_name, to_status): [handlers]}
         self._handlers: Dict[Tuple[str, str], List[WorkflowHandler]] = {}
         # {(model_name, from_status, to_status): [handlers]}
-        self._transition_handlers: Dict[
-            Tuple[str, Optional[str], str], List[WorkflowHandler]
-        ] = {}
+        self._transition_handlers: Dict[Tuple[str, Optional[str], str], List[WorkflowHandler]] = {}
 
     def register(
         self,
@@ -46,13 +44,9 @@ class WorkflowEngine:
                 self._handlers[key] = []
             self._handlers[key].append(handler)
 
-        logger.debug(
-            f"Registered workflow handler for {model_name}: {from_status} -> {to_status}"
-        )
+        logger.debug(f"Registered workflow handler for {model_name}: {from_status} -> {to_status}")
 
-    def trigger(
-        self, db: Any, instance: Any, from_status: Optional[str], to_status: str
-    ):
+    def trigger(self, db: Any, instance: Any, from_status: Optional[str], to_status: str):
         """
         Trigger handlers for a status transition.
         """
@@ -71,9 +65,7 @@ class WorkflowEngine:
 
         # 2. Trigger specific transition handlers
         if from_status:
-            t_handlers = self._transition_handlers.get(
-                (model_name, from_status, to_status), []
-            )
+            t_handlers = self._transition_handlers.get((model_name, from_status, to_status), [])
             for handler in t_handlers:
                 try:
                     handler(db, instance, from_status, to_status)

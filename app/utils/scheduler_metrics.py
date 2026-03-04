@@ -32,7 +32,9 @@ class SchedulerMetrics:
             }
         )
         # Historical duration samples for percentile calculations
-        self._duration_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_history_size))
+        self._duration_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=max_history_size)
+        )
         # Notification channel statistics
         self._notification_stats: Dict[str, Dict[str, int]] = defaultdict(
             lambda: {"success_count": 0, "failure_count": 0}
@@ -135,8 +137,7 @@ class SchedulerMetrics:
         with self._lock:
             # Copy history data while holding lock
             history_snapshots = {
-                job_id: list(history)
-                for job_id, history in self._duration_history.items()
+                job_id: list(history) for job_id, history in self._duration_history.items()
             }
             job_ids = set(self._data.keys()) | set(self._duration_history.keys())
 

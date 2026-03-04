@@ -98,9 +98,9 @@ from .outsourcing import (
 )
 from .pitfall import (
     PitfallCreate,
-    PitfallUpdate,
-    PitfallResponse,
     PitfallListItem,
+    PitfallResponse,
+    PitfallUpdate,
 )
 from .project import (
     MachineCreate,
@@ -114,21 +114,9 @@ from .project import (
     ProjectResponse,
     ProjectUpdate,
 )
-# FIXME: Naming conflict between project_review.py and project_review/ package
-# from .project_review import (
-#     BestPracticeRecommendationRequest,
-#     BestPracticeRecommendationResponse,
-#     LessonStatisticsResponse,
-#     ProjectBestPracticeCreate,
-#     ProjectBestPracticeResponse,
-
-from .project_review import (  # Import from package instead of file
+from .project_review import (  # Import from package instead of file; LessonStatisticsResponse,  # Not exported from package; ProjectBestPracticeCreate,  # Not exported from package; ProjectBestPracticeResponse,  # Not exported from package; ProjectBestPracticeUpdate,  # Not exported from package
     BestPracticeRecommendationRequest,
     BestPracticeRecommendationResponse,
-    # LessonStatisticsResponse,  # Not exported from package
-    # ProjectBestPracticeCreate,  # Not exported from package
-    # ProjectBestPracticeResponse,  # Not exported from package
-    # ProjectBestPracticeUpdate,  # Not exported from package
     ProjectLessonCreate,
     ProjectLessonResponse,
     ProjectLessonUpdate,
@@ -228,6 +216,15 @@ from .technical_spec import (
     TechnicalSpecRequirementResponse,
     TechnicalSpecRequirementUpdate,
 )
+
+# FIXME: Naming conflict between project_review.py and project_review/ package
+# from .project_review import (
+#     BestPracticeRecommendationRequest,
+#     BestPracticeRecommendationResponse,
+#     LessonStatisticsResponse,
+#     ProjectBestPracticeCreate,
+#     ProjectBestPracticeResponse,
+
 
 __all__ = [
     # Common

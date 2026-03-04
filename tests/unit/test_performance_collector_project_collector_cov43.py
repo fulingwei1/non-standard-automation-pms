@@ -47,7 +47,9 @@ def test_collect_task_completion_with_tasks():
     t_open.due_date = None
 
     c.db.query.return_value.join.return_value.filter.return_value.all.return_value = [
-        t_done, t_late, t_open
+        t_done,
+        t_late,
+        t_open,
     ]
 
     result = c.collect_task_completion_data(1, date(2026, 1, 1), date(2026, 1, 31))

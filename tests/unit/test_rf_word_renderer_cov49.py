@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/renderers/word_renderer.py"""
 
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, mock_open
 
 try:
-    from app.services.report_framework.renderers.word_renderer import WordRenderer
     from app.services.report_framework.renderers.base import RenderError
+    from app.services.report_framework.renderers.word_renderer import WordRenderer
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -58,12 +59,14 @@ def test_render_table_section(mock_makedirs, mock_document_cls):
     mock_table.rows.__getitem__ = lambda self, idx: mock_row
 
     renderer = WordRenderer(output_dir="/tmp/word_test")
-    sections = [{
-        "type": "table",
-        "title": "明细",
-        "data": [{"name": "Alice", "score": 90}],
-        "columns": [{"field": "name", "label": "姓名"}, {"field": "score", "label": "分数"}],
-    }]
+    sections = [
+        {
+            "type": "table",
+            "title": "明细",
+            "data": [{"name": "Alice", "score": 90}],
+            "columns": [{"field": "name", "label": "姓名"}, {"field": "score", "label": "分数"}],
+        }
+    ]
     metadata = {"code": "T2", "name": "Table Report"}
     result = renderer.render(sections, metadata)
     assert result.format == "word"

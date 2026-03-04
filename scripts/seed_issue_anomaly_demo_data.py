@@ -58,7 +58,10 @@ def _build_issue_blueprints() -> list[dict]:
     blueprints: list[dict] = []
 
     technical_challenges = [
-        ("伺服轴重复定位偏差超标", "A轴重复定位偏差0.18mm，超出规格0.05mm，导致插针工位连续3次NG。"),
+        (
+            "伺服轴重复定位偏差超标",
+            "A轴重复定位偏差0.18mm，超出规格0.05mm，导致插针工位连续3次NG。",
+        ),
         ("视觉定位误判率偏高", "相机在高反光壳体上误判率4.6%，超出<1%要求，影响自动补偿逻辑。"),
         ("PLC扫描周期超限", "主站PLC扫描周期稳定在42ms，超出节拍设计上限20ms，触发连锁延时。"),
         ("激光测高数据抖动", "测高模块同一点连续采样标准差0.12mm，超出工艺容差0.03mm。"),
@@ -70,7 +73,10 @@ def _build_issue_blueprints() -> list[dict]:
         ("扭矩采集通道漂移", "CH3扭矩零点每班次漂移约0.32N·m，导致拧紧判定边界不稳定。"),
     ]
     technical_design_changes = [
-        ("客户新增双工位并行节拍需求", "客户将CT目标由18秒压缩至11秒，现有单工位机构无法满足并行节拍。"),
+        (
+            "客户新增双工位并行节拍需求",
+            "客户将CT目标由18秒压缩至11秒，现有单工位机构无法满足并行节拍。",
+        ),
         ("治具定位基准变更", "客户将产品定位基准由外壳孔位改为电芯边界，现治具定位销需重构。"),
         ("安规门锁方案变更", "客户要求门锁联锁由单回路升级为双回路冗余，原电气图纸不兼容。"),
         ("产品尺寸公差收紧", "客户最新图纸将关键尺寸公差从±0.2mm收紧至±0.08mm，夹具精度不足。"),
@@ -82,7 +88,10 @@ def _build_issue_blueprints() -> list[dict]:
         ("测试报告字段新增16项", "客户质量部新增SPC字段与追溯字段，现报表模板缺少16个列项。"),
     ]
     technical_spec_mismatch = [
-        ("FAT节拍实测与规格不符", "FAT实测CT均值22.4秒，高于合同规格20秒上限，瓶颈在扫码+写站环节。"),
+        (
+            "FAT节拍实测与规格不符",
+            "FAT实测CT均值22.4秒，高于合同规格20秒上限，瓶颈在扫码+写站环节。",
+        ),
         ("绝缘耐压项判定阈值错误", "程序使用1.5mA判定阈值，合同技术协议要求1.0mA。"),
         ("上位机日志保留周期不足", "当前仅保留30天日志，客户验收标准明确要求至少180天。"),
         ("多语言界面翻译缺项", "德语界面存在27处未翻译字段，未满足出口项目交付规范。"),
@@ -412,7 +421,9 @@ def seed_issue_anomaly_data() -> None:
                 impact_scope="影响产线节拍、质量稳定性与交付节点",
                 impact_level=_priority_to_impact(priority),
                 is_blocking=(priority == "CRITICAL" or blueprint["issue_type"] == "BLOCKER"),
-                tags=json.dumps([DEMO_TAG, blueprint["type_key"], blueprint["subtype"]], ensure_ascii=False),
+                tags=json.dumps(
+                    [DEMO_TAG, blueprint["type_key"], blueprint["subtype"]], ensure_ascii=False
+                ),
                 root_cause=blueprint["root_cause"],
                 responsible_engineer_id=responsible.id,
                 responsible_engineer_name=_display_name(responsible),
@@ -440,7 +451,9 @@ def seed_issue_anomaly_data() -> None:
         for issue in resolved_issues[:10]:
             owner = users[(issue.id + 2) % len(users)]
             ts1 = issue.report_date + timedelta(days=1, hours=rng.randint(1, 5))
-            ts2 = (issue.resolved_at or ts1 + timedelta(days=2)) - timedelta(hours=rng.randint(1, 4))
+            ts2 = (issue.resolved_at or ts1 + timedelta(days=2)) - timedelta(
+                hours=rng.randint(1, 4)
+            )
 
             f1 = IssueFollowUpRecord(
                 issue_id=issue.id,

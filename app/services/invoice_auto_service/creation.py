@@ -40,30 +40,25 @@ def create_invoice_request(
         创建结果字典
     """
     # 检查是否已有发票申请
-    existing_request = service.db.query(InvoiceRequest).filter(
-        InvoiceRequest.payment_plan_id == plan.id,
-        InvoiceRequest.status.in_(["PENDING", "APPROVED"])
-    ).first()
+    existing_request = (
+        service.db.query(InvoiceRequest)
+        .filter(
+            InvoiceRequest.payment_plan_id == plan.id,
+            InvoiceRequest.status.in_(["PENDING", "APPROVED"]),
+        )
+        .first()
+    )
 
     if existing_request:
-        return {
-            "success": False,
-            "message": "发票申请已存在",
-            "request_id": existing_request.id
-        }
+        return {"success": False, "message": "发票申请已存在", "request_id": existing_request.id}
 
     # 获取合同信息
     contract = None
     if plan.contract_id:
-        contract = service.db.query(Contract).filter(
-            Contract.id == plan.contract_id
-        ).first()
+        contract = service.db.query(Contract).filter(Contract.id == plan.contract_id).first()
 
     if not contract:
-        return {
-            "success": False,
-            "message": "收款计划未关联合同"
-        }
+        return {"success": False, "message": "收款计划未关联合同"}
 
     # 生成申请编号
     today = datetime.now()
@@ -125,7 +120,7 @@ def create_invoice_request(
         "message": "发票申请已创建",
         "request_id": invoice_request.id,
         "request_no": request_no,
-        "amount": float(total_amount)
+        "amount": float(total_amount),
     }
 
 
@@ -149,23 +144,15 @@ def create_invoice_directly(
     """
     # 检查是否已开票
     if plan.invoice_id:
-        return {
-            "success": False,
-            "message": "已开票"
-        }
+        return {"success": False, "message": "已开票"}
 
     # 获取合同信息
     contract = None
     if plan.contract_id:
-        contract = service.db.query(Contract).filter(
-            Contract.id == plan.contract_id
-        ).first()
+        contract = service.db.query(Contract).filter(Contract.id == plan.contract_id).first()
 
     if not contract:
-        return {
-            "success": False,
-            "message": "收款计划未关联合同"
-        }
+        return {"success": False, "message": "收款计划未关联合同"}
 
     # 生成发票编码
     today = datetime.now()
@@ -229,5 +216,5 @@ def create_invoice_directly(
         "message": "发票已创建",
         "invoice_id": invoice.id,
         "invoice_code": invoice_code,
-        "amount": float(total_amount)
+        "amount": float(total_amount),
     }

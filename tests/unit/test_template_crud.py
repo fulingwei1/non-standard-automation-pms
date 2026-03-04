@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/stage_template/template_crud.py"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.stage_template.template_crud import TemplateCrudMixin
 

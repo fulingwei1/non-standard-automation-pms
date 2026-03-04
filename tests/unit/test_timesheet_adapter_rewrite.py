@@ -13,9 +13,9 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
-from app.models.timesheet import Timesheet
 from app.models.approval import ApprovalInstance
+from app.models.timesheet import Timesheet
+from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
 
 
 class TestTimesheetAdapterCore(unittest.TestCase):
@@ -59,7 +59,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
             user_id=100,
             user_name="张三",
             hours=Decimal("8.0"),
-            overtime_type="NORMAL"
+            overtime_type="NORMAL",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -81,7 +81,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
             timesheet_no="TS-2024-002",
             project_id=10,
             project_code="PRJ-001",
-            project_name="测试项目"
+            project_name="测试项目",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -96,9 +96,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_entity_data_with_department(self):
         """测试获取包含部门信息的工时数据"""
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-003",
-            department_id=5,
-            department_name="研发部"
+            timesheet_no="TS-2024-003", department_id=5, department_name="研发部"
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -114,7 +112,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
         mock_timesheet = self._create_mock_timesheet(
             timesheet_no="TS-2024-004",
             task_name="开发功能模块",
-            work_content="完成用户认证模块开发"
+            work_content="完成用户认证模块开发",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -129,8 +127,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
         """测试包含工作日期的数据"""
         work_date = datetime(2024, 1, 15)
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-005",
-            work_date=work_date
+            timesheet_no="TS-2024-005", work_date=work_date
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -142,10 +139,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_work_date_none(self):
         """测试工作日期为None的情况"""
-        mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-006",
-            work_date=None
-        )
+        mock_timesheet = self._create_mock_timesheet(timesheet_no="TS-2024-006", work_date=None)
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -157,9 +151,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_entity_data_overtime_weekday(self):
         """测试工作日加班工时"""
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-007",
-            hours=Decimal("10.0"),
-            overtime_type="WEEKDAY"
+            timesheet_no="TS-2024-007", hours=Decimal("10.0"), overtime_type="WEEKDAY"
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -173,9 +165,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_entity_data_overtime_weekend(self):
         """测试周末加班工时"""
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-008",
-            hours=Decimal("8.0"),
-            overtime_type="WEEKEND"
+            timesheet_no="TS-2024-008", hours=Decimal("8.0"), overtime_type="WEEKEND"
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -189,9 +179,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_entity_data_overtime_holiday(self):
         """测试节假日加班工时"""
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-009",
-            hours=Decimal("8.0"),
-            overtime_type="HOLIDAY"
+            timesheet_no="TS-2024-009", hours=Decimal("8.0"), overtime_type="HOLIDAY"
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -204,10 +192,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_hours_none(self):
         """测试工时为None的情况"""
-        mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-010",
-            hours=None
-        )
+        mock_timesheet = self._create_mock_timesheet(timesheet_no="TS-2024-010", hours=None)
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -219,8 +204,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_entity_data_hours_decimal(self):
         """测试Decimal类型的工时"""
         mock_timesheet = self._create_mock_timesheet(
-            timesheet_no="TS-2024-011",
-            hours=Decimal("7.5")
+            timesheet_no="TS-2024-011", hours=Decimal("7.5")
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -315,8 +299,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_on_withdrawn_success(self):
         """测试成功撤回审批"""
         mock_timesheet = self._create_mock_timesheet(
-            status="SUBMITTED",
-            submit_time=datetime(2024, 1, 15, 10, 0, 0)
+            status="SUBMITTED", submit_time=datetime(2024, 1, 15, 10, 0, 0)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -341,10 +324,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_title_basic(self):
         """测试生成基础标题"""
         work_date = datetime(2024, 1, 15)
-        mock_timesheet = self._create_mock_timesheet(
-            user_name="张三",
-            work_date=work_date
-        )
+        mock_timesheet = self._create_mock_timesheet(user_name="张三", work_date=work_date)
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
         title = self.adapter.get_title(self.entity_id)
@@ -353,10 +333,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
 
     def test_get_title_no_work_date(self):
         """测试没有工作日期的标题"""
-        mock_timesheet = self._create_mock_timesheet(
-            user_name="李四",
-            work_date=None
-        )
+        mock_timesheet = self._create_mock_timesheet(user_name="李四", work_date=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
         title = self.adapter.get_title(self.entity_id)
@@ -378,10 +355,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
         """测试生成基础摘要"""
         work_date = datetime(2024, 1, 15)
         mock_timesheet = self._create_mock_timesheet(
-            user_name="张三",
-            work_date=work_date,
-            hours=Decimal("8.0"),
-            overtime_type="NORMAL"
+            user_name="张三", work_date=work_date, hours=Decimal("8.0"), overtime_type="NORMAL"
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -401,7 +375,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
             user_name="李四",
             work_date=datetime(2024, 1, 16),
             hours=Decimal("7.5"),
-            project_name="测试项目A"
+            project_name="测试项目A",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -417,7 +391,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
             user_name="王五",
             work_date=datetime(2024, 1, 17),
             hours=Decimal("10.0"),
-            overtime_type="WEEKDAY"
+            overtime_type="WEEKDAY",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -434,7 +408,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
             work_date=datetime(2024, 1, 18),
             hours=Decimal("8.0"),
             project_name="项目B",
-            overtime_type="WEEKEND"
+            overtime_type="WEEKEND",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -454,9 +428,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_summary_missing_user_name(self):
         """测试缺少用户名的摘要"""
         mock_timesheet = self._create_mock_timesheet(
-            user_name=None,
-            work_date=datetime(2024, 1, 19),
-            hours=Decimal("8.0")
+            user_name=None, work_date=datetime(2024, 1, 19), hours=Decimal("8.0")
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -469,9 +441,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_get_summary_missing_hours(self):
         """测试缺少工时的摘要"""
         mock_timesheet = self._create_mock_timesheet(
-            user_name="测试",
-            work_date=datetime(2024, 1, 20),
-            hours=None
+            user_name="测试", work_date=datetime(2024, 1, 20), hours=None
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
@@ -496,9 +466,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_success_from_draft(self):
         """测试从草稿状态成功验证提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("8.0"),
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=Decimal("8.0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -510,9 +478,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_success_from_rejected(self):
         """测试从驳回状态成功验证提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="REJECTED",
-            hours=Decimal("7.5"),
-            work_date=datetime(2024, 1, 16)
+            status="REJECTED", hours=Decimal("7.5"), work_date=datetime(2024, 1, 16)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -533,9 +499,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_invalid_status_submitted(self):
         """测试已提交状态不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="SUBMITTED",
-            hours=Decimal("8.0"),
-            work_date=datetime(2024, 1, 15)
+            status="SUBMITTED", hours=Decimal("8.0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -548,9 +512,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_invalid_status_approved(self):
         """测试已审批状态不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="APPROVED",
-            hours=Decimal("8.0"),
-            work_date=datetime(2024, 1, 15)
+            status="APPROVED", hours=Decimal("8.0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -562,9 +524,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_hours_none(self):
         """测试工时为None不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=None,
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=None, work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -576,9 +536,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_hours_zero(self):
         """测试工时为0不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("0"),
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=Decimal("0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -590,9 +548,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_hours_negative(self):
         """测试工时为负数不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("-2.0"),
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=Decimal("-2.0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -604,9 +560,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_no_work_date(self):
         """测试缺少工作日期不允许提交"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("8.0"),
-            work_date=None
+            status="DRAFT", hours=Decimal("8.0"), work_date=None
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -618,9 +572,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_minimum_valid_hours(self):
         """测试最小有效工时（0.1小时）"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("0.1"),
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=Decimal("0.1"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -632,9 +584,7 @@ class TestTimesheetAdapterCore(unittest.TestCase):
     def test_validate_submit_large_hours(self):
         """测试大工时值（24小时）"""
         mock_timesheet = self._create_mock_timesheet(
-            status="DRAFT",
-            hours=Decimal("24.0"),
-            work_date=datetime(2024, 1, 15)
+            status="DRAFT", hours=Decimal("24.0"), work_date=datetime(2024, 1, 15)
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_timesheet
 
@@ -651,23 +601,23 @@ class TestTimesheetAdapterCore(unittest.TestCase):
 
         # 设置默认值
         defaults = {
-            'id': self.entity_id,
-            'timesheet_no': 'TS-001',
-            'status': 'DRAFT',
-            'user_id': 1,
-            'user_name': '测试用户',
-            'department_id': None,
-            'department_name': None,
-            'project_id': None,
-            'project_code': None,
-            'project_name': None,
-            'task_name': None,
-            'work_date': datetime(2024, 1, 15),
-            'hours': Decimal("8.0"),
-            'overtime_type': 'NORMAL',
-            'work_content': None,
-            'submit_time': None,
-            'approve_time': None,
+            "id": self.entity_id,
+            "timesheet_no": "TS-001",
+            "status": "DRAFT",
+            "user_id": 1,
+            "user_name": "测试用户",
+            "department_id": None,
+            "department_name": None,
+            "project_id": None,
+            "project_code": None,
+            "project_name": None,
+            "task_name": None,
+            "work_date": datetime(2024, 1, 15),
+            "hours": Decimal("8.0"),
+            "overtime_type": "NORMAL",
+            "work_content": None,
+            "submit_time": None,
+            "approve_time": None,
         }
 
         # 合并自定义值
@@ -688,5 +638,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(TimesheetApprovalAdapter.entity_type, "TIMESHEET")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -16,12 +16,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -43,8 +43,7 @@ def get_receivables_aging(
     from app.core.sales_permissions import filter_sales_finance_data_by_scope
 
     query = db.query(Invoice).filter(
-        Invoice.status == "ISSUED",
-        Invoice.payment_status.in_(["PENDING", "PARTIAL"])
+        Invoice.status == "ISSUED", Invoice.payment_status.in_(["PENDING", "PARTIAL"])
     )
 
     # 应用数据权限过滤（发票使用财务数据权限）
@@ -72,7 +71,9 @@ def get_receivables_aging(
         if not invoice.due_date:
             continue
 
-        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (
+            invoice.paid_amount or Decimal("0")
+        )
         if unpaid <= 0:
             continue
 
@@ -100,22 +101,22 @@ def get_receivables_aging(
             "aging_buckets": {
                 "0-30": {
                     "count": aging_buckets["0-30"]["count"],
-                    "amount": float(aging_buckets["0-30"]["amount"])
+                    "amount": float(aging_buckets["0-30"]["amount"]),
                 },
                 "31-60": {
                     "count": aging_buckets["31-60"]["count"],
-                    "amount": float(aging_buckets["31-60"]["amount"])
+                    "amount": float(aging_buckets["31-60"]["amount"]),
                 },
                 "61-90": {
                     "count": aging_buckets["61-90"]["count"],
-                    "amount": float(aging_buckets["61-90"]["amount"])
+                    "amount": float(aging_buckets["61-90"]["amount"]),
                 },
                 "90+": {
                     "count": aging_buckets["90+"]["count"],
-                    "amount": float(aging_buckets["90+"]["amount"])
-                }
-            }
-        }
+                    "amount": float(aging_buckets["90+"]["amount"]),
+                },
+            },
+        },
     )
 
 
@@ -140,7 +141,7 @@ def get_overdue_receivables(
         Invoice.status == "ISSUED",
         Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
         Invoice.due_date.isnot(None),
-        Invoice.due_date < today
+        Invoice.due_date < today,
     )
 
     # 应用数据权限过滤（发票使用财务数据权限）
@@ -153,38 +154,46 @@ def get_overdue_receivables(
         query = query.filter(Invoice.contract_id == contract_id)
 
     total = query.count()
-    invoices = apply_pagination(query.order_by(Invoice.due_date), pagination.offset, pagination.limit).all()
+    invoices = apply_pagination(
+        query.order_by(Invoice.due_date), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for invoice in invoices:
         contract = invoice.contract
-        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (
+            invoice.paid_amount or Decimal("0")
+        )
         overdue_days = (today - invoice.due_date).days
 
         if min_overdue_days and overdue_days < min_overdue_days:
             continue
 
-        items.append({
-            "id": invoice.id,
-            "invoice_code": invoice.invoice_code,
-            "contract_id": invoice.contract_id,
-            "contract_code": contract.contract_code if contract else None,
-            "customer_id": contract.customer_id if contract else None,
-            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
-            "invoice_amount": float(invoice.total_amount or invoice.amount or 0),
-            "paid_amount": float(invoice.paid_amount or 0),
-            "unpaid_amount": float(unpaid),
-            "due_date": invoice.due_date,
-            "overdue_days": overdue_days,
-            "payment_status": invoice.payment_status,
-        })
+        items.append(
+            {
+                "id": invoice.id,
+                "invoice_code": invoice.invoice_code,
+                "contract_id": invoice.contract_id,
+                "contract_code": contract.contract_code if contract else None,
+                "customer_id": contract.customer_id if contract else None,
+                "customer_name": (
+                    contract.customer.customer_name if contract and contract.customer else None
+                ),
+                "invoice_amount": float(invoice.total_amount or invoice.amount or 0),
+                "paid_amount": float(invoice.paid_amount or 0),
+                "unpaid_amount": float(unpaid),
+                "due_date": invoice.due_date,
+                "overdue_days": overdue_days,
+                "payment_status": invoice.payment_status,
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -235,7 +244,11 @@ def get_receivables_summary(
         if invoice.payment_status == "PARTIAL":
             partial_amount += unpaid
 
-        if invoice.due_date and invoice.due_date < today and invoice.payment_status in ["PENDING", "PARTIAL"]:
+        if (
+            invoice.due_date
+            and invoice.due_date < today
+            and invoice.payment_status in ["PENDING", "PARTIAL"]
+        ):
             overdue_amount += unpaid
             overdue_count += 1
 
@@ -256,5 +269,5 @@ def get_receivables_summary(
             "paid_count": len([inv for inv in invoices if inv.payment_status == "PAID"]),
             "partial_count": len([inv for inv in invoices if inv.payment_status == "PARTIAL"]),
             "pending_count": len([inv for inv in invoices if inv.payment_status == "PENDING"]),
-        }
+        },
     )

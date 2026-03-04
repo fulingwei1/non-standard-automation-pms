@@ -1,6 +1,8 @@
 """Tests for app/services/data_integrity/reminders.py"""
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.data_integrity.reminders import RemindersMixin
@@ -61,11 +63,13 @@ def test_get_missing_data_reminders_project_without_evaluation():
     project.project_name = "测试项目"
     # outerjoin().filter().all() returns [project] for first query (projects), [] for rest
     db.query.return_value.outerjoin.return_value.filter.return_value.all.side_effect = [
-        [project], [], []
+        [project],
+        [],
+        [],
     ]
     service = ConcreteReminders(db)
     result = service.get_missing_data_reminders(1)
-    assert any(r['type'] == 'project_evaluation_missing' for r in result)
+    assert any(r["type"] == "project_evaluation_missing" for r in result)
 
 
 def test_send_data_missing_reminders_returns_structure():
@@ -78,11 +82,11 @@ def test_send_data_missing_reminders_returns_structure():
     db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = []
     service = ConcreteReminders(db)
     result = service.send_data_missing_reminders(1)
-    assert 'period_id' in result
-    assert 'total_reminders' in result
-    assert 'sent_count' in result
-    assert 'failed_count' in result
-    assert 'reminders' in result
+    assert "period_id" in result
+    assert "total_reminders" in result
+    assert "sent_count" in result
+    assert "failed_count" in result
+    assert "reminders" in result
 
 
 def test_send_data_missing_reminders_with_type_filter():
@@ -94,8 +98,8 @@ def test_send_data_missing_reminders_with_type_filter():
     db.query.return_value.filter.return_value.first.return_value = period
     db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = []
     service = ConcreteReminders(db)
-    result = service.send_data_missing_reminders(1, reminder_types=['work_log_missing'])
-    assert result['total_reminders'] == 0  # no reminders after filter
+    result = service.send_data_missing_reminders(1, reminder_types=["work_log_missing"])
+    assert result["total_reminders"] == 0  # no reminders after filter
 
 
 def test_send_data_missing_reminders_no_period():
@@ -104,4 +108,4 @@ def test_send_data_missing_reminders_no_period():
     db.query.return_value.filter.return_value.first.return_value = None
     service = ConcreteReminders(db)
     result = service.send_data_missing_reminders(999)
-    assert result['total_reminders'] == 0
+    assert result["total_reminders"] == 0

@@ -20,6 +20,7 @@ def _make_db():
 #  send_notification_for_alert
 # ================================================================
 
+
 class TestSendNotificationForAlert:
 
     def test_dispatches_and_logs_debug(self):
@@ -28,9 +29,7 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-001"
 
-        with patch(
-            "app.services.notification_dispatcher.NotificationDispatcher"
-        ) as MockDisp:
+        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 2,
@@ -43,6 +42,7 @@ class TestSendNotificationForAlert:
             mock_logger = MagicMock()
 
             from app.utils.scheduled_tasks.base import send_notification_for_alert
+
             send_notification_for_alert(db, alert, logger_instance=mock_logger)
 
         instance.dispatch_alert_notifications.assert_called_once_with(alert=alert)
@@ -54,9 +54,7 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-002"
 
-        with patch(
-            "app.services.notification_dispatcher.NotificationDispatcher"
-        ) as MockDisp:
+        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 0,
@@ -69,6 +67,7 @@ class TestSendNotificationForAlert:
             mock_logger = MagicMock()
 
             from app.utils.scheduled_tasks.base import send_notification_for_alert
+
             send_notification_for_alert(db, alert, logger_instance=mock_logger)
 
         mock_logger.debug.assert_not_called()
@@ -86,6 +85,7 @@ class TestSendNotificationForAlert:
             mock_logger = MagicMock()
 
             from app.utils.scheduled_tasks.base import send_notification_for_alert
+
             # 不应抛出
             send_notification_for_alert(db, alert, logger_instance=mock_logger)
 
@@ -97,14 +97,13 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-003"
 
-        with patch(
-            "app.services.notification_dispatcher.NotificationDispatcher"
-        ) as MockDisp:
+        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {"created": 0}
             MockDisp.return_value = instance
 
             from app.utils.scheduled_tasks.base import send_notification_for_alert
+
             # 不传 logger_instance，用模块默认 logger，不应抛出
             send_notification_for_alert(db, alert)
 
@@ -112,6 +111,7 @@ class TestSendNotificationForAlert:
 # ================================================================
 #  enqueue_or_dispatch_notification
 # ================================================================
+
 
 class TestEnqueueOrDispatchNotification:
 
@@ -133,6 +133,7 @@ class TestEnqueueOrDispatchNotification:
             return_value=True,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
+
             result = enqueue_or_dispatch_notification(dispatcher, notification, alert, user)
 
         assert result["queued"] is True
@@ -158,6 +159,7 @@ class TestEnqueueOrDispatchNotification:
             return_value=False,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
+
             result = enqueue_or_dispatch_notification(dispatcher, notification, alert, user)
 
         assert result["queued"] is False
@@ -174,6 +176,7 @@ class TestEnqueueOrDispatchNotification:
         user = MagicMock()
 
         from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
+
         result = enqueue_or_dispatch_notification(dispatcher, notification, alert, user)
 
         assert result["queued"] is False
@@ -202,6 +205,7 @@ class TestEnqueueOrDispatchNotification:
             return_value=False,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
+
             result = enqueue_or_dispatch_notification(
                 dispatcher, notification, alert, user, request=pre_built
             )
@@ -213,6 +217,7 @@ class TestEnqueueOrDispatchNotification:
 #  log_task_result
 # ================================================================
 
+
 class TestLogTaskResult:
 
     def test_logs_error_when_error_key_present(self):
@@ -220,6 +225,7 @@ class TestLogTaskResult:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import log_task_result
+
         log_task_result("测试任务", {"error": "something went wrong"}, mock_logger)
 
         mock_logger.error.assert_called_once()
@@ -229,6 +235,7 @@ class TestLogTaskResult:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import log_task_result
+
         log_task_result("成功任务", {"created": 5, "skipped": 0}, mock_logger)
 
         mock_logger.info.assert_called_once()
@@ -236,6 +243,7 @@ class TestLogTaskResult:
     def test_uses_module_logger_when_none(self):
         """未提供 logger → 使用模块 logger，不抛出"""
         from app.utils.scheduled_tasks.base import log_task_result
+
         # 不传 logger_instance，不应抛出
         log_task_result("默认日志任务", {"ok": True})
 
@@ -243,6 +251,7 @@ class TestLogTaskResult:
 # ================================================================
 #  safe_task_execution
 # ================================================================
+
 
 class TestSafeTaskExecution:
 
@@ -252,6 +261,7 @@ class TestSafeTaskExecution:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import safe_task_execution
+
         wrapped = safe_task_execution(mock_func, "正常任务", mock_logger)
         result = wrapped()
 
@@ -264,6 +274,7 @@ class TestSafeTaskExecution:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import safe_task_execution
+
         wrapped = safe_task_execution(mock_func, "失败任务", mock_logger)
         result = wrapped()
 
@@ -276,6 +287,7 @@ class TestSafeTaskExecution:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import safe_task_execution
+
         wrapped = safe_task_execution(mock_func, "带参任务", mock_logger)
         wrapped(1, 2, key="value")
 
@@ -287,6 +299,7 @@ class TestSafeTaskExecution:
         mock_logger = MagicMock()
 
         from app.utils.scheduled_tasks.base import safe_task_execution
+
         wrapped = safe_task_execution(mock_func, "空结果任务", mock_logger)
         result = wrapped()
 

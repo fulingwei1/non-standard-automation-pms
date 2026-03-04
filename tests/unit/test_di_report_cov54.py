@@ -1,6 +1,8 @@
 """Tests for app/services/data_integrity/report.py"""
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.data_integrity.report import DataReportMixin
@@ -41,8 +43,8 @@ def test_generate_data_quality_report_no_engineers():
     db.query.return_value.all.return_value = []
     reporter = ConcreteDataReport(db)
     result = reporter.generate_data_quality_report(1)
-    assert result['total_engineers'] == 0
-    assert result['reports'] == []
+    assert result["total_engineers"] == 0
+    assert result["reports"] == []
 
 
 def test_generate_data_quality_report_structure():
@@ -53,10 +55,10 @@ def test_generate_data_quality_report_structure():
     db.query.return_value.all.return_value = []
     reporter = ConcreteDataReport(db)
     result = reporter.generate_data_quality_report(1)
-    assert 'period_id' in result
-    assert 'department_id' in result
-    assert 'total_engineers' in result
-    assert 'reports' in result
+    assert "period_id" in result
+    assert "department_id" in result
+    assert "total_engineers" in result
+    assert "reports" in result
 
 
 def test_generate_data_quality_report_with_engineers():
@@ -69,14 +71,17 @@ def test_generate_data_quality_report_with_engineers():
     db.query.return_value.all.return_value = [engineer]
     reporter = ConcreteDataReport(db)
     fake_report = {
-        'engineer_id': 1, 'period_id': 1,
-        'completeness_score': 80.0,
-        'missing_items': [], 'warnings': [], 'suggestions': []
+        "engineer_id": 1,
+        "period_id": 1,
+        "completeness_score": 80.0,
+        "missing_items": [],
+        "warnings": [],
+        "suggestions": [],
     }
     reporter.check_data_completeness = MagicMock(return_value=fake_report)
     result = reporter.generate_data_quality_report(1)
-    assert result['total_engineers'] == 1
-    assert result['average_completeness_score'] == 80.0
+    assert result["total_engineers"] == 1
+    assert result["average_completeness_score"] == 80.0
 
 
 def test_generate_data_quality_report_averages_multiple_engineers():
@@ -91,16 +96,28 @@ def test_generate_data_quality_report_averages_multiple_engineers():
     db.query.return_value.all.return_value = [e1, e2]
     reporter = ConcreteDataReport(db)
     reports = [
-        {'engineer_id': 1, 'period_id': 1, 'completeness_score': 60.0,
-         'missing_items': ['X'], 'warnings': [], 'suggestions': []},
-        {'engineer_id': 2, 'period_id': 1, 'completeness_score': 80.0,
-         'missing_items': [], 'warnings': ['Y'], 'suggestions': []},
+        {
+            "engineer_id": 1,
+            "period_id": 1,
+            "completeness_score": 60.0,
+            "missing_items": ["X"],
+            "warnings": [],
+            "suggestions": [],
+        },
+        {
+            "engineer_id": 2,
+            "period_id": 1,
+            "completeness_score": 80.0,
+            "missing_items": [],
+            "warnings": ["Y"],
+            "suggestions": [],
+        },
     ]
     reporter.check_data_completeness = MagicMock(side_effect=reports)
     result = reporter.generate_data_quality_report(1)
-    assert result['average_completeness_score'] == 70.0
-    assert result['missing_items_summary']['X'] == 1
-    assert result['warnings_summary']['Y'] == 1
+    assert result["average_completeness_score"] == 70.0
+    assert result["missing_items_summary"]["X"] == 1
+    assert result["warnings_summary"]["Y"] == 1
 
 
 def test_generate_data_quality_report_without_department():
@@ -111,4 +128,4 @@ def test_generate_data_quality_report_without_department():
     db.query.return_value.all.return_value = []
     reporter = ConcreteDataReport(db)
     result = reporter.generate_data_quality_report(1)
-    assert result['department_id'] is None
+    assert result["department_id"] is None

@@ -32,6 +32,7 @@ def make_mock_db_ctx(return_data=None):
 #  calculate_all_project_risks
 # ================================================================
 
+
 class TestCalculateAllProjectRisks:
 
     @patch("app.utils.scheduled_tasks.risk_tasks.get_db_session")
@@ -40,14 +41,13 @@ class TestCalculateAllProjectRisks:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.project.project_risk_service.ProjectRiskService"
-        ) as MockSvc:
+        with patch("app.services.project.project_risk_service.ProjectRiskService") as MockSvc:
             instance = MagicMock()
             instance.batch_calculate_risks.return_value = []
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.risk_tasks import calculate_all_project_risks
+
             result = calculate_all_project_risks()
 
         assert result["total"] == 0
@@ -61,9 +61,7 @@ class TestCalculateAllProjectRisks:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.project.project_risk_service.ProjectRiskService"
-        ) as MockSvc:
+        with patch("app.services.project.project_risk_service.ProjectRiskService") as MockSvc:
             instance = MagicMock()
             instance.batch_calculate_risks.return_value = [
                 {"project_id": 1, "is_upgrade": True},
@@ -73,6 +71,7 @@ class TestCalculateAllProjectRisks:
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.risk_tasks import calculate_all_project_risks
+
             result = calculate_all_project_risks()
 
         assert result["total"] == 3
@@ -91,6 +90,7 @@ class TestCalculateAllProjectRisks:
             side_effect=Exception("risk calc error"),
         ):
             from app.utils.scheduled_tasks.risk_tasks import calculate_all_project_risks
+
             result = calculate_all_project_risks()
 
         assert "error" in result
@@ -99,6 +99,7 @@ class TestCalculateAllProjectRisks:
 # ================================================================
 #  create_daily_risk_snapshots
 # ================================================================
+
 
 class TestCreateDailyRiskSnapshots:
 
@@ -114,6 +115,7 @@ class TestCreateDailyRiskSnapshots:
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.risk_tasks import create_daily_risk_snapshots
+
             result = create_daily_risk_snapshots()
 
         assert result["total"] == 0
@@ -135,6 +137,7 @@ class TestCreateDailyRiskSnapshots:
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.risk_tasks import create_daily_risk_snapshots
+
             result = create_daily_risk_snapshots()
 
         assert result["total"] == 2
@@ -156,6 +159,7 @@ class TestCreateDailyRiskSnapshots:
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.risk_tasks import create_daily_risk_snapshots
+
             result = create_daily_risk_snapshots()
 
         assert result["errors"] == 1
@@ -164,6 +168,7 @@ class TestCreateDailyRiskSnapshots:
     @patch("app.utils.scheduled_tasks.risk_tasks.get_db_session")
     def test_session_exception_returns_error(self, mock_get_db):
         """session 异常 → 返回 error"""
+
         @contextmanager
         def bad_ctx():
             raise Exception("session error")
@@ -172,6 +177,7 @@ class TestCreateDailyRiskSnapshots:
         mock_get_db.side_effect = bad_ctx
 
         from app.utils.scheduled_tasks.risk_tasks import create_daily_risk_snapshots
+
         result = create_daily_risk_snapshots()
 
         assert "error" in result
@@ -180,6 +186,7 @@ class TestCreateDailyRiskSnapshots:
 # ================================================================
 #  check_high_risk_projects
 # ================================================================
+
 
 class TestCheckHighRiskProjects:
 
@@ -193,6 +200,7 @@ class TestCheckHighRiskProjects:
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         from app.utils.scheduled_tasks.risk_tasks import check_high_risk_projects
+
         result = check_high_risk_projects()
 
         assert result["checked"] == 0
@@ -234,6 +242,7 @@ class TestCheckHighRiskProjects:
             side_effect=lambda query, *args, **kwargs: query,
         ):
             from app.utils.scheduled_tasks.risk_tasks import check_high_risk_projects
+
             result = check_high_risk_projects()
 
         assert mock_db.add.called
@@ -268,6 +277,7 @@ class TestCheckHighRiskProjects:
             side_effect=lambda query, *args, **kwargs: query,
         ):
             from app.utils.scheduled_tasks.risk_tasks import check_high_risk_projects
+
             result = check_high_risk_projects()
 
         assert result["alerts_created"] == 0
@@ -275,6 +285,7 @@ class TestCheckHighRiskProjects:
     @patch("app.utils.scheduled_tasks.risk_tasks.get_db_session")
     def test_exception_returns_error(self, mock_get_db):
         """异常 → 返回 error"""
+
         @contextmanager
         def bad_ctx():
             raise Exception("risk check error")
@@ -283,6 +294,7 @@ class TestCheckHighRiskProjects:
         mock_get_db.side_effect = bad_ctx
 
         from app.utils.scheduled_tasks.risk_tasks import check_high_risk_projects
+
         result = check_high_risk_projects()
 
         assert "error" in result

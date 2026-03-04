@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """第二十三批：cost_allocation_service 单元测试"""
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cost_allocation_service")
 
 from app.services.cost_allocation_service import (
-    query_allocatable_costs,
-    get_target_project_ids,
-    calculate_allocation_rates_by_hours,
-    calculate_allocation_rates_by_headcount,
     calculate_allocation_rates,
+    calculate_allocation_rates_by_headcount,
+    calculate_allocation_rates_by_hours,
     create_allocated_cost,
+    get_target_project_ids,
+    query_allocatable_costs,
 )
 
 
@@ -24,8 +25,13 @@ def _mock_rule(project_ids=None, cost_type_ids=None, allocation_basis="EQUAL"):
     return r
 
 
-def _mock_cost(cost_no="C001", cost_amount=Decimal("1000"), cost_type_id=1,
-               status="APPROVED", is_allocated=False):
+def _mock_cost(
+    cost_no="C001",
+    cost_amount=Decimal("1000"),
+    cost_type_id=1,
+    status="APPROVED",
+    is_allocated=False,
+):
     c = MagicMock()
     c.cost_no = cost_no
     c.cost_amount = cost_amount
@@ -104,6 +110,7 @@ class TestCalculateAllocationRatesByHours:
         db.query.side_effect = query_side
         # Reset side effects
         call_count = [0]
+
         def filter_side(*a, **kw):
             q2 = MagicMock()
             call_count[0] += 1
@@ -146,14 +153,20 @@ class TestCalculateAllocationRates:
     def test_hours_basis_delegates(self):
         db = MagicMock()
         rule = _mock_rule(allocation_basis="HOURS")
-        with patch("app.services.cost_allocation_service.calculate_allocation_rates_by_hours", return_value={1: 100.0}) as mock_fn:
+        with patch(
+            "app.services.cost_allocation_service.calculate_allocation_rates_by_hours",
+            return_value={1: 100.0},
+        ) as mock_fn:
             result = calculate_allocation_rates(db, rule, [1])
         mock_fn.assert_called_once()
 
     def test_headcount_basis_delegates(self):
         db = MagicMock()
         rule = _mock_rule(allocation_basis="HEADCOUNT")
-        with patch("app.services.cost_allocation_service.calculate_allocation_rates_by_headcount", return_value={1: 100.0}) as mock_fn:
+        with patch(
+            "app.services.cost_allocation_service.calculate_allocation_rates_by_headcount",
+            return_value={1: 100.0},
+        ) as mock_fn:
             result = calculate_allocation_rates(db, rule, [1])
         mock_fn.assert_called_once()
 

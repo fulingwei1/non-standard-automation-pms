@@ -12,8 +12,8 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
 
 from app.services.outsourcing_workflow.outsourcing_workflow_service import (
     OutsourcingWorkflowService,
@@ -79,9 +79,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         query_mock = self.db.query.return_value
         query_mock.filter.return_value.first.return_value = None
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[999], initiator_id=5
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[999], initiator_id=5)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -97,9 +95,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         query_mock = self.db.query.return_value
         query_mock.filter.return_value.first.return_value = mock_order
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=5
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=5)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -117,9 +113,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         # Mock engine抛出异常
         self.service.engine.submit.side_effect = Exception("引擎错误")
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=5
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=5)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -154,9 +148,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         self.service.engine.submit.side_effect = [mock_instance1, mock_instance3]
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1, 2, 3], initiator_id=5
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1, 2, 3], initiator_id=5)
 
         self.assertEqual(len(result["success"]), 2)
         self.assertEqual(len(result["errors"]), 1)
@@ -243,8 +235,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         query_mock = self.db.query.return_value
         filter_mock = query_mock.filter.return_value
         filter_mock.first.side_effect = [
-            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000)
-            for i in range(3)
+            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000) for i in range(3)
         ]
 
         # 测试第一页
@@ -254,8 +245,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         # 重置filter的side_effect
         filter_mock.first.side_effect = [
-            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000)
-            for i in range(3)
+            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000) for i in range(3)
         ]
 
         # 测试第二页
@@ -297,9 +287,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         self.service.engine.approve.return_value = mock_result
 
         # Mock _trigger_cost_collection
-        with patch.object(
-            self.service, "_trigger_cost_collection"
-        ) as mock_trigger:
+        with patch.object(self.service, "_trigger_cost_collection") as mock_trigger:
             result = self.service.perform_approval_action(
                 task_id=1, approver_id=5, action="approve", comment="同意"
             )
@@ -317,9 +305,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         self.service.engine.approve.return_value = mock_result
 
-        with patch.object(
-            self.service, "_trigger_cost_collection"
-        ) as mock_trigger:
+        with patch.object(self.service, "_trigger_cost_collection") as mock_trigger:
             result = self.service.perform_approval_action(
                 task_id=1, approver_id=5, action="approve"
             )
@@ -348,9 +334,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
     def test_perform_approval_action_invalid_action(self):
         """测试不支持的操作类型"""
         with self.assertRaises(ValueError) as context:
-            self.service.perform_approval_action(
-                task_id=1, approver_id=5, action="invalid"
-            )
+            self.service.perform_approval_action(task_id=1, approver_id=5, action="invalid")
 
         self.assertIn("不支持的操作类型", str(context.exception))
 
@@ -368,9 +352,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         self.service.engine.approve.side_effect = [mock_result1, mock_result2]
 
-        with patch.object(
-            self.service, "_trigger_cost_collection"
-        ) as mock_trigger:
+        with patch.object(self.service, "_trigger_cost_collection") as mock_trigger:
             result = self.service.perform_batch_approval(
                 task_ids=[1, 2], approver_id=5, action="approve"
             )
@@ -403,9 +385,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
     def test_perform_batch_approval_invalid_action(self):
         """测试批量审批不支持的操作"""
-        result = self.service.perform_batch_approval(
-            task_ids=[1], approver_id=5, action="invalid"
-        )
+        result = self.service.perform_batch_approval(task_ids=[1], approver_id=5, action="invalid")
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -537,9 +517,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         self.assertEqual(result["order_id"], 1)
         self.assertEqual(result["status"], "withdrawn")
-        self.service.engine.withdraw.assert_called_once_with(
-            instance_id=100, user_id=5
-        )
+        self.service.engine.withdraw.assert_called_once_with(instance_id=100, user_id=5)
 
     def test_withdraw_approval_order_not_found(self):
         """测试订单不存在"""
@@ -639,7 +617,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         query_mock = self.db.query.return_value
         join_mock = query_mock.join.return_value
         filter_mock1 = join_mock.filter.return_value
-        
+
         # 设置第二次filter的返回值（status筛选后）
         filter_mock2 = filter_mock1.filter.return_value
         filter_mock2.count.return_value = 0
@@ -649,9 +627,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         limit_mock = offset_mock.limit.return_value
         limit_mock.all.return_value = []
 
-        result = self.service.get_approval_history(
-            user_id=5, status_filter="REJECTED"
-        )
+        result = self.service.get_approval_history(user_id=5, status_filter="REJECTED")
 
         self.assertEqual(result["total"], 0)
         self.assertEqual(len(result["items"]), 0)
@@ -683,8 +659,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         order_query = self.db.query.return_value
         order_filter = order_query.filter.return_value
         order_filter.first.side_effect = [
-            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000)
-            for i in range(2)
+            MagicMock(order_no=f"OUT-{i+1}", amount_with_tax=1000) for i in range(2)
         ]
 
         result = self.service.get_approval_history(user_id=5, offset=0, limit=2)
@@ -697,9 +672,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
     def test_trigger_cost_collection_success(self):
         """测试成功触发成本归集"""
         # Mock动态导入的CostCollectionService
-        with patch(
-            "app.services.cost_collection_service.CostCollectionService"
-        ) as mock_service:
+        with patch("app.services.cost_collection_service.CostCollectionService") as mock_service:
             self.service._trigger_cost_collection(order_id=10, user_id=5)
             mock_service.collect_from_outsourcing_order.assert_called_once_with(
                 self.db, 10, created_by=5
@@ -707,12 +680,8 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
     def test_trigger_cost_collection_exception(self):
         """测试成本归集异常（应该被捕获并记录日志）"""
-        with patch(
-            "app.services.cost_collection_service.CostCollectionService"
-        ) as mock_service:
-            mock_service.collect_from_outsourcing_order.side_effect = Exception(
-                "成本归集失败"
-            )
+        with patch("app.services.cost_collection_service.CostCollectionService") as mock_service:
+            mock_service.collect_from_outsourcing_order.side_effect = Exception("成本归集失败")
 
             # 不应该抛出异常
             try:
@@ -724,6 +693,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         """测试成本归集服务导入失败"""
         # Mock导入失败：将模块导入替换为抛出ImportError
         import builtins
+
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):

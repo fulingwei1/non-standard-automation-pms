@@ -4,8 +4,8 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 from app.services.acceptance_approval import AcceptanceApprovalService
 
@@ -63,9 +63,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
         """测试提交审批时验收单不存在"""
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[999], initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[999], initiator_id=1)
 
         self.assertEqual(len(results), 0)
         self.assertEqual(len(errors), 1)
@@ -80,9 +78,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         self.assertEqual(len(results), 0)
         self.assertEqual(len(errors), 1)
@@ -96,9 +92,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        results, errors = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=1
-        )
+        results, errors = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         self.assertEqual(len(results), 0)
         self.assertEqual(len(errors), 1)
@@ -130,9 +124,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
         self.service.engine.get_pending_tasks = MagicMock(return_value=[mock_task])
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        items, total = self.service.get_pending_tasks(
-            user_id=1, offset=0, limit=20
-        )
+        items, total = self.service.get_pending_tasks(user_id=1, offset=0, limit=20)
 
         self.assertEqual(len(items), 1)
         self.assertEqual(total, 1)
@@ -173,9 +165,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
     def test_perform_approval_action_invalid_action(self):
         """测试无效的审批操作"""
         with self.assertRaises(ValueError) as context:
-            self.service.perform_approval_action(
-                task_id=1, action="invalid", approver_id=1
-            )
+            self.service.perform_approval_action(task_id=1, action="invalid", approver_id=1)
 
         self.assertIn("不支持的操作类型", str(context.exception))
 
@@ -194,9 +184,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
     def test_batch_approval_partial_failure(self):
         """测试批量审批部分失败"""
         # 第一个成功，第二个失败
-        self.service.engine.approve = MagicMock(
-            side_effect=[None, Exception("审批失败")]
-        )
+        self.service.engine.approve = MagicMock(side_effect=[None, Exception("审批失败")])
 
         results, errors = self.service.batch_approval(
             task_ids=[1, 2], action="approve", approver_id=1
@@ -236,9 +224,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
 
         # 配置查询返回
         query_results = [mock_order, mock_instance, [mock_task]]
-        self.db.query.return_value.filter.return_value.first.side_effect = (
-            query_results[:2]
-        )
+        self.db.query.return_value.filter.return_value.first.side_effect = query_results[:2]
         self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
             mock_instance
         )
@@ -332,9 +318,7 @@ class TestAcceptanceApprovalService(unittest.TestCase):
         self.db.query.return_value = mock_query
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        items, total = self.service.get_approval_history(
-            user_id=1, offset=0, limit=20
-        )
+        items, total = self.service.get_approval_history(user_id=1, offset=0, limit=20)
 
         self.assertEqual(total, 1)
         self.assertEqual(len(items), 1)

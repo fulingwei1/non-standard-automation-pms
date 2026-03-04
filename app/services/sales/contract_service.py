@@ -10,18 +10,17 @@
 4. 同步SOW/验收标准到项目
 """
 
-from typing import Dict, Any
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict
 
-from sqlalchemy import Column, Date, Integer, Numeric, String
+from sqlalchemy import Column, Date, Integer, Numeric, String, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship, selectinload
 
 from app.models.base import Base
 from app.models.project import (
+    Customer,
     Project,
     ProjectMilestone,
-    Customer,
 )
 from app.models.sales.contracts import Contract
 
@@ -30,9 +29,7 @@ class ContractService:
     """合同服务类"""
 
     @staticmethod
-    async def create_project_from_contract(
-        db: AsyncSession, contract_id: int
-    ) -> Dict[str, Any]:
+    async def create_project_from_contract(db: AsyncSession, contract_id: int) -> Dict[str, Any]:
         """
         从合同创建项目，自动绑定付款节点到里程碑
 
@@ -75,9 +72,7 @@ class ContractService:
         if contract.project_id:
             return {
                 "success": False,
-                "message": "该合同已关联项目ID "
-                + str(contract.project_id)
-                + "，无需重复创建项目",
+                "message": "该合同已关联项目ID " + str(contract.project_id) + "，无需重复创建项目",
                 "project_id": contract.project_id,
             }
 
@@ -165,15 +160,11 @@ class ProjectPaymentPlan(Base):
     percentage = Column(Numeric(5, 2), comment="百分比")
     amount = Column(Numeric(14, 2), comment="金额")
     due_date = Column(Date, comment="到期日期")
-    milestone_id = Column(
-        Integer, nullable=True, index=True, comment="里程碑ID（里程碑表）"
-    )
+    milestone_id = Column(Integer, nullable=True, index=True, comment="里程碑ID（里程碑表）")
     status = Column(String(20), default="PENDING", comment="状态：PENDING/PAID")
 
     # 关系
-    project = relationship(
-        "Project", back_populates="payment_plans", cascade="all, delete-orphan"
-    )
+    project = relationship("Project", back_populates="payment_plans", cascade="all, delete-orphan")
     contract = relationship("Contract", back_populates="payment_plans")
     milestone = relationship("ProjectMilestone", foreign_keys="[milestone_id]")
 

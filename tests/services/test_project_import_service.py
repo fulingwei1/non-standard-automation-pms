@@ -400,13 +400,15 @@ class TestPopulateProjectFromRow:
         db = _make_db()
         project = _make_project()
 
-        row = pd.Series({
-            "合同编号": "HT-2024-001",
-            "项目类型": "研发项目",
-            "合同日期": "2024-01-15",
-            "合同金额": 500000,
-            "预算金额": 450000,
-        })
+        row = pd.Series(
+            {
+                "合同编号": "HT-2024-001",
+                "项目类型": "研发项目",
+                "合同日期": "2024-01-15",
+                "合同金额": 500000,
+                "预算金额": 450000,
+            }
+        )
         pis.populate_project_from_row(db, project, row)
 
         assert project.contract_no == "HT-2024-001"
@@ -420,10 +422,12 @@ class TestPopulateProjectFromRow:
         db = _make_db()
         project = _make_project()
 
-        row = pd.Series({
-            "计划开始日期": "2024-01-01",
-            "计划结束日期": "2024-12-31",
-        })
+        row = pd.Series(
+            {
+                "计划开始日期": "2024-01-01",
+                "计划结束日期": "2024-12-31",
+            }
+        )
         pis.populate_project_from_row(db, project, row)
 
         assert project.planned_start_date == date(2024, 1, 1)
@@ -459,11 +463,13 @@ class TestPopulateProjectFromRow:
         db = _make_db()
         project = _make_project()
 
-        row = pd.Series({
-            "客户名称": pd.NA,
-            "合同编号": pd.NA,
-            "合同金额": pd.NA,
-        })
+        row = pd.Series(
+            {
+                "客户名称": pd.NA,
+                "合同编号": pd.NA,
+                "合同金额": pd.NA,
+            }
+        )
         pis.populate_project_from_row(db, project, row)
         # 不应抛出异常
 
@@ -477,10 +483,12 @@ class TestImportProjectsFromDataframe:
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None  # 项目不存在
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["测试项目"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["测试项目"],
+            }
+        )
 
         imported, updated, failed = pis.import_projects_from_dataframe(
             db, df, update_existing=False
@@ -498,10 +506,12 @@ class TestImportProjectsFromDataframe:
         existing_project = _make_project(project_code="P001")
         db.query.return_value.filter.return_value.first.return_value = existing_project
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["测试项目"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["测试项目"],
+            }
+        )
 
         imported, updated, failed = pis.import_projects_from_dataframe(
             db, df, update_existing=False
@@ -519,15 +529,15 @@ class TestImportProjectsFromDataframe:
         existing_project = _make_project(project_code="P001")
         db.query.return_value.filter.return_value.first.return_value = existing_project
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["更新后的项目"],
-            "项目描述": ["新描述"],
-        })
-
-        imported, updated, failed = pis.import_projects_from_dataframe(
-            db, df, update_existing=True
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["更新后的项目"],
+                "项目描述": ["新描述"],
+            }
         )
+
+        imported, updated, failed = pis.import_projects_from_dataframe(db, df, update_existing=True)
 
         assert imported == 0
         assert updated == 1
@@ -539,10 +549,12 @@ class TestImportProjectsFromDataframe:
         """测试导入缺少必需字段的行"""
         db = _make_db()
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001", pd.NA],
-            "项目名称*": ["测试项目", "无编码项目"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001", pd.NA],
+                "项目名称*": ["测试项目", "无编码项目"],
+            }
+        )
 
         imported, updated, failed = pis.import_projects_from_dataframe(
             db, df, update_existing=False
@@ -557,10 +569,12 @@ class TestImportProjectsFromDataframe:
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001", "P002", "P003"],
-            "项目名称*": ["项目1", "项目2", "项目3"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001", "P002", "P003"],
+                "项目名称*": ["项目1", "项目2", "项目3"],
+            }
+        )
 
         with patch("app.services.project_import_service.init_project_stages"):
             imported, updated, failed = pis.import_projects_from_dataframe(
@@ -576,10 +590,12 @@ class TestImportProjectsFromDataframe:
         db = _make_db()
         db.query.return_value.filter.return_value.first.side_effect = Exception("数据库错误")
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["测试项目"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["测试项目"],
+            }
+        )
 
         imported, updated, failed = pis.import_projects_from_dataframe(
             db, df, update_existing=False
@@ -595,10 +611,12 @@ class TestImportProjectsFromDataframe:
         db = _make_db()
 
         # 第一个项目成功，第二个项目失败（缺少名称）
-        df = pd.DataFrame({
-            "项目编码*": ["P001", "P002"],
-            "项目名称*": ["项目1", pd.NA],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001", "P002"],
+                "项目名称*": ["项目1", pd.NA],
+            }
+        )
 
         # 模拟查询：第一个项目不存在
         db.query.return_value.filter.return_value.first.return_value = None
@@ -627,16 +645,18 @@ class TestImportProjectsFromDataframe:
             pm,  # 项目经理查询（按真实姓名）
         ]
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["完整项目"],
-            "客户名称": ["比亚迪"],
-            "项目经理": ["张三"],
-            "合同编号": ["HT-001"],
-            "合同金额": [500000],
-            "计划开始日期": ["2024-01-01"],
-            "计划结束日期": ["2024-12-31"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["完整项目"],
+                "客户名称": ["比亚迪"],
+                "项目经理": ["张三"],
+                "合同编号": ["HT-001"],
+                "合同金额": [500000],
+                "计划开始日期": ["2024-01-01"],
+                "计划结束日期": ["2024-12-31"],
+            }
+        )
 
         with patch("app.services.project_import_service.init_project_stages"):
             imported, updated, failed = pis.import_projects_from_dataframe(

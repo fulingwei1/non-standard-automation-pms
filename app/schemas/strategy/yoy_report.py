@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 class KPIComparisonItem(BaseModel):
     """KPI 对比项（同比报告用）"""
+
     kpi_code: str
     kpi_name: str
     current_target: Optional[Decimal] = None
@@ -25,6 +26,7 @@ class KPIComparisonItem(BaseModel):
 
 class CSFComparisonItem(BaseModel):
     """CSF 对比项（同比报告用）"""
+
     csf_code: str
     csf_name: str
     current_score: Optional[int] = None
@@ -36,6 +38,7 @@ class CSFComparisonItem(BaseModel):
 
 class DimensionComparisonDetail(BaseModel):
     """维度对比详情（同比报告用）"""
+
     dimension: str
     dimension_name: str
     current_score: Optional[int] = None
@@ -46,6 +49,7 @@ class DimensionComparisonDetail(BaseModel):
 
 class YoYReportResponse(BaseModel):
     """同比报告响应（GET /strategy/comparisons/yoy-report）"""
+
     current_year: int
     previous_year: int
     current_strategy_id: Optional[int] = None

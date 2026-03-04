@@ -134,9 +134,7 @@ def import_employees():
                 continue
 
             department = get_department_name(row)
-            position = (
-                str(row.get("职务", "")).strip() if pd.notna(row.get("职务")) else None
-            )
+            position = str(row.get("职务", "")).strip() if pd.notna(row.get("职务")) else None
             phone = clean_phone(row.get("联系方式"))
             is_active = is_active_employee(row.get("在职离职状态"))
             entry_date = parse_entry_date(row.get("入职时间"))
@@ -281,21 +279,9 @@ def import_departments():
     # 提取所有部门组合
     dept_hierarchy = {}
     for idx, row in df.iterrows():
-        level1 = (
-            str(row.get("一级部门", "")).strip()
-            if pd.notna(row.get("一级部门"))
-            else None
-        )
-        level2 = (
-            str(row.get("二级部门", "")).strip()
-            if pd.notna(row.get("二级部门"))
-            else None
-        )
-        level3 = (
-            str(row.get("三级部门", "")).strip()
-            if pd.notna(row.get("三级部门"))
-            else None
-        )
+        level1 = str(row.get("一级部门", "")).strip() if pd.notna(row.get("一级部门")) else None
+        level2 = str(row.get("二级部门", "")).strip() if pd.notna(row.get("二级部门")) else None
+        level3 = str(row.get("三级部门", "")).strip() if pd.notna(row.get("三级部门")) else None
 
         if level1 and level1 not in ["/", "NaN", ""]:
             if level1 not in dept_hierarchy:

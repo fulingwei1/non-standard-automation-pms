@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第五批：quality_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.quality_service import QualityService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False

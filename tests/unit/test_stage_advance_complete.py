@@ -7,14 +7,13 @@
 
 
 import pytest
-from sqlalchemy.orm import Session
-
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
 from app.models.project import Machine, Project, ProjectStatusLog
 from app.services.stage_advance_service import (
-    create_status_log,
     create_installation_dispatch_orders,
+    create_status_log,
     generate_cost_review_report,
     get_stage_status_mapping,
     perform_gate_check,
@@ -54,14 +53,14 @@ class TestValidateStageAdvancement:
     def test_forward_advancement(self):
         """向前推进阶段应通过验证"""
         valid_transitions = [
-        ("S1", "S2"),
-        ("S2", "S3"),
-        ("S3", "S4"),
-        ("S4", "S5"),
-        ("S5", "S6"),
-        ("S6", "S7"),
-        ("S7", "S8"),
-        ("S8", "S9"),
+            ("S1", "S2"),
+            ("S2", "S3"),
+            ("S3", "S4"),
+            ("S4", "S5"),
+            ("S5", "S6"),
+            ("S6", "S7"),
+            ("S7", "S8"),
+            ("S8", "S9"),
         ]
 
         for current, target in valid_transitions:
@@ -70,9 +69,9 @@ class TestValidateStageAdvancement:
     def test_backward_advancement(self):
         """向后倒退阶段应抛出异常"""
         invalid_transitions = [
-        ("S3", "S1"),
-        ("S5", "S3"),
-        ("S7", "S5"),
+            ("S3", "S1"),
+            ("S5", "S3"),
+            ("S7", "S5"),
         ]
 
         for current, target in invalid_transitions:
@@ -99,23 +98,23 @@ class TestPerformGateCheck:
         """超级用户应跳过门检查"""
         # 创建项目
         project = Project(
-        project_code="PJ-GATE-001",
-        project_name="门检查测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-GATE-001",
+            project_name="门检查测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 执行门检查（skip_gate_check=True通过内部逻辑实现）
         gate_passed, missing_items, details = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=True,
-        current_user_is_superuser=True,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=True,
+            current_user_is_superuser=True,
         )
 
         # 应通过
@@ -126,23 +125,23 @@ class TestPerformGateCheck:
         """普通用户需要通过门检查"""
         # 创建项目（S1阶段，状态ST01）
         project = Project(
-        project_code="PJ-GATE-002",
-        project_name="门检查测试项目",
-        stage="S1",
-        status="ST01",  # S1阶段对应ST01
-        health="H1",
-        created_by=1,
+            project_code="PJ-GATE-002",
+            project_name="门检查测试项目",
+            stage="S1",
+            status="ST01",  # S1阶段对应ST01
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 执行门检查（不跳过，用户非管理员）
         gate_passed, missing_items, details = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=False,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=False,
         )
 
         # 验证检查结果（根据check_gate实现）
@@ -153,23 +152,23 @@ class TestPerformGateCheck:
         """项目未满足门条件时检查失败"""
         # 创建项目（S1阶段，但状态不满足条件）
         project = Project(
-        project_code="PJ-GATE-003",
-        project_name="门检查测试项目",
-        stage="S1",
-        status="ST00",  # 不满足门条件的状态
-        health="H1",
-        created_by=1,
+            project_code="PJ-GATE-003",
+            project_name="门检查测试项目",
+            stage="S1",
+            status="ST00",  # 不满足门条件的状态
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 执行门检查
         gate_passed, missing_items, details = perform_gate_check(
-        db_session,
-        project,
-        "S2",
-        skip_gate_check=False,
-        current_user_is_superuser=False,
+            db_session,
+            project,
+            "S2",
+            skip_gate_check=False,
+            current_user_is_superuser=False,
         )
 
         # 应失败
@@ -216,19 +215,19 @@ class TestUpdateProjectStageAndStatus:
         """阶段变化应自动更新状态"""
         # 创建项目
         project = Project(
-        project_code="PJ-STAGE-001",
-        project_name="阶段测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-STAGE-001",
+            project_name="阶段测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         old_status = project.status
         new_status = update_project_stage_and_status(
-        db_session, project, "S2", old_status, old_status
+            db_session, project, "S2", old_status, old_status
         )
 
         # 验证阶段更新
@@ -243,12 +242,12 @@ class TestUpdateProjectStageAndStatus:
         """状态变化应保持阶段不变"""
         # 创建项目
         project = Project(
-        project_code="PJ-STAGE-002",
-        project_name="阶段测试项目",
-        stage="S2",
-        status="ST03",
-        health="H1",
-        created_by=1,
+            project_code="PJ-STAGE-002",
+            project_name="阶段测试项目",
+            stage="S2",
+            status="ST03",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -267,12 +266,12 @@ class TestUpdateProjectStageAndStatus:
         """测试多个阶段连续推进"""
         # 创建项目
         project = Project(
-        project_code="PJ-STAGE-003",
-        project_name="阶段测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-STAGE-003",
+            project_name="阶段测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -282,7 +281,7 @@ class TestUpdateProjectStageAndStatus:
             old_stage = project.stage
             old_status = project.status
             update_project_stage_and_status(
-            db_session, project, target_stage, old_stage, old_status
+                db_session, project, target_stage, old_stage, old_status
             )
             db_session.flush()
 
@@ -301,35 +300,35 @@ class TestCreateStatusLog:
         """状态变更应创建日志记录"""
         # 创建项目
         project = Project(
-        project_code="PJ-LOG-001",
-        project_name="日志测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-LOG-001",
+            project_name="日志测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 创建状态日志
         create_status_log(
-        db_session,
-        project.id,
-        "S1",
-        "S2",
-        "ST01",
-        "ST03",
-        "H1",
-        "H1",
-        "阶段推进测试",
-        100,
+            db_session,
+            project.id,
+            "S1",
+            "S2",
+            "ST01",
+            "ST03",
+            "H1",
+            "H1",
+            "阶段推进测试",
+            100,
         )
 
         # 验证日志已创建
         status_logs = (
-        db_session.query(ProjectStatusLog)
-        .filter(ProjectStatusLog.project_id == project.id)
-        .all()
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project.id)
+            .all()
         )
 
         assert len(status_logs) == 1
@@ -348,26 +347,24 @@ class TestCreateStatusLog:
         """多次状态变更创建多条日志"""
         # 创建项目
         project = Project(
-        project_code="PJ-LOG-002",
-        project_name="日志测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-LOG-002",
+            project_name="日志测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 创建3条状态日志
         transitions = [
-        ("S1", "S2", "ST01", "ST03"),
-        ("S2", "S3", "ST03", "ST05"),
-        ("S3", "S4", "ST05", "ST07"),
+            ("S1", "S2", "ST01", "ST03"),
+            ("S2", "S3", "ST03", "ST05"),
+            ("S3", "S4", "ST05", "ST07"),
         ]
 
-        for i, (old_stage, new_stage, old_status, new_status) in enumerate(
-            transitions, 1
-        ):
+        for i, (old_stage, new_stage, old_status, new_status) in enumerate(transitions, 1):
             create_status_log(
                 db_session,
                 project.id,
@@ -394,35 +391,35 @@ class TestCreateStatusLog:
         """健康度变化应记录在日志中"""
         # 创建项目
         project = Project(
-        project_code="PJ-LOG-003",
-        project_name="日志测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
+            project_code="PJ-LOG-003",
+            project_name="日志测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 创建状态日志（健康度从H1变为H2）
         create_status_log(
-        db_session,
-        project.id,
-        "S1",
-        "S1",
-        "ST01",
-        "ST01",
-        "H1",
-        "H2",
-        "健康度变化",
-        100,
+            db_session,
+            project.id,
+            "S1",
+            "S1",
+            "ST01",
+            "ST01",
+            "H1",
+            "H2",
+            "健康度变化",
+            100,
         )
 
         # 验证日志
         status_logs = (
-        db_session.query(ProjectStatusLog)
-        .filter(ProjectStatusLog.project_id == project.id)
-        .all()
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project.id)
+            .all()
         )
 
         assert len(status_logs) == 1
@@ -443,34 +440,34 @@ class TestStageTransitionSideEffects:
 
         # 创建客户
         customer = Customer(
-        customer_code="CUST-S8",
-        customer_name="S8测试客户",
-        contact_person="测试",
-        contact_phone="13800000000",
-        status="ACTIVE",
+            customer_code="CUST-S8",
+            customer_name="S8测试客户",
+            contact_person="测试",
+            contact_phone="13800000000",
+            status="ACTIVE",
         )
         db_session.add(customer)
 
         # 创建项目
         project = Project(
-        project_code="PJ-S8-001",
-        project_name="S8阶段测试项目",
-        stage="S7",
-        status="ST20",
-        health="H1",
-        customer_id=customer.id,
-        customer_address="测试地址",
-        created_by=1,
+            project_code="PJ-S8-001",
+            project_name="S8阶段测试项目",
+            stage="S7",
+            status="ST20",
+            health="H1",
+            customer_id=customer.id,
+            customer_address="测试地址",
+            created_by=1,
         )
         db_session.add(project)
 
         # 创建设备
         machine = Machine(
-        project_id=project.id,
-        machine_code="M-S8-001",
-        machine_name="S8测试设备",
-        machine_type="TEST",
-        status="READY_TO_SHIP",
+            project_id=project.id,
+            machine_code="M-S8-001",
+            machine_name="S8测试设备",
+            machine_type="TEST",
+            status="READY_TO_SHIP",
         )
         db_session.add(machine)
         db_session.commit()
@@ -481,12 +478,12 @@ class TestStageTransitionSideEffects:
 
         # 验证安装调试派工单已创建
         dispatch_orders = (
-        db_session.query(InstallationDispatchOrder)
-        .filter(
-        InstallationDispatchOrder.project_id == project.id,
-        InstallationDispatchOrder.machine_id == machine.id,
-        )
-        .all()
+            db_session.query(InstallationDispatchOrder)
+            .filter(
+                InstallationDispatchOrder.project_id == project.id,
+                InstallationDispatchOrder.machine_id == machine.id,
+            )
+            .all()
         )
 
         assert len(dispatch_orders) == 1
@@ -498,12 +495,12 @@ class TestStageTransitionSideEffects:
         """推进到S9或状态变为ST30应生成成本复盘报告"""
         # 创建项目
         project = Project(
-        project_code="PJ-COST-001",
-        project_name="成本复盘测试项目",
-        stage="S8",
-        status="ST25",
-        health="H1",
-        created_by=1,
+            project_code="PJ-COST-001",
+            project_name="成本复盘测试项目",
+            stage="S8",
+            status="ST25",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -515,12 +512,12 @@ class TestStageTransitionSideEffects:
         from app.models.project import ProjectReview
 
         reviews = (
-        db_session.query(ProjectReview)
-        .filter(
-        ProjectReview.project_id == project.id,
-        ProjectReview.review_type == "POST_MORTEM",
-        )
-        .all()
+            db_session.query(ProjectReview)
+            .filter(
+                ProjectReview.project_id == project.id,
+                ProjectReview.review_type == "POST_MORTEM",
+            )
+            .all()
         )
 
         # 注意：实际生成取决于cost_review_service实现
@@ -531,22 +528,22 @@ class TestStageTransitionSideEffects:
         """非S8阶段不应创建安装调试派工单"""
         # 创建项目
         project = Project(
-        project_code="PJ-NO-S8",
-        project_name="非S8测试项目",
-        stage="S6",
-        status="ST15",
-        health="H1",
-        created_by=1,
+            project_code="PJ-NO-S8",
+            project_name="非S8测试项目",
+            stage="S6",
+            status="ST15",
+            health="H1",
+            created_by=1,
         )
         db_session.add(project)
 
         # 创建设备
         machine = Machine(
-        project_id=project.id,
-        machine_code="M-NO-S8",
-        machine_name="测试设备",
-        machine_type="TEST",
-        status="TESTING",
+            project_id=project.id,
+            machine_code="M-NO-S8",
+            machine_name="测试设备",
+            machine_type="TEST",
+            status="TESTING",
         )
         db_session.add(machine)
         db_session.commit()
@@ -559,9 +556,9 @@ class TestStageTransitionSideEffects:
         from app.models.installation_dispatch import InstallationDispatchOrder
 
         dispatch_orders = (
-        db_session.query(InstallationDispatchOrder)
-        .filter(InstallationDispatchOrder.project_id == project.id)
-        .all()
+            db_session.query(InstallationDispatchOrder)
+            .filter(InstallationDispatchOrder.project_id == project.id)
+            .all()
         )
 
         assert len(dispatch_orders) == 0
@@ -578,25 +575,25 @@ class TestCompleteStageAdvanceWorkflow:
 
         # 创建客户
         customer = Customer(
-        customer_code="CUST-WORKFLOW",
-        customer_name="工作流测试客户",
-        contact_person="测试",
-        contact_phone="13800000000",
-        status="ACTIVE",
+            customer_code="CUST-WORKFLOW",
+            customer_name="工作流测试客户",
+            contact_person="测试",
+            contact_phone="13800000000",
+            status="ACTIVE",
         )
         db_session.add(customer)
         db_session.commit()
 
         # 创建项目
         project = Project(
-        project_code="PJ-WORKFLOW-001",
-        project_name="工作流测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        customer_id=customer.id,
-        customer_address="测试地址",
-        created_by=1,
+            project_code="PJ-WORKFLOW-001",
+            project_name="工作流测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            customer_id=customer.id,
+            customer_address="测试地址",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -606,14 +603,14 @@ class TestCompleteStageAdvanceWorkflow:
 
         # 模拟推进到S9（每个阶段都应该通过门检查）
         target_transitions = [
-        ("S2", "ST03"),
-        ("S3", "ST05"),
-        ("S4", "ST07"),
-        ("S5", "ST10"),
-        ("S6", "ST15"),
-        ("S7", "ST20"),
-        ("S8", "ST25"),
-        ("S9", "ST30"),
+            ("S2", "ST03"),
+            ("S3", "ST05"),
+            ("S4", "ST07"),
+            ("S5", "ST10"),
+            ("S6", "ST15"),
+            ("S7", "ST20"),
+            ("S8", "ST25"),
+            ("S9", "ST30"),
         ]
 
         for target_stage, target_status in target_transitions:
@@ -649,9 +646,9 @@ class TestCompleteStageAdvanceWorkflow:
 
         # 验证有9条状态日志
         status_logs = (
-        db_session.query(ProjectStatusLog)
-        .filter(ProjectStatusLog.project_id == project.id)
-        .all()
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project.id)
+            .all()
         )
 
         assert len(status_logs) == 9
@@ -662,54 +659,52 @@ class TestCompleteStageAdvanceWorkflow:
 
         # 创建客户
         customer = Customer(
-        customer_code="CUST-H-HEALTH",
-        customer_name="健康度测试客户",
-        contact_person="测试",
-        contact_phone="13800000000",
-        status="ACTIVE",
+            customer_code="CUST-H-HEALTH",
+            customer_name="健康度测试客户",
+            contact_person="测试",
+            contact_phone="13800000000",
+            status="ACTIVE",
         )
         db_session.add(customer)
         db_session.commit()
 
         # 创建项目
         project = Project(
-        project_code="PJ-H-HEALTH-001",
-        project_name="健康度测试项目",
-        stage="S1",
-        status="ST01",
-        health="H1",
-        customer_id=customer.id,
-        customer_address="测试地址",
-        created_by=1,
+            project_code="PJ-H-HEALTH-001",
+            project_name="健康度测试项目",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            customer_id=customer.id,
+            customer_address="测试地址",
+            created_by=1,
         )
         db_session.add(project)
         db_session.commit()
 
         # 推进阶段（假设健康度变为H2）
-        new_status = update_project_stage_and_status(
-        db_session, project, "S2", "S1", "ST01"
-        )
+        new_status = update_project_stage_and_status(db_session, project, "S2", "S1", "ST01")
 
         # 创建状态日志（健康度变化）
         create_status_log(
-        db_session,
-        project.id,
-        "S1",
-        "S2",
-        "ST01",
-        new_status,
-        "H1",
-        "H2",
-        "健康度变化",
-        1,
+            db_session,
+            project.id,
+            "S1",
+            "S2",
+            "ST01",
+            new_status,
+            "H1",
+            "H2",
+            "健康度变化",
+            1,
         )
 
         # 验证健康度记录在日志中
         db_session.refresh(project)
         status_logs = (
-        db_session.query(ProjectStatusLog)
-        .filter(ProjectStatusLog.project_id == project.id)
-        .all()
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project.id)
+            .all()
         )
 
         log = status_logs[-1]

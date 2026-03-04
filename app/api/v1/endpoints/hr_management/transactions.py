@@ -11,16 +11,16 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.date_range import get_month_range_by_ym
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.organization import (
     Employee,
     EmployeeHrProfile,
     HrTransaction,
 )
 from app.models.user import User
-from app.common.query_filters import apply_pagination
 from app.schemas.organization import (
     HrTransactionCreate,
     HrTransactionResponse,
@@ -55,7 +55,9 @@ def get_hr_transactions(
         query = query.filter(HrTransaction.transaction_date <= end_date)
 
     total = query.count()
-    transactions = apply_pagination(query.order_by(HrTransaction.created_at.desc()), pagination.offset, pagination.limit).all()
+    transactions = apply_pagination(
+        query.order_by(HrTransaction.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for t in transactions:
@@ -71,37 +73,49 @@ def get_hr_transactions(
         }
         # 根据事务类型添加相关字段
         if t.transaction_type == "onboarding":
-            item.update({
-                "onboard_date": str(t.onboard_date) if t.onboard_date else None,
-                "initial_position": t.initial_position,
-                "initial_department": t.initial_department,
-            })
+            item.update(
+                {
+                    "onboard_date": str(t.onboard_date) if t.onboard_date else None,
+                    "initial_position": t.initial_position,
+                    "initial_department": t.initial_department,
+                }
+            )
         elif t.transaction_type == "resignation":
-            item.update({
-                "resignation_date": str(t.resignation_date) if t.resignation_date else None,
-                "last_working_date": str(t.last_working_date) if t.last_working_date else None,
-                "resignation_reason": t.resignation_reason,
-            })
+            item.update(
+                {
+                    "resignation_date": str(t.resignation_date) if t.resignation_date else None,
+                    "last_working_date": str(t.last_working_date) if t.last_working_date else None,
+                    "resignation_reason": t.resignation_reason,
+                }
+            )
         elif t.transaction_type == "confirmation":
-            item.update({
-                "confirmation_date": str(t.confirmation_date) if t.confirmation_date else None,
-                "probation_evaluation": t.probation_evaluation,
-            })
+            item.update(
+                {
+                    "confirmation_date": str(t.confirmation_date) if t.confirmation_date else None,
+                    "probation_evaluation": t.probation_evaluation,
+                }
+            )
         elif t.transaction_type in ["promotion", "salary_adjustment"]:
-            item.update({
-                "from_level": t.from_level,
-                "to_level": t.to_level,
-                "from_salary": float(t.from_salary) if t.from_salary else None,
-                "to_salary": float(t.to_salary) if t.to_salary else None,
-                "salary_change_ratio": float(t.salary_change_ratio) if t.salary_change_ratio else None,
-            })
+            item.update(
+                {
+                    "from_level": t.from_level,
+                    "to_level": t.to_level,
+                    "from_salary": float(t.from_salary) if t.from_salary else None,
+                    "to_salary": float(t.to_salary) if t.to_salary else None,
+                    "salary_change_ratio": (
+                        float(t.salary_change_ratio) if t.salary_change_ratio else None
+                    ),
+                }
+            )
         elif t.transaction_type == "transfer":
-            item.update({
-                "from_department": t.from_department,
-                "to_department": t.to_department,
-                "from_position": t.from_position,
-                "to_position": t.to_position,
-            })
+            item.update(
+                {
+                    "from_department": t.from_department,
+                    "to_department": t.to_department,
+                    "from_position": t.from_position,
+                    "to_position": t.to_position,
+                }
+            )
         items.append(item)
 
     return {
@@ -109,7 +123,7 @@ def get_hr_transactions(
         "total": total,
         "page": pagination.page,
         "page_size": pagination.page_size,
-        "pages": pagination.pages_for_total(total)
+        "pages": pagination.pages_for_total(total),
     }
 
 
@@ -126,9 +140,7 @@ def create_hr_transaction(
         raise HTTPException(status_code=404, detail="员工不存在")
 
     transaction = HrTransaction(
-        **transaction_in.model_dump(),
-        applicant_id=current_user.id,
-        status="pending"
+        **transaction_in.model_dump(), applicant_id=current_user.id, status="pending"
     )
     db.add(transaction)
     db.commit()
@@ -214,41 +226,53 @@ def get_transaction_statistics(
     start_date, end_date = get_month_range_by_ym(year, month)
 
     # 按类型统计本月事务
-    type_stats = db.query(
-        HrTransaction.transaction_type,
-        func.count(HrTransaction.id)
-    ).filter(
-        HrTransaction.transaction_date >= start_date,
-        HrTransaction.transaction_date <= end_date
-    ).group_by(HrTransaction.transaction_type).all()
+    type_stats = (
+        db.query(HrTransaction.transaction_type, func.count(HrTransaction.id))
+        .filter(
+            HrTransaction.transaction_date >= start_date, HrTransaction.transaction_date <= end_date
+        )
+        .group_by(HrTransaction.transaction_type)
+        .all()
+    )
 
     # 统计待处理事务
-    pending_count = db.query(HrTransaction).filter(
-        HrTransaction.status == "pending"
-    ).count()
+    pending_count = db.query(HrTransaction).filter(HrTransaction.status == "pending").count()
 
     # 本月入职人数
-    onboarding_count = db.query(HrTransaction).filter(
-        HrTransaction.transaction_type == "onboarding",
-        HrTransaction.transaction_date >= start_date,
-        HrTransaction.transaction_date <= end_date,
-        HrTransaction.status.in_(["approved", "completed"])
-    ).count()
+    onboarding_count = (
+        db.query(HrTransaction)
+        .filter(
+            HrTransaction.transaction_type == "onboarding",
+            HrTransaction.transaction_date >= start_date,
+            HrTransaction.transaction_date <= end_date,
+            HrTransaction.status.in_(["approved", "completed"]),
+        )
+        .count()
+    )
 
     # 本月离职人数
-    resignation_count = db.query(HrTransaction).filter(
-        HrTransaction.transaction_type == "resignation",
-        HrTransaction.transaction_date >= start_date,
-        HrTransaction.transaction_date <= end_date,
-        HrTransaction.status.in_(["approved", "completed"])
-    ).count()
+    resignation_count = (
+        db.query(HrTransaction)
+        .filter(
+            HrTransaction.transaction_type == "resignation",
+            HrTransaction.transaction_date >= start_date,
+            HrTransaction.transaction_date <= end_date,
+            HrTransaction.status.in_(["approved", "completed"]),
+        )
+        .count()
+    )
 
     # 待转正人数（试用期即将到期）
-    probation_due = db.query(Employee).join(EmployeeHrProfile).filter(
-        Employee.is_active,
-        Employee.employment_type == "probation",
-        EmployeeHrProfile.probation_end_date <= now.date() + timedelta(days=30)
-    ).count()
+    probation_due = (
+        db.query(Employee)
+        .join(EmployeeHrProfile)
+        .filter(
+            Employee.is_active,
+            Employee.employment_type == "probation",
+            EmployeeHrProfile.probation_end_date <= now.date() + timedelta(days=30),
+        )
+        .count()
+    )
 
     return {
         "year": year,

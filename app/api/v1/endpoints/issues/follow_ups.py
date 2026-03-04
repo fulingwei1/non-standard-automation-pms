@@ -32,9 +32,12 @@ def get_issue_follow_ups(
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    follow_ups = db.query(IssueFollowUpRecord).filter(
-        IssueFollowUpRecord.issue_id == issue_id
-    ).order_by(desc(IssueFollowUpRecord.created_at)).all()
+    follow_ups = (
+        db.query(IssueFollowUpRecord)
+        .filter(IssueFollowUpRecord.issue_id == issue_id)
+        .order_by(desc(IssueFollowUpRecord.created_at))
+        .all()
+    )
 
     return [
         IssueFollowUpResponse(
@@ -53,7 +56,11 @@ def get_issue_follow_ups(
     ]
 
 
-@router.post("/{issue_id}/follow-ups", response_model=IssueFollowUpResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{issue_id}/follow-ups",
+    response_model=IssueFollowUpResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_issue_follow_up(
     issue_id: int,
     follow_up_in: IssueFollowUpCreate,
@@ -79,7 +86,9 @@ def create_issue_follow_up(
     db.add(follow_up)
 
     # 更新问题的跟进统计
-    issue.follow_up_count = db.query(IssueFollowUpRecord).filter(IssueFollowUpRecord.issue_id == issue_id).count()
+    issue.follow_up_count = (
+        db.query(IssueFollowUpRecord).filter(IssueFollowUpRecord.issue_id == issue_id).count()
+    )
     issue.last_follow_up_at = datetime.now()
 
     db.commit()

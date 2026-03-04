@@ -6,15 +6,16 @@ generate_bom, _generate_bom_item, get_solution, update_solution,
 review_solution, get_template_library 等核心分支
 """
 import json
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.presale_ai_service import PresaleAIService
+import pytest
+
 from app.schemas.presale_ai_solution import (
-    TemplateMatchRequest,
     SolutionGenerationRequest,
+    TemplateMatchRequest,
 )
+from app.services.presale_ai_service import PresaleAIService
 
 
 def _make_service():
@@ -56,6 +57,7 @@ def _make_solution(**kwargs):
 # 1. _parse_solution_response - 三条分支
 # ============================================================
 
+
 class TestParseSolutionResponse:
     def test_parse_json_code_block(self):
         svc, db, _ = _make_service()
@@ -91,6 +93,7 @@ class TestParseSolutionResponse:
 # ============================================================
 # 2. _calculate_confidence - 各字段影响
 # ============================================================
+
 
 class TestCalculateConfidence:
     def test_base_score_no_extras(self):
@@ -138,6 +141,7 @@ class TestCalculateConfidence:
 # 3. _extract_mermaid_code - 三条分支
 # ============================================================
 
+
 class TestExtractMermaidCode:
     def test_extract_from_mermaid_block(self):
         svc, db, _ = _make_service()
@@ -162,6 +166,7 @@ class TestExtractMermaidCode:
 # ============================================================
 # 4. generate_bom - 基本流程
 # ============================================================
+
 
 class TestGenerateBOM:
     def test_empty_equipment_list(self):
@@ -191,13 +196,12 @@ class TestGenerateBOM:
 # 5. _generate_bom_item - include_cost / include_suppliers
 # ============================================================
 
+
 class TestGenerateBOMItem:
     def test_with_cost(self):
         svc, db, _ = _make_service()
         item = svc._generate_bom_item(
-            {"name": "PLC", "quantity": 1},
-            include_cost=True,
-            include_suppliers=False
+            {"name": "PLC", "quantity": 1}, include_cost=True, include_suppliers=False
         )
         assert "unit_price" in item
         assert "total_price" in item
@@ -205,18 +209,14 @@ class TestGenerateBOMItem:
     def test_without_cost(self):
         svc, db, _ = _make_service()
         item = svc._generate_bom_item(
-            {"name": "PLC", "quantity": 1},
-            include_cost=False,
-            include_suppliers=False
+            {"name": "PLC", "quantity": 1}, include_cost=False, include_suppliers=False
         )
         assert "unit_price" not in item
 
     def test_with_suppliers(self):
         svc, db, _ = _make_service()
         item = svc._generate_bom_item(
-            {"name": "传感器", "quantity": 2},
-            include_cost=False,
-            include_suppliers=True
+            {"name": "传感器", "quantity": 2}, include_cost=False, include_suppliers=True
         )
         assert "supplier" in item
         assert "lead_time_days" in item
@@ -224,9 +224,7 @@ class TestGenerateBOMItem:
     def test_quantity_used_in_total(self):
         svc, db, _ = _make_service()
         item = svc._generate_bom_item(
-            {"name": "机器人", "quantity": 3},
-            include_cost=True,
-            include_suppliers=False
+            {"name": "机器人", "quantity": 3}, include_cost=True, include_suppliers=False
         )
         assert item["total_price"] == item["unit_price"] * 3
 
@@ -234,6 +232,7 @@ class TestGenerateBOMItem:
 # ============================================================
 # 6. get_solution
 # ============================================================
+
 
 class TestGetSolution:
     def test_found(self):
@@ -253,6 +252,7 @@ class TestGetSolution:
 # ============================================================
 # 7. update_solution
 # ============================================================
+
 
 class TestUpdateSolution:
     def test_update_success(self):
@@ -276,6 +276,7 @@ class TestUpdateSolution:
 # 8. review_solution
 # ============================================================
 
+
 class TestReviewSolution:
     def test_review_approved(self):
         svc, db, _ = _make_service()
@@ -298,6 +299,7 @@ class TestReviewSolution:
 # ============================================================
 # 9. get_template_library
 # ============================================================
+
 
 class TestGetTemplateLibrary:
     def test_returns_active_templates(self):
@@ -327,6 +329,7 @@ class TestGetTemplateLibrary:
 # 10. match_templates - 无关键词分支
 # ============================================================
 
+
 class TestMatchTemplatesDeep:
     def test_no_keywords_sorted_by_usage_count(self):
         svc, db, _ = _make_service()
@@ -334,11 +337,7 @@ class TestMatchTemplatesDeep:
         t2 = _make_template(id=2, usage_count=20)
         db.query.return_value.filter.return_value.all.return_value = [t1, t2]
 
-        req = TemplateMatchRequest(
-            query="机器人",
-            keywords=None,
-            top_k=2
-        )
+        req = TemplateMatchRequest(query="机器人", keywords=None, top_k=2)
         result, _ = svc.match_templates(req, user_id=1)
         # usage_count 更高的排前面
         assert result[0].template_id == 2
@@ -363,6 +362,7 @@ class TestMatchTemplatesDeep:
 # ============================================================
 # 11. _build_solution_prompt
 # ============================================================
+
 
 class TestBuildSolutionPrompt:
     def test_without_template(self):

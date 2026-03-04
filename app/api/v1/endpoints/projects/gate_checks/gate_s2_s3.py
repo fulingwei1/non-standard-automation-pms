@@ -18,18 +18,22 @@ from sqlalchemy.orm import Session
 from app.models.project import Project
 
 
-
 def check_gate_s2_to_s3(db: Session, project: Project) -> Tuple[bool, List[str]]:
     """G2: S2→S3 阶段门校验 - 需求规格书已确认、客户签字"""
     missing = []
 
     # 检查需求规格书文档
     from app.models.project import ProjectDocument
-    spec_docs = db.query(ProjectDocument).filter(
-        ProjectDocument.project_id == project.id,
-        ProjectDocument.doc_type.in_(["REQUIREMENT", "SPECIFICATION"]),
-        ProjectDocument.status == "APPROVED"
-    ).count()
+
+    spec_docs = (
+        db.query(ProjectDocument)
+        .filter(
+            ProjectDocument.project_id == project.id,
+            ProjectDocument.doc_type.in_(["REQUIREMENT", "SPECIFICATION"]),
+            ProjectDocument.status == "APPROVED",
+        )
+        .count()
+    )
 
     if spec_docs == 0:
         missing.append("需求规格书未确认（请上传并确认需求规格书）")

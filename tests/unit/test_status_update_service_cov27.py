@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - status_update_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_update_service")
 
-from app.services.status_update_service import StatusUpdateService, StatusUpdateResult
+from app.services.status_update_service import StatusUpdateResult, StatusUpdateService
 
 
 def make_db():
@@ -72,7 +73,7 @@ class TestUpdateStatusValidation:
             entity=entity,
             new_status="INVALID_STATUS",
             operator=self.operator,
-            valid_statuses=["PENDING", "APPROVED", "REJECTED"]
+            valid_statuses=["PENDING", "APPROVED", "REJECTED"],
         )
         assert result.success is False
         assert len(result.errors) > 0
@@ -84,7 +85,7 @@ class TestUpdateStatusValidation:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                valid_statuses=["PENDING", "APPROVED", "REJECTED"]
+                valid_statuses=["PENDING", "APPROVED", "REJECTED"],
             )
         assert result.success is True
 
@@ -92,9 +93,7 @@ class TestUpdateStatusValidation:
         entity = make_entity(status="PENDING")
         with patch("app.services.status_update_service.save_obj"):
             result = self.svc.update_status(
-                entity=entity,
-                new_status="ANYTHING",
-                operator=self.operator
+                entity=entity, new_status="ANYTHING", operator=self.operator
             )
         assert result.success is True
 
@@ -104,7 +103,7 @@ class TestUpdateStatusValidation:
             entity=entity,
             new_status="PENDING",
             operator=self.operator,
-            valid_statuses=["PENDING", "APPROVED"]
+            valid_statuses=["PENDING", "APPROVED"],
         )
         assert result.success is True
         assert "变化" in (result.message or "")
@@ -124,7 +123,7 @@ class TestUpdateStatusTransitionRules:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                transition_rules=transition_rules
+                transition_rules=transition_rules,
             )
         assert result.success is True
 
@@ -135,7 +134,7 @@ class TestUpdateStatusTransitionRules:
             entity=entity,
             new_status="REJECTED",
             operator=self.operator,
-            transition_rules=transition_rules
+            transition_rules=transition_rules,
         )
         assert result.success is False
         assert len(result.errors) > 0
@@ -147,7 +146,7 @@ class TestUpdateStatusTransitionRules:
             entity=entity,
             new_status="APPROVED",
             operator=self.operator,
-            transition_rules=transition_rules
+            transition_rules=transition_rules,
         )
         assert result.success is False
 
@@ -158,7 +157,7 @@ class TestUpdateStatusTransitionRules:
             entity=entity,
             new_status="REJECTED",
             operator=self.operator,
-            transition_rules=transition_rules
+            transition_rules=transition_rules,
         )
         assert any("PENDING" in e or "REJECTED" in e for e in result.errors)
 
@@ -177,7 +176,7 @@ class TestUpdateStatusCallbacks:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                before_update_callback=before_cb
+                before_update_callback=before_cb,
             )
         before_cb.assert_called_once()
 
@@ -189,7 +188,7 @@ class TestUpdateStatusCallbacks:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                after_update_callback=after_cb
+                after_update_callback=after_cb,
             )
         after_cb.assert_called_once()
 
@@ -200,7 +199,7 @@ class TestUpdateStatusCallbacks:
             entity=entity,
             new_status="APPROVED",
             operator=self.operator,
-            before_update_callback=before_cb
+            before_update_callback=before_cb,
         )
         assert result.success is False
         assert len(result.errors) > 0
@@ -213,7 +212,7 @@ class TestUpdateStatusCallbacks:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                history_callback=hist_cb
+                history_callback=hist_cb,
             )
         hist_cb.assert_called_once()
 
@@ -227,11 +226,7 @@ class TestUpdateStatusSideEffects:
     def test_status_field_updated_on_entity(self):
         entity = make_entity(status="PENDING")
         with patch("app.services.status_update_service.save_obj"):
-            self.svc.update_status(
-                entity=entity,
-                new_status="APPROVED",
-                operator=self.operator
-            )
+            self.svc.update_status(entity=entity, new_status="APPROVED", operator=self.operator)
         assert entity.status == "APPROVED"
 
     def test_related_entities_updated(self):
@@ -243,7 +238,7 @@ class TestUpdateStatusSideEffects:
                 entity=entity,
                 new_status="APPROVED",
                 operator=self.operator,
-                related_entities=[{"entity": related, "field": "status", "value": "CLOSED"}]
+                related_entities=[{"entity": related, "field": "status", "value": "CLOSED"}],
             )
         assert related.status == "CLOSED"
 
@@ -251,9 +246,7 @@ class TestUpdateStatusSideEffects:
         entity = make_entity(status="PENDING")
         with patch("app.services.status_update_service.save_obj"):
             result = self.svc.update_status(
-                entity=entity,
-                new_status="APPROVED",
-                operator=self.operator
+                entity=entity, new_status="APPROVED", operator=self.operator
             )
         assert result.old_status == "PENDING"
         assert result.new_status == "APPROVED"
@@ -266,6 +259,6 @@ class TestUpdateStatusSideEffects:
                 entity=entity,
                 new_status="SUBMITTED",
                 operator=self.operator,
-                status_field="approval_status"
+                status_field="approval_status",
             )
         assert entity.approval_status == "SUBMITTED"

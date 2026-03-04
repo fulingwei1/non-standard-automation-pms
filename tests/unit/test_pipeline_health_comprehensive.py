@@ -79,12 +79,16 @@ class TestCalculateLeadHealth:
             svc.calculate_lead_health(999)
 
     def test_converted(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_lead(status="CONVERTED")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_lead(
+            status="CONVERTED"
+        )
         result = svc.calculate_lead_health(1)
         assert result["health_status"] == "H4"
 
     def test_invalid(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_lead(status="INVALID")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_lead(
+            status="INVALID"
+        )
         result = svc.calculate_lead_health(1)
         assert result["health_status"] == "H4"
 
@@ -131,12 +135,16 @@ class TestCalculateOpportunityHealth:
             svc.calculate_opportunity_health(999)
 
     def test_won(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_opportunity(stage="WON")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_opportunity(
+            stage="WON"
+        )
         result = svc.calculate_opportunity_health(1)
         assert result["health_status"] == "H4"
 
     def test_lost(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_opportunity(stage="LOST")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_opportunity(
+            stage="LOST"
+        )
         result = svc.calculate_opportunity_health(1)
         assert result["health_status"] == "H4"
 
@@ -172,12 +180,16 @@ class TestCalculateQuoteHealth:
             svc.calculate_quote_health(999)
 
     def test_approved(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_quote(status="APPROVED")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_quote(
+            status="APPROVED"
+        )
         result = svc.calculate_quote_health(1)
         assert result["health_status"] == "H4"
 
     def test_rejected(self, svc, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = _make_quote(status="REJECTED")
+        mock_db.query.return_value.filter.return_value.first.return_value = _make_quote(
+            status="REJECTED"
+        )
         result = svc.calculate_quote_health(1)
         assert result["health_status"] == "H4"
 
@@ -240,8 +252,10 @@ class TestCalculatePipelineHealth:
         lead = _make_lead()
         opp = _make_opportunity()
         mock_db.query.return_value.filter.return_value.first.return_value = lead
-        with patch.object(svc, 'calculate_lead_health', return_value={"health_score": 100}):
-            with patch.object(svc, 'calculate_opportunity_health', return_value={"health_score": 50}):
+        with patch.object(svc, "calculate_lead_health", return_value={"health_score": 100}):
+            with patch.object(
+                svc, "calculate_opportunity_health", return_value={"health_score": 50}
+            ):
                 result = svc.calculate_pipeline_health(lead_id=1, opportunity_id=1)
                 assert result["overall"]["health_score"] == 50
 
@@ -252,12 +266,12 @@ class TestCalculatePipelineHealth:
         # Errors are caught, so result might be empty or have partial data
 
     def test_overall_h3(self, svc):
-        with patch.object(svc, 'calculate_lead_health', return_value={"health_score": 20}):
+        with patch.object(svc, "calculate_lead_health", return_value={"health_score": 20}):
             result = svc.calculate_pipeline_health(lead_id=1)
             assert result["overall"]["health_status"] == "H3"
 
     def test_overall_h2(self, svc):
-        with patch.object(svc, 'calculate_lead_health', return_value={"health_score": 50}):
+        with patch.object(svc, "calculate_lead_health", return_value={"health_score": 50}):
             result = svc.calculate_pipeline_health(lead_id=1)
             assert result["overall"]["health_status"] == "H2"
 

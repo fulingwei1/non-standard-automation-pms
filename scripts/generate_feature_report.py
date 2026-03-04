@@ -33,7 +33,8 @@ def generate_report():
 
         # 获取所有功能
         result = session.execute(
-            text("""
+            text(
+                """
             SELECT
                 feature_code, feature_name, module,
                 api_file, api_prefix,
@@ -42,7 +43,8 @@ def generate_report():
                 is_enabled, priority
             FROM system_features
             ORDER BY module, feature_code
-        """)
+        """
+            )
         )
 
         features = []
@@ -109,16 +111,10 @@ def generate_report():
 
             for f in sorted(module_features, key=lambda x: x["code"]):
                 api_status = (
-                    f"✅ {f['api_endpoint_count']}"
-                    if f["api_endpoint_count"] > 0
-                    else "❌ 0"
+                    f"✅ {f['api_endpoint_count']}" if f["api_endpoint_count"] > 0 else "❌ 0"
                 )
-                perm_status = (
-                    f"✅ {f['permission_count']}" if f["has_permission"] else "❌ 无"
-                )
-                frontend_status = (
-                    f"✅ {f['frontend_page_count']}" if f["has_frontend"] else "❌ 无"
-                )
+                perm_status = f"✅ {f['permission_count']}" if f["has_permission"] else "❌ 无"
+                frontend_status = f"✅ {f['frontend_page_count']}" if f["has_frontend"] else "❌ 无"
                 enabled_status = "✅ 启用" if f["is_enabled"] else "❌ 禁用"
 
                 report += f"| `{f['code']}` | {f['name']} | {api_status} | {perm_status} | {frontend_status} | {enabled_status} |\n"
@@ -127,9 +123,7 @@ def generate_report():
 
         # 缺失项提醒
         missing_permission = [
-            f
-            for f in features
-            if f["api_endpoint_count"] > 0 and not f["has_permission"]
+            f for f in features if f["api_endpoint_count"] > 0 and not f["has_permission"]
         ]
         missing_frontend = [
             f for f in features if f["api_endpoint_count"] > 0 and not f["has_frontend"]

@@ -25,4 +25,4 @@ router.include_router(my_bonus_router)
 router.include_router(statistics_router)
 router.include_router(details_router)
 
-__all__ = ['router']
+__all__ = ["router"]

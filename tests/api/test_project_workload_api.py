@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 项目中心工作量API测试
@@ -21,10 +22,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project_id(client: TestClient, token: str) -> int:
     """获取第一个项目的ID"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -51,8 +49,7 @@ class TestProjectWorkloadTeam:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team", headers=headers
         )
 
         if response.status_code == 404:
@@ -87,7 +84,7 @@ class TestProjectWorkloadTeam:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -112,7 +109,7 @@ class TestProjectWorkloadTeam:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -135,8 +132,7 @@ class TestProjectWorkloadGantt:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/gantt",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/gantt", headers=headers
         )
 
         if response.status_code == 404:
@@ -165,7 +161,7 @@ class TestProjectWorkloadGantt:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/gantt",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -193,8 +189,7 @@ class TestProjectWorkloadSummary:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/summary", headers=headers
         )
 
         if response.status_code == 404:
@@ -217,8 +212,7 @@ class TestProjectWorkloadSummary:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/summary", headers=headers
         )
 
         if response.status_code == 404:
@@ -241,7 +235,9 @@ class TestProjectWorkloadSummary:
         for field in expected_fields:
             assert field in data, f"Missing field: {field}"
 
-    def test_get_project_workload_summary_with_date_range(self, client: TestClient, admin_token: str):
+    def test_get_project_workload_summary_with_date_range(
+        self, client: TestClient, admin_token: str
+    ):
         """测试按日期范围获取项目工作量汇总"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -258,7 +254,7 @@ class TestProjectWorkloadSummary:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/summary",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -277,8 +273,7 @@ class TestProjectWorkloadEdgeCases:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/99999/workload/team",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/99999/workload/team", headers=headers
         )
 
         # 应该返回404
@@ -301,7 +296,7 @@ class TestProjectWorkloadEdgeCases:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -312,9 +307,7 @@ class TestProjectWorkloadEdgeCases:
 
     def test_workload_without_auth(self, client: TestClient):
         """测试未授权访问"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/workload/team"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/workload/team")
 
         # 应该返回401或403
         assert response.status_code in [401, 403]
@@ -334,9 +327,7 @@ class TestProjectWorkloadEdgeCases:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if create_response.status_code != 201:
@@ -346,8 +337,7 @@ class TestProjectWorkloadEdgeCases:
 
         # 获取工作量
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/workload/team", headers=headers
         )
 
         if response.status_code == 404:
@@ -381,11 +371,15 @@ class TestProjectWorkloadAllEndpoints:
 
         for endpoint in endpoints:
             response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}{endpoint}",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}{endpoint}", headers=headers
             )
 
             # 端点应该存在（返回200或其他非404状态码）
             # 404可能表示端点不存在或数据不存在，我们接受两种情况
-            assert response.status_code in [200, 400, 403, 404, 422], \
-                f"Endpoint {endpoint} returned unexpected status: {response.status_code}"
+            assert response.status_code in [
+                200,
+                400,
+                403,
+                404,
+                422,
+            ], f"Endpoint {endpoint} returned unexpected status: {response.status_code}"

@@ -18,9 +18,9 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy.orm import Session
 
+from app.models import Project, ProjectPaymentPlan
 from app.models.acceptance import AcceptanceOrder
 from app.models.material import BomHeader
-from app.models import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.services.stage_transition_checks import (
     check_s3_to_s4_transition,
@@ -41,16 +41,16 @@ class TestStageStatusMapping:
         mapping = get_stage_status_mapping()
 
         assert isinstance(mapping, dict)
-        assert 'S4' in mapping
-        assert 'S5' in mapping
-        assert 'S6' in mapping
-        assert 'S8' in mapping
-        assert 'S9' in mapping
+        assert "S4" in mapping
+        assert "S5" in mapping
+        assert "S6" in mapping
+        assert "S8" in mapping
+        assert "S9" in mapping
 
         # 验证映射值格式
         for stage, status in mapping.items():
-            assert stage.startswith('S')
-            assert status.startswith('ST')
+            assert stage.startswith("S")
+            assert status.startswith("ST")
 
 
 class TestS3ToS4Transition:
@@ -64,9 +64,7 @@ class TestS3ToS4Transition:
         project.contract_date = None
         project.contract_amount = None
 
-        can_advance, target_stage, missing = check_s3_to_s4_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s3_to_s4_transition(db_session, project)
 
         assert can_advance == False
         assert target_stage is None
@@ -81,9 +79,7 @@ class TestS3ToS4Transition:
         project.contract_amount = Decimal("100000")
 
         # 没有对应的合同记录或合同未签订
-        can_advance, target_stage, missing = check_s3_to_s4_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s3_to_s4_transition(db_session, project)
 
         # 应该返回不能推进
         assert can_advance == False
@@ -92,22 +88,19 @@ class TestS3ToS4Transition:
     def test_transition_contract_signed(self, db_session: Session):
         """测试合同已签订时的流转检查"""
         # 查找一个有已签订合同的项目
-        project = db_session.query(Project).filter(
-        Project.contract_no.isnot(None)
-        ).first()
+        project = db_session.query(Project).filter(Project.contract_no.isnot(None)).first()
 
         if not project:
             pytest.skip("No project with contract available")
 
             # 检查是否有对应的已签订合同
-            contract = db_session.query(Contract).filter(
-            Contract.contract_code == project.contract_no,
-            Contract.status == "SIGNED"
-            ).first()
-
-            can_advance, target_stage, missing = check_s3_to_s4_transition(
-            db_session, project
+            contract = (
+                db_session.query(Contract)
+                .filter(Contract.contract_code == project.contract_no, Contract.status == "SIGNED")
+                .first()
             )
+
+            can_advance, target_stage, missing = check_s3_to_s4_transition(db_session, project)
 
             if contract:
                 assert can_advance == True
@@ -124,7 +117,7 @@ class TestS4ToS5Transition:
         """测试没有已发布BOM时的流转检查"""
         # 使用一个没有BOM的项目ID
         can_advance, target_stage, missing = check_s4_to_s5_transition(
-        db_session, project_id=999999
+            db_session, project_id=999999
         )
 
         assert can_advance == False
@@ -134,15 +127,13 @@ class TestS4ToS5Transition:
     def test_transition_with_released_bom(self, db_session: Session):
         """测试有已发布BOM时的流转检查"""
         # 查找有已发布BOM的项目
-        bom = db_session.query(BomHeader).filter(
-        BomHeader.status == "RELEASED"
-        ).first()
+        bom = db_session.query(BomHeader).filter(BomHeader.status == "RELEASED").first()
 
         if not bom or not bom.project_id:
             pytest.skip("No released BOM available")
 
             can_advance, target_stage, missing = check_s4_to_s5_transition(
-            db_session, project_id=bom.project_id
+                db_session, project_id=bom.project_id
             )
 
             assert can_advance == True
@@ -155,16 +146,12 @@ class TestS5ToS6Transition:
 
     def test_transition_check(self, db_session: Session):
         """测试S5→S6流转检查"""
-        project = db_session.query(Project).filter(
-        Project.stage == "S5"
-        ).first()
+        project = db_session.query(Project).filter(Project.stage == "S5").first()
 
         if not project:
             pytest.skip("No project in S5 stage available")
 
-            can_advance, target_stage, missing = check_s5_to_s6_transition(
-            db_session, project
-            )
+            can_advance, target_stage, missing = check_s5_to_s6_transition(db_session, project)
 
             # 根据物料齐套率结果
             if can_advance:
@@ -181,7 +168,7 @@ class TestS7ToS8Transition:
     def test_transition_no_fat_passed(self, db_session: Session):
         """测试没有FAT验收通过时的流转检查"""
         can_advance, target_stage, missing = check_s7_to_s8_transition(
-        db_session, project_id=999999
+            db_session, project_id=999999
         )
 
         assert can_advance == False
@@ -191,17 +178,21 @@ class TestS7ToS8Transition:
     def test_transition_with_fat_passed(self, db_session: Session):
         """测试FAT验收通过时的流转检查"""
         # 查找有FAT验收通过的项目
-        fat_order = db_session.query(AcceptanceOrder).filter(
-        AcceptanceOrder.acceptance_type == "FAT",
-        AcceptanceOrder.status == "COMPLETED",
-        AcceptanceOrder.overall_result == "PASSED"
-        ).first()
+        fat_order = (
+            db_session.query(AcceptanceOrder)
+            .filter(
+                AcceptanceOrder.acceptance_type == "FAT",
+                AcceptanceOrder.status == "COMPLETED",
+                AcceptanceOrder.overall_result == "PASSED",
+            )
+            .first()
+        )
 
         if not fat_order or not fat_order.project_id:
             pytest.skip("No FAT passed acceptance available")
 
             can_advance, target_stage, missing = check_s7_to_s8_transition(
-            db_session, project_id=fat_order.project_id
+                db_session, project_id=fat_order.project_id
             )
 
             assert can_advance == True
@@ -218,9 +209,7 @@ class TestS8ToS9Transition:
         project.id = 999999
         project.contract_amount = Decimal("100000")
 
-        can_advance, target_stage, missing = check_s8_to_s9_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s8_to_s9_transition(db_session, project)
 
         assert can_advance == False
         assert target_stage is None
@@ -229,30 +218,32 @@ class TestS8ToS9Transition:
     def test_transition_no_payment_plan(self, db_session: Session):
         """测试没有收款计划时的流转检查"""
         # 查找有终验收但没有收款计划的项目
-        final_order = db_session.query(AcceptanceOrder).filter(
-        AcceptanceOrder.acceptance_type.in_(["FINAL", "SAT"]),
-        AcceptanceOrder.status == "COMPLETED",
-        AcceptanceOrder.overall_result == "PASSED"
-        ).first()
+        final_order = (
+            db_session.query(AcceptanceOrder)
+            .filter(
+                AcceptanceOrder.acceptance_type.in_(["FINAL", "SAT"]),
+                AcceptanceOrder.status == "COMPLETED",
+                AcceptanceOrder.overall_result == "PASSED",
+            )
+            .first()
+        )
 
         if not final_order or not final_order.project_id:
             pytest.skip("No final acceptance available")
 
-            project = db_session.query(Project).filter(
-            Project.id == final_order.project_id
-            ).first()
+            project = db_session.query(Project).filter(Project.id == final_order.project_id).first()
 
             if not project:
                 pytest.skip("Project not found")
 
                 # 检查是否有收款计划
-                payment_plans = db_session.query(ProjectPaymentPlan).filter(
-                ProjectPaymentPlan.project_id == project.id
-                ).all()
-
-                can_advance, target_stage, missing = check_s8_to_s9_transition(
-                db_session, project
+                payment_plans = (
+                    db_session.query(ProjectPaymentPlan)
+                    .filter(ProjectPaymentPlan.project_id == project.id)
+                    .all()
                 )
+
+                can_advance, target_stage, missing = check_s8_to_s9_transition(db_session, project)
 
                 if not payment_plans:
                     assert can_advance == False
@@ -265,9 +256,7 @@ class TestS8ToS9Transition:
         project.id = 999999
         project.contract_amount = Decimal("100000")
 
-        can_advance, target_stage, missing = check_s8_to_s9_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s8_to_s9_transition(db_session, project)
 
         # 应该不能推进（没有终验收或回款不足）
         assert can_advance == False
@@ -285,10 +274,10 @@ class TestExecuteStageTransition:
 
             # 尝试推进到一个不太可能满足条件的阶段
             success, result = execute_stage_transition(
-            db_session,
-            project,
-            target_stage="S9",  # 最后阶段，条件最严格
-            transition_reason="测试流转"
+                db_session,
+                project,
+                target_stage="S9",  # 最后阶段，条件最严格
+                transition_reason="测试流转",
             )
 
             # 根据项目实际情况
@@ -300,9 +289,7 @@ class TestExecuteStageTransition:
     def test_execute_transition_success(self, db_session: Session):
         """测试成功执行阶段流转"""
         # 查找一个可以推进的项目
-        project = db_session.query(Project).filter(
-        Project.stage == "S3"
-        ).first()
+        project = db_session.query(Project).filter(Project.stage == "S3").first()
 
         if not project:
             pytest.skip("No project in S3 stage available")
@@ -314,10 +301,7 @@ class TestExecuteStageTransition:
                 pytest.skip("Project cannot advance to S4")
 
                 success, result = execute_stage_transition(
-                db_session,
-                project,
-                target_stage="S4",
-                transition_reason="合同已签订"
+                    db_session, project, target_stage="S4", transition_reason="合同已签订"
                 )
 
                 if success:
@@ -332,14 +316,11 @@ class TestExecuteStageTransition:
         project.id = 1
 
         # 模拟异常情况 - check_gate is in utils submodule
-        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_check:
+        with patch("app.api.v1.endpoints.projects.utils.check_gate") as mock_check:
             mock_check.side_effect = Exception("测试异常")
 
             success, result = execute_stage_transition(
-            db_session,
-            project,
-            target_stage="S4",
-            transition_reason="测试"
+                db_session, project, target_stage="S4", transition_reason="测试"
             )
 
             assert success == False
@@ -352,9 +333,7 @@ class TestTransitionIntegration:
     def test_full_transition_flow(self, db_session: Session):
         """测试完整的阶段流转流程"""
         # 查找一个处于早期阶段的项目
-        project = db_session.query(Project).filter(
-        Project.stage.in_(["S1", "S2", "S3"])
-        ).first()
+        project = db_session.query(Project).filter(Project.stage.in_(["S1", "S2", "S3"])).first()
 
         if not project:
             pytest.skip("No project in early stage available")
@@ -372,11 +351,11 @@ class TestTransitionIntegration:
 
                 # 检查是否可以推进到下一阶段
                 check_functions = {
-                "S4": lambda: check_s3_to_s4_transition(db_session, project),
-                "S5": lambda: check_s4_to_s5_transition(db_session, project.id),
-                "S6": lambda: check_s5_to_s6_transition(db_session, project),
-                "S8": lambda: check_s7_to_s8_transition(db_session, project.id),
-                "S9": lambda: check_s8_to_s9_transition(db_session, project),
+                    "S4": lambda: check_s3_to_s4_transition(db_session, project),
+                    "S5": lambda: check_s4_to_s5_transition(db_session, project.id),
+                    "S6": lambda: check_s5_to_s6_transition(db_session, project),
+                    "S8": lambda: check_s7_to_s8_transition(db_session, project.id),
+                    "S9": lambda: check_s8_to_s9_transition(db_session, project),
                 }
 
                 if next_stage in check_functions:
@@ -398,9 +377,7 @@ class TestEdgeCases:
         project.contract_date = None
         project.contract_amount = None
 
-        can_advance, target_stage, missing = check_s3_to_s4_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s3_to_s4_transition(db_session, project)
 
         assert can_advance == False
         assert len(missing) > 0
@@ -411,18 +388,14 @@ class TestEdgeCases:
         project.id = 999999
         project.contract_amount = Decimal("0")
 
-        can_advance, target_stage, missing = check_s8_to_s9_transition(
-        db_session, project
-        )
+        can_advance, target_stage, missing = check_s8_to_s9_transition(db_session, project)
 
         # 合同金额为零应该导致无法计算回款率
         assert can_advance == False
 
     def test_negative_project_id(self, db_session: Session):
         """测试负数项目ID的情况"""
-        can_advance, target_stage, missing = check_s4_to_s5_transition(
-        db_session, project_id=-1
-        )
+        can_advance, target_stage, missing = check_s4_to_s5_transition(db_session, project_id=-1)
 
         assert can_advance == False
         assert len(missing) > 0

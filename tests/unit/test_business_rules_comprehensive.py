@@ -8,33 +8,33 @@ import pytest
 
 from app.services.business_rules import (
     KPI_BENCHMARKS,
-    calc_gross_margin,
-    is_warning_required,
-    requires_gm_approval,
-    calc_kit_rate,
-    should_trigger_shortage_alert,
-    calc_spi,
-    get_delay_alert_level,
-    PaymentMilestone,
     STANDARD_PAYMENT_RATIOS,
-    create_standard_payment_milestones,
-    calc_payment_overdue_days,
-    is_overdue_escalation_required,
-    is_daily_overtime,
-    should_hr_review,
-    evaluate_fat_result,
     FATResult,
-    calc_final_margin,
-    requires_margin_review,
-    analyze_delay_root_causes,
-    recalculate_delivery_date,
-    calc_bom_kit_rate,
-    generate_shortage_alert,
+    PaymentMilestone,
     ShortageAlert,
+    analyze_delay_root_causes,
+    calc_bom_kit_rate,
+    calc_final_margin,
+    calc_gross_margin,
+    calc_kit_rate,
+    calc_payment_overdue_days,
+    calc_spi,
+    create_standard_payment_milestones,
+    evaluate_fat_result,
+    generate_shortage_alert,
+    get_delay_alert_level,
+    is_daily_overtime,
+    is_overdue_escalation_required,
+    is_warning_required,
+    recalculate_delivery_date,
+    requires_gm_approval,
+    requires_margin_review,
+    should_hr_review,
+    should_trigger_shortage_alert,
 )
 
-
 # ---- 1. 毛利率 ----
+
 
 class TestCalcGrossMargin:
     def test_normal_case(self):
@@ -58,7 +58,9 @@ class TestCalcGrossMargin:
             calc_gross_margin(-100, 10, 10, 10, 10)
 
     def test_decimal_input(self):
-        m = calc_gross_margin(Decimal("1000"), Decimal("200"), Decimal("100"), Decimal("50"), Decimal("50"))
+        m = calc_gross_margin(
+            Decimal("1000"), Decimal("200"), Decimal("100"), Decimal("50"), Decimal("50")
+        )
         assert m == Decimal("0.600000")
 
     def test_float_input(self):
@@ -114,6 +116,7 @@ class TestRequiresGmApproval:
 
 # ---- 2. 套件率 ----
 
+
 class TestCalcKitRate:
     def test_normal(self):
         r = calc_kit_rate(95, 100)
@@ -159,6 +162,7 @@ class TestShouldTriggerShortageAlert:
 
 
 # ---- 3. SPI ----
+
 
 class TestCalcSpi:
     def test_normal(self):
@@ -206,6 +210,7 @@ class TestGetDelayAlertLevel:
 
 
 # ---- 4. 付款 ----
+
 
 class TestCreateStandardPaymentMilestones:
     def test_normal(self):
@@ -272,6 +277,7 @@ class TestIsOverdueEscalationRequired:
 
 # ---- 5. 工时 ----
 
+
 class TestIsDailyOvertime:
     def test_normal(self):
         assert is_daily_overtime(8) is False
@@ -298,6 +304,7 @@ class TestShouldHrReview:
 
 
 # ---- 6. FAT 验收 ----
+
 
 class TestEvaluateFatResult:
     def test_all_pass(self):
@@ -367,6 +374,7 @@ class TestEvaluateFatResult:
 
 # ---- 7. 最终毛利 ----
 
+
 class TestCalcFinalMargin:
     def test_normal(self):
         data = {"contract_amount": 1000, "costs": {"hardware": 200, "labor": 100}}
@@ -401,6 +409,7 @@ class TestRequiresMarginReview:
 
 
 # ---- 8. 延期分析 ----
+
 
 class TestAnalyzeDelayRootCauses:
     def test_empty(self):
@@ -465,6 +474,7 @@ class TestRecalculateDeliveryDate:
 
 
 # ---- 9. BOM 套件率 & 缺料预警 ----
+
 
 class TestCalcBomKitRate:
     def test_full(self):
@@ -539,13 +549,18 @@ class TestGenerateShortageAlert:
 
 # ---- KPI Benchmarks ----
 
+
 class TestKPIBenchmarks:
     def test_all_keys_exist(self):
         keys = [
-            "gross_margin_warning", "gross_margin_gm_approval",
-            "kit_rate_target", "spi_warning", "spi_urgent",
+            "gross_margin_warning",
+            "gross_margin_gm_approval",
+            "kit_rate_target",
+            "spi_warning",
+            "spi_urgent",
             "payment_overdue_escalation_days",
-            "daily_overtime_threshold", "monthly_hr_review_threshold",
+            "daily_overtime_threshold",
+            "monthly_hr_review_threshold",
         ]
         for k in keys:
             assert k in KPI_BENCHMARKS

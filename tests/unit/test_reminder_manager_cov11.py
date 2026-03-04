@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第十一批：timesheet_reminder/reminder_manager 单元测试"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
+    from app.models.timesheet_reminder import ReminderStatusEnum, ReminderTypeEnum
     from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
-    from app.models.timesheet_reminder import ReminderTypeEnum, ReminderStatusEnum
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

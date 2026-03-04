@@ -10,12 +10,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import ProjectTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.schemas.project import (
     ProjectTemplateCreate,
     ProjectTemplateUpdate,
@@ -49,28 +49,32 @@ def get_project_templates(
         query = query.filter(ProjectTemplate.is_active == is_active)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(ProjectTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(ProjectTemplate.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for template in templates:
-        items.append({
-            "id": template.id,
-            "template_code": template.template_code,
-            "template_name": template.template_name,
-            "project_type": template.project_type,
-            "description": template.description,
-            "is_active": template.is_active,
-            "usage_count": template.usage_count or 0,
-            "created_at": template.created_at.isoformat() if template.created_at else None,
-            "updated_at": template.updated_at.isoformat() if template.updated_at else None,
-        })
+        items.append(
+            {
+                "id": template.id,
+                "template_code": template.template_code,
+                "template_name": template.template_name,
+                "project_type": template.project_type,
+                "description": template.description,
+                "is_active": template.is_active,
+                "usage_count": template.usage_count or 0,
+                "created_at": template.created_at.isoformat() if template.created_at else None,
+                "updated_at": template.updated_at.isoformat() if template.updated_at else None,
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -85,9 +89,11 @@ def create_project_template(
     创建项目模板
     """
     # 检查模板编码是否已存在
-    existing = db.query(ProjectTemplate).filter(
-        ProjectTemplate.template_code == template_in.template_code
-    ).first()
+    existing = (
+        db.query(ProjectTemplate)
+        .filter(ProjectTemplate.template_code == template_in.template_code)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="模板编码已存在")
 
@@ -108,11 +114,13 @@ def create_project_template(
             "id": template.id,
             "template_code": template.template_code,
             "template_name": template.template_name,
-        }
+        },
     )
 
 
-@router.get("/templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_project_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -137,11 +145,13 @@ def get_project_template(
             "usage_count": template.usage_count or 0,
             "created_at": template.created_at.isoformat() if template.created_at else None,
             "updated_at": template.updated_at.isoformat() if template.updated_at else None,
-        }
+        },
     )
 
 
-@router.put("/templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def update_project_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -169,5 +179,5 @@ def update_project_template(
             "id": template.id,
             "template_code": template.template_code,
             "template_name": template.template_name,
-        }
+        },
     )

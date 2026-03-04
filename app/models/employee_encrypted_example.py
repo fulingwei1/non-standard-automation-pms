@@ -4,16 +4,20 @@
 展示如何使用加密字段保护敏感信息
 """
 
-from sqlalchemy import Column, Integer, String, Date, Enum as SQLEnum
-from datetime import date
 import enum
+from datetime import date
+
+from sqlalchemy import Column, Date
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Integer, String
 
 from app.models.base import Base
-from app.models.encrypted_types import EncryptedString, EncryptedText, EncryptedNumeric
+from app.models.encrypted_types import EncryptedNumeric, EncryptedString, EncryptedText
 
 
 class EmployeeEncryptedExampleStatus(str, enum.Enum):
     """员工状态"""
+
     ACTIVE = "active"  # 在职
     ON_LEAVE = "on_leave"  # 休假
     RESIGNED = "resigned"  # 离职
@@ -22,7 +26,7 @@ class EmployeeEncryptedExampleStatus(str, enum.Enum):
 
 class EmployeeEncryptedExample(Base):
     """员工模型（带加密字段）
-    
+
     敏感字段加密存储:
     - 身份证号
     - 银行卡号
@@ -30,10 +34,11 @@ class EmployeeEncryptedExample(Base):
     - 家庭住址
     - 紧急联系人信息
     - 工资薪酬
-    
+
     【状态】示例代码 - 可删除"""
+
     __tablename__ = "employees"
-    
+
     # 基本信息（非敏感）
     id = Column(Integer, primary_key=True, index=True)
     employee_code = Column(String(50), unique=True, nullable=False, index=True, comment="员工工号")
@@ -43,7 +48,7 @@ class EmployeeEncryptedExample(Base):
     position = Column(String(100), comment="职位")
     status = Column(SQLEnum(EmployeeStatus), default=EmployeeStatus.PROBATION, comment="状态")
     hire_date = Column(Date, default=date.today, comment="入职日期")
-    
+
     # 敏感字段（加密存储）
     id_card = Column(EncryptedString(200), comment="身份证号（加密）")
     bank_account = Column(EncryptedString(200), comment="银行卡号（加密）")
@@ -51,17 +56,17 @@ class EmployeeEncryptedExample(Base):
     address = Column(EncryptedText, comment="家庭住址（加密）")
     emergency_contact = Column(EncryptedText, comment="紧急联系人信息（加密）")
     salary = Column(EncryptedNumeric, comment="工资（加密）")
-    
+
     def __repr__(self):
         return f"<Employee {self.employee_code} - {self.name}>"
-    
+
     def to_dict(self, include_sensitive: bool = False):
         """
         转换为字典
-        
+
         Args:
             include_sensitive: 是否包含敏感信息（默认不包含）
-        
+
         Returns:
             员工信息字典
         """
@@ -75,34 +80,36 @@ class EmployeeEncryptedExample(Base):
             "status": self.status.value if self.status else None,
             "hire_date": self.hire_date.isoformat() if self.hire_date else None,
         }
-        
+
         if include_sensitive:
             # 敏感信息脱敏显示
-            data.update({
-                "id_card": self._mask_id_card(self.id_card),
-                "bank_account": self._mask_bank_account(self.bank_account),
-                "phone": self._mask_phone(self.phone),
-                "address": self.address[:10] + "***" if self.address else None,
-                "emergency_contact": "[敏感信息]",
-                "salary": self.salary,
-            })
-        
+            data.update(
+                {
+                    "id_card": self._mask_id_card(self.id_card),
+                    "bank_account": self._mask_bank_account(self.bank_account),
+                    "phone": self._mask_phone(self.phone),
+                    "address": self.address[:10] + "***" if self.address else None,
+                    "emergency_contact": "[敏感信息]",
+                    "salary": self.salary,
+                }
+            )
+
         return data
-    
+
     @staticmethod
     def _mask_id_card(id_card: str) -> str:
         """身份证号脱敏（前6后4）"""
         if not id_card or len(id_card) < 10:
             return id_card
         return id_card[:6] + "********" + id_card[-4:]
-    
+
     @staticmethod
     def _mask_bank_account(bank_account: str) -> str:
         """银行卡号脱敏（前4后4）"""
         if not bank_account or len(bank_account) < 8:
             return bank_account
         return bank_account[:4] + "********" + bank_account[-4:]
-    
+
     @staticmethod
     def _mask_phone(phone: str) -> str:
         """手机号脱敏（中间4位）"""

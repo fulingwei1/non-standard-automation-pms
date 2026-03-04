@@ -8,13 +8,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
 
 from app.core.exception_handlers import (
-    SecurityException,
-    ResourceNotFoundException,
     PermissionDeniedException,
     RateLimitExceededException,
-    _sanitize_error_detail,
-    _extract_user_message,
+    ResourceNotFoundException,
+    SecurityException,
     _build_error_response,
+    _extract_user_message,
+    _sanitize_error_detail,
     setup_exception_handlers,
 )
 
@@ -23,9 +23,7 @@ class TestSecurityExceptions:
     """测试自定义异常类"""
 
     def test_security_exception_basic(self):
-        exc = SecurityException(
-            status_code=400, detail="test error", error_code="TEST_ERROR"
-        )
+        exc = SecurityException(status_code=400, detail="test error", error_code="TEST_ERROR")
         assert exc.status_code == 400
         assert exc.detail == "test error"
         assert exc.error_code == "TEST_ERROR"

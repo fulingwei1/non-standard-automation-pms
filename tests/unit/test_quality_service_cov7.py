@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - quality_service"""
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.quality_service import QualityService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -31,6 +33,7 @@ class TestCreateInspection:
     def test_creates_inspection_with_schema(self):
         db = MagicMock()
         from app.schemas.production.quality import QualityInspectionCreate
+
         try:
             data = QualityInspectionCreate(
                 work_order_id=1,
@@ -50,8 +53,11 @@ class TestCreateInspection:
 class TestGetQualityTrend:
     def test_returns_dict(self):
         from datetime import datetime
+
         db = MagicMock()
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         try:
             result = QualityService.get_quality_trend(
                 db,
@@ -66,7 +72,9 @@ class TestGetQualityTrend:
 class TestCalculateSPCControlLimits:
     def test_insufficient_data(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         try:
             result = QualityService.calculate_spc_control_limits(db, work_order_id=1)
             assert result is not None
@@ -82,7 +90,9 @@ class TestCalculateSPCControlLimits:
             insp.inspected_qty = Decimal("100")
             insp.created_at = datetime.now()
             inspections.append(insp)
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = inspections
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            inspections
+        )
         try:
             result = QualityService.calculate_spc_control_limits(db, work_order_id=1)
             assert result is not None

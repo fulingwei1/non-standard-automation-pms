@@ -137,11 +137,13 @@ class DashboardRegistry:
         modules = []
         for adapter_class in self._adapters.values():
             temp = adapter_class.__new__(adapter_class)
-            modules.append({
-                "module_id": adapter_class.module_id.fget(temp),
-                "module_name": adapter_class.module_name.fget(temp),
-                "supported_roles": adapter_class.supported_roles.fget(temp),
-            })
+            modules.append(
+                {
+                    "module_id": adapter_class.module_id.fget(temp),
+                    "module_name": adapter_class.module_name.fget(temp),
+                    "supported_roles": adapter_class.supported_roles.fget(temp),
+                }
+            )
         return modules
 
 
@@ -150,6 +152,7 @@ dashboard_registry = DashboardRegistry()
 
 
 # ==================== 装饰器：注册适配器 ====================
+
 
 def register_dashboard(adapter_class: type[DashboardAdapter]) -> type[DashboardAdapter]:
     """装饰器：注册dashboard适配器

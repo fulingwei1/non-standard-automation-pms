@@ -14,7 +14,11 @@ endpoints_dir = Path(__file__).parent.parent / "app" / "api" / "v1" / "endpoints
 # 分类定义
 PUBLIC_APIS = {
     # 认证相关（无需权限，但需要认证）
-    "/login", "/logout", "/refresh", "/me", "/password",
+    "/login",
+    "/logout",
+    "/refresh",
+    "/me",
+    "/password",
     # 健康检查
     "/health",
 }
@@ -27,8 +31,16 @@ SELF_DATA_APIS = {
 
 # 业务模块分类
 BUSINESS_MODULES = {
-    "项目管理": ["projects", "stages", "milestones", "members", "project_workspace",
-              "project_roles", "project_contributions", "project_evaluation"],
+    "项目管理": [
+        "projects",
+        "stages",
+        "milestones",
+        "members",
+        "project_workspace",
+        "project_roles",
+        "project_contributions",
+        "project_evaluation",
+    ],
     "物料管理": ["materials", "bom", "material_demands", "suppliers"],
     "采购管理": ["purchase", "outsourcing"],
     "销售管理": ["sales", "presale", "presales_integration", "customers"],
@@ -39,14 +51,37 @@ BUSINESS_MODULES = {
     "绩效管理": ["performance", "work_log", "timesheet"],
     "预警管理": ["alerts", "shortage", "shortage_alerts"],
     "系统管理": ["users", "roles", "audits", "organization"],
-    "其他功能": ["documents", "notifications", "report_center", "data_import_export",
-              "scheduler", "task_center", "issues", "service", "installation_dispatch",
-              "hr_management", "engineers", "staff_matching", "technical_review",
-              "technical_spec", "qualification", "rd_project", "pmo", "progress",
-              "workload", "business_support", "business_support_orders",
-              "culture_wall", "culture_wall_config", "advantage_products",
-              "hourly_rate", "admin_stats", "management_rhythm"],
+    "其他功能": [
+        "documents",
+        "notifications",
+        "report_center",
+        "data_import_export",
+        "scheduler",
+        "task_center",
+        "issues",
+        "service",
+        "installation_dispatch",
+        "hr_management",
+        "engineers",
+        "staff_matching",
+        "technical_review",
+        "technical_spec",
+        "qualification",
+        "rd_project",
+        "pmo",
+        "progress",
+        "workload",
+        "business_support",
+        "business_support_orders",
+        "culture_wall",
+        "culture_wall_config",
+        "advantage_products",
+        "hourly_rate",
+        "admin_stats",
+        "management_rhythm",
+    ],
 }
+
 
 def analyze_endpoints():
     """分析所有API端点"""
@@ -67,7 +102,7 @@ def analyze_endpoints():
             continue
 
         module_name = file_path.stem
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         # 查找路由装饰器
@@ -113,6 +148,7 @@ def analyze_endpoints():
                     results["by_module"]["未分类"].append(endpoint_info)
 
     return results, total_count
+
 
 def print_report(results: Dict, total_count: int):
     """打印分析报告"""
@@ -195,7 +231,9 @@ def print_report(results: Dict, total_count: int):
         else:
             module_permission_needs["未分类"] += 1
 
-    for module_type, count in sorted(module_permission_needs.items(), key=lambda x: x[1], reverse=True):
+    for module_type, count in sorted(
+        module_permission_needs.items(), key=lambda x: x[1], reverse=True
+    ):
         if count > 0:
             print(f"  {module_type:15} {count:4} 个端点需要权限检查")
     print()
@@ -229,6 +267,7 @@ def print_report(results: Dict, total_count: int):
     print("   🟢 低优先级（逐步完善）:")
     print("      - 报表、统计、通知等辅助功能")
     print()
+
 
 if __name__ == "__main__":
     results, total_count = analyze_endpoints()

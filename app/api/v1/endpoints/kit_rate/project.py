@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.kit_rate import KitRateService
 from app.models.user import User
+from app.services.kit_rate import KitRateService
 
 router = APIRouter()
 
@@ -59,10 +59,7 @@ def get_project_shortage(
     material_status = service.get_project_material_status(project_id)
 
     # 筛选缺料项
-    shortage_list = [
-        item for item in material_status["materials"]
-        if item["shortage_qty"] > 0
-    ]
+    shortage_list = [item for item in material_status["materials"] if item["shortage_qty"] > 0]
 
     return {
         "project_id": material_status["project_id"],
@@ -88,7 +85,8 @@ def get_project_critical_shortage(
 
     # 筛选关键物料且缺料的项
     critical_shortage_list = [
-        item for item in material_status["materials"]
+        item
+        for item in material_status["materials"]
         if item["is_key_material"] and item["shortage_qty"] > 0
     ]
 

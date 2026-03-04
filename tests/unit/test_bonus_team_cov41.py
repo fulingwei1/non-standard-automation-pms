@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.bonus.team")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -16,6 +16,7 @@ def db():
 @pytest.fixture
 def calculator(db):
     from app.services.bonus.team import TeamBonusCalculator
+
     return TeamBonusCalculator(db)
 
 
@@ -36,6 +37,7 @@ def test_calculate_no_contributions_equal_distribution(calculator, db):
     member.user_id = 10
 
     call_count = [0]
+
     def query_side_effect(*args, **kwargs):
         call_count[0] += 1
         q = MagicMock()
@@ -89,6 +91,7 @@ def test_calculate_total_bonus_amount(calculator, db):
     db.query.return_value.filter.return_value.all.return_value = []
 
     call_count = [0]
+
     def query_side(*args, **kwargs):
         call_count[0] += 1
         q = MagicMock()
@@ -114,6 +117,7 @@ def test_calculate_with_period_id(calculator, db):
     db.query.return_value.filter.return_value.all.return_value = []
 
     call_count = [0]
+
     def query_side(*args, **kwargs):
         call_count[0] += 1
         q = MagicMock()

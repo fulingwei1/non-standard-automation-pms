@@ -5,9 +5,10 @@
 测试审批任务的查询、处理、批量操作等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/pending",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/pending", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Approval tasks API not implemented")
@@ -44,8 +42,7 @@ class TestApprovalsTasksAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/completed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/tasks/completed", headers=headers
         )
 
         if response.status_code == 404:
@@ -60,10 +57,7 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No task data or API not implemented")
@@ -80,13 +74,13 @@ class TestApprovalsTasksAPI:
         approval_data = {
             "action": "approve",
             "comments": "审批通过",
-            "approved_at": datetime.now().isoformat()
+            "approved_at": datetime.now().isoformat(),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/tasks/1/approve",
             headers=headers,
-            json=approval_data
+            json=approval_data,
         )
 
         if response.status_code == 404:
@@ -104,13 +98,13 @@ class TestApprovalsTasksAPI:
         rejection_data = {
             "action": "reject",
             "comments": "不符合要求，请修改后重新提交",
-            "rejected_at": datetime.now().isoformat()
+            "rejected_at": datetime.now().isoformat(),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/tasks/1/reject",
             headers=headers,
-            json=rejection_data
+            json=rejection_data,
         )
 
         if response.status_code == 404:
@@ -125,16 +119,10 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        return_data = {
-            "action": "return",
-            "comments": "退回上一步重新审批",
-            "return_to_step": 1
-        }
+        return_data = {"action": "return", "comments": "退回上一步重新审批", "return_to_step": 1}
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/1/return",
-            headers=headers,
-            json=return_data
+            f"{settings.API_V1_PREFIX}/approvals/tasks/1/return", headers=headers, json=return_data
         )
 
         if response.status_code == 404:
@@ -149,15 +137,12 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        transfer_data = {
-            "transfer_to_user_id": 2,
-            "comments": "临时出差，转交给其他人处理"
-        }
+        transfer_data = {"transfer_to_user_id": 2, "comments": "临时出差，转交给其他人处理"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/tasks/1/transfer",
             headers=headers,
-            json=transfer_data
+            json=transfer_data,
         )
 
         if response.status_code == 404:
@@ -172,16 +157,12 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        batch_data = {
-            "task_ids": [1, 2, 3],
-            "action": "approve",
-            "comments": "批量审批通过"
-        }
+        batch_data = {"task_ids": [1, 2, 3], "action": "approve", "comments": "批量审批通过"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/tasks/batch-approve",
             headers=headers,
-            json=batch_data
+            json=batch_data,
         )
 
         if response.status_code == 404:
@@ -198,7 +179,7 @@ class TestApprovalsTasksAPI:
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/tasks/pending?type=purchase_request",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -214,8 +195,7 @@ class TestApprovalsTasksAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/pending?priority=urgent",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/tasks/pending?priority=urgent", headers=headers
         )
 
         if response.status_code == 404:
@@ -230,10 +210,7 @@ class TestApprovalsTasksAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/overdue",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/overdue", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Overdue tasks API not implemented")
@@ -248,8 +225,7 @@ class TestApprovalsTasksAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/1/remind",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/tasks/1/remind", headers=headers
         )
 
         if response.status_code == 404:
@@ -265,8 +241,7 @@ class TestApprovalsTasksAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/tasks/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -276,9 +251,7 @@ class TestApprovalsTasksAPI:
 
     def test_task_unauthorized(self, client: TestClient):
         """测试未授权访问审批任务"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/pending"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/pending")
 
         assert response.status_code in [401, 403], response.text
 
@@ -296,9 +269,7 @@ class TestApprovalsTasksAPI:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/1/reject",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/approvals/tasks/1/reject", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:

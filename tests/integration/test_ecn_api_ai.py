@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 ECN变更管理API集成测试（AI辅助生成）
@@ -12,8 +13,9 @@ ECN变更管理API集成测试（AI辅助生成）
 - 受影响订单管理
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from tests.integration.api_test_helper import APITestHelper
 
@@ -45,9 +47,7 @@ class TestECNCRUD:
             "source_reference": "CR-001",
         }
 
-        response = self.helper.post(
-            "/ecns/", ecn_data, username="admin", password="admin123"
-        )
+        response = self.helper.post("/ecns/", ecn_data, username="admin", password="admin123")
 
         self.helper.print_request("POST", "/ecns/", ecn_data)
         self.helper.print_response(response)
@@ -103,9 +103,7 @@ class TestECNCRUD:
         ecn_id = items[0].get("id")
 
         # 获取ECN详情
-        response = self.helper.get(
-            f"/ecns/{ecn_id}", username="admin", password="admin123"
-        )
+        response = self.helper.get(f"/ecns/{ecn_id}", username="admin", password="admin123")
 
         self.helper.print_request("GET", f"/ecns/{ecn_id}")
         self.helper.print_response(response)
@@ -373,9 +371,7 @@ class TestECNAffectedMaterials:
             password="admin123",
         )
 
-        self.helper.print_request(
-            "POST", f"/ecns/{ecn_id}/affected-materials", material_data
-        )
+        self.helper.print_request("POST", f"/ecns/{ecn_id}/affected-materials", material_data)
         self.helper.print_response(response)
 
         # 断言

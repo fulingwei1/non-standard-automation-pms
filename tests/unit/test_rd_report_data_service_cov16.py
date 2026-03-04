@@ -2,16 +2,18 @@
 """
 第十六批：研发费用报表数据服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.rd_report_data_service import (
         build_auxiliary_ledger_data,
         build_deduction_detail_data,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -76,7 +78,9 @@ class TestBuildAuxiliaryLedgerData:
     def test_with_project_filter(self):
         db = make_db()
         q_mock = MagicMock()
-        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         db.query.return_value = q_mock
         result = build_auxiliary_ledger_data(db, year=2025, project_id=5)
         assert isinstance(result, dict)
@@ -94,7 +98,9 @@ class TestBuildDeductionDetailData:
     def test_empty_deductible_costs(self):
         db = make_db()
         q_mock = MagicMock()
-        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         db.query.return_value = q_mock
         result = build_deduction_detail_data(db, year=2025)
         assert isinstance(result, dict)
@@ -106,7 +112,9 @@ class TestBuildDeductionDetailData:
         project = make_project()
         cost_type = make_cost_type()
         q_mock = MagicMock()
-        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [cost]
+        q_mock.join.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            cost
+        ]
         q_mock.filter.return_value.first.side_effect = [project, cost_type]
         db.query.return_value = q_mock
         result = build_deduction_detail_data(db, year=2025)

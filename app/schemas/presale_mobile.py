@@ -122,9 +122,7 @@ class CreateVisitRecordRequest(BaseModel):
     customer_id: int
     visit_date: date
     visit_type: VisitType
-    attendees: List[Dict[str, str]] = Field(
-        ..., description="参会人员：[{name, title, company}]"
-    )
+    attendees: List[Dict[str, str]] = Field(..., description="参会人员：[{name, title, company}]")
     discussion_points: str
     customer_feedback: Optional[str] = None
     next_steps: Optional[str] = None

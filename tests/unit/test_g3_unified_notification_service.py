@@ -3,18 +3,19 @@
 G3组 - 统一通知服务单元测试（扩展）
 目标文件: app/services/unified_notification_service.py
 """
-import pytest
 from datetime import datetime
 from hashlib import md5
 from unittest.mock import MagicMock, patch
 
-from app.services.unified_notification_service import NotificationService, get_notification_service
+import pytest
+
 from app.services.channel_handlers.base import (
     NotificationChannel,
     NotificationPriority,
     NotificationRequest,
     NotificationResult,
 )
+from app.services.unified_notification_service import NotificationService, get_notification_service
 
 
 def make_service(db=None):
@@ -28,16 +29,28 @@ def make_service(db=None):
         NotificationChannel.SMS: MagicMock(),
         NotificationChannel.WEBHOOK: MagicMock(),
     }
-    with patch("app.services.unified_notification_service.SystemChannelHandler",
-               return_value=mock_handlers[NotificationChannel.SYSTEM]), \
-         patch("app.services.unified_notification_service.EmailChannelHandler",
-               return_value=mock_handlers[NotificationChannel.EMAIL]), \
-         patch("app.services.unified_notification_service.WeChatChannelHandler",
-               return_value=mock_handlers[NotificationChannel.WECHAT]), \
-         patch("app.services.unified_notification_service.SMSChannelHandler",
-               return_value=mock_handlers[NotificationChannel.SMS]), \
-         patch("app.services.unified_notification_service.WebhookChannelHandler",
-               return_value=mock_handlers[NotificationChannel.WEBHOOK]):
+    with (
+        patch(
+            "app.services.unified_notification_service.SystemChannelHandler",
+            return_value=mock_handlers[NotificationChannel.SYSTEM],
+        ),
+        patch(
+            "app.services.unified_notification_service.EmailChannelHandler",
+            return_value=mock_handlers[NotificationChannel.EMAIL],
+        ),
+        patch(
+            "app.services.unified_notification_service.WeChatChannelHandler",
+            return_value=mock_handlers[NotificationChannel.WECHAT],
+        ),
+        patch(
+            "app.services.unified_notification_service.SMSChannelHandler",
+            return_value=mock_handlers[NotificationChannel.SMS],
+        ),
+        patch(
+            "app.services.unified_notification_service.WebhookChannelHandler",
+            return_value=mock_handlers[NotificationChannel.WEBHOOK],
+        ),
+    ):
         svc = NotificationService(db)
     svc._handlers = mock_handlers
     return svc, mock_handlers, db
@@ -232,8 +245,7 @@ class TestSendNotification:
         self.db.query.return_value.filter.return_value.first.return_value = None
 
         reqs = [
-            make_request(recipient_id=i, channels=[NotificationChannel.SYSTEM])
-            for i in range(1, 4)
+            make_request(recipient_id=i, channels=[NotificationChannel.SYSTEM]) for i in range(1, 4)
         ]
         results = self.svc.send_bulk_notification(reqs)
         assert len(results) == 3
@@ -264,10 +276,12 @@ class TestGetNotificationService:
 
     def test_factory_returns_service(self):
         db = MagicMock()
-        with patch("app.services.unified_notification_service.SystemChannelHandler"), \
-             patch("app.services.unified_notification_service.EmailChannelHandler"), \
-             patch("app.services.unified_notification_service.WeChatChannelHandler"), \
-             patch("app.services.unified_notification_service.SMSChannelHandler"), \
-             patch("app.services.unified_notification_service.WebhookChannelHandler"):
+        with (
+            patch("app.services.unified_notification_service.SystemChannelHandler"),
+            patch("app.services.unified_notification_service.EmailChannelHandler"),
+            patch("app.services.unified_notification_service.WeChatChannelHandler"),
+            patch("app.services.unified_notification_service.SMSChannelHandler"),
+            patch("app.services.unified_notification_service.WebhookChannelHandler"),
+        ):
             svc = get_notification_service(db)
         assert isinstance(svc, NotificationService)

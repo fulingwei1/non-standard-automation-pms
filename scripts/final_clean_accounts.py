@@ -6,7 +6,7 @@
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -18,11 +18,11 @@ from app.models.user import User
 def get_test_accounts():
     """获取测试账户列表"""
     test_patterns = [
-        'admin',           # 系统管理员
-        'pwd_test_user',   # 密码测试用户
-        'engineer_test',   # 工程师一号
-        'pm_test',         # 项目经理
-        'pwd_test_'        # 批量密码测试用户前缀
+        "admin",  # 系统管理员
+        "pwd_test_user",  # 密码测试用户
+        "engineer_test",  # 工程师一号
+        "pm_test",  # 项目经理
+        "pwd_test_",  # 批量密码测试用户前缀
     ]
 
     db = next(get_db())
@@ -37,41 +37,42 @@ def get_test_accounts():
     finally:
         db.close()
 
+
 def get_project_manager():
     """获取项目经理谭章斌"""
     db = next(get_db())
     try:
-        return db.query(User).filter(
-            User.username == 'tanzhangbin'
-        ).first()
+        return db.query(User).filter(User.username == "tanzhangbin").first()
     finally:
         db.close()
+
 
 def cleanup_all_related_data(db: Session, user_id: int):
     """使用原生SQL清理用户相关的所有数据"""
     print(f"  🧹 清理用户ID {user_id} 的相关数据...")
 
     tables_to_clean = [
-        ('project_members', 'user_id'),
-        ('task_assignments', 'user_id'),
-        ('timesheets', 'user_id'),
-        ('approval_records', 'requester_id'),
-        ('approval_records', 'approver_id'),
-        ('issues', 'reporter_id'),
-        ('issues', 'assignee_id'),
-        ('uploaded_files', 'uploaded_by'),
-        ('system_logs', 'user_id')
+        ("project_members", "user_id"),
+        ("task_assignments", "user_id"),
+        ("timesheets", "user_id"),
+        ("approval_records", "requester_id"),
+        ("approval_records", "approver_id"),
+        ("issues", "reporter_id"),
+        ("issues", "assignee_id"),
+        ("uploaded_files", "uploaded_by"),
+        ("system_logs", "user_id"),
     ]
 
     for table, column in tables_to_clean:
         try:
-            db.execute(text(f"DELETE FROM {table} WHERE {column} = :user_id"), {'user_id': user_id})
+            db.execute(text(f"DELETE FROM {table} WHERE {column} = :user_id"), {"user_id": user_id})
             print(f"    ✅ 清理 {table}.{column}")
         except Exception as e:
             print(f"    ⚠️ 跳过 {table}: {e}")
 
     db.commit()
     print(f"  ✅ 清理完成用户ID {user_id} 的相关数据")
+
 
 def main():
     """主函数"""
@@ -141,7 +142,7 @@ def main():
         print(f"✅ 达成目标: {'是' if final_users <= 176 else '否'}")
 
         # 再次确认项目经理保护状态
-        pm_check = db.query(User).filter(User.username == 'tanzhangbin').first()
+        pm_check = db.query(User).filter(User.username == "tanzhangbin").first()
         if pm_check:
             print(f"\n🛡️ 项目经理保护状态:")
             print(f"  ✅ 账户保留: {pm_check.username} ({pm_check.real_name})")
@@ -154,6 +155,7 @@ def main():
         db.close()
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

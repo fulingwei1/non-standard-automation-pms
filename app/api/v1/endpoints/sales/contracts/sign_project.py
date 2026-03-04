@@ -19,10 +19,10 @@ from app.models.sales import Contract, ContractDeliverable
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
+from app.utils.db_helpers import get_or_404
 
 from ..utils import validate_g4_contract_to_project
 
-from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
@@ -56,14 +56,21 @@ def sign_contract(
     contract.status = "SIGNED"
 
     # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
-    auto_create_project = getattr(sign_request, 'auto_create_project', True) if hasattr(sign_request, 'auto_create_project') else True
+    auto_create_project = (
+        getattr(sign_request, "auto_create_project", True)
+        if hasattr(sign_request, "auto_create_project")
+        else True
+    )
     created_project = None
 
     if auto_create_project:
         try:
             from app.services.status_transition_service import StatusTransitionService
+
             transition_service = StatusTransitionService(db)
-            created_project = transition_service.handle_contract_signed(contract_id, auto_create_project=True)
+            created_project = transition_service.handle_contract_signed(
+                contract_id, auto_create_project=True
+            )
 
             if created_project:
                 # 更新合同关联的项目ID（如果之前没有）
@@ -73,11 +80,12 @@ def sign_contract(
                 # Issue 1.2: 合同签订后自动触发阶段流转检查（S3→S4）
                 try:
                     auto_transition_result = transition_service.check_auto_stage_transition(
-                        created_project.id,
-                        auto_advance=True  # 自动推进
+                        created_project.id, auto_advance=True  # 自动推进
                     )
                     if auto_transition_result.get("auto_advanced"):
-                        logger.info(f"合同签订后自动推进项目 {created_project.id} 至 {auto_transition_result.get('target_stage')} 阶段")
+                        logger.info(
+                            f"合同签订后自动推进项目 {created_project.id} 至 {auto_transition_result.get('target_stage')} 阶段"
+                        )
                 except Exception as e:
                     # 自动流转失败不影响合同签订，记录日志
                     logger.warning(f"合同签订后自动阶段流转失败：{str(e)}", exc_info=True)
@@ -94,6 +102,7 @@ def sign_contract(
     # 发送合同签订通知
     try:
         from app.services.sales_reminder import notify_contract_signed
+
         notify_contract_signed(db, contract.id)
         db.commit()
     except Exception as e:
@@ -124,19 +133,20 @@ def create_contract_project(
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 获取交付物清单
-    deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    deliverables = (
+        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    )
 
     # G4验证
     if not skip_g4_validation:
         is_valid, errors = validate_g4_contract_to_project(contract, deliverables, db)
         if not is_valid:
-            raise HTTPException(
-                status_code=400,
-                detail=f"G4阶段门验证失败: {', '.join(errors)}"
-            )
+            raise HTTPException(status_code=400, detail=f"G4阶段门验证失败: {', '.join(errors)}")
 
     # 检查项目编码是否已存在
-    existing = db.query(Project).filter(Project.project_code == project_request.project_code).first()
+    existing = (
+        db.query(Project).filter(Project.project_code == project_request.project_code).first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="项目编码已存在")
 
@@ -144,7 +154,10 @@ def create_contract_project(
     lead_id = None
     if contract.opportunity_id:
         from app.models.sales import Opportunity
-        opportunity = db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
+
+        opportunity = (
+            db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
+        )
         if opportunity and hasattr(opportunity, "lead_id"):
             lead_id = opportunity.lead_id
 

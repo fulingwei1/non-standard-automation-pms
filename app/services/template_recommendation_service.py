@@ -24,7 +24,7 @@ class TemplateRecommendationService:
         project_type: Optional[str] = None,
         product_category: Optional[str] = None,
         industry: Optional[str] = None,
-        limit: int = 5
+        limit: int = 5,
     ) -> List[Dict[str, Any]]:
         """
         根据项目信息推荐合适的模板
@@ -38,28 +38,28 @@ class TemplateRecommendationService:
         Returns:
             List[Dict]: 推荐模板列表，包含推荐理由和评分
         """
-        query = self.db.query(ProjectTemplate).filter(
-            ProjectTemplate.is_active
-        )
+        query = self.db.query(ProjectTemplate).filter(ProjectTemplate.is_active)
 
         recommendations = []
 
         # 1. 根据项目类型推荐
         if project_type:
-            type_matches = query.filter(
-                ProjectTemplate.project_type == project_type
-            ).all()
+            type_matches = query.filter(ProjectTemplate.project_type == project_type).all()
             for template in type_matches:
                 score = self._calculate_score(template, project_type, product_category, industry)
-                recommendations.append({
-                    "template_id": template.id,
-                    "template_code": template.template_code,
-                    "template_name": template.template_name,
-                    "description": template.description,
-                    "score": score,
-                    "reasons": self._get_recommendation_reasons(template, project_type, product_category, industry),
-                    "match_type": "project_type"
-                })
+                recommendations.append(
+                    {
+                        "template_id": template.id,
+                        "template_code": template.template_code,
+                        "template_name": template.template_name,
+                        "description": template.description,
+                        "score": score,
+                        "reasons": self._get_recommendation_reasons(
+                            template, project_type, product_category, industry
+                        ),
+                        "match_type": "project_type",
+                    }
+                )
 
         # 2. 根据产品类别推荐
         if product_category:
@@ -69,53 +69,63 @@ class TemplateRecommendationService:
             for template in category_matches:
                 # 避免重复添加
                 if not any(r["template_id"] == template.id for r in recommendations):
-                    score = self._calculate_score(template, project_type, product_category, industry)
-                    recommendations.append({
-                        "template_id": template.id,
-                        "template_code": template.template_code,
-                        "template_name": template.template_name,
-                        "description": template.description,
-                        "score": score,
-                        "reasons": self._get_recommendation_reasons(template, project_type, product_category, industry),
-                        "match_type": "product_category"
-                    })
+                    score = self._calculate_score(
+                        template, project_type, product_category, industry
+                    )
+                    recommendations.append(
+                        {
+                            "template_id": template.id,
+                            "template_code": template.template_code,
+                            "template_name": template.template_name,
+                            "description": template.description,
+                            "score": score,
+                            "reasons": self._get_recommendation_reasons(
+                                template, project_type, product_category, industry
+                            ),
+                            "match_type": "product_category",
+                        }
+                    )
 
         # 3. 根据行业推荐
         if industry:
-            industry_matches = query.filter(
-                ProjectTemplate.industry == industry
-            ).all()
+            industry_matches = query.filter(ProjectTemplate.industry == industry).all()
             for template in industry_matches:
                 # 避免重复添加
                 if not any(r["template_id"] == template.id for r in recommendations):
-                    score = self._calculate_score(template, project_type, product_category, industry)
-                    recommendations.append({
+                    score = self._calculate_score(
+                        template, project_type, product_category, industry
+                    )
+                    recommendations.append(
+                        {
+                            "template_id": template.id,
+                            "template_code": template.template_code,
+                            "template_name": template.template_name,
+                            "description": template.description,
+                            "score": score,
+                            "reasons": self._get_recommendation_reasons(
+                                template, project_type, product_category, industry
+                            ),
+                            "match_type": "industry",
+                        }
+                    )
+
+        # 4. 根据使用频率推荐（如果没有匹配的，推荐使用最多的模板）
+        if not recommendations:
+            popular_templates = query.order_by(desc(ProjectTemplate.usage_count)).limit(limit).all()
+
+            for template in popular_templates:
+                score = self._calculate_score(template, project_type, product_category, industry)
+                recommendations.append(
+                    {
                         "template_id": template.id,
                         "template_code": template.template_code,
                         "template_name": template.template_name,
                         "description": template.description,
                         "score": score,
-                        "reasons": self._get_recommendation_reasons(template, project_type, product_category, industry),
-                        "match_type": "industry"
-                    })
-
-        # 4. 根据使用频率推荐（如果没有匹配的，推荐使用最多的模板）
-        if not recommendations:
-            popular_templates = query.order_by(
-                desc(ProjectTemplate.usage_count)
-            ).limit(limit).all()
-
-            for template in popular_templates:
-                score = self._calculate_score(template, project_type, product_category, industry)
-                recommendations.append({
-                    "template_id": template.id,
-                    "template_code": template.template_code,
-                    "template_name": template.template_name,
-                    "description": template.description,
-                    "score": score,
-                    "reasons": ["使用频率高（推荐热门模板）"],
-                    "match_type": "usage_frequency"
-                })
+                        "reasons": ["使用频率高（推荐热门模板）"],
+                        "match_type": "usage_frequency",
+                    }
+                )
 
         # 按评分排序，返回前limit个
         recommendations.sort(key=lambda x: x["score"], reverse=True)
@@ -126,7 +136,7 @@ class TemplateRecommendationService:
         template: ProjectTemplate,
         project_type: Optional[str],
         product_category: Optional[str],
-        industry: Optional[str]
+        industry: Optional[str],
     ) -> float:
         """
         计算模板推荐评分
@@ -157,6 +167,7 @@ class TemplateRecommendationService:
         if usage_count > 0:
             # 使用对数函数，使分数增长更平滑
             import math
+
             usage_score = min(15.0, math.log10(usage_count + 1) * 5)
             score += usage_score
 
@@ -167,7 +178,7 @@ class TemplateRecommendationService:
         template: ProjectTemplate,
         project_type: Optional[str],
         product_category: Optional[str],
-        industry: Optional[str]
+        industry: Optional[str],
     ) -> List[str]:
         """
         获取推荐理由列表

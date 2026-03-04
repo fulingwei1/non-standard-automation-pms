@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.resource_waste_analysis.waste_calculation import WasteCalculationMixin
 
 
@@ -35,11 +37,18 @@ class TestWasteCalculationMixin:
         mock_worklog.project_id = MagicMock()
         mock_worklog.work_hours = MagicMock()
 
-        p1 = MagicMock(); p1.id = 1; p1.outcome = "WON"; p1.loss_reason = None
-        p2 = MagicMock(); p2.id = 2; p2.outcome = "LOST"; p2.loss_reason = "PRICE"
+        p1 = MagicMock()
+        p1.id = 1
+        p1.outcome = "WON"
+        p1.loss_reason = None
+        p2 = MagicMock()
+        p2.id = 2
+        p2.outcome = "LOST"
+        p2.loss_reason = "PRICE"
         self.db.query.return_value.filter.return_value.all.return_value = [p1, p2]
         self.db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
-            (1, 10.0), (2, 5.0)
+            (1, 10.0),
+            (2, 5.0),
         ]
         result = self.service.calculate_waste_by_period(date(2024, 1, 1), date(2024, 3, 1))
         assert result["total_leads"] == 2

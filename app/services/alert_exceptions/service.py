@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.alert import (
     ExceptionAction,
     ExceptionEscalation,
@@ -17,7 +18,6 @@ from app.models.issue import Issue
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.alert import ExceptionEventCreate
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.utils.db_helpers import get_or_404
 
 
@@ -214,16 +214,18 @@ class AlertExceptionsService:
         action_list = []
         for action in actions:
             action_user = self.db.query(User).filter(User.id == action.created_by).first()
-            action_list.append({
-                "id": action.id,
-                "action_type": action.action_type,
-                "action_content": action.action_content,
-                "old_status": action.old_status,
-                "new_status": action.new_status,
-                "action_user_id": action.created_by,
-                "action_user_name": action_user.real_name if action_user else None,
-                "created_at": action.created_at.isoformat() if action.created_at else None,
-            })
+            action_list.append(
+                {
+                    "id": action.id,
+                    "action_type": action.action_type,
+                    "action_content": action.action_content,
+                    "old_status": action.old_status,
+                    "new_status": action.new_status,
+                    "action_user_id": action.created_by,
+                    "action_user_name": action_user.real_name if action_user else None,
+                    "created_at": action.created_at.isoformat() if action.created_at else None,
+                }
+            )
 
         return {
             "id": event.id,

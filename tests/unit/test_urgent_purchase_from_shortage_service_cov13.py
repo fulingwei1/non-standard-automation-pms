@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十三批 - 缺料预警自动触发紧急采购服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.urgent_purchase_from_shortage_service import (
-        get_material_supplier,
         get_material_price,
+        get_material_supplier,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -93,7 +95,7 @@ class TestGetMaterialPrice:
     def test_price_from_db(self, db):
         """从数据库获取物料价格"""
         mock_material = MagicMock()
-        mock_material.unit_price = Decimal('100.50')
+        mock_material.unit_price = Decimal("100.50")
         db.query.return_value.filter.return_value.first.return_value = mock_material
 
         try:

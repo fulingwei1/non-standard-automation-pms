@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 协作评价统计分析单元测试"""
-import pytest
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.collaboration_rating.statistics")
 
 
 def _make_stats(db=None):
     from app.services.collaboration_rating.statistics import RatingStatistics
+
     return RatingStatistics(db or MagicMock(), MagicMock())
 
 

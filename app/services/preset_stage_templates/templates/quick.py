@@ -49,7 +49,7 @@ QUICK_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": ["ME", "EE"],
                     "deliverables": ["简易技术方案"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "Q2",
@@ -100,7 +100,7 @@ QUICK_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["齐套确认单"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "Q3",
@@ -151,7 +151,7 @@ QUICK_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["质检报告"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "Q4",
@@ -202,7 +202,7 @@ QUICK_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["结项报告"],
                 },
-            ]
+            ],
         },
-    ]
+    ],
 }

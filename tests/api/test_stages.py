@@ -13,8 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_list_response,
+    assert_success_response,
 )
 
 
@@ -25,10 +25,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -51,10 +48,7 @@ class TestStageCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/stages/", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -75,8 +69,7 @@ class TestStageCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/projects/{project['id']}/stages",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/stages/projects/{project['id']}/stages", headers=headers
         )
 
         assert response.status_code == 200
@@ -105,9 +98,7 @@ class TestStageCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/stages/",
-            json=stage_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/stages/", json=stage_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -127,10 +118,7 @@ class TestStageCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取阶段列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/stages/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
@@ -144,10 +132,7 @@ class TestStageCRUD:
 
         stage_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/{stage_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/stages/{stage_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -161,10 +146,7 @@ class TestStageCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/stages/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -176,10 +158,7 @@ class TestStageCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取阶段列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/stages/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
@@ -198,9 +177,7 @@ class TestStageCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/stages/{stage_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/stages/{stage_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -221,10 +198,7 @@ class TestStatusCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/statuses",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/stages/statuses", headers=headers)
 
         if response.status_code == 422:
             pytest.skip("Validation error - endpoint requires additional parameters")
@@ -244,10 +218,7 @@ class TestStatusCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取阶段列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/stages/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
@@ -264,7 +235,7 @@ class TestStatusCRUD:
         try:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/stages/project-stages/{stage_id}/statuses",
-                headers=headers
+                headers=headers,
             )
 
             if response.status_code == 422:
@@ -286,10 +257,7 @@ class TestStatusCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取阶段列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/stages/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/stages/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
@@ -310,9 +278,7 @@ class TestStatusCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/stages/statuses",
-            json=status_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/stages/statuses", json=status_data, headers=headers
         )
 
         if response.status_code == 403:

@@ -2,9 +2,10 @@
 """
 Tests for app/services/project/analytics_service.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.project.analytics_service import ProjectAnalyticsService
@@ -19,19 +20,23 @@ def mock_db():
 
 @pytest.fixture
 def service(mock_db):
-    with patch("app.services.project.analytics_service.ProjectCoreService"), \
-         patch("app.services.project.analytics_service.ProjectExecutionService"), \
-         patch("app.services.project.analytics_service.ProjectResourceService"), \
-         patch("app.services.project.analytics_service.ProjectFinanceService"):
+    with (
+        patch("app.services.project.analytics_service.ProjectCoreService"),
+        patch("app.services.project.analytics_service.ProjectExecutionService"),
+        patch("app.services.project.analytics_service.ProjectResourceService"),
+        patch("app.services.project.analytics_service.ProjectFinanceService"),
+    ):
         return ProjectAnalyticsService(db=mock_db)
 
 
 def test_init_creates_sub_services(mock_db):
     """初始化时应创建所有子服务"""
-    with patch("app.services.project.analytics_service.ProjectCoreService") as MockCore, \
-         patch("app.services.project.analytics_service.ProjectExecutionService") as MockExec, \
-         patch("app.services.project.analytics_service.ProjectResourceService") as MockRes, \
-         patch("app.services.project.analytics_service.ProjectFinanceService") as MockFin:
+    with (
+        patch("app.services.project.analytics_service.ProjectCoreService") as MockCore,
+        patch("app.services.project.analytics_service.ProjectExecutionService") as MockExec,
+        patch("app.services.project.analytics_service.ProjectResourceService") as MockRes,
+        patch("app.services.project.analytics_service.ProjectFinanceService") as MockFin,
+    ):
         svc = ProjectAnalyticsService(db=mock_db)
         MockCore.assert_called_once_with(mock_db)
         assert svc.core_service is not None

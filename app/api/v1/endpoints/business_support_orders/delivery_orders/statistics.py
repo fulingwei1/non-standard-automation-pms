@@ -17,10 +17,13 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/delivery-orders/statistics", response_model=ResponseModel[DeliveryStatistics], summary="获取发货统计")
+@router.get(
+    "/delivery-orders/statistics",
+    response_model=ResponseModel[DeliveryStatistics],
+    summary="获取发货统计",
+)
 async def get_delivery_statistics(
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    db: Session = Depends(deps.get_db), current_user: User = Depends(deps.get_current_user)
 ):
     """
     发货统计（给生产总监看）
@@ -33,34 +36,48 @@ async def get_delivery_statistics(
         week_start = today - timedelta(days=today.weekday())
 
         # 待发货（已审批但未发货）
-        pending_shipments = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status == "approved"
-        ).count()
+        pending_shipments = (
+            db.query(DeliveryOrder).filter(DeliveryOrder.delivery_status == "approved").count()
+        )
 
         # 今日已发
-        shipped_today = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status == "shipped",
-            DeliveryOrder.ship_date >= today_start
-        ).count()
+        shipped_today = (
+            db.query(DeliveryOrder)
+            .filter(
+                DeliveryOrder.delivery_status == "shipped", DeliveryOrder.ship_date >= today_start
+            )
+            .count()
+        )
 
         # 在途订单（已发货但未签收）
-        in_transit = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status == "shipped",
-            DeliveryOrder.receive_date.is_(None)
-        ).count()
+        in_transit = (
+            db.query(DeliveryOrder)
+            .filter(
+                DeliveryOrder.delivery_status == "shipped", DeliveryOrder.receive_date.is_(None)
+            )
+            .count()
+        )
 
         # 本周已送达
-        delivered_this_week = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status == "received",
-            DeliveryOrder.receive_date >= week_start
-        ).count()
+        delivered_this_week = (
+            db.query(DeliveryOrder)
+            .filter(
+                DeliveryOrder.delivery_status == "received",
+                DeliveryOrder.receive_date >= week_start,
+            )
+            .count()
+        )
 
         # 准时发货率（计划发货日期 vs 实际发货日期）
-        all_shipped = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status.in_(["shipped", "received"]),
-            DeliveryOrder.delivery_date.isnot(None),
-            DeliveryOrder.ship_date.isnot(None)
-        ).all()
+        all_shipped = (
+            db.query(DeliveryOrder)
+            .filter(
+                DeliveryOrder.delivery_status.in_(["shipped", "received"]),
+                DeliveryOrder.delivery_date.isnot(None),
+                DeliveryOrder.ship_date.isnot(None),
+            )
+            .all()
+        )
 
         on_time_count = 0
         for order in all_shipped:
@@ -70,17 +87,20 @@ async def get_delivery_statistics(
         on_time_shipping_rate = (on_time_count / len(all_shipped) * 100) if all_shipped else 0.0
 
         # 平均发货时间（从发货到签收）
-        delivered_orders = db.query(DeliveryOrder).filter(
-            DeliveryOrder.delivery_status == "received",
-            DeliveryOrder.ship_date.isnot(None),
-            DeliveryOrder.receive_date.isnot(None)
-        ).all()
+        delivered_orders = (
+            db.query(DeliveryOrder)
+            .filter(
+                DeliveryOrder.delivery_status == "received",
+                DeliveryOrder.ship_date.isnot(None),
+                DeliveryOrder.receive_date.isnot(None),
+            )
+            .all()
+        )
 
         avg_shipping_time = 0.0
         if delivered_orders:
             total_days = sum(
-                (order.receive_date - order.ship_date.date()).days
-                for order in delivered_orders
+                (order.receive_date - order.ship_date.date()).days for order in delivered_orders
             )
             avg_shipping_time = total_days / len(delivered_orders) if delivered_orders else 0.0
 
@@ -98,7 +118,7 @@ async def get_delivery_statistics(
                 on_time_shipping_rate=on_time_shipping_rate,
                 avg_shipping_time=avg_shipping_time,
                 total_orders=total_orders,
-            )
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取发货统计失败: {str(e)}")

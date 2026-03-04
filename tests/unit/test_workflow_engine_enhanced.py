@@ -16,19 +16,19 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
-from app.services.approval_engine.workflow_engine import (
-    ApprovalRouter,
-    WorkflowEngine,
-)
 from app.services.approval_engine.models import (
     ApprovalDecision,
     ApprovalFlowType,
     ApprovalNodeRole,
     ApprovalStatus,
-    LegacyApprovalFlow as ApprovalFlow,
-    LegacyApprovalInstance as ApprovalInstance,
-    LegacyApprovalNode as ApprovalNode,
-    LegacyApprovalRecord as ApprovalRecord,
+)
+from app.services.approval_engine.models import LegacyApprovalFlow as ApprovalFlow
+from app.services.approval_engine.models import LegacyApprovalInstance as ApprovalInstance
+from app.services.approval_engine.models import LegacyApprovalNode as ApprovalNode
+from app.services.approval_engine.models import LegacyApprovalRecord as ApprovalRecord
+from app.services.approval_engine.workflow_engine import (
+    ApprovalRouter,
+    WorkflowEngine,
 )
 
 
@@ -75,8 +75,12 @@ class TestCreateInstance(TestWorkflowEngine):
             version=1,
         )
         flow.nodes = [
-            ApprovalNode(id=1, flow_id=1, node_code="N1", node_name="技术审批", sequence=1, role_type="USER"),
-            ApprovalNode(id=2, flow_id=1, node_code="N2", node_name="财务审批", sequence=2, role_type="USER"),
+            ApprovalNode(
+                id=1, flow_id=1, node_code="N1", node_name="技术审批", sequence=1, role_type="USER"
+            ),
+            ApprovalNode(
+                id=2, flow_id=1, node_code="N2", node_name="财务审批", sequence=2, role_type="USER"
+            ),
         ]
 
         # Mock 数据库查询返回真实对象
@@ -132,7 +136,11 @@ class TestCreateInstance(TestWorkflowEngine):
             is_active=True,
             version=1,
         )
-        flow.nodes = [ApprovalNode(id=1, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER")]
+        flow.nodes = [
+            ApprovalNode(
+                id=1, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER"
+            )
+        ]
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = flow
@@ -163,7 +171,9 @@ class TestGetCurrentNode(TestWorkflowEngine):
             status=ApprovalStatus.IN_PROGRESS.value,
         )
 
-        node = ApprovalNode(id=10, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER")
+        node = ApprovalNode(
+            id=10, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER"
+        )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = node
@@ -183,7 +193,9 @@ class TestGetCurrentNode(TestWorkflowEngine):
             status=ApprovalStatus.PENDING.value,
         )
 
-        node = ApprovalNode(id=1, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER")
+        node = ApprovalNode(
+            id=1, flow_id=1, node_code="N1", node_name="审批", sequence=1, role_type="USER"
+        )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = node
@@ -258,7 +270,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
 
         self.assertTrue(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_simple_true(self, mock_evaluator_class):
         """测试简单条件表达式返回 True"""
         mock_evaluator = MagicMock()
@@ -285,7 +297,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
 
         self.assertTrue(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_simple_false(self, mock_evaluator_class):
         """测试简单条件表达式返回 False"""
         mock_evaluator = MagicMock()
@@ -311,7 +323,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
 
         self.assertFalse(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_parse_error(self, mock_evaluator_class):
         """测试条件解析失败时返回 True（默认允许）"""
         from app.services.approval_engine.condition_parser import ConditionParseError
@@ -339,7 +351,7 @@ class TestEvaluateNodeConditions(TestWorkflowEngine):
 
         self.assertTrue(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_generic_error(self, mock_evaluator_class):
         """测试通用异常时返回 True（默认允许）"""
         mock_evaluator = MagicMock()
@@ -411,9 +423,14 @@ class TestBuildConditionContext(TestWorkflowEngine):
 
         # Mock User 对象
         from app.models.user import User
-        user = User(id=5, username="testuser", real_name="张三", department="技术部",
-        password_hash="test_hash_123"
-    )
+
+        user = User(
+            id=5,
+            username="testuser",
+            real_name="张三",
+            department="技术部",
+            password_hash="test_hash_123",
+        )
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = user
@@ -459,6 +476,7 @@ class TestGetBusinessEntityData(TestWorkflowEngine):
     def test_get_business_entity_data_ecn(self):
         """测试获取 ECN 业务实体数据"""
         from app.models.ecn import Ecn
+
         ecn = Ecn(
             id=100,
             ecn_no="ECN-001",
@@ -540,9 +558,8 @@ class TestSubmitApproval(TestWorkflowEngine):
         )
 
         from app.models.user import User
-        user = User(id=5, username="approver", real_name="审批人",
-        password_hash="test_hash_123"
-    )
+
+        user = User(id=5, username="approver", real_name="审批人", password_hash="test_hash_123")
 
         # Mock 多个查询
         def mock_query_side_effect(model):
@@ -551,7 +568,9 @@ class TestSubmitApproval(TestWorkflowEngine):
                 # 第一次调用：获取当前节点
                 # 第二次调用：查找下一节点
                 mock_q.filter.return_value.first.side_effect = [node, None]
-                mock_q.filter.return_value.filter.return_value.order_by.return_value.first.return_value = next_node
+                mock_q.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                    next_node
+                )
             elif model == User:
                 mock_q.filter.return_value.first.return_value = user
             return mock_q
@@ -588,7 +607,7 @@ class TestSubmitApproval(TestWorkflowEngine):
             )
         self.assertIn("没有可审批的节点", str(context.exception))
 
-    @patch.object(WorkflowEngine, 'evaluate_node_conditions', return_value=False)
+    @patch.object(WorkflowEngine, "evaluate_node_conditions", return_value=False)
     def test_submit_approval_condition_not_met(self, mock_evaluate):
         """测试条件不满足时抛出异常"""
         instance = ApprovalInstance(
@@ -669,7 +688,9 @@ class TestFindNextNode(TestWorkflowEngine):
         )
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = next_node
+        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            next_node
+        )
         self.db.query.return_value = mock_query
 
         found_node = self.engine._find_next_node(current_node)
@@ -689,7 +710,9 @@ class TestFindNextNode(TestWorkflowEngine):
         )
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         self.db.query.return_value = mock_query
 
         found_node = self.engine._find_next_node(current_node)
@@ -721,7 +744,9 @@ class TestFindPreviousNode(TestWorkflowEngine):
         )
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = previous_node
+        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            previous_node
+        )
         self.db.query.return_value = mock_query
 
         found_node = self.engine._find_previous_node(current_node)
@@ -741,7 +766,9 @@ class TestFindPreviousNode(TestWorkflowEngine):
         )
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_query.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         self.db.query.return_value = mock_query
 
         found_node = self.engine._find_previous_node(current_node)
@@ -858,7 +885,7 @@ class TestApprovalFlowResolver(unittest.TestCase):
         # 使用多个不同的 mock_query 对象
         mock_query1 = MagicMock()
         mock_query1.filter.return_value.first.return_value = None
-        
+
         mock_query2 = MagicMock()
         mock_query2.filter.return_value.first.return_value = flow
 

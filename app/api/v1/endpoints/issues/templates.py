@@ -15,12 +15,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.issue import Issue, IssueTemplate
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.issue import (
     IssueFromTemplateRequest,
     IssueResponse,
@@ -31,7 +32,6 @@ from app.schemas.issue import (
 )
 
 from .utils import generate_issue_no
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -100,11 +100,11 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         is_blocking=issue.is_blocking,
         attachments=json.loads(issue.attachments) if issue.attachments else [],
         tags=json.loads(issue.tags) if issue.tags else [],
-        root_cause=getattr(issue, 'root_cause', None),
-        responsible_engineer_id=getattr(issue, 'responsible_engineer_id', None),
-        responsible_engineer_name=getattr(issue, 'responsible_engineer_name', None),
-        estimated_inventory_loss=getattr(issue, 'estimated_inventory_loss', None),
-        estimated_extra_hours=getattr(issue, 'estimated_extra_hours', None),
+        root_cause=getattr(issue, "root_cause", None),
+        responsible_engineer_id=getattr(issue, "responsible_engineer_id", None),
+        responsible_engineer_name=getattr(issue, "responsible_engineer_name", None),
+        estimated_inventory_loss=getattr(issue, "estimated_inventory_loss", None),
+        estimated_extra_hours=getattr(issue, "estimated_extra_hours", None),
         created_at=issue.created_at,
         updated_at=issue.updated_at,
         project_code=issue.project.project_code if issue.project else None,
@@ -130,6 +130,7 @@ def list_issue_templates(
 
     # 应用关键词过滤（模板编码/名称）
     from app.common.query_filters import apply_keyword_filter
+
     query = apply_keyword_filter(query, IssueTemplate, keyword, ["template_code", "template_name"])
 
     # 分类筛选
@@ -144,7 +145,9 @@ def list_issue_templates(
     total = query.count()
 
     # 分页
-    templates = apply_pagination(query.order_by(desc(IssueTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(IssueTemplate.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 构建响应
     items = [_build_template_response(t) for t in templates]
@@ -154,7 +157,7 @@ def list_issue_templates(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -196,9 +199,11 @@ def create_issue_template(
         title_template=template_in.title_template,
         description_template=template_in.description_template,
         solution_template=template_in.solution_template,
-        default_tags=json.dumps(template_in.default_tags, ensure_ascii=False)
-        if template_in.default_tags is not None
-        else None,
+        default_tags=(
+            json.dumps(template_in.default_tags, ensure_ascii=False)
+            if template_in.default_tags is not None
+            else None
+        ),
         default_impact_scope=template_in.default_impact_scope,
         default_is_blocking=template_in.default_is_blocking,
         is_active=template_in.is_active if template_in.is_active is not None else True,
@@ -226,18 +231,22 @@ def update_issue_template(
 
     # 如果更新模板编码，验证唯一性
     update_data = template_in.dict(exclude_unset=True)
-    if 'template_code' in update_data:
-        existing = db.query(IssueTemplate).filter(
-            IssueTemplate.template_code == update_data['template_code'],
-            IssueTemplate.id != template_id
-        ).first()
+    if "template_code" in update_data:
+        existing = (
+            db.query(IssueTemplate)
+            .filter(
+                IssueTemplate.template_code == update_data["template_code"],
+                IssueTemplate.id != template_id,
+            )
+            .first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="模板编码已存在")
 
     # 处理JSON字段
-    if 'default_tags' in update_data:
-        tags_value = update_data['default_tags']
-        update_data['default_tags'] = (
+    if "default_tags" in update_data:
+        tags_value = update_data["default_tags"]
+        update_data["default_tags"] = (
             json.dumps(tags_value, ensure_ascii=False) if tags_value is not None else None
         )
 
@@ -267,13 +276,12 @@ def delete_issue_template(
 
     db.commit()
 
-    return ResponseModel(
-        code=200,
-        message="问题模板已删除"
-    )
+    return ResponseModel(code=200, message="问题模板已删除")
 
 
-@router.post("/{template_id}/create-issue", response_model=IssueResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{template_id}/create-issue", response_model=IssueResponse, status_code=status.HTTP_201_CREATED
+)
 def create_issue_from_template(
     template_id: int,
     issue_in: IssueFromTemplateRequest,
@@ -292,35 +300,35 @@ def create_issue_from_template(
     # 从模板获取默认值
     category = template.category
     issue_type = template.issue_type
-    severity = issue_in.severity or template.default_severity or 'MINOR'
-    priority = issue_in.priority or template.default_priority or 'MEDIUM'
+    severity = issue_in.severity or template.default_severity or "MINOR"
+    priority = issue_in.priority or template.default_priority or "MEDIUM"
     impact_level = template.default_impact_level
     is_blocking = template.default_is_blocking
 
     # 处理模板变量替换
     title = issue_in.title or template.title_template
-    description = issue_in.description or template.description_template or ''
+    description = issue_in.description or template.description_template or ""
 
     # 如果有关联对象，获取变量值进行替换
     if issue_in.project_id:
         project = db.query(Project).filter(Project.id == issue_in.project_id).first()
         if project:
-            title = title.replace('{project_name}', project.project_name or '')
-            title = title.replace('{project_code}', project.project_code or '')
-            description = description.replace('{project_name}', project.project_name or '')
-            description = description.replace('{project_code}', project.project_code or '')
+            title = title.replace("{project_name}", project.project_name or "")
+            title = title.replace("{project_code}", project.project_code or "")
+            description = description.replace("{project_name}", project.project_name or "")
+            description = description.replace("{project_code}", project.project_code or "")
 
     if issue_in.machine_id:
         machine = db.query(Machine).filter(Machine.id == issue_in.machine_id).first()
         if machine:
-            title = title.replace('{machine_name}', machine.machine_name or '')
-            title = title.replace('{machine_code}', machine.machine_code or '')
-            description = description.replace('{machine_name}', machine.machine_name or '')
-            description = description.replace('{machine_code}', machine.machine_code or '')
+            title = title.replace("{machine_name}", machine.machine_name or "")
+            title = title.replace("{machine_code}", machine.machine_code or "")
+            description = description.replace("{machine_name}", machine.machine_name or "")
+            description = description.replace("{machine_code}", machine.machine_code or "")
 
     # 替换其他常见变量
-    title = title.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
-    description = description.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
+    title = title.replace("{date}", datetime.now().strftime("%Y-%m-%d"))
+    description = description.replace("{date}", datetime.now().strftime("%Y-%m-%d"))
 
     # 生成问题编号
     issue_no = generate_issue_no(db)
@@ -352,7 +360,7 @@ def create_issue_from_template(
         assignee_id=issue_in.assignee_id,
         assignee_name=assignee_name,
         due_date=issue_in.due_date,
-        status='OPEN',
+        status="OPEN",
         impact_scope=template.default_impact_scope,
         impact_level=impact_level,
         is_blocking=is_blocking,

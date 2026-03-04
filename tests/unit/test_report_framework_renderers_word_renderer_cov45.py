@@ -3,14 +3,15 @@
 第四十五批覆盖：report_framework/renderers/word_renderer.py
 """
 
-import pytest
 import os
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.renderers.word_renderer")
 
+from app.services.report_framework.renderers.base import RenderError, ReportResult
 from app.services.report_framework.renderers.word_renderer import WordRenderer
-from app.services.report_framework.renderers.base import ReportResult, RenderError
 
 
 @pytest.fixture

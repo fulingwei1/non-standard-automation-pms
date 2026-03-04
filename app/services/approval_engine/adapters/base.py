@@ -211,34 +211,35 @@ class ApprovalAdapter(ABC):
             部门负责人的用户ID，如果找不到返回None
         """
         from sqlalchemy import or_
+
         from app.models.organization import Department, Employee
         from app.models.user import User
 
         # 查找部门
-        dept = self.db.query(Department).filter(
-            Department.dept_name == dept_name,
-            Department.is_active
-        ).first()
+        dept = (
+            self.db.query(Department)
+            .filter(Department.dept_name == dept_name, Department.is_active)
+            .first()
+        )
 
         if not dept or not dept.manager_id:
             return None
 
         # 查找部门经理（Employee）
-        manager = self.db.query(Employee).filter(
-            Employee.id == dept.manager_id
-        ).first()
+        manager = self.db.query(Employee).filter(Employee.id == dept.manager_id).first()
 
         if not manager:
             return None
 
         # 通过员工信息查找用户
-        user = self.db.query(User).filter(
-            or_(
-                User.real_name == manager.name,
-                User.username == manager.employee_code
-            ),
-            User.is_active
-        ).first()
+        user = (
+            self.db.query(User)
+            .filter(
+                or_(User.real_name == manager.name, User.username == manager.employee_code),
+                User.is_active,
+            )
+            .first()
+        )
 
         return user.id if user else None
 
@@ -253,25 +254,25 @@ class ApprovalAdapter(ABC):
             部门负责人用户ID列表（去重）
         """
         from sqlalchemy import or_
+
         from app.models.organization import Department, Employee
         from app.models.user import User
 
         user_ids = []
 
         # 批量查询部门
-        depts = self.db.query(Department).filter(
-            Department.dept_code.in_(dept_codes),
-            Department.is_active
-        ).all()
+        depts = (
+            self.db.query(Department)
+            .filter(Department.dept_code.in_(dept_codes), Department.is_active)
+            .all()
+        )
 
         manager_ids = [d.manager_id for d in depts if d.manager_id]
         if not manager_ids:
             return []
 
         # 批量查询员工
-        managers = self.db.query(Employee).filter(
-            Employee.id.in_(manager_ids)
-        ).all()
+        managers = self.db.query(Employee).filter(Employee.id.in_(manager_ids)).all()
 
         if not managers:
             return []
@@ -283,10 +284,7 @@ class ApprovalAdapter(ABC):
             name_conditions.append(User.username == manager.employee_code)
 
         # 批量查询用户
-        users = self.db.query(User).filter(
-            or_(*name_conditions),
-            User.is_active
-        ).all()
+        users = self.db.query(User).filter(or_(*name_conditions), User.is_active).all()
 
         user_ids = [u.id for u in users]
         return list(set(user_ids))
@@ -310,16 +308,15 @@ class ApprovalAdapter(ABC):
             return None
 
         # 优先从项目的 sales_id 字段获取
-        if hasattr(project, 'sales_id') and project.sales_id:
+        if hasattr(project, "sales_id") and project.sales_id:
             return project.sales_id
 
         # 其次尝试从关联的销售合同获取
-        if hasattr(project, 'contract_id') and project.contract_id:
+        if hasattr(project, "contract_id") and project.contract_id:
             from app.models.sales.contracts import Contract
-            contract = self.db.query(Contract).filter(
-                Contract.id == project.contract_id
-            ).first()
-            if contract and hasattr(contract, 'sales_id') and contract.sales_id:
+
+            contract = self.db.query(Contract).filter(Contract.id == project.contract_id).first()
+            if contract and hasattr(contract, "sales_id") and contract.sales_id:
                 return contract.sales_id
 
         return None

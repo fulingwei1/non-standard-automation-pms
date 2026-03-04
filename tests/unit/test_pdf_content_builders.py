@@ -5,12 +5,12 @@ I2组 - PDF内容构建工具 单元测试
 """
 from datetime import datetime
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_styles():
     """创建伪 styles 字典（使用 MagicMock 避免真实 reportlab 样式问题）"""
@@ -69,18 +69,20 @@ def _patch_platypus():
 
 # ─── build_basic_info_section ─────────────────────────────────────────────────
 
+
 class TestBuildBasicInfoSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_basic_info_section
+
             result = build_basic_info_section(
-                _make_order(), _make_project(), _make_machine(),
-                "RPT-001", 1, _make_styles()
+                _make_order(), _make_project(), _make_machine(), "RPT-001", 1, _make_styles()
             )
         assert result == []
 
     def test_returns_story_when_available(self):
-        from app.services.pdf_content_builders import build_basic_info_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_basic_info_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -91,16 +93,19 @@ class TestBuildBasicInfoSection:
 
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_basic_info_section(order, project, machine, "RPT-001", 1, styles)
             assert isinstance(result, list)
             assert len(result) > 0
 
     def test_acceptance_type_mapping(self):
         """各验收类型都能正确映射中文，不崩溃"""
-        from app.services.pdf_content_builders import build_basic_info_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_basic_info_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -108,27 +113,35 @@ class TestBuildBasicInfoSection:
 
         for atype in ["FAT", "SAT", "FINAL", "UNKNOWN"]:
             order = _make_order(acceptance_type=atype)
-            with patch("reportlab.platypus.Paragraph", mock_para), \
-                 patch("reportlab.platypus.Spacer", mock_spacer), \
-                 patch("reportlab.platypus.Table", mock_table):
+            with (
+                patch("reportlab.platypus.Paragraph", mock_para),
+                patch("reportlab.platypus.Spacer", mock_spacer),
+                patch("reportlab.platypus.Table", mock_table),
+            ):
                 # 不抛出异常即可
-                build_basic_info_section(order, _make_project(), _make_machine(), "R001", 1, _make_styles())
+                build_basic_info_section(
+                    order, _make_project(), _make_machine(), "R001", 1, _make_styles()
+                )
 
     def test_none_project_and_machine(self):
-        from app.services.pdf_content_builders import build_basic_info_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_basic_info_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             # project=None, machine=None 不应崩溃
             build_basic_info_section(_make_order(), None, None, "R001", 1, _make_styles())
 
 
 # ─── build_statistics_section ─────────────────────────────────────────────────
+
 
 class TestBuildStatisticsSection:
     def _make_db(self, items):
@@ -148,25 +161,30 @@ class TestBuildStatisticsSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_statistics_section
+
             result = build_statistics_section(_make_order(), MagicMock(), _make_styles())
         assert result == []
 
     def test_empty_items(self):
-        from app.services.pdf_content_builders import build_statistics_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_statistics_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         db = self._make_db([])
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_statistics_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_with_items(self):
-        from app.services.pdf_content_builders import build_statistics_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_statistics_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -179,15 +197,18 @@ class TestBuildStatisticsSection:
         db = self._make_db(items)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_statistics_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_pass_rate_calculation(self):
         """验证通过率计算逻辑正确"""
-        from app.services.pdf_content_builders import build_statistics_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_statistics_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -202,76 +223,95 @@ class TestBuildStatisticsSection:
         db = self._make_db(items)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_statistics_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
 
 # ─── build_conclusion_section ────────────────────────────────────────────────
 
+
 class TestBuildConclusionSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_conclusion_section
+
             result = build_conclusion_section(_make_order(), _make_styles())
         assert result == []
 
     def test_passed_conclusion(self):
-        from app.services.pdf_content_builders import build_conclusion_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_conclusion_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         order = _make_order(overall_result="PASSED", conclusion="全部通过")
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_conclusion_section(order, _make_styles())
             assert isinstance(result, list)
 
     def test_failed_conclusion(self):
-        from app.services.pdf_content_builders import build_conclusion_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_conclusion_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         order = _make_order(overall_result="FAILED", conclusion="验收不通过")
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_conclusion_section(order, _make_styles())
             assert isinstance(result, list)
 
     def test_conditional_with_conditions(self):
-        from app.services.pdf_content_builders import build_conclusion_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_conclusion_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
-        order = _make_order(overall_result="CONDITIONAL", conclusion="有条件通过", conditions="需整改三项")
+        order = _make_order(
+            overall_result="CONDITIONAL", conclusion="有条件通过", conditions="需整改三项"
+        )
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_conclusion_section(order, _make_styles())
             assert isinstance(result, list)
 
     def test_unknown_result(self):
-        from app.services.pdf_content_builders import build_conclusion_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_conclusion_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         order = _make_order(overall_result="UNKNOWN")
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_conclusion_section(order, _make_styles())
             assert isinstance(result, list)
 
 
 # ─── build_issues_section ─────────────────────────────────────────────────────
+
 
 class TestBuildIssuesSection:
     def _make_issue(self, issue_no, title, severity, status, is_blocking):
@@ -291,11 +331,13 @@ class TestBuildIssuesSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_issues_section
+
             result = build_issues_section(_make_order(), MagicMock(), _make_styles())
         assert result == []
 
     def test_no_issues(self):
-        from app.services.pdf_content_builders import build_issues_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_issues_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -305,7 +347,8 @@ class TestBuildIssuesSection:
         assert result == []
 
     def test_with_issues(self):
-        from app.services.pdf_content_builders import build_issues_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_issues_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -316,15 +359,18 @@ class TestBuildIssuesSection:
         db = self._make_db(issues)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_issues_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_title_truncation(self):
         """超过20字的标题应被截断"""
-        from app.services.pdf_content_builders import build_issues_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_issues_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -333,33 +379,38 @@ class TestBuildIssuesSection:
         db = self._make_db(issues)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_issues_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_more_than_10_issues_shows_note(self):
         """超过10条问题时显示省略提示"""
-        from app.services.pdf_content_builders import build_issues_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_issues_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         issues = [
-            self._make_issue(f"ISS-{i:03d}", f"问题{i}", "MINOR", "OPEN", False)
-            for i in range(12)
+            self._make_issue(f"ISS-{i:03d}", f"问题{i}", "MINOR", "OPEN", False) for i in range(12)
         ]
         db = self._make_db(issues)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_issues_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
 
 # ─── build_signatures_section ────────────────────────────────────────────────
+
 
 class TestBuildSignaturesSection:
     def _make_sig(self, stype, name, role, company, signed_at):
@@ -379,24 +430,29 @@ class TestBuildSignaturesSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_signatures_section
+
             result = build_signatures_section(_make_order(), MagicMock(), _make_styles())
         assert result == []
 
     def test_no_signatures(self):
-        from app.services.pdf_content_builders import build_signatures_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_signatures_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
         db = self._make_db([])
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_signatures_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_with_signatures(self):
-        from app.services.pdf_content_builders import build_signatures_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_signatures_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -407,15 +463,18 @@ class TestBuildSignaturesSection:
         db = self._make_db(sigs)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_signatures_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
     def test_signer_type_mapping(self):
         """所有签字人类型都能映射"""
-        from app.services.pdf_content_builders import build_signatures_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_signatures_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -428,24 +487,29 @@ class TestBuildSignaturesSection:
         db = self._make_db(sigs)
         mock_para, mock_spacer, mock_table = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer), \
-             patch("reportlab.platypus.Table", mock_table):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+            patch("reportlab.platypus.Table", mock_table),
+        ):
             result = build_signatures_section(_make_order(), db, _make_styles())
             assert isinstance(result, list)
 
 
 # ─── build_footer_section ─────────────────────────────────────────────────────
 
+
 class TestBuildFooterSection:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.pdf_content_builders.REPORTLAB_AVAILABLE", False):
             from app.services.pdf_content_builders import build_footer_section
+
             result = build_footer_section(MagicMock(), _make_styles())
         assert result == []
 
     def test_with_real_name(self):
-        from app.services.pdf_content_builders import build_footer_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_footer_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -455,13 +519,16 @@ class TestBuildFooterSection:
 
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_footer_section(user, _make_styles())
             assert isinstance(result, list)
 
     def test_fallback_to_username(self):
-        from app.services.pdf_content_builders import build_footer_section, REPORTLAB_AVAILABLE
+        from app.services.pdf_content_builders import REPORTLAB_AVAILABLE, build_footer_section
+
         if not REPORTLAB_AVAILABLE:
             pytest.skip("reportlab 未安装")
 
@@ -471,7 +538,9 @@ class TestBuildFooterSection:
 
         mock_para, mock_spacer, _ = _patch_platypus()
 
-        with patch("reportlab.platypus.Paragraph", mock_para), \
-             patch("reportlab.platypus.Spacer", mock_spacer):
+        with (
+            patch("reportlab.platypus.Paragraph", mock_para),
+            patch("reportlab.platypus.Spacer", mock_spacer),
+        ):
             result = build_footer_section(user, _make_styles())
             assert isinstance(result, list)

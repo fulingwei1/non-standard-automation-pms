@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - presale_ai_knowledge_service"""
-import pytest
 from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 
 try:
     from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -30,6 +32,7 @@ class TestCreateCase:
         svc, db = _make_service()
         try:
             from app.schemas.presale_ai_knowledge import KnowledgeCaseCreate
+
             case_data = KnowledgeCaseCreate(
                 case_name="Test Case",
                 industry="manufacturing",

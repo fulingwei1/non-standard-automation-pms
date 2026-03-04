@@ -336,9 +336,7 @@ class APITestHelper:
         return response.get("data")
 
     @staticmethod
-    def assert_status(
-        response: Dict[str, Any], expected_status: int, message: str = ""
-    ) -> None:
+    def assert_status(response: Dict[str, Any], expected_status: int, message: str = "") -> None:
         """
         断言特定状态码
 
@@ -383,9 +381,7 @@ class APITestHelper:
             text = ""
             if isinstance(data_or_response, dict):
                 text = data_or_response.get("text", "无响应数据")
-            raise AssertionError(
-                f"{message} - 响应数据为空\n响应: {text}"
-            )
+            raise AssertionError(f"{message} - 响应数据为空\n响应: {text}")
 
     @staticmethod
     def assert_field_equals(
@@ -500,9 +496,7 @@ class APITestHelper:
         """打印分隔线"""
         print(char * length)
 
-    def print_request(
-        self, method: str, endpoint: str, data: Optional[Dict] = None
-    ) -> None:
+    def print_request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> None:
         """打印请求信息"""
         print()
         self.print_separator()

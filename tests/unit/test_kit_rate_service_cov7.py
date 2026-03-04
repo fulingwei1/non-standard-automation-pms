@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - kit_rate/kit_rate_service"""
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.kit_rate.kit_rate_service import KitRateService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -30,6 +32,7 @@ class TestGetProject:
         svc, db = _make_service()
         with patch("app.services.kit_rate.kit_rate_service.get_or_404") as mock_404:
             from fastapi import HTTPException
+
             mock_404.side_effect = HTTPException(status_code=404, detail="项目不存在")
             with pytest.raises(HTTPException):
                 svc._get_project(999)
@@ -40,6 +43,7 @@ class TestListBomItemsForMachine:
         svc, db = _make_service()
         with patch("app.services.kit_rate.kit_rate_service.get_or_404") as mock_404:
             from fastapi import HTTPException
+
             mock_404.side_effect = HTTPException(status_code=404, detail="机台不存在")
             with pytest.raises(HTTPException):
                 svc.list_bom_items_for_machine(999)
@@ -95,11 +99,13 @@ class TestCalculateKitRate:
 class TestGetMachineKitRate:
     def test_returns_dict(self):
         svc, db = _make_service()
-        svc.calculate_kit_rate = MagicMock(return_value={
-            "kit_rate": Decimal("0.85"),
-            "total_items": 10,
-            "ready_items": 8,
-        })
+        svc.calculate_kit_rate = MagicMock(
+            return_value={
+                "kit_rate": Decimal("0.85"),
+                "total_items": 10,
+                "ready_items": 8,
+            }
+        )
         with patch("app.services.kit_rate.kit_rate_service.get_or_404", return_value=MagicMock()):
             try:
                 result = svc.get_machine_kit_rate(machine_id=1, calculate_by="quantity")

@@ -193,7 +193,10 @@ def cleanup_old_data(conn: sqlite3.Connection) -> None:
         ")",
         (like,),
     )
-    cur.execute("DELETE FROM quote_versions WHERE quote_id IN (SELECT id FROM quotes WHERE quote_code LIKE ?)", (like,))
+    cur.execute(
+        "DELETE FROM quote_versions WHERE quote_id IN (SELECT id FROM quotes WHERE quote_code LIKE ?)",
+        (like,),
+    )
     cur.execute(
         "DELETE FROM purchase_order_items WHERE order_id IN (SELECT id FROM purchase_orders WHERE order_no LIKE ?)",
         (like,),
@@ -221,9 +224,14 @@ def cleanup_old_data(conn: sqlite3.Connection) -> None:
         (like, like),
     )
 
-    cur.execute("DELETE FROM team_performance_snapshots WHERE period_value = ?", (f"{PREFIX}-2026Q1",))
+    cur.execute(
+        "DELETE FROM team_performance_snapshots WHERE period_value = ?", (f"{PREFIX}-2026Q1",)
+    )
     cur.execute("DELETE FROM sales_targets_v2 WHERE description LIKE ?", (desc_like,))
-    cur.execute("DELETE FROM sales_team_members WHERE team_id IN (SELECT id FROM sales_teams WHERE team_code LIKE ?)", (like,))
+    cur.execute(
+        "DELETE FROM sales_team_members WHERE team_id IN (SELECT id FROM sales_teams WHERE team_code LIKE ?)",
+        (like,),
+    )
 
     cur.execute("DELETE FROM service_tickets WHERE ticket_no LIKE ?", (like,))
     cur.execute("DELETE FROM work_order WHERE work_order_no LIKE ?", (like,))
@@ -312,7 +320,11 @@ def seed_sales_team(conn: sqlite3.Connection) -> dict:
         username = f"{PREFIX.lower()}_sales_{idx:03d}"
         group = member["group"]
         dept_id = sales_dept_id if group is None else departments[group]
-        dept_name = "销售中心" if group is None else GROUPS[[g["code"] for g in GROUPS].index(group)]["dept"]
+        dept_name = (
+            "销售中心"
+            if group is None
+            else GROUPS[[g["code"] for g in GROUPS].index(group)]["dept"]
+        )
 
         cur.execute(
             """
@@ -475,7 +487,9 @@ def seed_customers(conn: sqlite3.Connection, sales_ctx: dict, rng: random.Random
         full_name, short_name, industry, city, level, scale = CUSTOMER_CATALOG[idx]
         customer_code = f"{PREFIX}-CUST-{idx + 1:03d}"
         owner_id = owners[idx % len(owners)]
-        created_at = ts(datetime.combine(BASE_DATE - timedelta(days=560 - idx * 3), datetime.min.time()))
+        created_at = ts(
+            datetime.combine(BASE_DATE - timedelta(days=560 - idx * 3), datetime.min.time())
+        )
         annual_revenue = round(rng.uniform(2.0, 120.0) * 100_000_000, 2)
 
         cur.execute(
@@ -586,13 +600,25 @@ def seed_leads_and_assessments(
                 f"{product}产线扩建，计划新增{rng.randint(2, 8)}个测试工位，目标CT {rng.randint(18, 55)}秒",
                 owner_id,
                 status,
-                ts(datetime.combine(created_day + timedelta(days=rng.randint(5, 25)), datetime.min.time())),
+                ts(
+                    datetime.combine(
+                        created_day + timedelta(days=rng.randint(5, 25)), datetime.min.time()
+                    )
+                ),
                 "ASSESSMENT_COMPLETED" if status in {"CONVERTED", "QUALIFIED"} else "PENDING",
                 priority,
-                rng.randint(70, 95) if status in {"CONVERTED", "QUALIFIED"} else rng.randint(30, 70),
+                (
+                    rng.randint(70, 95)
+                    if status in {"CONVERTED", "QUALIFIED"}
+                    else rng.randint(30, 70)
+                ),
                 "H1" if priority >= 80 else ("H2" if priority >= 60 else "H3"),
                 priority,
-                ts(datetime.combine(created_day + timedelta(days=rng.randint(1, 12)), datetime.min.time())),
+                ts(
+                    datetime.combine(
+                        created_day + timedelta(days=rng.randint(1, 12)), datetime.min.time()
+                    )
+                ),
                 ts(datetime.combine(created_day, datetime.min.time())),
                 ts(datetime.combine(created_day, datetime.min.time())),
             ),
@@ -619,7 +645,9 @@ def seed_leads_and_assessments(
     for idx, lead in enumerate(leads):
         if lead["status"] in {"NEW", "LOST"}:
             continue
-        created_time = ts(datetime.combine(lead["created_date"] + timedelta(days=8), datetime.min.time()))
+        created_time = ts(
+            datetime.combine(lead["created_date"] + timedelta(days=8), datetime.min.time())
+        )
         maturity = rng.randint(2, 5) if lead["status"] == "CONVERTED" else rng.randint(1, 4)
         cur.execute(
             """
@@ -701,7 +729,9 @@ def seed_leads_and_assessments(
 
     converted_leads = sorted(converted_leads, key=lambda item: item["id"])
     for idx, lead in enumerate(converted_leads):
-        lead["planned_amount"] = won_amounts[idx] if idx < len(won_amounts) else rng.randint(2_000_000, 8_000_000)
+        lead["planned_amount"] = (
+            won_amounts[idx] if idx < len(won_amounts) else rng.randint(2_000_000, 8_000_000)
+        )
 
     conn.commit()
     return {
@@ -711,7 +741,9 @@ def seed_leads_and_assessments(
     }
 
 
-def seed_opportunities(conn: sqlite3.Connection, leads_ctx: dict, sales_ctx: dict, rng: random.Random) -> list[dict]:
+def seed_opportunities(
+    conn: sqlite3.Connection, leads_ctx: dict, sales_ctx: dict, rng: random.Random
+) -> list[dict]:
     cur = conn.cursor()
     converted_leads = leads_ctx["converted_leads"]
     opportunities = []
@@ -809,7 +841,10 @@ def seed_opportunities(conn: sqlite3.Connection, leads_ctx: dict, sales_ctx: dic
                 "场地净高3.2m，温湿度可控，单班换型<30min",
                 "GRR<10%，CPK>=1.33，误判率<0.3%",
                 "急停/光栅/门禁/ESD全闭环",
-                json.dumps({"line_speed": rng.randint(40, 120), "uph": rng.randint(80, 420)}, ensure_ascii=False),
+                json.dumps(
+                    {"line_speed": rng.randint(40, 120), "uph": rng.randint(80, 420)},
+                    ensure_ascii=False,
+                ),
                 ts(datetime.combine(created_day, datetime.min.time())),
                 ts(datetime.combine(created_day, datetime.min.time())),
             ),
@@ -837,7 +872,10 @@ def seed_opportunities(conn: sqlite3.Connection, leads_ctx: dict, sales_ctx: dic
                     ensure_ascii=False,
                 ),
                 "GO" if stage != "LOST" else "NO_GO",
-                json.dumps([rng.choice(["交付窗口紧", "需锁定关键料号", "需求变更频繁"])], ensure_ascii=False),
+                json.dumps(
+                    [rng.choice(["交付窗口紧", "需锁定关键料号", "需求变更频繁"])],
+                    ensure_ascii=False,
+                ),
                 json.dumps(["项目里程碑需纳入合同条款"], ensure_ascii=False),
                 ts(datetime.combine(created_day + timedelta(days=7), datetime.min.time())),
                 ts(datetime.combine(created_day + timedelta(days=7), datetime.min.time())),
@@ -845,7 +883,10 @@ def seed_opportunities(conn: sqlite3.Connection, leads_ctx: dict, sales_ctx: dic
             ),
         )
         assess_id = cur.lastrowid
-        cur.execute("UPDATE opportunities SET assessment_id=?, updated_at=? WHERE id=?", (assess_id, ts(), opp_id))
+        cur.execute(
+            "UPDATE opportunities SET assessment_id=?, updated_at=? WHERE id=?",
+            (assess_id, ts(), opp_id),
+        )
 
         opportunities.append(
             {
@@ -938,9 +979,11 @@ def seed_quotes(conn: sqlite3.Connection, opportunities: list[dict], rng: random
                 dstr(created_day + timedelta(days=rng.randint(100, 280))),
                 opp["owner_id"],
                 opp["owner_id"] if status in {"APPROVED", "ACCEPTED"} else None,
-                ts(datetime.combine(created_day + timedelta(days=2), datetime.min.time()))
-                if status in {"APPROVED", "ACCEPTED"}
-                else None,
+                (
+                    ts(datetime.combine(created_day + timedelta(days=2), datetime.min.time()))
+                    if status in {"APPROVED", "ACCEPTED"}
+                    else None
+                ),
                 1 if gross_margin < 38 else 0,
                 ts(datetime.combine(created_day, datetime.min.time())),
                 ts(datetime.combine(created_day, datetime.min.time())),
@@ -975,7 +1018,10 @@ def seed_quotes(conn: sqlite3.Connection, opportunities: list[dict], rng: random
                 ),
             )
 
-        cur.execute("UPDATE quotes SET current_version_id=?, updated_at=? WHERE id=?", (version_id, ts(), quote_id))
+        cur.execute(
+            "UPDATE quotes SET current_version_id=?, updated_at=? WHERE id=?",
+            (version_id, ts(), quote_id),
+        )
 
         record = {
             "id": quote_id,
@@ -1072,7 +1118,9 @@ def seed_contracts(
     return contracts
 
 
-def seed_projects(conn: sqlite3.Connection, contracts: list[dict], sales_ctx: dict, rng: random.Random) -> dict:
+def seed_projects(
+    conn: sqlite3.Connection, contracts: list[dict], sales_ctx: dict, rng: random.Random
+) -> dict:
     cur = conn.cursor()
     manager_ids = list(sales_ctx["group_manager"].values())
     projects = []
@@ -1206,7 +1254,9 @@ def seed_projects(conn: sqlite3.Connection, contracts: list[dict], sales_ctx: di
             ("6.0", "SAT导入与终验"),
         ]
         for t_idx, (wbs, task_name) in enumerate(task_templates, start=1):
-            part_start = start_day + timedelta(days=int((t_idx - 1) * (end_day - start_day).days / 6))
+            part_start = start_day + timedelta(
+                days=int((t_idx - 1) * (end_day - start_day).days / 6)
+            )
             part_end = part_start + timedelta(days=max(12, int((end_day - start_day).days / 8)))
             threshold = int((t_idx / len(task_templates)) * 100)
             if progress >= threshold + 15:
@@ -1479,7 +1529,16 @@ def seed_production(
         )
 
     work_orders = []
-    task_pool = ["机械装配", "电气布线", "软件烧录", "ICT标定", "FCT联调", "EOL验证", "老化测试", "视觉检测调优"]
+    task_pool = [
+        "机械装配",
+        "电气布线",
+        "软件烧录",
+        "ICT标定",
+        "FCT联调",
+        "EOL验证",
+        "老化测试",
+        "视觉检测调优",
+    ]
     for idx in range(COUNTS["work_orders"]):
         plan = production_plans[idx % len(production_plans)]
         wo_no = f"{PREFIX}-WO-{idx + 1:04d}"
@@ -1601,8 +1660,16 @@ def seed_after_sales(
                 "响应及时，问题定位清晰" if status == "CLOSED" else "待问题彻底解决",
                 json.dumps(
                     [
-                        {"time": ts(datetime.combine(reported, datetime.min.time())), "event": "客户报修"},
-                        {"time": ts(datetime.combine(reported + timedelta(hours=2), datetime.min.time())), "event": "工程师受理"},
+                        {
+                            "time": ts(datetime.combine(reported, datetime.min.time())),
+                            "event": "客户报修",
+                        },
+                        {
+                            "time": ts(
+                                datetime.combine(reported + timedelta(hours=2), datetime.min.time())
+                            ),
+                            "event": "工程师受理",
+                        },
                     ],
                     ensure_ascii=False,
                 ),
@@ -1640,7 +1707,11 @@ def seed_after_sales(
                 dstr(survey_day + timedelta(days=2)),
                 score,
                 json.dumps(
-                    {"响应速度": score, "方案有效性": round(score - 0.1, 1), "交付质量": round(score - 0.2, 1)},
+                    {
+                        "响应速度": score,
+                        "方案有效性": round(score - 0.1, 1),
+                        "交付质量": round(score - 0.2, 1),
+                    },
                     ensure_ascii=False,
                 ),
                 "设备稳定，售后响应快，问题闭环及时。",
@@ -1839,13 +1910,21 @@ def seed_targets_and_snapshots(
 
 
 def fetch_count(cur: sqlite3.Cursor, table: str, code_field: str) -> int:
-    return int(cur.execute(f"SELECT COUNT(*) FROM {table} WHERE {code_field} LIKE ?", (f"{PREFIX}-%",)).fetchone()[0])
+    return int(
+        cur.execute(
+            f"SELECT COUNT(*) FROM {table} WHERE {code_field} LIKE ?", (f"{PREFIX}-%",)
+        ).fetchone()[0]
+    )
 
 
 def validate_and_report(conn: sqlite3.Connection) -> tuple[bool, dict]:
     cur = conn.cursor()
     stats = {
-        "sales_team_total": int(cur.execute("SELECT COUNT(*) FROM users WHERE username LIKE ?", (f"{PREFIX.lower()}_%",)).fetchone()[0]),
+        "sales_team_total": int(
+            cur.execute(
+                "SELECT COUNT(*) FROM users WHERE username LIKE ?", (f"{PREFIX.lower()}_%",)
+            ).fetchone()[0]
+        ),
         "customers": fetch_count(cur, "customers", "customer_code"),
         "leads": fetch_count(cur, "leads", "lead_code"),
         "opportunities": fetch_count(cur, "opportunities", "opp_code"),
@@ -1856,9 +1935,16 @@ def validate_and_report(conn: sqlite3.Connection) -> tuple[bool, dict]:
         "work_orders": fetch_count(cur, "work_order", "work_order_no"),
         "service_tickets": fetch_count(cur, "service_tickets", "ticket_no"),
         "project_milestones": int(
-            cur.execute("SELECT COUNT(*) FROM project_milestones WHERE milestone_code LIKE ?", (f"{PREFIX}-%",)).fetchone()[0]
+            cur.execute(
+                "SELECT COUNT(*) FROM project_milestones WHERE milestone_code LIKE ?",
+                (f"{PREFIX}-%",),
+            ).fetchone()[0]
         ),
-        "project_tasks": int(cur.execute("SELECT COUNT(*) FROM tasks WHERE task_code LIKE ?", (f"{PREFIX}-%",)).fetchone()[0]),
+        "project_tasks": int(
+            cur.execute(
+                "SELECT COUNT(*) FROM tasks WHERE task_code LIKE ?", (f"{PREFIX}-%",)
+            ).fetchone()[0]
+        ),
         "sales_target_actual": float(
             cur.execute(
                 "SELECT COALESCE(actual_sales, 0) FROM sales_targets_v2 WHERE target_type='company' AND description LIKE ?",
@@ -1956,9 +2042,17 @@ def validate_and_report(conn: sqlite3.Connection) -> tuple[bool, dict]:
         "margin_max": max(margins) if margins else 0,
         "cycle_min": min_cycle,
         "cycle_max": max_cycle,
-        "sales_target_completion": stats["sales_target_actual"] * 100 / stats["sales_target_goal"] if stats["sales_target_goal"] else 0,
+        "sales_target_completion": (
+            stats["sales_target_actual"] * 100 / stats["sales_target_goal"]
+            if stats["sales_target_goal"]
+            else 0
+        ),
     }
-    return all(validations.values()), {"stats": stats, "validations": validations, "metrics": metrics}
+    return all(validations.values()), {
+        "stats": stats,
+        "validations": validations,
+        "metrics": metrics,
+    }
 
 
 def print_report(report: dict, success: bool) -> None:
@@ -1976,7 +2070,9 @@ def print_report(report: dict, success: bool) -> None:
     print(f"  销售团队: {stats['sales_team_total']} 人（1总经理 / 4总监 / 4经理 / 10工程师）")
     print(f"  客户: {stats['customers']} | 线索: {stats['leads']} | 商机: {stats['opportunities']}")
     print(f"  报价: {stats['quotes']} | 合同: {stats['contracts']} | 项目: {stats['projects']}")
-    print(f"  采购订单: {stats['purchase_orders']} | 生产工单: {stats['work_orders']} | 售后工单: {stats['service_tickets']}")
+    print(
+        f"  采购订单: {stats['purchase_orders']} | 生产工单: {stats['work_orders']} | 售后工单: {stats['service_tickets']}"
+    )
     print(f"  里程碑: {stats['project_milestones']} | WBS任务: {stats['project_tasks']}")
     print("")
     print("二、关键业务指标")
@@ -1985,7 +2081,9 @@ def print_report(report: dict, success: bool) -> None:
     print(f"  目标达成率: {metrics['sales_target_completion']:.2f}%")
     print(f"  线索转化率(线索->合同): {metrics['lead_conversion']:.2f}%")
     print(f"  赢单率(商机->合同): {metrics['win_rate']:.2f}%")
-    print(f"  项目毛利率区间: {metrics['margin_min']:.2f}% ~ {metrics['margin_max']:.2f}% (均值 {metrics['avg_margin']:.2f}%)")
+    print(
+        f"  项目毛利率区间: {metrics['margin_min']:.2f}% ~ {metrics['margin_max']:.2f}% (均值 {metrics['avg_margin']:.2f}%)"
+    )
     print(f"  项目周期区间: {metrics['cycle_min']:.2f} ~ {metrics['cycle_max']:.2f} 月")
     print("")
     print("三、校验结果")
@@ -1994,7 +2092,11 @@ def print_report(report: dict, success: bool) -> None:
 
     print("")
     print("四、结论")
-    print("  ✅ 数据生成成功，可用于前端联调与业务演示。" if success else "  ❌ 存在未通过校验项，请检查数据逻辑。")
+    print(
+        "  ✅ 数据生成成功，可用于前端联调与业务演示。"
+        if success
+        else "  ❌ 存在未通过校验项，请检查数据逻辑。"
+    )
     print("=" * 72)
 
 

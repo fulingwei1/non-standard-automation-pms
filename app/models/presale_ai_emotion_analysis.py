@@ -1,14 +1,18 @@
 """
 AI客户情绪分析记录模型
 """
-from sqlalchemy import Column, Integer, Text, DECIMAL, Enum, TIMESTAMP, ForeignKey, JSON
-from sqlalchemy.sql import func
-from app.models.base import Base
+
 import enum
+
+from sqlalchemy import DECIMAL, JSON, TIMESTAMP, Column, Enum, ForeignKey, Integer, Text
+from sqlalchemy.sql import func
+
+from app.models.base import Base
 
 
 class SentimentType(str, enum.Enum):
     """情绪类型"""
+
     POSITIVE = "positive"
     NEUTRAL = "neutral"
     NEGATIVE = "negative"
@@ -16,6 +20,7 @@ class SentimentType(str, enum.Enum):
 
 class ChurnRiskLevel(str, enum.Enum):
     """流失风险等级"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -23,10 +28,17 @@ class ChurnRiskLevel(str, enum.Enum):
 
 class PresaleAIEmotionAnalysis(Base):
     """AI客户情绪分析记录表"""
+
     __tablename__ = "presale_ai_emotion_analysis"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), nullable=False, index=True, comment="售前工单ID")
+    presale_ticket_id = Column(
+        Integer,
+        ForeignKey("presale_support_ticket.id"),
+        nullable=False,
+        index=True,
+        comment="售前工单ID",
+    )
     customer_id = Column(Integer, nullable=False, index=True, comment="客户ID")
     communication_content = Column(Text, comment="沟通内容")
     sentiment = Column(Enum(SentimentType), comment="情绪类型")

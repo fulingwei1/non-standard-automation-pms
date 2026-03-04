@@ -16,10 +16,10 @@ from app.models.material import BomHeader
 from app.models.project import Machine
 from app.schemas.project import MachineCreate, MachineResponse, MachineUpdate
 from app.services.machine_service import (
-    MachineService,
-    ProjectAggregationService,
     VALID_HEALTH,
     VALID_STAGES,
+    MachineService,
+    ProjectAggregationService,
 )
 
 
@@ -161,7 +161,9 @@ class ProjectMachineService(
             )
 
         if current_stage:
-            is_valid, error_msg = self._machine_service.validate_stage_transition(current_stage, stage)
+            is_valid, error_msg = self._machine_service.validate_stage_transition(
+                current_stage, stage
+            )
             if not is_valid:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
 
@@ -175,11 +177,7 @@ class ProjectMachineService(
             )
 
     def _ensure_can_delete(self, machine_id: int) -> None:
-        bom_count = (
-            self.db.query(BomHeader)
-            .filter(BomHeader.machine_id == machine_id)
-            .count()
-        )
+        bom_count = self.db.query(BomHeader).filter(BomHeader.machine_id == machine_id).count()
         if bom_count > 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

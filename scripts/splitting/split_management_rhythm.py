@@ -5,31 +5,91 @@
 import re
 from pathlib import Path
 
+
 def read_file_lines(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
 
+
 def main():
-    source_file = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/management_rhythm.py')
-    output_dir = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/management_rhythm')
+    source_file = Path(
+        "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/management_rhythm.py"
+    )
+    output_dir = Path(
+        "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/management_rhythm"
+    )
 
     print("📖 读取 management_rhythm.py (1993行)...")
     lines = read_file_lines(source_file)
 
     # 提取导入（行1-48，到router = APIRouter()为止）
-    imports = ''.join(lines[0:48])
+    imports = "".join(lines[0:48])
 
     # 根据章节注释定义模块
     modules = [
-        {'name': 'configs.py', 'start': 50, 'end': 277, 'prefix': '/management-rhythm/configs', 'routes': '管理节律配置'},
-        {'name': 'meetings.py', 'start': 278, 'end': 635, 'prefix': '/management-rhythm/meetings', 'routes': '战略会议'},
-        {'name': 'action_items.py', 'start': 636, 'end': 779, 'prefix': '/management-rhythm/action-items', 'routes': '会议行动项'},
-        {'name': 'dashboard.py', 'start': 780, 'end': 941, 'prefix': '/management-rhythm/dashboard', 'routes': '节律仪表盘'},
-        {'name': 'meeting_map.py', 'start': 942, 'end': 1173, 'prefix': '/management-rhythm/meeting-map', 'routes': '会议地图'},
-        {'name': 'integrations.py', 'start': 1174, 'end': 1276, 'prefix': '/management-rhythm/integrations', 'routes': '数据集成'},
-        {'name': 'report_configs.py', 'start': 1345, 'end': 1567, 'prefix': '/management-rhythm/report-configs', 'routes': '报告配置管理'},
-        {'name': 'metrics.py', 'start': 1568, 'end': 1739, 'prefix': '/management-rhythm/metrics', 'routes': '指标定义管理'},
-        {'name': 'reports.py', 'start': 1740, 'end': 1993, 'prefix': '/management-rhythm/reports', 'routes': '会议报告'},
+        {
+            "name": "configs.py",
+            "start": 50,
+            "end": 277,
+            "prefix": "/management-rhythm/configs",
+            "routes": "管理节律配置",
+        },
+        {
+            "name": "meetings.py",
+            "start": 278,
+            "end": 635,
+            "prefix": "/management-rhythm/meetings",
+            "routes": "战略会议",
+        },
+        {
+            "name": "action_items.py",
+            "start": 636,
+            "end": 779,
+            "prefix": "/management-rhythm/action-items",
+            "routes": "会议行动项",
+        },
+        {
+            "name": "dashboard.py",
+            "start": 780,
+            "end": 941,
+            "prefix": "/management-rhythm/dashboard",
+            "routes": "节律仪表盘",
+        },
+        {
+            "name": "meeting_map.py",
+            "start": 942,
+            "end": 1173,
+            "prefix": "/management-rhythm/meeting-map",
+            "routes": "会议地图",
+        },
+        {
+            "name": "integrations.py",
+            "start": 1174,
+            "end": 1276,
+            "prefix": "/management-rhythm/integrations",
+            "routes": "数据集成",
+        },
+        {
+            "name": "report_configs.py",
+            "start": 1345,
+            "end": 1567,
+            "prefix": "/management-rhythm/report-configs",
+            "routes": "报告配置管理",
+        },
+        {
+            "name": "metrics.py",
+            "start": 1568,
+            "end": 1739,
+            "prefix": "/management-rhythm/metrics",
+            "routes": "指标定义管理",
+        },
+        {
+            "name": "reports.py",
+            "start": 1740,
+            "end": 1993,
+            "prefix": "/management-rhythm/reports",
+            "routes": "会议报告",
+        },
     ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -37,11 +97,11 @@ def main():
     for module in modules:
         print(f"📝 生成 {module['name']}...")
 
-        start = module['start'] - 1
-        end = min(module['end'], len(lines))
+        start = module["start"] - 1
+        end = min(module["end"], len(lines))
 
-        module_code = ''.join(lines[start:end])
-        routes = len(re.findall(r'@router\.', module_code))
+        module_code = "".join(lines[start:end])
+        routes = len(re.findall(r"@router\.", module_code))
 
         if routes == 0:
             print(f"  ⚠️ 跳过: 没有找到路由")
@@ -67,8 +127,8 @@ router = APIRouter(
 {module_code}
 '''
 
-        output_path = output_dir / module['name']
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = output_dir / module["name"]
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module['name']}: {routes} 个路由")
@@ -106,11 +166,12 @@ router.include_router(reports_router)
 __all__ = ['router']
 '''
 
-    with open(output_dir / '__init__.py', 'w', encoding='utf-8') as f:
+    with open(output_dir / "__init__.py", "w", encoding="utf-8") as f:
         f.write(init_content)
 
     print("\n✅ management_rhythm.py 拆分完成！")
     print(f"总计: {len(modules)} 个模块")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

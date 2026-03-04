@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """设计评审数据收集器单元测试 - 第三十六批"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.performance_collector.design_collector")
 
@@ -47,8 +48,10 @@ class TestCollectDesignReviewData:
         assert result["first_pass_rate"] == 0.0
 
     def test_all_first_pass(self):
-        r1 = MagicMock(); r1.is_first_pass = True
-        r2 = MagicMock(); r2.is_first_pass = True
+        r1 = MagicMock()
+        r1.is_first_pass = True
+        r2 = MagicMock()
+        r2.is_first_pass = True
         collector, db = make_collector()
         db.query.return_value.filter.return_value.all.return_value = [r1, r2]
         result = collector.collect_design_review_data(1, START, END)
@@ -56,8 +59,10 @@ class TestCollectDesignReviewData:
         assert result["first_pass_rate"] == 100.0
 
     def test_partial_first_pass(self):
-        r1 = MagicMock(); r1.is_first_pass = True
-        r2 = MagicMock(); r2.is_first_pass = False
+        r1 = MagicMock()
+        r1.is_first_pass = True
+        r2 = MagicMock()
+        r2.is_first_pass = False
         collector, db = make_collector()
         db.query.return_value.filter.return_value.all.return_value = [r1, r2]
         result = collector.collect_design_review_data(1, START, END)

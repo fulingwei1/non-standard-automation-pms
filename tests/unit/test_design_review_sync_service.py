@@ -34,13 +34,10 @@ class TestSyncFromTechnicalReview:
 
     def test_review_not_completed(self, db_session):
         """测试评审未完成"""
-        from app.services.design_review_sync_service import DesignReviewSyncService
         from app.models.technical_review import TechnicalReview
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-        review = TechnicalReview(
-        review_no="TR001",
-        status="IN_PROGRESS"
-        )
+        review = TechnicalReview(review_no="TR001", status="IN_PROGRESS")
         db_session.add(review)
         db_session.flush()
 
@@ -60,8 +57,8 @@ class TestSyncAllCompletedReviews:
         service = DesignReviewSyncService(db_session)
         result = service.sync_all_completed_reviews()
 
-        assert result['total_reviews'] == 0
-        assert result['synced_count'] == 0
+        assert result["total_reviews"] == 0
+        assert result["synced_count"] == 0
 
     def test_with_date_filter(self, db_session):
         """测试带日期过滤"""
@@ -69,11 +66,10 @@ class TestSyncAllCompletedReviews:
 
         service = DesignReviewSyncService(db_session)
         result = service.sync_all_completed_reviews(
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
 
-        assert 'total_reviews' in result
+        assert "total_reviews" in result
 
     def test_stats_structure(self, db_session):
         """测试统计结构"""
@@ -83,8 +79,11 @@ class TestSyncAllCompletedReviews:
         result = service.sync_all_completed_reviews()
 
         expected_fields = [
-        'total_reviews', 'synced_count', 'skipped_count',
-        'error_count', 'errors'
+            "total_reviews",
+            "synced_count",
+            "skipped_count",
+            "error_count",
+            "errors",
         ]
         for field in expected_fields:
             assert field in result
@@ -95,49 +94,49 @@ class TestReviewResultMapping:
 
     def test_pass_result(self):
         """测试通过结果"""
-        conclusion = 'PASS'
+        conclusion = "PASS"
         review_result = None
         is_first_pass = False
 
-        if conclusion == 'PASS':
-            review_result = 'PASSED'
+        if conclusion == "PASS":
+            review_result = "PASSED"
             is_first_pass = True
-        elif conclusion == 'PASS_WITH_CONDITION':
-            review_result = 'PASSED_WITH_CONDITION'
+        elif conclusion == "PASS_WITH_CONDITION":
+            review_result = "PASSED_WITH_CONDITION"
 
-            assert review_result == 'PASSED'
+            assert review_result == "PASSED"
             assert is_first_pass is True
 
     def test_pass_with_condition(self):
         """测试有条件通过"""
-        conclusion = 'PASS_WITH_CONDITION'
+        conclusion = "PASS_WITH_CONDITION"
         review_result = None
         is_first_pass = False
 
-        if conclusion == 'PASS':
-            review_result = 'PASSED'
+        if conclusion == "PASS":
+            review_result = "PASSED"
             is_first_pass = True
-        elif conclusion == 'PASS_WITH_CONDITION':
-            review_result = 'PASSED_WITH_CONDITION'
+        elif conclusion == "PASS_WITH_CONDITION":
+            review_result = "PASSED_WITH_CONDITION"
             is_first_pass = False
 
-            assert review_result == 'PASSED_WITH_CONDITION'
+            assert review_result == "PASSED_WITH_CONDITION"
             assert is_first_pass is False
 
     def test_reject_result(self):
         """测试拒绝结果"""
-        conclusion = 'REJECT'
+        conclusion = "REJECT"
         review_result = None
         is_first_pass = False
 
-        if conclusion == 'PASS':
-            review_result = 'PASSED'
-        elif conclusion == 'PASS_WITH_CONDITION':
-            review_result = 'PASSED_WITH_CONDITION'
-        elif conclusion == 'REJECT':
-            review_result = 'REJECTED'
+        if conclusion == "PASS":
+            review_result = "PASSED"
+        elif conclusion == "PASS_WITH_CONDITION":
+            review_result = "PASSED_WITH_CONDITION"
+        elif conclusion == "REJECT":
+            review_result = "REJECTED"
 
-            assert review_result == 'REJECTED'
+            assert review_result == "REJECTED"
             assert is_first_pass is False
 
 
@@ -196,6 +195,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -153,9 +153,7 @@ class TestExecutionStagesIntegration:
         )
 
         # 筛选包含特定字段的阶段
-        required_stages = [
-            stage for stage in EXECUTION_STAGES if stage.get("is_required") is True
-        ]
+        required_stages = [stage for stage in EXECUTION_STAGES if stage.get("is_required") is True]
 
         # 应该有一些必需阶段
         assert isinstance(required_stages, list)
@@ -167,9 +165,7 @@ class TestExecutionStagesIntegration:
         )
 
         # 按序号排序
-        stages_with_seq = [
-            stage for stage in EXECUTION_STAGES if "sequence" in stage
-        ]
+        stages_with_seq = [stage for stage in EXECUTION_STAGES if "sequence" in stage]
 
         if stages_with_seq:
             sorted_stages = sorted(stages_with_seq, key=lambda x: x["sequence"])
@@ -236,9 +232,7 @@ class TestExecutionStagesValidation:
             EXECUTION_STAGES,
         )
 
-        stages_with_desc = [
-            stage for stage in EXECUTION_STAGES if "description" in stage
-        ]
+        stages_with_desc = [stage for stage in EXECUTION_STAGES if "description" in stage]
 
         # 大多数阶段应该有描述
         assert len(stages_with_desc) > 0

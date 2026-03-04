@@ -3,9 +3,10 @@
 第四十五批覆盖：stage_instance/helpers.py
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.stage_instance.helpers")
 

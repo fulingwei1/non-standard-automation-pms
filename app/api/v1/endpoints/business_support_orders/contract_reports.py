@@ -21,12 +21,16 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/reports/contract", response_model=ResponseModel[ContractReportResponse], summary="获取合同执行报表")
+@router.get(
+    "/reports/contract",
+    response_model=ResponseModel[ContractReportResponse],
+    summary="获取合同执行报表",
+)
 async def get_contract_report(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD格式）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD格式）"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取合同执行报表"""
     try:
@@ -66,7 +70,9 @@ async def get_contract_report(
 
         # 执行进度（简化处理，使用回款进度）
         try:
-            avg_progress_result = db.execute(text("""
+            avg_progress_result = db.execute(
+                text(
+                    """
                 SELECT AVG(progress) as avg_progress FROM (
                     SELECT
                         CASE
@@ -80,13 +86,21 @@ async def get_contract_report(
                     WHERE c.status IN ('SIGNED', 'EXECUTING')
                     GROUP BY c.id
                 ) sub
-            """)).fetchone()
-            average_execution_rate = Decimal(str(avg_progress_result[0])) if avg_progress_result and avg_progress_result[0] else Decimal("0")
+            """
+                )
+            ).fetchone()
+            average_execution_rate = (
+                Decimal(str(avg_progress_result[0]))
+                if avg_progress_result and avg_progress_result[0]
+                else Decimal("0")
+            )
         except Exception:
             average_execution_rate = Decimal("0")
 
         # 按客户统计（前10名）
-        top_customers_result = db.execute(text("""
+        top_customers_result = db.execute(
+            text(
+                """
             SELECT
                 c.customer_name,
                 COALESCE(SUM(ct.total_amount), 0) as contract_amount
@@ -97,7 +111,10 @@ async def get_contract_report(
             GROUP BY c.id, c.customer_name
             ORDER BY contract_amount DESC
             LIMIT 10
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchall()
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchall()
 
         top_customers = [
             {"customer_name": row[0], "contract_amount": float(row[1])}
@@ -120,8 +137,8 @@ async def get_contract_report(
                 executing_amount=executing_amount,
                 completed_amount=completed_amount,
                 average_execution_rate=average_execution_rate,
-                top_customers=top_customers
-            )
+                top_customers=top_customers,
+            ),
         )
     except HTTPException:
         raise

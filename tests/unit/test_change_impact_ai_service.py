@@ -12,19 +12,19 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
 from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from app.services.change_impact_ai_service import ChangeImpactAIService
 from app.models import (
+    ChangeImpactAnalysis,
     ChangeRequest,
     Project,
+    ProjectMilestone,
     Task,
     TaskDependency,
-    ProjectMilestone,
-    ChangeImpactAnalysis,
 )
+from app.services.change_impact_ai_service import ChangeImpactAIService
 
 
 class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
@@ -134,9 +134,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
             self.mock_milestones,
         ]
 
-        context = self.service._gather_analysis_context(
-            self.mock_change, self.mock_project
-        )
+        context = self.service._gather_analysis_context(self.mock_change, self.mock_project)
 
         # 验证返回结构
         self.assertIn("change", context)
@@ -173,9 +171,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
             [],  # 无里程碑
         ]
 
-        context = self.service._gather_analysis_context(
-            self.mock_change, self.mock_project
-        )
+        context = self.service._gather_analysis_context(self.mock_change, self.mock_project)
 
         self.assertEqual(len(context["tasks"]), 0)
         self.assertEqual(len(context["dependencies"]), 0)
@@ -418,9 +414,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
                 {"task_id": 3, "depends_on": 2, "type": "SS", "lag_days": 0},
                 {"task_id": 4, "depends_on": 3, "type": "FS", "lag_days": 1},
             ],
-            "tasks": [
-                {"id": i, "status": "TODO"} for i in range(1, 5)
-            ],
+            "tasks": [{"id": i, "status": "TODO"} for i in range(1, 5)],
         }
 
         result = self.service._identify_chain_reactions(
@@ -478,8 +472,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": False}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         self.assertEqual(result["level"], "LOW")
@@ -495,8 +488,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": False}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         self.assertEqual(result["level"], "MEDIUM")
@@ -513,8 +505,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": False}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         self.assertEqual(result["level"], "HIGH")
@@ -531,8 +522,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": True, "depth": 3}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         self.assertEqual(result["level"], "CRITICAL")
@@ -548,16 +538,12 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": True, "depth": 2}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         # 连锁反应应该增加风险分数
         self.assertIn("factors", result)
-        chain_factor = next(
-            (f for f in result["factors"] if f["factor"] == "chain_reaction"),
-            None
-        )
+        chain_factor = next((f for f in result["factors"] if f["factor"] == "chain_reaction"), None)
         self.assertIsNotNone(chain_factor)
         self.assertEqual(chain_factor["score"], 50)
 
@@ -570,8 +556,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         chain_reaction = {"detected": True, "depth": 2}
 
         result = self.service._calculate_overall_risk(
-            schedule_impact, cost_impact, quality_impact,
-            resource_impact, chain_reaction
+            schedule_impact, cost_impact, quality_impact, resource_impact, chain_reaction
         )
 
         # 验证摘要包含关键信息
@@ -591,7 +576,7 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
                 {"id": 2, "name": "任务2", "status": "TODO"},
                 {"id": 3, "name": "任务3", "status": "DONE"},
             ],
-            "change": {"time_impact": 5}
+            "change": {"time_impact": 5},
         }
 
         result = self.service._find_affected_tasks(context)
@@ -603,11 +588,8 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
     def test_find_affected_tasks_max_limit(self):
         """测试最多返回10个任务"""
         context = {
-            "tasks": [
-                {"id": i, "name": f"任务{i}", "status": "TODO"}
-                for i in range(1, 20)
-            ],
-            "change": {"time_impact": 3}
+            "tasks": [{"id": i, "name": f"任务{i}", "status": "TODO"} for i in range(1, 20)],
+            "change": {"time_impact": 3},
         }
 
         result = self.service._find_affected_tasks(context)
@@ -619,16 +601,8 @@ class TestChangeImpactAIServiceCore(unittest.IsolatedAsyncioTestCase):
         """测试查找受影响里程碑"""
         context = {
             "milestones": [
-                {
-                    "id": 1,
-                    "name": "里程碑1",
-                    "plan_date": "2024-05-01T00:00:00"
-                },
-                {
-                    "id": 2,
-                    "name": "里程碑2",
-                    "plan_date": "2024-06-01T00:00:00"
-                },
+                {"id": 1, "name": "里程碑1", "plan_date": "2024-05-01T00:00:00"},
+                {"id": 2, "name": "里程碑2", "plan_date": "2024-06-01T00:00:00"},
             ]
         }
 
@@ -763,7 +737,7 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         analysis.id = 1
         return analysis
 
-    @patch('app.services.change_impact_ai_service.call_glm_api')
+    @patch("app.services.change_impact_ai_service.call_glm_api")
     async def test_analyze_change_impact_success(self, mock_glm_api):
         """测试完整的变更影响分析流程"""
         # Mock数据库查询
@@ -792,10 +766,7 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         mock_glm_api.return_value = '{"level": "MEDIUM", "delay_days": 10}'
 
         # 执行分析
-        result = await self.service.analyze_change_impact(
-            change_request_id=1,
-            user_id=1
-        )
+        result = await self.service.analyze_change_impact(change_request_id=1, user_id=1)
 
         # 验证数据库操作
         self.mock_db.add.assert_called()
@@ -804,21 +775,18 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         # 验证结果
         self.assertIsNotNone(result)
 
-    @patch('app.services.change_impact_ai_service.call_glm_api')
+    @patch("app.services.change_impact_ai_service.call_glm_api")
     async def test_analyze_change_impact_change_not_found(self, mock_glm_api):
         """测试变更请求不存在的情况"""
         query_mock = self.mock_db.query.return_value
         query_mock.filter.return_value.first.return_value = None
 
         with self.assertRaises(ValueError) as cm:
-            await self.service.analyze_change_impact(
-                change_request_id=999,
-                user_id=1
-            )
+            await self.service.analyze_change_impact(change_request_id=999, user_id=1)
 
         self.assertIn("不存在", str(cm.exception))
 
-    @patch('app.services.change_impact_ai_service.call_glm_api')
+    @patch("app.services.change_impact_ai_service.call_glm_api")
     async def test_analyze_change_impact_project_not_found(self, mock_glm_api):
         """测试项目不存在的情况"""
         query_mock = self.mock_db.query.return_value
@@ -828,14 +796,11 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         ]
 
         with self.assertRaises(ValueError) as cm:
-            await self.service.analyze_change_impact(
-                change_request_id=1,
-                user_id=1
-            )
+            await self.service.analyze_change_impact(change_request_id=1, user_id=1)
 
         self.assertIn("项目", str(cm.exception))
 
-    @patch('app.services.change_impact_ai_service.call_glm_api')
+    @patch("app.services.change_impact_ai_service.call_glm_api")
     async def test_analyze_schedule_impact_with_ai(self, mock_glm_api):
         """测试进度影响分析（包含AI调用）"""
         # Mock AI响应
@@ -851,10 +816,8 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         context = {
             "change": {"time_impact": 15},
             "project": {"start_date": "2024-01-01", "end_date": "2024-06-30"},
-            "tasks": [
-                {"id": 1, "status": "IN_PROGRESS", "name": "任务1"}
-            ],
-            "milestones": []
+            "tasks": [{"id": 1, "status": "IN_PROGRESS", "name": "任务1"}],
+            "milestones": [],
         }
 
         result = await self.service._analyze_schedule_impact(
@@ -868,7 +831,7 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["level"], "HIGH")
         self.assertTrue(result["critical_path_affected"])
 
-    @patch('app.services.change_impact_ai_service.call_glm_api')
+    @patch("app.services.change_impact_ai_service.call_glm_api")
     async def test_analyze_schedule_impact_ai_error(self, mock_glm_api):
         """测试AI调用失败的情况"""
         # Mock AI抛出异常
@@ -878,7 +841,7 @@ class TestChangeImpactAIServiceIntegration(unittest.IsolatedAsyncioTestCase):
             "change": {"time_impact": 5},
             "project": {"start_date": "2024-01-01", "end_date": "2024-06-30"},
             "tasks": [],
-            "milestones": []
+            "milestones": [],
         }
 
         # 应该返回默认值而不是抛出异常

@@ -3,8 +3,18 @@
 项目管理模块 - 按业务域聚合
 """
 
+# 枚举兼容导出
+from app.models.enums.project import ProjectHealthEnum  # noqa: F401
+from app.models.enums.project import ProjectHealthEnum as ProjectHealth
+
+# 项目复盘（兼容导出）
+from app.models.project_review import ProjectReview  # noqa: F401
+
 # 项目核心
 from .core import Machine, Project
+
+# 成本预测和预警
+from .cost_forecast import CostAlert, CostAlertRule, CostForecast
 
 # 客户相关
 from .customer import Customer
@@ -32,9 +42,6 @@ from .financial import (
 # 项目生命周期
 from .lifecycle import ProjectStage, ProjectStatus, ProjectStatusLog
 
-# 项目团队
-from .team import ProjectMember, ProjectMemberContribution
-
 # 资源计划
 from .resource_plan import (
     AssignmentStatusEnum,
@@ -46,15 +53,8 @@ from .resource_plan import (
 # 风险历史
 from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 
-# 成本预测和预警
-from .cost_forecast import CostAlert, CostAlertRule, CostForecast
-
-# 项目复盘（兼容导出）
-from app.models.project_review import ProjectReview  # noqa: F401
-
-# 枚举兼容导出
-from app.models.enums.project import ProjectHealthEnum as ProjectHealth  # noqa: F401
-from app.models.enums.project import ProjectHealthEnum  # noqa: F401
+# 项目团队
+from .team import ProjectMember, ProjectMemberContribution
 
 __all__ = [
     # 客户相关

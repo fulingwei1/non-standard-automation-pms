@@ -3,8 +3,9 @@
 项目关联关系服务单元测试
 覆盖物料转移关联、统计、发现函数等
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.project_relations_service import (
     calculate_relation_statistics,
@@ -14,9 +15,18 @@ from app.services.project_relations_service import (
 )
 
 
-def make_project(id=1, project_code="P001", project_name="项目A",
-                 customer_id=None, pm_id=None, pm_name=None, customer_name=None,
-                 planned_start_date=None, planned_end_date=None, is_active=True):
+def make_project(
+    id=1,
+    project_code="P001",
+    project_name="项目A",
+    customer_id=None,
+    pm_id=None,
+    pm_name=None,
+    customer_name=None,
+    planned_start_date=None,
+    planned_end_date=None,
+    is_active=True,
+):
     p = MagicMock()
     p.id = id
     p.project_code = project_code
@@ -115,6 +125,7 @@ class TestDiscoverTimeOverlapRelations:
 
     def test_returns_overlap_relations(self):
         from datetime import date
+
         related = make_project(id=4, project_code="P004", project_name="项目D")
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = [related]

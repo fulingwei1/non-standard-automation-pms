@@ -10,8 +10,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.services.import_export_engine import ImportExportEngine
 from app.models.organization import Employee, EmployeeHrProfile
 from app.models.user import User
 from app.schemas.organization import (
@@ -19,8 +20,7 @@ from app.schemas.organization import (
     EmployeeHrProfileUpdate,
     EmployeeWithHrProfileResponse,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.services.import_export_engine import ImportExportEngine
 
 router = APIRouter()
 
@@ -47,7 +47,9 @@ def get_hr_profiles(
         query = query.filter(Employee.employment_status == employment_status)
 
     total = query.count()
-    employees = apply_pagination(query.order_by(Employee.created_at.desc()), pagination.offset, pagination.limit).all()
+    employees = apply_pagination(
+        query.order_by(Employee.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for emp in employees:
@@ -63,7 +65,7 @@ def get_hr_profiles(
             "employment_status": emp.employment_status,
             "employment_type": emp.employment_type,
             "id_card": emp.id_card,
-            "hr_profile": None
+            "hr_profile": None,
         }
         if profile:
             item["hr_profile"] = {
@@ -89,7 +91,7 @@ def get_hr_profiles(
         "total": total,
         "page": pagination.page,
         "page_size": pagination.page_size,
-        "pages": pagination.pages_for_total(total)
+        "pages": pagination.pages_for_total(total),
     }
 
 
@@ -174,10 +176,10 @@ async def import_hr_profiles(
     return {
         "success": True,
         "message": f"导入完成：新增 {result['imported']} 人，更新 {result['updated']} 人，跳过 {result['skipped']} 条",
-        "imported": result['imported'],
-        "updated": result['updated'],
-        "skipped": result['skipped'],
-        "errors": result['errors']
+        "imported": result["imported"],
+        "updated": result["updated"],
+        "skipped": result["skipped"],
+        "errors": result["errors"],
     }
 
 
@@ -189,22 +191,25 @@ def get_hr_statistics(
     """获取人事统计概览"""
     total = db.query(Employee).filter(Employee.is_active).count()
 
-    dept_stats = db.query(
-        EmployeeHrProfile.dept_level1,
-        func.count(EmployeeHrProfile.id)
-    ).join(Employee).filter(Employee.is_active).group_by(
-        EmployeeHrProfile.dept_level1
-    ).all()
+    dept_stats = (
+        db.query(EmployeeHrProfile.dept_level1, func.count(EmployeeHrProfile.id))
+        .join(Employee)
+        .filter(Employee.is_active)
+        .group_by(EmployeeHrProfile.dept_level1)
+        .all()
+    )
 
-    status_stats = db.query(
-        Employee.employment_status,
-        func.count(Employee.id)
-    ).group_by(Employee.employment_status).all()
+    status_stats = (
+        db.query(Employee.employment_status, func.count(Employee.id))
+        .group_by(Employee.employment_status)
+        .all()
+    )
 
-    probation_count = db.query(Employee).filter(
-        Employee.is_active,
-        Employee.employment_type == 'probation'
-    ).count()
+    probation_count = (
+        db.query(Employee)
+        .filter(Employee.is_active, Employee.employment_type == "probation")
+        .count()
+    )
 
     return {
         "total_active": total,

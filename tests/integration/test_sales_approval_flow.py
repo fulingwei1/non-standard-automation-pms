@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 Sales审批流程集成测试
@@ -11,8 +12,9 @@ Sales审批流程集成测试
 5. 错误处理
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.sales import (
@@ -20,10 +22,10 @@ from app.models.sales import (
 )
 from app.models.sales.contracts import Contract
 from app.models.sales.invoices import Invoice
-from app.services.approval_engine.workflow_engine import WorkflowEngine
-from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
 from app.services.approval_engine.adapters.contract import ContractApprovalAdapter
 from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
+from app.services.approval_engine.workflow_engine import WorkflowEngine
 
 
 class TestSalesApprovalFlow:
@@ -165,9 +167,7 @@ class TestSalesApprovalFlow:
 
     # ========== 合同审批测试 ==========
 
-    def test_submit_contract_for_approval(
-        self, db_session: Session, contract_sample: Contract
-    ):
+    def test_submit_contract_for_approval(self, db_session: Session, contract_sample: Contract):
         """测试提交合同审批"""
         adapter = ContractApprovalAdapter(db_session)
 
@@ -190,9 +190,7 @@ class TestSalesApprovalFlow:
         assert contract_sample.approval_instance_id == instance.id
         assert contract_sample.approval_status == instance.status
 
-    def test_contract_approval_approval(
-        self, db_session: Session, contract_sample: Contract
-    ):
+    def test_contract_approval_approval(self, db_session: Session, contract_sample: Contract):
         """测试合同审批通过"""
         adapter = ContractApprovalAdapter(db_session)
 
@@ -217,9 +215,7 @@ class TestSalesApprovalFlow:
         db_session.refresh(contract_sample)
         assert contract_sample.approval_status == "APPROVED"
 
-    def test_contract_approval_rejection(
-        self, db_session: Session, contract_sample: Contract
-    ):
+    def test_contract_approval_rejection(self, db_session: Session, contract_sample: Contract):
         """测试合同审批驳回"""
         adapter = ContractApprovalAdapter(db_session)
 
@@ -245,9 +241,7 @@ class TestSalesApprovalFlow:
 
     # ========== 发票审批测试 ==========
 
-    def test_submit_invoice_for_approval(
-        self, db_session: Session, invoice_sample: Invoice
-    ):
+    def test_submit_invoice_for_approval(self, db_session: Session, invoice_sample: Invoice):
         """测试提交发票审批"""
         adapter = InvoiceApprovalAdapter(db_session)
 
@@ -326,9 +320,7 @@ class TestSalesApprovalFlow:
             assert record.approval_level >= 1
             assert record.status == "PENDING"
 
-    def test_sync_contract_approval_records(
-        self, db_session: Session, contract_sample: Contract
-    ):
+    def test_sync_contract_approval_records(self, db_session: Session, contract_sample: Contract):
         """测试合同审批记录同步"""
         adapter = ContractApprovalAdapter(db_session)
 
@@ -351,9 +343,7 @@ class TestSalesApprovalFlow:
             assert record.approval_level >= 1
             assert record.status == "PENDING"
 
-    def test_sync_invoice_approval_records(
-        self, db_session: Session, invoice_sample: Invoice
-    ):
+    def test_sync_invoice_approval_records(self, db_session: Session, invoice_sample: Invoice):
         """测试发票审批记录同步"""
         adapter = InvoiceApprovalAdapter(db_session)
 

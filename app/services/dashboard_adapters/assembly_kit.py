@@ -69,15 +69,9 @@ class AssemblyKitDashboardAdapter(DashboardAdapter):
         partial = total - can_start - not_ready
 
         avg_kit = (
-            sum(r.overall_kit_rate for r in recent_analyses) / total
-            if total > 0
-            else Decimal(0)
+            sum(r.overall_kit_rate for r in recent_analyses) / total if total > 0 else Decimal(0)
         )
-        (
-            sum(r.blocking_kit_rate for r in recent_analyses) / total
-            if total > 0
-            else Decimal(0)
-        )
+        (sum(r.blocking_kit_rate for r in recent_analyses) / total if total > 0 else Decimal(0))
 
         # 预警汇总
         alert_counts = {
@@ -161,9 +155,7 @@ class AssemblyKitDashboardAdapter(DashboardAdapter):
         for s in pending_suggestions:
             from app.models import Machine, Project
 
-            project = (
-                self.db.query(Project).filter(Project.id == s.project_id).first()
-            )
+            project = self.db.query(Project).filter(Project.id == s.project_id).first()
             machine = (
                 self.db.query(Machine).filter(Machine.id == s.machine_id).first()
                 if s.machine_id

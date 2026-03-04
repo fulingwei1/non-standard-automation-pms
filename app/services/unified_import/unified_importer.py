@@ -27,7 +27,7 @@ class UnifiedImporter(ImportBase):
         filename: str,
         template_type: str,
         current_user_id: int,
-        update_existing: bool = False
+        update_existing: bool = False,
     ) -> Dict[str, Any]:
         """
         统一导入入口
@@ -50,6 +50,7 @@ class UnifiedImporter(ImportBase):
         if template_type == "PROJECT":
             # 调用项目导入服务
             from app.services.project_import_service import import_projects_from_dataframe
+
             imported_count, updated_count, failed_rows = import_projects_from_dataframe(
                 db, df, update_existing
             )
@@ -75,12 +76,14 @@ class UnifiedImporter(ImportBase):
             )
         elif template_type == "EMPLOYEE":
             from app.services.employee_import_service import import_employees_from_dataframe
+
             result = import_employees_from_dataframe(db, df, current_user_id)
             imported_count = result.get("imported", 0)
             updated_count = result.get("updated", 0)
             failed_rows = [{"row_index": 0, "error": e} for e in result.get("errors", [])]
         elif template_type == "HR_PROFILE":
             from app.services.hr_profile_import_service import import_hr_profiles_from_dataframe
+
             result = import_hr_profiles_from_dataframe(db, df)
             imported_count = result.get("imported", 0)
             updated_count = result.get("updated", 0)
@@ -92,5 +95,5 @@ class UnifiedImporter(ImportBase):
             "imported_count": imported_count,
             "updated_count": updated_count,
             "failed_count": len(failed_rows),
-            "failed_rows": failed_rows[:20]  # 最多返回20个错误
+            "failed_rows": failed_rows[:20],  # 最多返回20个错误
         }

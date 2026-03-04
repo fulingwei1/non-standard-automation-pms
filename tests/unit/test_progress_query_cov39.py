@@ -2,12 +2,12 @@
 """
 第三十九批覆盖率测试 - stage_instance/progress_query.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
-pytest.importorskip("app.services.stage_instance.progress_query",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.stage_instance.progress_query", reason="import failed, skip")
 
 from app.services.stage_instance.progress_query import ProgressQueryMixin
 

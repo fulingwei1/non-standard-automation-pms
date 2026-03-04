@@ -16,11 +16,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ==================== 跨部门协作 Schemas ====================
+
 
 class CollaborationRatingBase(BaseModel):
     """跨部门协作评价基础"""
+
     ratee_id: int = Field(..., description="被评价人ID")
     communication_score: int = Field(..., ge=1, le=5, description="沟通配合")
     response_score: int = Field(..., ge=1, le=5, description="响应速度")
@@ -32,11 +33,13 @@ class CollaborationRatingBase(BaseModel):
 
 class CollaborationRatingCreate(CollaborationRatingBase):
     """创建跨部门评价"""
+
     period_id: int = Field(..., description="考核周期ID")
 
 
 class CollaborationRatingResponse(CollaborationRatingBase):
     """跨部门评价响应"""
+
     id: int
     period_id: int
     rater_id: int
@@ -52,8 +55,7 @@ class CollaborationRatingResponse(CollaborationRatingBase):
 
 class CollaborationMatrixResponse(BaseModel):
     """协作矩阵响应"""
+
     period_id: int
     matrix: Dict[str, Dict[str, float]] = Field(..., description="协作评分矩阵")
     details: List[Dict[str, Any]] = Field(default_factory=list, description="详细评价")
-
-

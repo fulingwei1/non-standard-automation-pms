@@ -84,9 +84,7 @@ class TestHealthCalculatorEdgeCases:
 
     # ==================== 异常值边界测试 ====================
 
-    def test_is_deadline_approaching_past_deadline(
-        self, health_calculator, mock_project
-    ):
+    def test_is_deadline_approaching_past_deadline(self, health_calculator, mock_project):
         """测试交期临近 - 过去日期"""
         mock_project.planned_end_date = date.today() - timedelta(days=1)
         result = health_calculator._is_deadline_approaching(mock_project, days=7)
@@ -98,9 +96,7 @@ class TestHealthCalculatorEdgeCases:
         result = health_calculator._is_deadline_approaching(mock_project, days=7)
         assert result is False
 
-    def test_is_deadline_approaching_exactly_boundary(
-        self, health_calculator, mock_project
-    ):
+    def test_is_deadline_approaching_exactly_boundary(self, health_calculator, mock_project):
         """测试交期临近 - 正好在边界上"""
         mock_project.planned_end_date = date.today() + timedelta(days=7)
         result = health_calculator._is_deadline_approaching(mock_project, days=7)
@@ -112,17 +108,13 @@ class TestHealthCalculatorEdgeCases:
         result = health_calculator._has_schedule_variance(mock_project, threshold=10)
         assert result is True
 
-    def test_has_schedule_variance_hundred_progress(
-        self, health_calculator, mock_project
-    ):
+    def test_has_schedule_variance_hundred_progress(self, health_calculator, mock_project):
         """测试进度偏差 - 100% 进度"""
         mock_project.progress_pct = Decimal("100")
         result = health_calculator._has_schedule_variance(mock_project, threshold=10)
         assert result is False
 
-    def test_has_schedule_variance_same_day_start_end(
-        self, health_calculator, mock_project
-    ):
+    def test_has_schedule_variance_same_day_start_end(self, health_calculator, mock_project):
         """测试进度偏差 - 同一天开始和结束"""
         today = date.today()
         mock_project.planned_start_date = today
@@ -132,25 +124,19 @@ class TestHealthCalculatorEdgeCases:
 
     # ==================== 类型错误边界测试 ====================
 
-    def test_calculate_health_invalid_status_type(
-        self, health_calculator, mock_project
-    ):
+    def test_calculate_health_invalid_status_type(self, health_calculator, mock_project):
         """测试计算健康度 - 无效状态类型"""
         mock_project.status = 123
         result = health_calculator._is_closed(mock_project)
         assert result is False
 
-    def test_calculate_health_empty_string_status(
-        self, health_calculator, mock_project
-    ):
+    def test_calculate_health_empty_string_status(self, health_calculator, mock_project):
         """测试计算健康度 - 空字符串状态"""
         mock_project.status = ""
         result = health_calculator._is_closed(mock_project)
         assert result is False
 
-    def test_is_deadline_approaching_invalid_date_type(
-        self, health_calculator, mock_project
-    ):
+    def test_is_deadline_approaching_invalid_date_type(self, health_calculator, mock_project):
         """测试交期临近 - 无效日期类型"""
         mock_project.planned_end_date = "2024-01-01"
         with pytest.raises(TypeError):
@@ -168,9 +154,7 @@ class TestHealthCalculatorEdgeCases:
         with pytest.raises(SQLAlchemyError):
             health_calculator._has_blocked_critical_tasks(mock_project)
 
-    def test_has_blocking_issues_database_error(
-        self, health_calculator, mock_project, db_session
-    ):
+    def test_has_blocking_issues_database_error(self, health_calculator, mock_project, db_session):
         """测试有阻塞问题 - 数据库错误"""
         from sqlalchemy.exc import SQLAlchemyError
 

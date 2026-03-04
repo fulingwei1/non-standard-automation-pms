@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.stage_instance.adjustments import AdjustmentsMixin
 
 
@@ -34,10 +36,12 @@ class TestAdjustmentsMixin:
         self.db.query.return_value.filter.return_value.first.return_value = None
         with pytest.raises(ValueError, match="不存在"):
             from datetime import date
+
             self.service.update_node_planned_date(999, date(2024, 6, 1))
 
     def test_update_node_planned_date_success(self):
         from datetime import date
+
         node = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = node
         result = self.service.update_node_planned_date(1, date(2024, 6, 1))

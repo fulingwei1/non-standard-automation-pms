@@ -41,17 +41,11 @@ class PresalesDashboardAdapter(DashboardAdapter):
         year_start = date(today.year, 1, 1)
 
         # 年度统计
-        ytd_projects = (
-            self.db.query(Project).filter(Project.created_at >= year_start).all()
-        )
+        ytd_projects = self.db.query(Project).filter(Project.created_at >= year_start).all()
 
         total_leads_ytd = len(ytd_projects)
-        won_leads_ytd = sum(
-            1 for p in ytd_projects if p.outcome == LeadOutcomeEnum.WON.value
-        )
-        lost_leads_ytd = sum(
-            1 for p in ytd_projects if p.outcome == LeadOutcomeEnum.LOST.value
-        )
+        won_leads_ytd = sum(1 for p in ytd_projects if p.outcome == LeadOutcomeEnum.WON.value)
+        lost_leads_ytd = sum(1 for p in ytd_projects if p.outcome == LeadOutcomeEnum.LOST.value)
         overall_win_rate = (
             won_leads_ytd / (won_leads_ytd + lost_leads_ytd)
             if (won_leads_ytd + lost_leads_ytd) > 0
@@ -136,9 +130,7 @@ class PresalesDashboardAdapter(DashboardAdapter):
         today = date.today()
         year_start = date(today.year, 1, 1)
 
-        ytd_projects = (
-            self.db.query(Project).filter(Project.created_at >= year_start).all()
-        )
+        ytd_projects = self.db.query(Project).filter(Project.created_at >= year_start).all()
 
         # 按失败原因统计
         loss_reasons = {}
@@ -161,12 +153,8 @@ class PresalesDashboardAdapter(DashboardAdapter):
                 for p in ytd_projects
                 if p.created_at and p.created_at.strftime("%Y-%m") == month_key
             ]
-            month_won = sum(
-                1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value
-            )
-            month_lost = sum(
-                1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value
-            )
+            month_won = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value)
+            month_lost = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value)
 
             monthly_stats.append(
                 {
@@ -174,11 +162,11 @@ class PresalesDashboardAdapter(DashboardAdapter):
                     "total": len(month_projects),
                     "won": month_won,
                     "lost": month_lost,
-                    "win_rate": round(
-                        month_won / (month_won + month_lost), 3
-                    )
-                    if (month_won + month_lost) > 0
-                    else 0,
+                    "win_rate": (
+                        round(month_won / (month_won + month_lost), 3)
+                        if (month_won + month_lost) > 0
+                        else 0
+                    ),
                 }
             )
 
@@ -209,9 +197,7 @@ class PresalesDashboardAdapter(DashboardAdapter):
         today = date.today()
         year_start = date(today.year, 1, 1)
 
-        ytd_projects = (
-            self.db.query(Project).filter(Project.created_at >= year_start).all()
-        )
+        ytd_projects = self.db.query(Project).filter(Project.created_at >= year_start).all()
 
         # 月度统计完整数据
         monthly_stats = []
@@ -224,12 +210,8 @@ class PresalesDashboardAdapter(DashboardAdapter):
                 for p in ytd_projects
                 if p.created_at and p.created_at.strftime("%Y-%m") == month_key
             ]
-            month_won = sum(
-                1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value
-            )
-            month_lost = sum(
-                1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value
-            )
+            month_won = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value)
+            month_lost = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value)
 
             monthly_stats.append(
                 {
@@ -237,11 +219,11 @@ class PresalesDashboardAdapter(DashboardAdapter):
                     "total": len(month_projects),
                     "won": month_won,
                     "lost": month_lost,
-                    "win_rate": round(
-                        month_won / (month_won + month_lost), 3
-                    )
-                    if (month_won + month_lost) > 0
-                    else 0,
+                    "win_rate": (
+                        round(month_won / (month_won + month_lost), 3)
+                        if (month_won + month_lost) > 0
+                        else 0
+                    ),
                 }
             )
 

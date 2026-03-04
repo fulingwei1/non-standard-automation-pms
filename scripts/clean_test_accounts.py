@@ -7,7 +7,7 @@
 
 import sys
 
-sys.path.append('/Users/flw/non-standard-automation-pm')
+sys.path.append("/Users/flw/non-standard-automation-pm")
 
 from app.models.base import SessionLocal
 from app.models.user import Role, User, UserRole
@@ -20,30 +20,38 @@ def clean_test_accounts():
         print("=" * 60)
 
         # 1. 查找需要删除的测试账户
-        test_accounts = db.query(User).filter(
-            User.username.ilike('%test%') |
-            User.username.ilike('%demo%') |
-            User.username.ilike('%guest%') |
-            User.username.ilike('%admin%')
-        ).all()
+        test_accounts = (
+            db.query(User)
+            .filter(
+                User.username.ilike("%test%")
+                | User.username.ilike("%demo%")
+                | User.username.ilike("%guest%")
+                | User.username.ilike("%admin%")
+            )
+            .all()
+        )
 
         print(f"📊 找到 {len(test_accounts)} 个测试/演示账户")
 
         # 2. 查找项目经理角色
-        pm_role = db.query(Role).filter(Role.role_name == '项目经理').first()
+        pm_role = db.query(Role).filter(Role.role_name == "项目经理").first()
         if not pm_role:
             print("❌ 项目经理角色不存在，跳过项目经理保留操作")
             return False
 
         # 3. 查找项目经理用户（谭章斌）
-        project_manager_users = db.query(User).join(UserRole).filter(
-            UserRole.role_id == pm_role.id,
-            User.real_name == '谭章斌'
-        ).all()
+        project_manager_users = (
+            db.query(User)
+            .join(UserRole)
+            .filter(UserRole.role_id == pm_role.id, User.real_name == "谭章斌")
+            .all()
+        )
 
         print(f"👥 查找项目经理用户（谭章斌）: {len(project_manager_users)} 个")
         for user in project_manager_users:
-            print(f"  - {user.username} ({user.real_name}) - {user.department if user.department else '无部门'}")
+            print(
+                f"  - {user.username} ({user.real_name}) - {user.department if user.department else '无部门'}"
+            )
 
         # 4. 删除测试账户
         deleted_count = 0
@@ -89,12 +97,13 @@ def clean_test_accounts():
         print(f"  👑 保留项目经理数: {len(tan_zhangbin_users)}")
 
         return {
-            'deleted_count': deleted_count,
-            'final_users': final_users,
-            'final_active': final_active,
-            'reserved_pm_count': len(tan_zhangbin_users),
-            'pm_users': tan_zhangbin_users
+            "deleted_count": deleted_count,
+            "final_users": final_users,
+            "final_active": final_active,
+            "reserved_pm_count": len(tan_zhangbin_users),
+            "pm_users": tan_zhangbin_users,
         }
+
 
 def protect_project_manager():
     """保护项目经理谭章斌的账户"""
@@ -103,25 +112,22 @@ def protect_project_manager():
         print("=" * 60)
 
         # 确保谭章斌用户存在且激活
-        pm_role = db.query(Role).filter(Role.role_name == '项目经理').first()
-        tan_zhangbin = db.query(User).filter(
-            User.real_name == '谭章斌',
-            User.is_active == True
-        ).first()
+        pm_role = db.query(Role).filter(Role.role_name == "项目经理").first()
+        tan_zhangbin = (
+            db.query(User).filter(User.real_name == "谭章斌", User.is_active == True).first()
+        )
 
         if tan_zhangbin:
             # 确保有项目经理角色
-            existing_pm_role = db.query(UserRole).filter(
-                UserRole.user_id == tan_zhangbin.id,
-                UserRole.role_id == pm_role.id
-            ).first()
+            existing_pm_role = (
+                db.query(UserRole)
+                .filter(UserRole.user_id == tan_zhangbin.id, UserRole.role_id == pm_role.id)
+                .first()
+            )
 
             if not existing_pm_role:
                 # 分配项目经理角色
-                pm_user_role = UserRole(
-                    user_id=tan_zhangbin.id,
-                    role_id=pm_role.id
-                )
+                pm_user_role = UserRole(user_id=tan_zhangbin.id, role_id=pm_role.id)
                 db.add(pm_user_role)
                 print(f"  ✅ 为谭章斌分配项目经理角色")
             else:
@@ -136,6 +142,7 @@ def protect_project_manager():
             print(f"  ✅ 谭章斌账户保护完成")
         else:
             print("❌ 未找到谭章斌用户")
+
 
 def main():
     """主函数"""
@@ -156,7 +163,7 @@ def main():
     print(f"👑 保留项目经理: {result['reserved_pm_count']}")
     print(f"🗑️ 删除测试账户: {result['deleted_count']}")
 
-    if result['final_users'] <= 175:  # 接近实际员工数174
+    if result["final_users"] <= 175:  # 接近实际员工数174
         print(f"✅ 用户数恢复正常: {result['final_users']}/174 (实际员工数)")
     else:
         print(f"⚠️ 用户数仍然偏多: {result['final_users']}/174 (实际员工数)")
@@ -164,6 +171,7 @@ def main():
     print(f"\n📝 谭章斌项目经理账户已安全保留并激活")
     print(f"🔐 所有测试和演示账户已被清理")
     print(f"🛡️ 系统现在只包含真实员工和必要的管理账户")
+
 
 if __name__ == "__main__":
     main()

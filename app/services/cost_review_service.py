@@ -21,10 +21,7 @@ class CostReviewService:
 
     @staticmethod
     def generate_cost_review_report(
-        db: Session,
-        project_id: int,
-        reviewer_id: int,
-        review_date: Optional[date] = None
+        db: Session, project_id: int, reviewer_id: int, review_date: Optional[date] = None
     ) -> ProjectReview:
         """
         自动生成项目成本复盘报告
@@ -47,10 +44,13 @@ class CostReviewService:
             raise ValueError("项目未结项，无法生成成本复盘报告")
 
         # 检查是否已有复盘报告
-        existing = db.query(ProjectReview).filter(
-            ProjectReview.project_id == project_id,
-            ProjectReview.review_type == "POST_MORTEM"
-        ).first()
+        existing = (
+            db.query(ProjectReview)
+            .filter(
+                ProjectReview.project_id == project_id, ProjectReview.review_type == "POST_MORTEM"
+            )
+            .first()
+        )
 
         if existing:
             raise ValueError("该项目已存在结项复盘报告")
@@ -76,15 +76,11 @@ class CostReviewService:
             schedule_variance = actual_duration - plan_duration
 
         # 获取预算和实际成本（取最新已审批的有效预算版本）
-        budget = (
-            db.query(ProjectBudget)
-            .filter(
-                ProjectBudget.project_id == project_id
-            )
-            .first()
-        )
+        budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
 
-        budget_amount = Decimal(str(budget.total_amount)) if budget else (project.budget_amount or Decimal("0"))
+        budget_amount = (
+            Decimal(str(budget.total_amount)) if budget else (project.budget_amount or Decimal("0"))
+        )
 
         # 计算实际成本
         costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
@@ -97,10 +93,9 @@ class CostReviewService:
 
         # 统计变更次数（使用安全的整数转换，防止查询异常）
         try:
-            ecn_count = int(db.query(Ecn).filter(
-                Ecn.project_id == project_id,
-                Ecn.status == "APPROVED"
-            ).count())
+            ecn_count = int(
+                db.query(Ecn).filter(Ecn.project_id == project_id, Ecn.status == "APPROVED").count()
+            )
         except (TypeError, ValueError):
             ecn_count = 0
 
@@ -122,12 +117,12 @@ class CostReviewService:
 
         # 生成成本分析总结
         cost_summary = CostReviewService._generate_cost_summary(
-            budget_amount, actual_cost, cost_variance,
-            cost_by_type, cost_by_category, ecn_count
+            budget_amount, actual_cost, cost_variance, cost_by_type, cost_by_category, ecn_count
         )
 
         # 获取复盘负责人信息
         from app.models.user import User
+
         reviewer = db.query(User).filter(User.id == reviewer_id).first()
         reviewer_name = reviewer.real_name or reviewer.username if reviewer else "系统"
 
@@ -148,7 +143,7 @@ class CostReviewService:
             reviewer_id=reviewer_id,
             reviewer_name=reviewer_name,
             conclusion=cost_summary,
-            status="DRAFT"
+            status="DRAFT",
         )
 
         db.add(review)
@@ -175,7 +170,11 @@ class CostReviewService:
         )
 
         seq = 1
-        if latest_review and hasattr(latest_review, "review_no") and isinstance(getattr(latest_review, "review_no", None), str):
+        if (
+            latest_review
+            and hasattr(latest_review, "review_no")
+            and isinstance(getattr(latest_review, "review_no", None), str)
+        ):
             try:
                 # 从编号中提取序号部分，格式：REV-yymmdd-xxx
                 parts = latest_review.review_no.split("-")
@@ -193,7 +192,7 @@ class CostReviewService:
         cost_variance: Decimal,
         cost_by_type: Dict[str, Decimal],
         cost_by_category: Dict[str, Decimal],
-        ecn_count: int
+        ecn_count: int,
     ) -> str:
         """生成成本分析总结"""
         summary_parts = []
@@ -201,13 +200,21 @@ class CostReviewService:
         # 总体情况
         variance_pct = (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
         if variance_pct > 10:
-            summary_parts.append(f"项目实际成本{actual_cost:.2f}元，超出预算{cost_variance:.2f}元（{variance_pct:.1f}%），存在严重超支。")
+            summary_parts.append(
+                f"项目实际成本{actual_cost:.2f}元，超出预算{cost_variance:.2f}元（{variance_pct:.1f}%），存在严重超支。"
+            )
         elif variance_pct > 5:
-            summary_parts.append(f"项目实际成本{actual_cost:.2f}元，超出预算{cost_variance:.2f}元（{variance_pct:.1f}%），需要关注。")
+            summary_parts.append(
+                f"项目实际成本{actual_cost:.2f}元，超出预算{cost_variance:.2f}元（{variance_pct:.1f}%），需要关注。"
+            )
         elif variance_pct < -5:
-            summary_parts.append(f"项目实际成本{actual_cost:.2f}元，低于预算{abs(cost_variance):.2f}元（{abs(variance_pct):.1f}%），成本控制良好。")
+            summary_parts.append(
+                f"项目实际成本{actual_cost:.2f}元，低于预算{abs(cost_variance):.2f}元（{abs(variance_pct):.1f}%），成本控制良好。"
+            )
         else:
-            summary_parts.append(f"项目实际成本{actual_cost:.2f}元，与预算基本一致（偏差{variance_pct:.1f}%）。")
+            summary_parts.append(
+                f"项目实际成本{actual_cost:.2f}元，与预算基本一致（偏差{variance_pct:.1f}%）。"
+            )
 
         # 成本构成
         if cost_by_type:
@@ -221,9 +228,3 @@ class CostReviewService:
             summary_parts.append(f"\n项目共发生{ecn_count}次工程变更，变更成本已单独核算。")
 
         return "\n".join(summary_parts)
-
-
-
-
-
-

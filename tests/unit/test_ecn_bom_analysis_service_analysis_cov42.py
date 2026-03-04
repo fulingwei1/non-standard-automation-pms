@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.ecn_bom_analysis_service.analysis")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.ecn_bom_analysis_service.analysis import (
     analyze_bom_impact,
     analyze_single_bom,
@@ -17,6 +18,7 @@ def make_service():
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_analyze_bom_impact_ecn_not_found():
     svc = make_service()
@@ -44,6 +46,7 @@ def test_analyze_bom_impact_no_affected_materials():
     def query_side(*args):
         q = MagicMock()
         from app.models.ecn import Ecn, EcnAffectedMaterial
+
         if args and args[0] is Ecn:
             q.filter.return_value.first.return_value = ecn
         elif args and args[0] is EcnAffectedMaterial:
@@ -51,8 +54,10 @@ def test_analyze_bom_impact_no_affected_materials():
         return q
 
     svc.db.query.side_effect = query_side
-    with patch("app.services.ecn_bom_analysis_service.analysis.Ecn"), \
-         patch("app.services.ecn_bom_analysis_service.analysis.EcnAffectedMaterial"):
+    with (
+        patch("app.services.ecn_bom_analysis_service.analysis.Ecn"),
+        patch("app.services.ecn_bom_analysis_service.analysis.EcnAffectedMaterial"),
+    ):
         # Simplified: mock entire chain
         svc.db.query.side_effect = None
         ecn_q = MagicMock()
@@ -61,6 +66,7 @@ def test_analyze_bom_impact_no_affected_materials():
         mat_q.filter.return_value.all.return_value = []
 
         call_count = [0]
+
         def query_router(*args):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -80,10 +86,21 @@ def test_analyze_single_bom_no_affected_items():
     bom.bom_name = "测试BOM"
     svc.db.query.return_value.filter.return_value.all.return_value = []
 
-    with patch("app.services.ecn_bom_analysis_service.analysis.analyze_cascade_impact", return_value=[]), \
-         patch("app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact", return_value=0), \
-         patch("app.services.ecn_bom_analysis_service.analysis.calculate_schedule_impact", return_value=0):
-        result = analyze_single_bom(svc, ecn_id=1, bom_header=bom, affected_materials=[], include_cascade=False)
+    with (
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.analyze_cascade_impact", return_value=[]
+        ),
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact", return_value=0
+        ),
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.calculate_schedule_impact",
+            return_value=0,
+        ),
+    ):
+        result = analyze_single_bom(
+            svc, ecn_id=1, bom_header=bom, affected_materials=[], include_cascade=False
+        )
 
     assert result["has_impact"] is False
     assert result["bom_id"] == 1
@@ -109,12 +126,25 @@ def test_analyze_single_bom_with_matching_material():
 
     svc.db.query.return_value.filter.return_value.all.return_value = [bom_item]
 
-    with patch("app.services.ecn_bom_analysis_service.analysis.analyze_cascade_impact", return_value=[]), \
-         patch("app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact", return_value=100), \
-         patch("app.services.ecn_bom_analysis_service.analysis.calculate_schedule_impact", return_value=5), \
-         patch("app.services.ecn_bom_analysis_service.analysis.get_impact_description", return_value="修改"):
-        result = analyze_single_bom(svc, ecn_id=1, bom_header=bom,
-                                    affected_materials=[affected_mat], include_cascade=True)
+    with (
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.analyze_cascade_impact", return_value=[]
+        ),
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.calculate_cost_impact", return_value=100
+        ),
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.calculate_schedule_impact",
+            return_value=5,
+        ),
+        patch(
+            "app.services.ecn_bom_analysis_service.analysis.get_impact_description",
+            return_value="修改",
+        ),
+    ):
+        result = analyze_single_bom(
+            svc, ecn_id=1, bom_header=bom, affected_materials=[affected_mat], include_cascade=True
+        )
 
     assert result["has_impact"] is True
     assert len(result["direct_impact"]) == 1

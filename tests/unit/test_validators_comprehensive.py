@@ -3,30 +3,31 @@
 Comprehensive tests for app/core/schemas/validators.py
 Standalone – no DB or fixtures required.
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+
+import pytest
 
 from app.core.schemas.validators import (
-    validate_project_code,
-    validate_machine_code,
-    validate_phone,
-    validate_email,
-    validate_phone_or_email,
-    validate_id_card,
     validate_bank_card,
+    validate_code_string,
     validate_date_range,
     validate_date_string,
-    validate_positive_number,
-    validate_non_negative_number,
     validate_decimal,
+    validate_email,
+    validate_id_card,
+    validate_machine_code,
     validate_non_empty_string,
-    validate_code_string,
+    validate_non_negative_number,
+    validate_phone,
+    validate_phone_or_email,
+    validate_positive_number,
+    validate_project_code,
     validate_status,
 )
 
-
 # ========== validate_project_code ==========
+
 
 class TestValidateProjectCode:
     def test_valid_code(self):
@@ -75,6 +76,7 @@ class TestValidateProjectCode:
 
 # ========== validate_machine_code ==========
 
+
 class TestValidateMachineCode:
     def test_valid_code(self):
         assert validate_machine_code("PN001") == "PN001"
@@ -99,6 +101,7 @@ class TestValidateMachineCode:
 
 
 # ========== validate_phone ==========
+
 
 class TestValidatePhone:
     def test_valid_phone(self):
@@ -125,6 +128,7 @@ class TestValidatePhone:
 
 
 # ========== validate_email ==========
+
 
 class TestValidateEmail:
     def test_valid_email(self):
@@ -155,6 +159,7 @@ class TestValidateEmail:
 
 # ========== validate_phone_or_email ==========
 
+
 class TestValidatePhoneOrEmail:
     def test_valid_phone(self):
         result = validate_phone_or_email("13812345678")
@@ -178,6 +183,7 @@ class TestValidatePhoneOrEmail:
 
 
 # ========== validate_id_card ==========
+
 
 class TestValidateIdCard:
     def test_valid_18_digit(self):
@@ -220,6 +226,7 @@ class TestValidateIdCard:
 
 # ========== validate_bank_card ==========
 
+
 class TestValidateBankCard:
     def test_valid_card(self):
         # Known Luhn-valid test card number
@@ -254,6 +261,7 @@ class TestValidateBankCard:
 
 # ========== validate_date_range ==========
 
+
 class TestValidateDateRange:
     def test_valid_range(self):
         s = date(2025, 1, 1)
@@ -286,6 +294,7 @@ class TestValidateDateRange:
 
 # ========== validate_date_string ==========
 
+
 class TestValidateDateString:
     def test_valid_date(self):
         result = validate_date_string("2025-01-15")
@@ -309,6 +318,7 @@ class TestValidateDateString:
 
 
 # ========== validate_positive_number ==========
+
 
 class TestValidatePositiveNumber:
     def test_valid_int(self):
@@ -339,6 +349,7 @@ class TestValidatePositiveNumber:
 
 # ========== validate_non_negative_number ==========
 
+
 class TestValidateNonNegativeNumber:
     def test_zero_allowed(self):
         assert validate_non_negative_number(0) == 0.0
@@ -360,6 +371,7 @@ class TestValidateNonNegativeNumber:
 
 
 # ========== validate_decimal ==========
+
 
 class TestValidateDecimal:
     def test_valid_value(self):
@@ -397,6 +409,7 @@ class TestValidateDecimal:
 
 # ========== validate_non_empty_string ==========
 
+
 class TestValidateNonEmptyString:
     def test_valid_string(self):
         assert validate_non_empty_string("hello") == "hello"
@@ -427,6 +440,7 @@ class TestValidateNonEmptyString:
 
 # ========== validate_code_string ==========
 
+
 class TestValidateCodeString:
     def test_valid_code(self):
         assert validate_code_string("ABC_123") == "ABC_123"
@@ -448,6 +462,7 @@ class TestValidateCodeString:
 
 
 # ========== validate_status ==========
+
 
 class TestValidateStatus:
     def test_valid_status(self):

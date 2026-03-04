@@ -5,10 +5,11 @@
       calculate_overall_metrics, _calculate_schedule_score, _fetch_work_orders,
       _generate_plan_id, _get_available_equipment/workers, 算法分支
 """
-import pytest
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.production_schedule_service import ProductionScheduleService
 
@@ -23,9 +24,16 @@ def service(mock_db):
     return ProductionScheduleService(db=mock_db)
 
 
-def make_schedule(id=1, equipment_id=None, worker_id=None,
-                  start=None, end=None, work_order_id=1,
-                  priority_score=2.0, duration_hours=8.0):
+def make_schedule(
+    id=1,
+    equipment_id=None,
+    worker_id=None,
+    start=None,
+    end=None,
+    work_order_id=1,
+    priority_score=2.0,
+    duration_hours=8.0,
+):
     s = MagicMock()
     s.id = id
     s.equipment_id = equipment_id
@@ -38,10 +46,18 @@ def make_schedule(id=1, equipment_id=None, worker_id=None,
     return s
 
 
-def make_work_order(id=1, priority="NORMAL", plan_end_date=None,
-                    workshop_id=1, process_id=1, standard_hours=8,
-                    machine_id=None, assigned_to=None, work_order_no="WO-001",
-                    material_id=1):
+def make_work_order(
+    id=1,
+    priority="NORMAL",
+    plan_end_date=None,
+    workshop_id=1,
+    process_id=1,
+    standard_hours=8,
+    machine_id=None,
+    assigned_to=None,
+    work_order_no="WO-001",
+    material_id=1,
+):
     wo = MagicMock()
     wo.id = id
     wo.priority = priority
@@ -76,6 +92,7 @@ def make_worker(id=1, workshop_id=1, is_active=True, status="ACTIVE"):
 
 # ======================= _should_swap_schedules =======================
 
+
 class TestShouldSwapSchedules:
     """测试 _should_swap_schedules 分支逻辑"""
 
@@ -106,6 +123,7 @@ class TestShouldSwapSchedules:
 
 
 # ======================= _select_best_equipment =======================
+
 
 class TestSelectBestEquipment:
     """测试设备选择逻辑"""
@@ -157,6 +175,7 @@ class TestSelectBestEquipment:
 
 
 # ======================= _select_best_worker =======================
+
 
 class TestSelectBestWorker:
     """测试工人选择逻辑"""
@@ -224,14 +243,18 @@ class TestSelectBestWorker:
 
 # ======================= _calculate_priority_score =======================
 
+
 class TestCalculatePriorityScore:
-    @pytest.mark.parametrize("priority,expected", [
-        ("URGENT", 5.0),
-        ("HIGH", 3.0),
-        ("NORMAL", 2.0),
-        ("LOW", 1.0),
-        ("UNKNOWN", 2.0),
-    ])
+    @pytest.mark.parametrize(
+        "priority,expected",
+        [
+            ("URGENT", 5.0),
+            ("HIGH", 3.0),
+            ("NORMAL", 2.0),
+            ("LOW", 1.0),
+            ("UNKNOWN", 2.0),
+        ],
+    )
     def test_all_priorities(self, service, priority, expected):
         order = make_work_order(priority=priority)
         assert service._calculate_priority_score(order) == expected
@@ -239,19 +262,24 @@ class TestCalculatePriorityScore:
 
 # ======================= _get_priority_weight =======================
 
+
 class TestGetPriorityWeight:
-    @pytest.mark.parametrize("priority,expected", [
-        ("URGENT", 1),
-        ("HIGH", 2),
-        ("NORMAL", 3),
-        ("LOW", 4),
-        ("UNKNOWN", 3),
-    ])
+    @pytest.mark.parametrize(
+        "priority,expected",
+        [
+            ("URGENT", 1),
+            ("HIGH", 2),
+            ("NORMAL", 3),
+            ("LOW", 4),
+            ("UNKNOWN", 3),
+        ],
+    )
     def test_all_weights(self, service, priority, expected):
         assert service._get_priority_weight(priority) == expected
 
 
 # ======================= _calculate_schedule_score =======================
+
 
 class TestCalculateScheduleScore:
     def test_order_not_found_returns_zero(self, service):
@@ -291,9 +319,11 @@ class TestCalculateScheduleScore:
 
 # ======================= calculate_overall_metrics =======================
 
+
 class TestCalculateOverallMetrics:
     def test_empty_schedules_returns_zeroed_metrics(self, service):
         from app.schemas.production_schedule import ScheduleScoreMetrics
+
         result = service.calculate_overall_metrics([], [])
         assert result.completion_rate == 0
         assert result.equipment_utilization == 0
@@ -335,6 +365,7 @@ class TestCalculateOverallMetrics:
 
 # ======================= _generate_plan_id =======================
 
+
 class TestGeneratePlanId:
     def test_returns_integer(self, service):
         plan_id = service._generate_plan_id()
@@ -343,6 +374,7 @@ class TestGeneratePlanId:
 
 
 # ======================= _get_available_equipment/workers =======================
+
 
 class TestGetAvailableResources:
     def test_get_available_equipment_calls_db(self, service):
@@ -359,6 +391,7 @@ class TestGetAvailableResources:
 
 
 # ======================= _find_earliest_available_slot =======================
+
 
 class TestFindEarliestAvailableSlot:
     def test_returns_start_when_no_conflicts(self, service):
@@ -385,6 +418,7 @@ class TestFindEarliestAvailableSlot:
 
 
 # ======================= _optimize_schedules =======================
+
 
 class TestOptimizeSchedules:
     def test_single_schedule_unchanged(self, service):

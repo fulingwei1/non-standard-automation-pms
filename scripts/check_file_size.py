@@ -11,7 +11,6 @@ import os
 import sys
 from pathlib import Path
 
-
 # 文件大小限制配置
 LIMITS = {
     ".py": 500,  # Python文件最大500行
@@ -105,9 +104,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="检查文件大小限制")
-    parser.add_argument(
-        "--strict", action="store_true", help="严格模式，发现违规则退出"
-    )
+    parser.add_argument("--strict", action="store_true", help="严格模式，发现违规则退出")
     parser.add_argument("--dir", default=".", help="检查目录")
     args = parser.parse_args()
 

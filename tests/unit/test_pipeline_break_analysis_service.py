@@ -8,13 +8,14 @@ File Size: 139 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+from sqlalchemy.orm import Session
+
+from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
 
 
 @pytest.fixture
@@ -30,9 +31,8 @@ class TestPipelineBreakAnalysisService:
         """测试服务初始化"""
         service = PipelineBreakAnalysisService(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_analyze_pipeline_breaks(self, pipeline_break_analysis_service):
         """测试 analyze_pipeline_breaks 方法"""
@@ -42,7 +42,6 @@ class TestPipelineBreakAnalysisService:
         # 3. 验证结果
         pass
 
-
     def test_get_break_reasons(self, pipeline_break_analysis_service):
         """测试 get_break_reasons 方法"""
         # TODO: 实现测试逻辑
@@ -50,7 +49,6 @@ class TestPipelineBreakAnalysisService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     def test_get_break_patterns(self, pipeline_break_analysis_service):
         """测试 get_break_patterns 方法"""
@@ -60,7 +58,6 @@ class TestPipelineBreakAnalysisService:
         # 3. 验证结果
         pass
 
-
     def test_get_break_warnings(self, pipeline_break_analysis_service):
         """测试 get_break_warnings 方法"""
         # TODO: 实现测试逻辑
@@ -68,7 +65,6 @@ class TestPipelineBreakAnalysisService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)
@@ -81,8 +77,9 @@ class TestPipelineBreakAnalysisService:
 # G4 补充测试（纯 MagicMock，不依赖真实数据库）
 # ──────────────────────────────────────────────────────────────────────────────
 
-from unittest.mock import MagicMock, patch
 from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 
@@ -91,6 +88,7 @@ class TestPipelineBreakAnalysisServiceG4:
 
     def _make_service(self):
         from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+
         db = MagicMock()
         return PipelineBreakAnalysisService(db), db
 
@@ -191,6 +189,7 @@ class TestPipelineBreakAnalysisServiceG4:
     def test_default_break_thresholds_exist(self):
         """服务包含正确的默认阈值配置"""
         from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+
         thresholds = PipelineBreakAnalysisService.DEFAULT_BREAK_THRESHOLDS
         assert "LEAD_TO_OPP" in thresholds
         assert "OPP_TO_QUOTE" in thresholds

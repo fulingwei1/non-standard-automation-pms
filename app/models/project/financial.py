@@ -26,15 +26,11 @@ class ProjectMilestone(Base, TimestampMixin):
     __tablename__ = "project_milestones"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID（可选）")
     milestone_code = Column(String(50), nullable=True, comment="里程碑编码")
     milestone_name = Column(String(200), nullable=True, comment="里程碑名称")
-    milestone_type = Column(
-        String(20), default="CUSTOM", comment="GATE/DELIVERY/PAYMENT/CUSTOM"
-    )
+    milestone_type = Column(String(20), default="CUSTOM", comment="GATE/DELIVERY/PAYMENT/CUSTOM")
 
     # 时间
     planned_date = Column(Date, nullable=True, comment="计划日期")
@@ -76,7 +72,9 @@ class ProjectPaymentPlan(Base, TimestampMixin):
 
     payment_no = Column(Integer, nullable=False, comment="期次")
     payment_name = Column(String(100), nullable=False, comment="款项名称")
-    payment_type = Column(String(20), nullable=False, comment="款项类型：ADVANCE/DELIVERY/ACCEPTANCE/WARRANTY")
+    payment_type = Column(
+        String(20), nullable=False, comment="款项类型：ADVANCE/DELIVERY/ACCEPTANCE/WARRANTY"
+    )
 
     # 金额
     payment_ratio = Column(Numeric(5, 2), comment="比例(%)")
@@ -93,7 +91,9 @@ class ProjectPaymentPlan(Base, TimestampMixin):
     trigger_condition = Column(Text, comment="触发条件描述")
 
     # 状态
-    status = Column(String(20), default="PENDING", comment="状态：PENDING/INVOICED/PARTIAL/COMPLETED")
+    status = Column(
+        String(20), default="PENDING", comment="状态：PENDING/INVOICED/PARTIAL/COMPLETED"
+    )
 
     # 发票信息
     invoice_id = Column(Integer, ForeignKey("invoices.id"), comment="关联发票ID")
@@ -140,9 +140,7 @@ class ProjectCost(Base, TimestampMixin):
     __tablename__ = "project_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
     cost_type = Column(String(50), nullable=True, comment="成本类型")
     cost_category = Column(String(50), nullable=True, comment="成本分类")
@@ -206,8 +204,12 @@ class FinancialProjectCost(Base, TimestampMixin):
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
 
     # 成本类型和分类
-    cost_type = Column(String(50), nullable=False, comment="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER")
-    cost_category = Column(String(50), nullable=False, comment="成本分类：出差费/人工费/招待费/其他")
+    cost_type = Column(
+        String(50), nullable=False, comment="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER"
+    )
+    cost_category = Column(
+        String(50), nullable=False, comment="成本分类：出差费/人工费/招待费/其他"
+    )
     cost_item = Column(String(200), comment="成本项名称")
 
     # 金额信息
@@ -232,13 +234,17 @@ class FinancialProjectCost(Base, TimestampMixin):
     hourly_rate = Column(Numeric(10, 2), comment="时薪（人工费用）")
 
     # 来源信息
-    source_type = Column(String(50), default="FINANCIAL_UPLOAD", comment="来源类型：FINANCIAL_UPLOAD（财务上传）")
+    source_type = Column(
+        String(50), default="FINANCIAL_UPLOAD", comment="来源类型：FINANCIAL_UPLOAD（财务上传）"
+    )
     source_no = Column(String(100), comment="来源单号（如报销单号、发票号等）")
     invoice_no = Column(String(100), comment="发票号")
 
     # 上传信息
     upload_batch_no = Column(String(50), comment="上传批次号")
-    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="上传人ID（财务部）")
+    uploaded_by = Column(
+        Integer, ForeignKey("users.id"), nullable=False, comment="上传人ID（财务部）"
+    )
 
     # 状态
     is_verified = Column(Boolean, default=False, comment="是否已核实")
@@ -259,7 +265,7 @@ class FinancialProjectCost(Base, TimestampMixin):
         Index("idx_financial_cost_date", "cost_date"),
         Index("idx_financial_cost_month", "cost_month"),
         Index("idx_financial_cost_upload_batch", "upload_batch_no"),
-        {"comment": "财务项目成本表（财务部手工录入）"}
+        {"comment": "财务项目成本表（财务部手工录入）"},
     )
 
     def __repr__(self):

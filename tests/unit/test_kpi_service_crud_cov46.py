@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - KPI服务CRUD单元测试"""
-import pytest
 import json
 
-pytest.importorskip("app.services.strategy.kpi_service.crud",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.strategy.kpi_service.crud", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.strategy.kpi_service.crud import (
     create_kpi,
+    delete_kpi,
     get_kpi,
     list_kpis,
     update_kpi,
-    delete_kpi,
 )
 
 

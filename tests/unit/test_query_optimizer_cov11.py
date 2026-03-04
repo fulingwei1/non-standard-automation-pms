@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十一批：database/query_optimizer 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.database.query_optimizer import QueryOptimizer
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -44,6 +46,7 @@ class TestGetProjectListOptimized:
     def test_returns_list(self, optimizer, db):
         """优化查询返回列表（Project.owner 不存在时跳过）"""
         from app.models.project import Project
+
         self._setup_db(db, [MagicMock()])
         # 临时给 Project 添加 owner 属性以绕过 AttributeError
         Project.owner = MagicMock()
@@ -59,6 +62,7 @@ class TestGetProjectListOptimized:
     def test_status_filter_applied(self, optimizer, db):
         """按状态过滤时不抛出异常"""
         from app.models.project import Project
+
         self._setup_db(db)
         Project.owner = MagicMock()
         try:
@@ -73,6 +77,7 @@ class TestGetProjectListOptimized:
     def test_pagination_params(self, optimizer, db):
         """分页参数传入"""
         from app.models.project import Project
+
         self._setup_db(db)
         Project.owner = MagicMock()
         try:

@@ -2,8 +2,9 @@
 """
 Unit tests for app/services/strategy/decomposition/stats.py
 """
-import pytest
 from unittest.mock import MagicMock, call
+
+import pytest
 
 try:
     from app.services.strategy.decomposition.stats import get_decomposition_stats
@@ -32,6 +33,7 @@ def _setup_db(csf_count=2, kpi_count=4, dept_obj_count=3, personal_kpi_count=6, 
 
 def test_get_decomposition_stats_uses_current_year_by_default():
     from datetime import date
+
     db = MagicMock()
     q = MagicMock()
     q.filter.return_value = q
@@ -90,8 +92,15 @@ def test_get_decomposition_stats_structure_keys():
     q.all.return_value = []
     db.query.return_value = q
     result = get_decomposition_stats(db, strategy_id=1)
-    expected = {"year", "csf_count", "kpi_count", "dept_objective_count",
-                "personal_kpi_count", "decomposition_rate", "department_stats"}
+    expected = {
+        "year",
+        "csf_count",
+        "kpi_count",
+        "dept_objective_count",
+        "personal_kpi_count",
+        "decomposition_rate",
+        "department_stats",
+    }
     assert expected == set(result.keys())
 
 

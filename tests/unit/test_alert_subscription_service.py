@@ -6,10 +6,8 @@
 from datetime import time
 from unittest.mock import MagicMock, patch
 
-
 from app.models.enums import AlertLevelEnum
 from app.services.alert_subscription_service import AlertSubscriptionService
-
 
 # ===== Mock Classes =====
 
@@ -89,7 +87,7 @@ class TestCheckLevelMatch:
         service = AlertSubscriptionService(db_session)
 
         result = service._check_level_match(
-        AlertLevelEnum.WARNING.value, AlertLevelEnum.WARNING.value
+            AlertLevelEnum.WARNING.value, AlertLevelEnum.WARNING.value
         )
         assert result is True
 
@@ -100,14 +98,12 @@ class TestCheckLevelMatch:
 
         # CRITICAL > WARNING
         result = service._check_level_match(
-        AlertLevelEnum.CRITICAL.value, AlertLevelEnum.WARNING.value
+            AlertLevelEnum.CRITICAL.value, AlertLevelEnum.WARNING.value
         )
         assert result is True
 
         # URGENT > INFO
-        result = service._check_level_match(
-        AlertLevelEnum.URGENT.value, AlertLevelEnum.INFO.value
-        )
+        result = service._check_level_match(AlertLevelEnum.URGENT.value, AlertLevelEnum.INFO.value)
         assert result is True
 
     def test_check_level_match_lower_level(self):
@@ -116,14 +112,12 @@ class TestCheckLevelMatch:
         service = AlertSubscriptionService(db_session)
 
         # INFO < WARNING
-        result = service._check_level_match(
-        AlertLevelEnum.INFO.value, AlertLevelEnum.WARNING.value
-        )
+        result = service._check_level_match(AlertLevelEnum.INFO.value, AlertLevelEnum.WARNING.value)
         assert result is False
 
         # WARNING < CRITICAL
         result = service._check_level_match(
-        AlertLevelEnum.WARNING.value, AlertLevelEnum.CRITICAL.value
+            AlertLevelEnum.WARNING.value, AlertLevelEnum.CRITICAL.value
         )
         assert result is False
 
@@ -156,9 +150,7 @@ class TestIsQuietHours:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        subscription = MockAlertSubscription(
-        id=1, user_id=1, quiet_start=None, quiet_end=None
-        )
+        subscription = MockAlertSubscription(id=1, user_id=1, quiet_start=None, quiet_end=None)
 
         result = service._is_quiet_hours(subscription)
         assert result is False
@@ -173,7 +165,7 @@ class TestIsQuietHours:
             mock_dt.now.return_value.time.return_value = time(22, 30)
 
             subscription = MockAlertSubscription(
-            id=1, user_id=1, quiet_start="22:00", quiet_end="06:00"
+                id=1, user_id=1, quiet_start="22:00", quiet_end="06:00"
             )
 
             result = service._is_quiet_hours(subscription)
@@ -189,7 +181,7 @@ class TestIsQuietHours:
             mock_dt.now.return_value.time.return_value = time(10, 0)
 
             subscription = MockAlertSubscription(
-            id=1, user_id=1, quiet_start="12:00", quiet_end="14:00"
+                id=1, user_id=1, quiet_start="12:00", quiet_end="14:00"
             )
 
             result = service._is_quiet_hours(subscription)
@@ -205,7 +197,7 @@ class TestIsQuietHours:
             mock_dt.now.return_value.time.return_value = time(23, 0)
 
             subscription = MockAlertSubscription(
-            id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
+                id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
             )
 
             result = service._is_quiet_hours(subscription)
@@ -221,7 +213,7 @@ class TestIsQuietHours:
             mock_dt.now.return_value.time.return_value = time(2, 0)
 
             subscription = MockAlertSubscription(
-            id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
+                id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
             )
 
             result = service._is_quiet_hours(subscription)
@@ -237,7 +229,7 @@ class TestIsQuietHours:
             mock_dt.now.return_value.time.return_value = time(12, 0)
 
             subscription = MockAlertSubscription(
-            id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
+                id=1, user_id=1, quiet_start="22:00", quiet_end="08:00"
             )
 
             result = service._is_quiet_hours(subscription)
@@ -249,7 +241,7 @@ class TestIsQuietHours:
         service = AlertSubscriptionService(db_session)
 
         subscription = MockAlertSubscription(
-        id=1, user_id=1, quiet_start="invalid", quiet_end="08:00"
+            id=1, user_id=1, quiet_start="invalid", quiet_end="08:00"
         )
 
         result = service._is_quiet_hours(subscription)
@@ -268,10 +260,10 @@ class TestMatchSubscriptions:
         service = AlertSubscriptionService(db_session)
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=None,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=None,
         )
 
         result = service.match_subscriptions(alert)
@@ -283,16 +275,14 @@ class TestMatchSubscriptions:
         service = AlertSubscriptionService(db_session)
 
         # 创建一个规则
-        rule = MockAlertRule(id=1, rule_type="DELAY",
-        target_type="PROJECT"
-    )
+        rule = MockAlertRule(id=1, rule_type="DELAY", target_type="PROJECT")
 
         # 创建预警记录
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         # 创建订阅配置 - 两个都匹配 DELAY 类型
@@ -317,16 +307,14 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY",
-        target_type="PROJECT"
-    )
+        rule = MockAlertRule(id=1, rule_type="DELAY", target_type="PROJECT")
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        project_id=100,
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            project_id=100,
+            rule=rule,
         )
 
         # 创建订阅配置
@@ -349,29 +337,27 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY",
-        target_type="PROJECT"
-    )
+        rule = MockAlertRule(id=1, rule_type="DELAY", target_type="PROJECT")
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.INFO.value,  # INFO 级别
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.INFO.value,  # INFO 级别
+            alert_type="DELAY",
+            rule=rule,
         )
 
         # 创建订阅配置
         sub1 = MockAlertSubscription(
-        id=1,
-        user_id=1,
-        alert_type="DELAY",
-        min_level=AlertLevelEnum.INFO.value,  # INFO 级别，应该匹配
+            id=1,
+            user_id=1,
+            alert_type="DELAY",
+            min_level=AlertLevelEnum.INFO.value,  # INFO 级别，应该匹配
         )
         sub2 = MockAlertSubscription(
-        id=2,
-        user_id=2,
-        alert_type="DELAY",
-        min_level=AlertLevelEnum.WARNING.value,  # WARNING 级别，不应该匹配
+            id=2,
+            user_id=2,
+            alert_type="DELAY",
+            min_level=AlertLevelEnum.WARNING.value,  # WARNING 级别，不应该匹配
         )
 
         # Mock 查询结果
@@ -391,15 +377,13 @@ class TestMatchSubscriptions:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY",
-        target_type="PROJECT"
-    )
+        rule = MockAlertRule(id=1, rule_type="DELAY", target_type="PROJECT")
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         # 假设当前时间是 12:00
@@ -407,18 +391,18 @@ class TestMatchSubscriptions:
             mock_dt.now.return_value.time.return_value = time(12, 0)
 
             sub1 = MockAlertSubscription(
-            id=1,
-            user_id=1,
-            alert_type="DELAY",
-            quiet_start="22:00",  # 不在免打扰时段
-            quiet_end="08:00",
+                id=1,
+                user_id=1,
+                alert_type="DELAY",
+                quiet_start="22:00",  # 不在免打扰时段
+                quiet_end="08:00",
             )
             sub2 = MockAlertSubscription(
-            id=2,
-            user_id=2,
-            alert_type="DELAY",
-            quiet_start="10:00",  # 在免打扰时段
-            quiet_end="14:00",
+                id=2,
+                user_id=2,
+                alert_type="DELAY",
+                quiet_start="10:00",  # 在免打扰时段
+                quiet_end="14:00",
             )
 
             mock_query = MagicMock()
@@ -445,10 +429,10 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=None,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=None,
         )
 
         result = service.get_notification_recipients(alert)
@@ -461,23 +445,21 @@ class TestGetNotificationRecipients:
         db_session = MagicMock()
         service = AlertSubscriptionService(db_session)
 
-        rule = MockAlertRule(id=1, rule_type="DELAY",
-        target_type="PROJECT"
-    )
+        rule = MockAlertRule(id=1, rule_type="DELAY", target_type="PROJECT")
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         # 创建订阅配置
         sub1 = MockAlertSubscription(
-        id=1, user_id=1, alert_type="DELAY", notify_channels=["SYSTEM", "EMAIL"]
+            id=1, user_id=1, alert_type="DELAY", notify_channels=["SYSTEM", "EMAIL"]
         )
         sub2 = MockAlertSubscription(
-        id=2, user_id=2, alert_type="DELAY", notify_channels=["SYSTEM"]
+            id=2, user_id=2, alert_type="DELAY", notify_channels=["SYSTEM"]
         )
 
         # Mock match_subscriptions
@@ -494,18 +476,18 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         rule = MockAlertRule(
-        id=1,
-        rule_type="DELAY",
-        notify_users=[10, 20],
-        notify_channels=["EMAIL", "SMS"],
-        target_type="PROJECT"
-    )
+            id=1,
+            rule_type="DELAY",
+            notify_users=[10, 20],
+            notify_channels=["EMAIL", "SMS"],
+            target_type="PROJECT",
+        )
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         # 没有匹配的订阅
@@ -522,19 +504,22 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         rule = MockAlertRule(
-        id=1, rule_type="DELAY", notify_users=[10], notify_channels=["EMAIL"],
-        target_type="PROJECT"
-    )
+            id=1,
+            rule_type="DELAY",
+            notify_users=[10],
+            notify_channels=["EMAIL"],
+            target_type="PROJECT",
+        )
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         sub1 = MockAlertSubscription(
-        id=1, user_id=1, alert_type="DELAY", notify_channels=["SYSTEM"]
+            id=1, user_id=1, alert_type="DELAY", notify_channels=["SYSTEM"]
         )
 
         with patch.object(service, "match_subscriptions", return_value=[sub1]):
@@ -551,15 +536,14 @@ class TestGetNotificationRecipients:
         service = AlertSubscriptionService(db_session)
 
         rule = MockAlertRule(
-        id=1, rule_type="DELAY", notify_users=None, notify_channels=None,
-        target_type="PROJECT"
-    )
+            id=1, rule_type="DELAY", notify_users=None, notify_channels=None, target_type="PROJECT"
+        )
 
         alert = MockAlertRecord(
-        id=1,
-        alert_level=AlertLevelEnum.WARNING.value,
-        alert_type="DELAY",
-        rule=rule,
+            id=1,
+            alert_level=AlertLevelEnum.WARNING.value,
+            alert_type="DELAY",
+            rule=rule,
         )
 
         with patch.object(service, "match_subscriptions", return_value=[]):
@@ -568,7 +552,6 @@ class TestGetNotificationRecipients:
             assert result["user_ids"] == []
             assert result["channels"] == ["SYSTEM"]
             assert len(result["subscriptions"]) == 0
-
 
             # ===== Tests for get_user_subscriptions =====
 

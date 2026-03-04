@@ -2,12 +2,14 @@
 """
 第八批覆盖率测试 - 销售排名服务
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.sales_ranking_service import SalesRankingService
+
     HAS_SRS = True
 except Exception:
     HAS_SRS = False
@@ -60,11 +62,17 @@ class TestGetOrCreateConfig:
             svc = SalesRankingService(db)
         mock_config = MagicMock()
         mock_config.metrics_config = [
-            {"key": "contract_amount", "weight": 0.4, "label": "合同金额",
-             "data_source": "contract_amount", "description": "", "is_primary": True}
+            {
+                "key": "contract_amount",
+                "weight": 0.4,
+                "label": "合同金额",
+                "data_source": "contract_amount",
+                "description": "",
+                "is_primary": True,
+            }
         ]
         db.query.return_value.first.return_value = mock_config
-        if hasattr(svc, 'get_or_create_config'):
+        if hasattr(svc, "get_or_create_config"):
             result = svc.get_or_create_config()
             assert result is not None
         else:
@@ -76,7 +84,7 @@ class TestGetOrCreateConfig:
         with patch("app.services.sales_ranking_service.SalesTeamService"):
             svc = SalesRankingService(db)
         db.query.return_value.first.return_value = None
-        if hasattr(svc, 'get_or_create_config'):
+        if hasattr(svc, "get_or_create_config"):
             result = svc.get_or_create_config()
             assert result is not None
         else:
@@ -91,11 +99,8 @@ class TestCalculateRanking:
             svc = SalesRankingService(db)
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.all.return_value = []
-        if hasattr(svc, 'calculate_ranking'):
-            result = svc.calculate_ranking(
-                start_date="2026-01-01",
-                end_date="2026-01-31"
-            )
+        if hasattr(svc, "calculate_ranking"):
+            result = svc.calculate_ranking(start_date="2026-01-01", end_date="2026-01-31")
             assert isinstance(result, (list, dict))
         else:
             pytest.skip("calculate_ranking 不存在")

@@ -42,15 +42,21 @@ def _create_material(db_session: Session) -> Material:
     return material
 
 
-def _cleanup_transfers(db_session: Session, transfer_ids: List[int], project_ids: List[int], material_ids: List[int]) -> None:
+def _cleanup_transfers(
+    db_session: Session, transfer_ids: List[int], project_ids: List[int], material_ids: List[int]
+) -> None:
     if transfer_ids:
         db_session.query(MaterialTransfer).filter(MaterialTransfer.id.in_(transfer_ids)).delete(
             synchronize_session=False
         )
     if project_ids:
-        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(synchronize_session=False)
+        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(
+            synchronize_session=False
+        )
     if material_ids:
-        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(synchronize_session=False)
+        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(
+            synchronize_session=False
+        )
     db_session.commit()
 
 

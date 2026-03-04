@@ -16,8 +16,8 @@ from . import (
     invoice_requests,
     payment_reports,
     reconciliations,
-    sales_reports,
     sales_orders,
+    sales_reports,
 )
 
 # 创建主路由

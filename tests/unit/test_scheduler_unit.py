@@ -10,13 +10,15 @@ Tests coverage for:
 - shutdown_scheduler function
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.utils.scheduler import (
-    job_listener,
     _resolve_callable,
     _wrap_job_callable,
+    job_listener,
 )
 
 
@@ -101,8 +103,8 @@ class TestWrapJobCallable:
     def test_wrap_callable_without_owner(self, mock_logger):
         """Test wrapping callable without owner field."""
         task = {
-        "id": "task_no_owner",
-        "name": "No Owner Task",
+            "id": "task_no_owner",
+            "name": "No Owner Task",
         }
 
         def sample_func():
@@ -116,10 +118,10 @@ class TestWrapJobCallable:
     def test_task_context_structure(self):
         """Test that task context is properly structured."""
         task = {
-        "id": "task_context",
-        "name": "Context Task",
-        "owner": "owner_1",
-        "category": "category_1",
+            "id": "task_context",
+            "name": "Context Task",
+            "owner": "owner_1",
+            "category": "category_1",
         }
 
         def sample_func():

@@ -20,11 +20,12 @@ def get_collection_status(db: Session, strategy_id: int) -> Dict[str, Any]:
     Returns:
         Dict: 采集状态统计
     """
-    kpis = db.query(KPI).join(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active,
-        KPI.is_active
-    ).all()
+    kpis = (
+        db.query(KPI)
+        .join(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.is_active, KPI.is_active)
+        .all()
+    )
 
     auto_kpis = [k for k in kpis if k.data_source_type == "AUTO"]
     manual_kpis = [k for k in kpis if k.data_source_type == "MANUAL"]

@@ -11,9 +11,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.project import Machine, Project
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
@@ -67,7 +67,11 @@ def _build_review_response(review: TechnicalReview) -> TechnicalReviewResponse:
     )
 
 
-@router.post("/technical-reviews", response_model=TechnicalReviewResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/technical-reviews",
+    response_model=TechnicalReviewResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_technical_review(
     review_in: TechnicalReviewCreate,
     db: Session = Depends(deps.get_db),
@@ -92,7 +96,7 @@ def create_technical_review(
         project_id=review_in.project_id,
         project_no=project.project_code,
         equipment_id=review_in.equipment_id,
-        status='DRAFT',
+        status="DRAFT",
         scheduled_date=review_in.scheduled_date,
         location=review_in.location,
         meeting_type=review_in.meeting_type,
@@ -134,7 +138,9 @@ def read_technical_reviews(
         query = query.filter(TechnicalReview.status == review_status)
 
     total = query.count()
-    reviews = apply_pagination(query.order_by(desc(TechnicalReview.created_at)), pagination.offset, pagination.limit).all()
+    reviews = apply_pagination(
+        query.order_by(desc(TechnicalReview.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_review_response(review) for review in reviews]
 
@@ -143,11 +149,15 @@ def read_technical_reviews(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.get("/technical-reviews/{review_id}", response_model=TechnicalReviewDetailResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/technical-reviews/{review_id}",
+    response_model=TechnicalReviewDetailResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_technical_review(
     review_id: int,
     db: Session = Depends(deps.get_db),
@@ -188,35 +198,85 @@ def read_technical_review(
         created_by=review.created_by,
         created_at=review.created_at,
         updated_at=review.updated_at,
-        participants=[ReviewParticipantResponse(
-            id=p.id, review_id=p.review_id, user_id=p.user_id, role=p.role,
-            is_required=p.is_required, attendance=p.attendance, delegate_id=p.delegate_id,
-            sign_time=p.sign_time, signature=p.signature, created_at=p.created_at,
-        ) for p in participants],
-        materials=[ReviewMaterialResponse(
-            id=m.id, review_id=m.review_id, material_type=m.material_type,
-            material_name=m.material_name, file_path=m.file_path, file_size=m.file_size,
-            version=m.version, is_required=m.is_required, upload_by=m.upload_by,
-            upload_at=m.upload_at, created_at=m.created_at, updated_at=m.updated_at,
-        ) for m in materials],
-        checklist_records=[ReviewChecklistRecordResponse(
-            id=c.id, review_id=c.review_id, checklist_item_id=c.checklist_item_id,
-            category=c.category, check_item=c.check_item, result=c.result,
-            issue_level=c.issue_level, issue_desc=c.issue_desc, issue_id=c.issue_id,
-            checker_id=c.checker_id, remark=c.remark, created_at=c.created_at,
-        ) for c in checklist_records],
-        issues=[ReviewIssueResponse(
-            id=i.id, review_id=i.review_id, issue_no=i.issue_no, issue_level=i.issue_level,
-            category=i.category, description=i.description, suggestion=i.suggestion,
-            assignee_id=i.assignee_id, deadline=i.deadline, status=i.status,
-            solution=i.solution, verify_result=i.verify_result, verifier_id=i.verifier_id,
-            verify_time=i.verify_time, linked_issue_id=i.linked_issue_id,
-            created_at=i.created_at, updated_at=i.updated_at,
-        ) for i in issues],
+        participants=[
+            ReviewParticipantResponse(
+                id=p.id,
+                review_id=p.review_id,
+                user_id=p.user_id,
+                role=p.role,
+                is_required=p.is_required,
+                attendance=p.attendance,
+                delegate_id=p.delegate_id,
+                sign_time=p.sign_time,
+                signature=p.signature,
+                created_at=p.created_at,
+            )
+            for p in participants
+        ],
+        materials=[
+            ReviewMaterialResponse(
+                id=m.id,
+                review_id=m.review_id,
+                material_type=m.material_type,
+                material_name=m.material_name,
+                file_path=m.file_path,
+                file_size=m.file_size,
+                version=m.version,
+                is_required=m.is_required,
+                upload_by=m.upload_by,
+                upload_at=m.upload_at,
+                created_at=m.created_at,
+                updated_at=m.updated_at,
+            )
+            for m in materials
+        ],
+        checklist_records=[
+            ReviewChecklistRecordResponse(
+                id=c.id,
+                review_id=c.review_id,
+                checklist_item_id=c.checklist_item_id,
+                category=c.category,
+                check_item=c.check_item,
+                result=c.result,
+                issue_level=c.issue_level,
+                issue_desc=c.issue_desc,
+                issue_id=c.issue_id,
+                checker_id=c.checker_id,
+                remark=c.remark,
+                created_at=c.created_at,
+            )
+            for c in checklist_records
+        ],
+        issues=[
+            ReviewIssueResponse(
+                id=i.id,
+                review_id=i.review_id,
+                issue_no=i.issue_no,
+                issue_level=i.issue_level,
+                category=i.category,
+                description=i.description,
+                suggestion=i.suggestion,
+                assignee_id=i.assignee_id,
+                deadline=i.deadline,
+                status=i.status,
+                solution=i.solution,
+                verify_result=i.verify_result,
+                verifier_id=i.verifier_id,
+                verify_time=i.verify_time,
+                linked_issue_id=i.linked_issue_id,
+                created_at=i.created_at,
+                updated_at=i.updated_at,
+            )
+            for i in issues
+        ],
     )
 
 
-@router.put("/technical-reviews/{review_id}", response_model=TechnicalReviewResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/technical-reviews/{review_id}",
+    response_model=TechnicalReviewResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_technical_review(
     review_id: int,
     review_in: TechnicalReviewUpdate,
@@ -230,16 +290,17 @@ def update_technical_review(
     for field, value in update_data.items():
         setattr(review, field, value)
 
-    if review_in.status == 'IN_PROGRESS' and not review.actual_date:
+    if review_in.status == "IN_PROGRESS" and not review.actual_date:
         review.actual_date = datetime.now()
 
     db.commit()
     db.refresh(review)
 
     # 评审完成时同步到设计评审
-    if review_in.status == 'COMPLETED' and review.conclusion:
+    if review_in.status == "COMPLETED" and review.conclusion:
         try:
             from app.services.design_review_sync_service import DesignReviewSyncService
+
             sync_service = DesignReviewSyncService(db)
             sync_service.sync_from_technical_review(review.id)
         except Exception as e:
@@ -257,7 +318,7 @@ def delete_technical_review(
     """删除技术评审"""
     review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
-    if review.status != 'DRAFT':
+    if review.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态的评审")
 
     db.delete(review)

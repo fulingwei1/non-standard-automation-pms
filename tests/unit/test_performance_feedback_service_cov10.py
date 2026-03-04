@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十批：PerformanceFeedbackService 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_feedback_service import PerformanceFeedbackService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

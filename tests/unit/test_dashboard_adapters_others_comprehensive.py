@@ -10,9 +10,9 @@ Dashboard Adapters Others 综合单元测试
 - get_user_tasks: 获取用户任务
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -66,7 +66,7 @@ class TestGetQuickStats:
 
         result = adapter.get_quick_stats()
 
-        assert 'project_count' in result or 'projects' in result or True
+        assert "project_count" in result or "projects" in result or True
 
     def test_includes_user_count(self):
         """测试包含用户数量"""
@@ -83,7 +83,7 @@ class TestGetQuickStats:
 
         result = adapter.get_quick_stats()
 
-        assert 'user_count' in result or 'users' in result or True
+        assert "user_count" in result or "users" in result or True
 
     def test_includes_alert_count(self):
         """测试包含告警数量"""
@@ -100,7 +100,7 @@ class TestGetQuickStats:
 
         result = adapter.get_quick_stats()
 
-        assert 'alert_count' in result or 'alerts' in result or True
+        assert "alert_count" in result or "alerts" in result or True
 
 
 class TestGetRecentActivities:
@@ -219,7 +219,7 @@ class TestGetSystemHealth:
 
         result = adapter.get_system_health()
 
-        assert 'database' in result or 'db_status' in result or True
+        assert "database" in result or "db_status" in result or True
 
     def test_includes_cache_status(self):
         """测试包含缓存状态"""
@@ -231,7 +231,7 @@ class TestGetSystemHealth:
 
         result = adapter.get_system_health()
 
-        assert 'cache' in result or 'redis_status' in result or True
+        assert "cache" in result or "redis_status" in result or True
 
     def test_handles_database_error(self):
         """测试处理数据库错误"""

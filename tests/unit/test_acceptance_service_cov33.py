@@ -2,11 +2,13 @@
 """
 第三十三批覆盖率测试 - 验收服务 (AcceptanceService)
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.acceptance.acceptance_service import AcceptanceService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -92,7 +94,7 @@ class TestCompleteAcceptanceOrder:
 
         with patch(
             "app.services.acceptance.acceptance_service.InvoiceService.generate_code",
-            new=AsyncMock(return_value="INV-2026-001")
+            new=AsyncMock(return_value="INV-2026-001"),
         ):
             result = await AcceptanceService.complete_acceptance_order(
                 db, order_id=1, completed_by=2, completion_notes="顺利完成"
@@ -127,15 +129,18 @@ class TestCompleteAcceptanceOrder:
 
         db.execute = AsyncMock(side_effect=[order_result, issues_result])
 
-        with patch(
-            "app.services.acceptance.acceptance_service.InvoiceService.generate_code",
-            new=AsyncMock(return_value="INV-001")
-        ), patch.object(
-            AcceptanceService,
-            "_update_project_to_warranty",
-            new=AsyncMock()
-        ) as mock_warranty:
-            result = await AcceptanceService.complete_acceptance_order(db, order_id=1, completed_by=2)
+        with (
+            patch(
+                "app.services.acceptance.acceptance_service.InvoiceService.generate_code",
+                new=AsyncMock(return_value="INV-001"),
+            ),
+            patch.object(
+                AcceptanceService, "_update_project_to_warranty", new=AsyncMock()
+            ) as mock_warranty,
+        ):
+            result = await AcceptanceService.complete_acceptance_order(
+                db, order_id=1, completed_by=2
+            )
 
         assert result["success"] is True
         mock_warranty.assert_called_once()

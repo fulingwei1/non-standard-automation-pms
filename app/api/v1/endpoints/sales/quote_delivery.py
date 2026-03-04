@@ -67,7 +67,7 @@ def get_quote_delivery(
             "delivery_status": delivery_status,
             "days_remaining": days_remaining,
             "quote_status": quote.status,
-        }
+        },
     )
 
 
@@ -105,8 +105,8 @@ def update_quote_delivery(
         message="交付日期更新成功",
         data={
             "quote_id": quote_id,
-            "delivery_date": quote.delivery_date.isoformat() if quote.delivery_date else None
-        }
+            "delivery_date": quote.delivery_date.isoformat() if quote.delivery_date else None,
+        },
     )
 
 
@@ -130,27 +130,33 @@ def get_upcoming_deliveries(
     today = date.today()
     end_date = today + timedelta(days=days)
 
-    quotes = db.query(Quote).filter(
-        Quote.delivery_date is not None,
-        Quote.delivery_date >= today,
-        Quote.delivery_date <= end_date,
-        Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"])
-    ).order_by(Quote.delivery_date).all()
+    quotes = (
+        db.query(Quote)
+        .filter(
+            Quote.delivery_date is not None,
+            Quote.delivery_date >= today,
+            Quote.delivery_date <= end_date,
+            Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"]),
+        )
+        .order_by(Quote.delivery_date)
+        .all()
+    )
 
-    items = [{
-        "quote_id": q.id,
-        "quote_no": q.quote_no,
-        "title": q.title,
-        "delivery_date": q.delivery_date.isoformat() if q.delivery_date else None,
-        "days_remaining": (q.delivery_date - today).days if q.delivery_date else None,
-        "status": q.status,
-        "customer_id": q.customer_id,
-    } for q in quotes]
+    items = [
+        {
+            "quote_id": q.id,
+            "quote_no": q.quote_no,
+            "title": q.title,
+            "delivery_date": q.delivery_date.isoformat() if q.delivery_date else None,
+            "days_remaining": (q.delivery_date - today).days if q.delivery_date else None,
+            "status": q.status,
+            "customer_id": q.customer_id,
+        }
+        for q in quotes
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取即将交付列表成功",
-        data={"count": len(items), "items": items}
+        code=200, message="获取即将交付列表成功", data={"count": len(items), "items": items}
     )
 
 
@@ -171,26 +177,32 @@ def get_overdue_deliveries(
     """
     today = date.today()
 
-    quotes = db.query(Quote).filter(
-        Quote.delivery_date is not None,
-        Quote.delivery_date < today,
-        Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"])
-    ).order_by(Quote.delivery_date).all()
+    quotes = (
+        db.query(Quote)
+        .filter(
+            Quote.delivery_date is not None,
+            Quote.delivery_date < today,
+            Quote.status.in_(["APPROVED", "SENT", "ACCEPTED"]),
+        )
+        .order_by(Quote.delivery_date)
+        .all()
+    )
 
-    items = [{
-        "quote_id": q.id,
-        "quote_no": q.quote_no,
-        "title": q.title,
-        "delivery_date": q.delivery_date.isoformat() if q.delivery_date else None,
-        "days_overdue": (today - q.delivery_date).days if q.delivery_date else 0,
-        "status": q.status,
-        "customer_id": q.customer_id,
-    } for q in quotes]
+    items = [
+        {
+            "quote_id": q.id,
+            "quote_no": q.quote_no,
+            "title": q.title,
+            "delivery_date": q.delivery_date.isoformat() if q.delivery_date else None,
+            "days_overdue": (today - q.delivery_date).days if q.delivery_date else 0,
+            "status": q.status,
+            "customer_id": q.customer_id,
+        }
+        for q in quotes
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取逾期交付列表成功",
-        data={"count": len(items), "items": items}
+        code=200, message="获取逾期交付列表成功", data={"count": len(items), "items": items}
     )
 
 
@@ -216,11 +228,16 @@ def get_delivery_calendar(
     # 计算月份的起止日期
     start_date, end_date = get_month_range_by_ym(year, month)
 
-    quotes = db.query(Quote).filter(
-        Quote.delivery_date is not None,
-        Quote.delivery_date >= start_date,
-        Quote.delivery_date <= end_date
-    ).order_by(Quote.delivery_date).all()
+    quotes = (
+        db.query(Quote)
+        .filter(
+            Quote.delivery_date is not None,
+            Quote.delivery_date >= start_date,
+            Quote.delivery_date <= end_date,
+        )
+        .order_by(Quote.delivery_date)
+        .all()
+    )
 
     # 按日期分组
     calendar_data = {}
@@ -228,12 +245,14 @@ def get_delivery_calendar(
         day = q.delivery_date.day
         if day not in calendar_data:
             calendar_data[day] = []
-        calendar_data[day].append({
-            "quote_id": q.id,
-            "quote_no": q.quote_no,
-            "title": q.title,
-            "status": q.status,
-        })
+        calendar_data[day].append(
+            {
+                "quote_id": q.id,
+                "quote_no": q.quote_no,
+                "title": q.title,
+                "status": q.status,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -242,6 +261,6 @@ def get_delivery_calendar(
             "year": year,
             "month": month,
             "total_deliveries": len(quotes),
-            "calendar": calendar_data
-        }
+            "calendar": calendar_data,
+        },
     )

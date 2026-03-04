@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """ECN similarity 单元测试"""
 from unittest.mock import MagicMock
+
 import pytest
 
 from app.services.ecn_knowledge_service.similarity import (
-    _text_similarity,
+    _calculate_similarity,
     _cost_similarity,
     _get_match_reasons,
     _material_similarity,
-    _calculate_similarity,
+    _text_similarity,
     find_similar_ecns,
 )
 

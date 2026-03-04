@@ -8,8 +8,8 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Boolean,
     JSON,
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -29,7 +29,9 @@ class ApprovalActionLog(Base, TimestampMixin):
     __tablename__ = "approval_action_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID"
+    )
     task_id = Column(Integer, ForeignKey("approval_tasks.id"), comment="关联任务ID（可为空）")
     node_id = Column(Integer, ForeignKey("approval_node_definitions.id"), comment="关联节点ID")
 
@@ -38,7 +40,10 @@ class ApprovalActionLog(Base, TimestampMixin):
     operator_name = Column(String(50), comment="操作人姓名（冗余）")
 
     # 操作类型
-    action = Column(String(30), nullable=False, comment="""
+    action = Column(
+        String(30),
+        nullable=False,
+        comment="""
         操作类型：
         SUBMIT: 提交审批
         SAVE_DRAFT: 保存草稿
@@ -57,16 +62,20 @@ class ApprovalActionLog(Base, TimestampMixin):
         COMMENT: 评论
         READ_CC: 阅读抄送
         TIMEOUT: 超时处理
-    """)
+    """,
+    )
 
     # 操作详情
-    action_detail = Column(JSON, comment="""
+    action_detail = Column(
+        JSON,
+        comment="""
         操作详情，示例：
         - TRANSFER: {"from_user_id": 1, "to_user_id": 2}
         - ADD_APPROVER: {"approver_ids": [3, 4], "position": "AFTER"}
         - RETURN: {"return_to_node_id": 2}
         - TIMEOUT: {"timeout_action": "AUTO_PASS"}
-    """)
+    """,
+    )
 
     # 操作说明
     comment = Column(Text, comment="操作备注/审批意见")
@@ -108,7 +117,9 @@ class ApprovalComment(Base, TimestampMixin):
     __tablename__ = "approval_comments"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID"
+    )
 
     # 评论人
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="评论人ID")

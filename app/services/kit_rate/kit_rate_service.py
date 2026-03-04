@@ -65,11 +65,7 @@ class KitRateService:
         po_items = (
             self.db.query(PurchaseOrderItem)
             .filter(PurchaseOrderItem.material_id == material_id)
-            .filter(
-                PurchaseOrderItem.status.in_(
-                    ["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]
-                )
-            )
+            .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
             .all()
         )
         for po_item in po_items:
@@ -82,9 +78,7 @@ class KitRateService:
         calculate_by: str = "quantity",
     ) -> Dict[str, Any]:
         if calculate_by not in ["quantity", "amount"]:
-            raise HTTPException(
-                status_code=400, detail="calculate_by 必须是 quantity 或 amount"
-            )
+            raise HTTPException(status_code=400, detail="calculate_by 必须是 quantity 或 amount")
 
         total_items = len(bom_items)
         if total_items == 0:
@@ -136,7 +130,9 @@ class KitRateService:
                     shortage_items += 1
 
         if calculate_by == "quantity":
-            kit_rate = float((fulfilled_quantity / total_quantity) * 100) if total_quantity > 0 else 0.0
+            kit_rate = (
+                float((fulfilled_quantity / total_quantity) * 100) if total_quantity > 0 else 0.0
+            )
         else:
             kit_rate = float((fulfilled_amount / total_amount) * 100) if total_amount > 0 else 0.0
 
@@ -285,9 +281,7 @@ class KitRateService:
                         "specification": item.specification,
                         "unit": item.unit,
                         "total_required_qty": Decimal(0),
-                        "current_stock": float(material.current_stock or 0)
-                        if material
-                        else 0,
+                        "current_stock": float(material.current_stock or 0) if material else 0,
                         "total_received_qty": Decimal(0),
                         "total_in_transit_qty": Decimal(0),
                         "is_key_material": item.is_key_item,
@@ -297,9 +291,7 @@ class KitRateService:
                 summary = material_summary[material_code]
                 summary["total_required_qty"] += item.quantity or 0
                 summary["total_received_qty"] += item.received_qty or 0
-                summary["total_in_transit_qty"] += self._get_in_transit_qty(
-                    item.material_id
-                )
+                summary["total_in_transit_qty"] += self._get_in_transit_qty(item.material_id)
 
                 summary["machines"].append(
                     {
@@ -334,9 +326,11 @@ class KitRateService:
                     "total_in_transit_qty": float(summary["total_in_transit_qty"]),
                     "total_available_qty": total_available_qty,
                     "shortage_qty": shortage_qty,
-                    "status": "fulfilled"
-                    if shortage_qty == 0
-                    else ("partial" if total_available_qty > 0 else "shortage"),
+                    "status": (
+                        "fulfilled"
+                        if shortage_qty == 0
+                        else ("partial" if total_available_qty > 0 else "shortage")
+                    ),
                 }
             )
 
@@ -377,9 +371,9 @@ class KitRateService:
                     "project_id": project.id,
                     "project_code": project.project_code,
                     "project_name": project.project_name,
-                    "planned_end_date": project.planned_end_date.isoformat()
-                    if project.planned_end_date
-                    else None,
+                    "planned_end_date": (
+                        project.planned_end_date.isoformat() if project.planned_end_date else None
+                    ),
                     "kit_rate": kit_rate_data["kit_rate"],
                     "kit_status": kit_rate_data["kit_status"],
                     "total_items": kit_rate_data["total_items"],
@@ -413,8 +407,7 @@ class KitRateService:
             raise HTTPException(
                 status_code=500,
                 detail=(
-                    f"齐套率快照表({KitRateSnapshot.__tablename__})不存在，"
-                    "请先执行数据库迁移"
+                    f"齐套率快照表({KitRateSnapshot.__tablename__})不存在，" "请先执行数据库迁移"
                 ),
             )
 
@@ -561,9 +554,9 @@ class KitRateService:
                 {
                     "id": snapshot.id,
                     "snapshot_date": snapshot.snapshot_date.isoformat(),
-                    "snapshot_time": snapshot.snapshot_time.isoformat()
-                    if snapshot.snapshot_time
-                    else None,
+                    "snapshot_time": (
+                        snapshot.snapshot_time.isoformat() if snapshot.snapshot_time else None
+                    ),
                     "snapshot_type": snapshot.snapshot_type,
                     "trigger_event": snapshot.trigger_event,
                     "kit_rate": float(snapshot.kit_rate) if snapshot.kit_rate else 0.0,
@@ -572,9 +565,9 @@ class KitRateService:
                     "fulfilled_items": snapshot.fulfilled_items,
                     "shortage_items": snapshot.shortage_items,
                     "in_transit_items": snapshot.in_transit_items,
-                    "blocking_kit_rate": float(snapshot.blocking_kit_rate)
-                    if snapshot.blocking_kit_rate
-                    else 0.0,
+                    "blocking_kit_rate": (
+                        float(snapshot.blocking_kit_rate) if snapshot.blocking_kit_rate else 0.0
+                    ),
                     "project_stage": snapshot.project_stage,
                     "project_health": snapshot.project_health,
                 }

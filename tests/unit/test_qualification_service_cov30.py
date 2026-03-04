@@ -20,11 +20,14 @@ def mock_db():
 # get_qualification_levels
 # ---------------------------------------------------------------------------
 
+
 class TestGetQualificationLevels:
     def test_returns_all_levels_when_no_filters(self, mock_db):
         levels = [MagicMock(), MagicMock()]
         # is_active=True by default -> filter() is called once, then order_by()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = levels
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            levels
+        )
 
         result = QualificationService.get_qualification_levels(mock_db, is_active=None)
         # With is_active=None, no filter called
@@ -33,15 +36,20 @@ class TestGetQualificationLevels:
         assert result == levels
 
     def test_filters_by_role_type(self, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
-        result = QualificationService.get_qualification_levels(mock_db, role_type="ENGINEER", is_active=True)
+        result = QualificationService.get_qualification_levels(
+            mock_db, role_type="ENGINEER", is_active=True
+        )
         assert result == []
 
 
 # ---------------------------------------------------------------------------
 # get_competency_model
 # ---------------------------------------------------------------------------
+
 
 class TestGetCompetencyModel:
     def test_returns_model_for_position(self, mock_db):
@@ -62,18 +70,25 @@ class TestGetCompetencyModel:
 # get_employee_qualification
 # ---------------------------------------------------------------------------
 
+
 class TestGetEmployeeQualification:
     def test_returns_latest_qualification(self, mock_db):
         qual = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = qual
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            qual
+        )
 
         result = QualificationService.get_employee_qualification(mock_db, employee_id=1)
         assert result is qual
 
     def test_filters_by_position_type(self, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
-        result = QualificationService.get_employee_qualification(mock_db, employee_id=1, position_type="ENGINEER")
+        result = QualificationService.get_employee_qualification(
+            mock_db, employee_id=1, position_type="ENGINEER"
+        )
         assert result is None
 
 
@@ -81,14 +96,19 @@ class TestGetEmployeeQualification:
 # certify_employee
 # ---------------------------------------------------------------------------
 
+
 class TestCertifyEmployee:
     def test_raises_when_employee_not_found(self, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         with pytest.raises(ValueError, match="员工"):
             QualificationService.certify_employee(
-                mock_db, employee_id=999, position_type="ENGINEER",
-                level_id=1, assessment_details={}, certifier_id=1
+                mock_db,
+                employee_id=999,
+                position_type="ENGINEER",
+                level_id=1,
+                assessment_details={},
+                certifier_id=1,
             )
 
     def test_raises_when_level_not_found(self, mock_db):
@@ -105,8 +125,12 @@ class TestCertifyEmployee:
 
         with pytest.raises(ValueError, match="等级"):
             QualificationService.certify_employee(
-                mock_db, employee_id=1, position_type="ENGINEER",
-                level_id=999, assessment_details={}, certifier_id=1
+                mock_db,
+                employee_id=1,
+                position_type="ENGINEER",
+                level_id=999,
+                assessment_details={},
+                certifier_id=1,
             )
 
     def test_updates_existing_qualification(self, mock_db):
@@ -128,8 +152,12 @@ class TestCertifyEmployee:
         mock_db.query.return_value.filter.return_value.first.side_effect = first_side_effect
 
         result = QualificationService.certify_employee(
-            mock_db, employee_id=1, position_type="ENGINEER",
-            level_id=2, assessment_details={"score": 90}, certifier_id=5
+            mock_db,
+            employee_id=1,
+            position_type="ENGINEER",
+            level_id=2,
+            assessment_details={"score": 90},
+            certifier_id=5,
         )
 
         mock_db.commit.assert_called()
@@ -153,8 +181,12 @@ class TestCertifyEmployee:
         mock_db.query.return_value.filter.return_value.first.side_effect = first_side_effect
 
         result = QualificationService.certify_employee(
-            mock_db, employee_id=1, position_type="ENGINEER",
-            level_id=2, assessment_details={}, certifier_id=5
+            mock_db,
+            employee_id=1,
+            position_type="ENGINEER",
+            level_id=2,
+            assessment_details={},
+            certifier_id=5,
         )
 
         mock_db.add.assert_called_once()
@@ -165,16 +197,18 @@ class TestCertifyEmployee:
 # assess_employee
 # ---------------------------------------------------------------------------
 
+
 class TestAssessEmployee:
     @patch("app.services.qualification_service.save_obj")
     def test_creates_assessment_record(self, mock_save, mock_db):
         scores = {"technical": 85, "communication": 78}
 
-        with patch.object(QualificationService, "_calculate_total_score", return_value=Decimal("82")):
+        with patch.object(
+            QualificationService, "_calculate_total_score", return_value=Decimal("82")
+        ):
             with patch.object(QualificationService, "_determine_result", return_value="PASS"):
                 result = QualificationService.assess_employee(
-                    mock_db, employee_id=1, assessment_type="ANNUAL",
-                    scores=scores, assessor_id=10
+                    mock_db, employee_id=1, assessment_type="ANNUAL", scores=scores, assessor_id=10
                 )
 
         mock_save.assert_called_once()
@@ -185,11 +219,16 @@ class TestAssessEmployee:
 # check_promotion_eligibility
 # ---------------------------------------------------------------------------
 
+
 class TestCheckPromotionEligibility:
     def test_returns_not_eligible_when_no_qualification(self, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
-        result = QualificationService.check_promotion_eligibility(mock_db, employee_id=1, target_level_id=3)
+        result = QualificationService.check_promotion_eligibility(
+            mock_db, employee_id=1, target_level_id=3
+        )
         assert result["eligible"] is False
         assert "尚未" in result["reason"]
 
@@ -205,7 +244,9 @@ class TestCheckPromotionEligibility:
         target_level.level_order = 2  # lower than current (int comparison)
 
         # get_employee_qualification -> order_by().first() returns qualification
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = qualification
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            qualification
+        )
 
         # current_level and target_level queries via filter().first()
         call_count = [0]
@@ -219,5 +260,7 @@ class TestCheckPromotionEligibility:
 
         mock_db.query.return_value.filter.return_value.first.side_effect = first_side_effect
 
-        result = QualificationService.check_promotion_eligibility(mock_db, employee_id=1, target_level_id=2)
+        result = QualificationService.check_promotion_eligibility(
+            mock_db, employee_id=1, target_level_id=2
+        )
         assert result["eligible"] is False

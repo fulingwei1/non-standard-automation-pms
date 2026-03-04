@@ -6,7 +6,6 @@ Automatically generates test stubs for services with 0% coverage
 
 from pathlib import Path
 
-
 ZERO_COVERAGE_SERVICES = [
     ("notification_dispatcher", 309),
     ("timesheet_report_service", 290),
@@ -44,9 +43,7 @@ ZERO_COVERAGE_SERVICES = [
 def generate_test_stub(service_name: str, lines: int) -> str:
     """Generate a test stub for a service."""
 
-    service_class = "".join(
-        [w.capitalize() for w in service_name.replace("_", " ").split()]
-    )
+    service_class = "".join([w.capitalize() for w in service_name.replace("_", " ").split()])
     module_path = f"app/services/{service_name}"
 
     stub = f'''# -*- coding: utf-8 -*-

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - approval_engine/condition_parser"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.approval_engine.condition_parser import (
         ConditionEvaluator,
         ConditionParseError,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -26,26 +28,23 @@ class TestConditionEvaluator:
 
     def test_evaluate_simple_gt_condition(self, evaluator):
         """简单大于条件"""
-        expr = {"operator": "AND", "items": [
-            {"field": "amount", "op": ">", "value": 1000}
-        ]}
+        expr = {"operator": "AND", "items": [{"field": "amount", "op": ">", "value": 1000}]}
         import json
+
         result = evaluator.evaluate(json.dumps(expr), {"amount": 2000})
         assert result is True
 
     def test_evaluate_simple_lt_condition(self, evaluator):
-        expr = {"operator": "AND", "items": [
-            {"field": "amount", "op": "<", "value": 1000}
-        ]}
+        expr = {"operator": "AND", "items": [{"field": "amount", "op": "<", "value": 1000}]}
         import json
+
         result = evaluator.evaluate(json.dumps(expr), {"amount": 500})
         assert result is True
 
     def test_evaluate_eq_condition(self, evaluator):
-        expr = {"operator": "AND", "items": [
-            {"field": "status", "op": "==", "value": "approved"}
-        ]}
+        expr = {"operator": "AND", "items": [{"field": "status", "op": "==", "value": "approved"}]}
         import json
+
         result = evaluator.evaluate(json.dumps(expr), {"status": "approved"})
         assert result is True
 
@@ -59,20 +58,28 @@ class TestConditionEvaluator:
         assert result is True
 
     def test_evaluate_and_operator(self, evaluator):
-        expr = {"operator": "AND", "items": [
-            {"field": "amount", "op": ">", "value": 100},
-            {"field": "amount", "op": "<", "value": 10000},
-        ]}
+        expr = {
+            "operator": "AND",
+            "items": [
+                {"field": "amount", "op": ">", "value": 100},
+                {"field": "amount", "op": "<", "value": 10000},
+            ],
+        }
         import json
+
         result = evaluator.evaluate(json.dumps(expr), {"amount": 500})
         assert result is True
 
     def test_evaluate_or_operator_one_true(self, evaluator):
-        expr = {"operator": "OR", "items": [
-            {"field": "status", "op": "==", "value": "A"},
-            {"field": "status", "op": "==", "value": "B"},
-        ]}
+        expr = {
+            "operator": "OR",
+            "items": [
+                {"field": "status", "op": "==", "value": "A"},
+                {"field": "status", "op": "==", "value": "B"},
+            ],
+        }
         import json
+
         result = evaluator.evaluate(json.dumps(expr), {"status": "A"})
         assert result is True
 

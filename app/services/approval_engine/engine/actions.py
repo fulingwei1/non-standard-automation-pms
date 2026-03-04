@@ -38,9 +38,7 @@ class ApprovalActionsMixin:
             创建的抄送记录列表
         """
         instance = (
-            self.db.query(ApprovalInstance)
-            .filter(ApprovalInstance.id == instance_id)
-            .first()
+            self.db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
         )
 
         if not instance:
@@ -90,9 +88,7 @@ class ApprovalActionsMixin:
             更新后的审批实例
         """
         instance = (
-            self.db.query(ApprovalInstance)
-            .filter(ApprovalInstance.id == instance_id)
-            .first()
+            self.db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
         )
 
         if not instance:
@@ -127,9 +123,7 @@ class ApprovalActionsMixin:
         self._log_action(
             instance_id=instance.id,
             operator_id=initiator_id,
-            operator_name=initiator.real_name or initiator.username
-            if initiator
-            else None,
+            operator_name=initiator.real_name or initiator.username if initiator else None,
             action="WITHDRAW",
             comment=comment,
             before_status=old_status,
@@ -160,9 +154,7 @@ class ApprovalActionsMixin:
             更新后的审批实例
         """
         instance = (
-            self.db.query(ApprovalInstance)
-            .filter(ApprovalInstance.id == instance_id)
-            .first()
+            self.db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
         )
 
         if not instance:
@@ -300,9 +292,7 @@ class ApprovalActionsMixin:
 
         # 通知被@的用户
         instance = (
-            self.db.query(ApprovalInstance)
-            .filter(ApprovalInstance.id == instance_id)
-            .first()
+            self.db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
         )
         if instance and mentioned_user_ids:
             self.notify.notify_comment(

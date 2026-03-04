@@ -13,6 +13,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.sales import CpqRuleSet
 from app.models.user import User
@@ -25,11 +27,9 @@ from app.schemas.sales import (
     CpqRuleSetUpdate,
 )
 from app.services.cpq_pricing_service import CpqPricingService
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .common import _serialize_rule_set
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -61,7 +61,7 @@ def list_cpq_rule_sets(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -73,11 +73,7 @@ def create_cpq_rule_set(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建CPQ规则集"""
-    existing = (
-        db.query(CpqRuleSet)
-        .filter(CpqRuleSet.rule_code == rule_set_in.rule_code)
-        .first()
-    )
+    existing = db.query(CpqRuleSet).filter(CpqRuleSet.rule_code == rule_set_in.rule_code).first()
     if existing:
         raise HTTPException(status_code=400, detail="规则集编码已存在")
 

@@ -10,9 +10,11 @@ _collectors: Dict[str, Callable] = {}
 
 def register_collector(module: str):
     """装饰器：注册数据采集器"""
+
     def decorator(func: Callable):
         _collectors[module] = func
         return func
+
     return decorator
 
 

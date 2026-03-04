@@ -15,6 +15,7 @@ MODULE = "app.utils.scheduled_tasks.project_health_tasks"
 # 辅助
 # ============================================================================
 
+
 def make_mock_db_ctx():
     mock_session = MagicMock()
     mock_ctx = MagicMock()
@@ -53,7 +54,9 @@ class TestCalculateProjectHealth:
         }
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = calculate_project_health()
 
         assert result["total"] == 8
@@ -79,7 +82,11 @@ class TestCalculateProjectHealth:
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_calculator_cls = MagicMock()
         mock_calculator_inst = MagicMock()
-        mock_calculator_inst.batch_calculate.return_value = {"total": 0, "updated": 0, "unchanged": 0}
+        mock_calculator_inst.batch_calculate.return_value = {
+            "total": 0,
+            "updated": 0,
+            "unchanged": 0,
+        }
         mock_calculator_cls.return_value = mock_calculator_inst
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -94,12 +101,12 @@ class TestCalculateProjectHealth:
 
         mock_ctx, _ = make_mock_db_ctx()
         mock_calculator = MagicMock()
-        mock_calculator.batch_calculate.return_value = {
-            "total": 3, "updated": 2, "unchanged": 1
-        }
+        mock_calculator.batch_calculate.return_value = {"total": 3, "updated": 2, "unchanged": 1}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = calculate_project_health()
 
         assert "total" in result
@@ -115,7 +122,9 @@ class TestCalculateProjectHealth:
         mock_calculator.batch_calculate.return_value = {"total": 0, "updated": 0, "unchanged": 0}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = calculate_project_health()
 
         assert result["total"] == 0
@@ -129,7 +138,7 @@ class TestCalculateProjectHealth:
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
                 "app.services.health_calculator.HealthCalculator",
-                side_effect=ImportError("module not found")
+                side_effect=ImportError("module not found"),
             ):
                 result = calculate_project_health()
 
@@ -154,7 +163,9 @@ class TestDailyHealthSnapshot:
         mock_calculator = MagicMock()
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 0
@@ -183,7 +194,9 @@ class TestDailyHealthSnapshot:
         }
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 2
@@ -203,7 +216,9 @@ class TestDailyHealthSnapshot:
 
         mock_calculator = MagicMock()
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 0
@@ -240,7 +255,9 @@ class TestDailyHealthSnapshot:
         }
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 1
@@ -266,7 +283,9 @@ class TestDailyHealthSnapshot:
         }
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 3

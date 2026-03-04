@@ -32,9 +32,7 @@ def generate_cost_review(
     from app.services.cost_review_service import CostReviewService
 
     try:
-        review = CostReviewService.generate_cost_review_report(
-            db, project_id, current_user.id
-        )
+        review = CostReviewService.generate_cost_review_report(db, project_id, current_user.id)
         db.commit()
         db.refresh(review)
 
@@ -47,8 +45,8 @@ def generate_cost_review(
                 "project_id": project_id,
                 "budget_amount": float(review.budget_amount or 0),
                 "actual_cost": float(review.actual_cost or 0),
-                "cost_variance": float(review.cost_variance or 0)
-            }
+                "cost_variance": float(review.cost_variance or 0),
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

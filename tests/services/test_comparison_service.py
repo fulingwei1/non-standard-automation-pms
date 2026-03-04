@@ -30,10 +30,15 @@ class TestCreateStrategyComparison:
     @patch("app.services.strategy.comparison_service.StrategyComparison")
     def test_creates(self, MockSC):
         from app.services.strategy.comparison_service import create_strategy_comparison
+
         db = MagicMock()
         data = MagicMock(
-            base_strategy_id=1, compare_strategy_id=2,
-            comparison_type="YOY", base_year=2025, compare_year=2024, summary="test"
+            base_strategy_id=1,
+            compare_strategy_id=2,
+            comparison_type="YOY",
+            base_year=2025,
+            compare_year=2024,
+            summary="test",
         )
         MockSC.return_value = MagicMock()
         result = create_strategy_comparison(db, data, created_by=1)
@@ -44,6 +49,7 @@ class TestCreateStrategyComparison:
 class TestGetStrategyComparison:
     def test_found(self):
         from app.services.strategy.comparison_service import get_strategy_comparison
+
         db = MagicMock()
         expected = _mock_comparison()
         q = MagicMock()
@@ -54,6 +60,7 @@ class TestGetStrategyComparison:
 
     def test_not_found(self):
         from app.services.strategy.comparison_service import get_strategy_comparison
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -65,6 +72,7 @@ class TestGetStrategyComparison:
 class TestListStrategyComparisons:
     def test_list(self):
         from app.services.strategy.comparison_service import list_strategy_comparisons
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -81,8 +89,9 @@ class TestListStrategyComparisons:
     def test_filter_by_base_strategy(self):
         """list_strategy_comparisons accepts base_strategy_id but model may differ.
         We just verify the function runs without error when mocked."""
-        from app.services.strategy.comparison_service import list_strategy_comparisons
         from app.models.strategy.comparison import StrategyComparison
+        from app.services.strategy.comparison_service import list_strategy_comparisons
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -102,6 +111,7 @@ class TestDeleteStrategyComparison:
     @patch("app.services.strategy.comparison_service.get_strategy_comparison")
     def test_delete(self, mock_get):
         from app.services.strategy.comparison_service import delete_strategy_comparison
+
         db = MagicMock()
         comp = _mock_comparison()
         mock_get.return_value = comp
@@ -111,6 +121,7 @@ class TestDeleteStrategyComparison:
     @patch("app.services.strategy.comparison_service.get_strategy_comparison")
     def test_delete_not_found(self, mock_get):
         from app.services.strategy.comparison_service import delete_strategy_comparison
+
         db = MagicMock()
         mock_get.return_value = None
         assert delete_strategy_comparison(db, 999) is False
@@ -120,6 +131,7 @@ class TestGenerateYoyReport:
     @patch("app.services.strategy.comparison_service.YoYReportResponse")
     def test_missing_strategies(self, MockResp):
         from app.services.strategy.comparison_service import generate_yoy_report
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -137,6 +149,7 @@ class TestGenerateYoyReport:
     @patch("app.services.strategy.comparison_service.YoYReportResponse")
     def test_with_both_strategies(self, MockResp, MockDim):
         from app.services.strategy.comparison_service import generate_yoy_report
+
         db = MagicMock()
 
         current = _mock_strategy(id=1, year=2025)
@@ -147,19 +160,29 @@ class TestGenerateYoyReport:
         q.first.side_effect = [current, previous]
         db.query.return_value = q
 
-        mock_result = MagicMock(current_strategy_id=1, previous_strategy_id=2, dimensions=[1,2,3,4])
+        mock_result = MagicMock(
+            current_strategy_id=1, previous_strategy_id=2, dimensions=[1, 2, 3, 4]
+        )
         MockResp.return_value = mock_result
         MockDim.return_value = MagicMock()
 
-        with patch("app.services.strategy.health_calculator.calculate_strategy_health", return_value=80), \
-             patch("app.services.strategy.health_calculator.calculate_dimension_health", return_value={"score": 75}), \
-             patch("app.services.strategy.comparison_service._compare_csfs", return_value=[]):
+        with (
+            patch(
+                "app.services.strategy.health_calculator.calculate_strategy_health", return_value=80
+            ),
+            patch(
+                "app.services.strategy.health_calculator.calculate_dimension_health",
+                return_value={"score": 75},
+            ),
+            patch("app.services.strategy.comparison_service._compare_csfs", return_value=[]),
+        ):
             result = generate_yoy_report(db, 2025)
             MockResp.assert_called_once()
 
     @patch("app.services.strategy.comparison_service.YoYReportResponse")
     def test_default_previous_year(self, MockResp):
         from app.services.strategy.comparison_service import generate_yoy_report
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -177,6 +200,7 @@ class TestCompareCSFs:
     @patch("app.services.strategy.comparison_service.CSFComparisonItem")
     def test_compare_with_match(self, MockCSFItem):
         from app.services.strategy.comparison_service import _compare_csfs
+
         db = MagicMock()
 
         csf_current = MagicMock(id=1, code="CSF-01", name="关键成功因素1")
@@ -189,8 +213,10 @@ class TestCompareCSFs:
 
         MockCSFItem.return_value = MagicMock(is_new=False)
 
-        with patch("app.services.strategy.health_calculator.calculate_csf_health",
-                    return_value={"score": 80, "kpi_completion_rate": 75}):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_csf_health",
+            return_value={"score": 80, "kpi_completion_rate": 75},
+        ):
             with patch("app.services.strategy.comparison_service._compare_kpis", return_value=[]):
                 result = _compare_csfs(db, 1, 2, "FINANCIAL")
                 assert len(result) == 1
@@ -199,6 +225,7 @@ class TestCompareCSFs:
     @patch("app.services.strategy.comparison_service.CSFComparisonItem")
     def test_compare_new_csf(self, MockCSFItem):
         from app.services.strategy.comparison_service import _compare_csfs
+
         db = MagicMock()
 
         csf_current = MagicMock(id=1, code="CSF-NEW", name="新CSF")
@@ -210,8 +237,10 @@ class TestCompareCSFs:
 
         MockCSFItem.return_value = MagicMock(is_new=True)
 
-        with patch("app.services.strategy.health_calculator.calculate_csf_health",
-                    return_value={"score": 70}):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_csf_health",
+            return_value={"score": 70},
+        ):
             with patch("app.services.strategy.comparison_service._compare_kpis", return_value=[]):
                 result = _compare_csfs(db, 1, 2, "FINANCIAL")
                 assert len(result) == 1
@@ -222,6 +251,7 @@ class TestCompareKPIs:
     @patch("app.services.strategy.comparison_service.KPIComparisonItem")
     def test_compare_with_match(self, MockKPIItem):
         from app.services.strategy.comparison_service import _compare_kpis
+
         db = MagicMock()
 
         kpi_current = MagicMock(id=1, code="KPI-01", name="KPI1", target_value=Decimal("100"))
@@ -234,8 +264,10 @@ class TestCompareKPIs:
 
         MockKPIItem.return_value = MagicMock(is_new=False, target_change=Decimal("10"))
 
-        with patch("app.services.strategy.health_calculator.calculate_kpi_completion_rate",
-                    side_effect=[Decimal("85"), Decimal("80")]):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_kpi_completion_rate",
+            side_effect=[Decimal("85"), Decimal("80")],
+        ):
             result = _compare_kpis(db, 1, 2)
             assert len(result) == 1
             MockKPIItem.assert_called_once()
@@ -243,6 +275,7 @@ class TestCompareKPIs:
     @patch("app.services.strategy.comparison_service.KPIComparisonItem")
     def test_compare_no_previous(self, MockKPIItem):
         from app.services.strategy.comparison_service import _compare_kpis
+
         db = MagicMock()
 
         kpi_current = MagicMock(id=1, code="KPI-01", name="KPI1", target_value=Decimal("100"))
@@ -254,8 +287,10 @@ class TestCompareKPIs:
 
         MockKPIItem.return_value = MagicMock(is_new=True)
 
-        with patch("app.services.strategy.health_calculator.calculate_kpi_completion_rate",
-                    return_value=Decimal("85")):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_kpi_completion_rate",
+            return_value=Decimal("85"),
+        ):
             result = _compare_kpis(db, 1, None)
             assert len(result) == 1
             assert result[0].is_new is True
@@ -265,6 +300,7 @@ class TestGetMultiYearTrend:
     @patch("app.services.strategy.comparison_service.date")
     def test_trend(self, mock_date):
         from app.services.strategy.comparison_service import get_multi_year_trend
+
         mock_date.today.return_value = date(2025, 6, 15)
         mock_date.side_effect = lambda *a, **kw: date(*a, **kw)
 
@@ -285,6 +321,7 @@ class TestGetMultiYearTrend:
 class TestGetKPIAchievementComparison:
     def test_no_strategies(self):
         from app.services.strategy.comparison_service import get_kpi_achievement_comparison
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -297,6 +334,7 @@ class TestGetKPIAchievementComparison:
 
     def test_with_strategies(self):
         from app.services.strategy.comparison_service import get_kpi_achievement_comparison
+
         db = MagicMock()
 
         current_s = _mock_strategy(id=1)

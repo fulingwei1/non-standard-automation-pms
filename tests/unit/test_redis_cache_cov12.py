@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：Redis缓存服务单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, call
 import json
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.cache.redis_cache import RedisCache
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -55,20 +57,20 @@ class TestRedisCacheGetSet:
     def test_get_returns_none_without_client(self):
         with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", False):
             cache = RedisCache()
-        if hasattr(cache, 'get'):
+        if hasattr(cache, "get"):
             result = cache.get("key")
             assert result is None
 
     def test_set_does_nothing_without_client(self):
         with patch("app.services.cache.redis_cache.REDIS_AVAILABLE", False):
             cache = RedisCache()
-        if hasattr(cache, 'set'):
+        if hasattr(cache, "set"):
             # 不应抛出异常
             cache.set("key", "value")
 
     def test_get_calls_redis_client(self):
         cache = self._make_cache_with_mock_client()
-        if not hasattr(cache, 'get'):
+        if not hasattr(cache, "get"):
             pytest.skip("无 get 方法")
         cache.client.get.return_value = json.dumps({"data": "value"}).encode()
         result = cache.get("mykey")
@@ -76,14 +78,14 @@ class TestRedisCacheGetSet:
 
     def test_set_calls_redis_client(self):
         cache = self._make_cache_with_mock_client()
-        if not hasattr(cache, 'set'):
+        if not hasattr(cache, "set"):
             pytest.skip("无 set 方法")
         cache.set("mykey", {"data": "value"})
         assert cache.client.set.called or cache.client.setex.called
 
     def test_delete_calls_redis_client(self):
         cache = self._make_cache_with_mock_client()
-        if not hasattr(cache, 'delete'):
+        if not hasattr(cache, "delete"):
             pytest.skip("无 delete 方法")
         cache.delete("mykey")
         assert cache.client.delete.called
@@ -100,7 +102,7 @@ class TestRedisCacheInvalidate:
 
     def test_exists_method(self):
         cache = self._make_cache_with_mock_client()
-        if not hasattr(cache, 'exists'):
+        if not hasattr(cache, "exists"):
             pytest.skip("无 exists 方法")
         cache.client.exists.return_value = 1
         result = cache.exists("key")
@@ -108,7 +110,7 @@ class TestRedisCacheInvalidate:
 
     def test_get_handles_exception_gracefully(self):
         cache = self._make_cache_with_mock_client()
-        if not hasattr(cache, 'get'):
+        if not hasattr(cache, "get"):
             pytest.skip("无 get 方法")
         cache.client.get.side_effect = Exception("Redis错误")
         # 应该返回None而不是崩溃

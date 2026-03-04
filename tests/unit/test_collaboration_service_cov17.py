@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 跨部门协作评价服务单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.collaboration_service")
 
 
 def _make_service(db=None):
     from app.services.collaboration_service import CollaborationService
+
     return CollaborationService(db or MagicMock())
 
 
@@ -42,9 +44,7 @@ class TestCollaborationService:
         rater_profile.job_type = "mechanical"
         ratee_profile = MagicMock()
         ratee_profile.job_type = "mechanical"
-        db.query.return_value.filter.return_value.first.side_effect = [
-            rater_profile, ratee_profile
-        ]
+        db.query.return_value.filter.return_value.first.side_effect = [rater_profile, ratee_profile]
         svc = _make_service(db)
         with pytest.raises(ValueError, match="相同岗位类型不能互评"):
             svc.create_rating(_make_rating_data(), rater_id=10)
@@ -58,7 +58,9 @@ class TestCollaborationService:
         ratee_profile.job_type = "test"
         existing = MagicMock()
         db.query.return_value.filter.return_value.first.side_effect = [
-            rater_profile, ratee_profile, existing
+            rater_profile,
+            ratee_profile,
+            existing,
         ]
         svc = _make_service(db)
         with pytest.raises(ValueError, match="已对该工程师进行过评价"):
@@ -76,7 +78,9 @@ class TestCollaborationService:
         """get_ratings_received 返回 (列表, 数量) 元组"""
         db = MagicMock()
         db.query.return_value.filter.return_value.count.return_value = 3
-        db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [MagicMock()] * 3
+        db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            MagicMock()
+        ] * 3
         svc = _make_service(db)
         items, total = svc.get_ratings_received(user_id=1)
         assert total == 3
@@ -114,6 +118,7 @@ class TestCollaborationService:
     def test_group_by_rater_type(self):
         """_group_by_rater_type 正确分组统计"""
         from app.services.collaboration_service import CollaborationService
+
         svc = _make_service()
         r1 = MagicMock()
         r1.rater_job_type = "electrical"

@@ -10,13 +10,14 @@ from pydantic import BaseModel, Field
 
 from ..common import TimestampSchema
 
-
 # ============================================
 # DepartmentObjective - 部门目标
 # ============================================
 
+
 class DepartmentObjectiveCreate(BaseModel):
     """创建部门目标"""
+
     strategy_id: int = Field(description="关联战略")
     department_id: int = Field(description="部门ID")
     year: int = Field(description="年度")
@@ -29,6 +30,7 @@ class DepartmentObjectiveCreate(BaseModel):
 
 class DepartmentObjectiveUpdate(BaseModel):
     """更新部门目标"""
+
     objectives: Optional[Dict[str, Any]] = None
     key_results: Optional[Dict[str, Any]] = None
     kpis_config: Optional[Dict[str, Any]] = None
@@ -38,6 +40,7 @@ class DepartmentObjectiveUpdate(BaseModel):
 
 class DepartmentObjectiveResponse(TimestampSchema):
     """部门目标响应"""
+
     id: int
     strategy_id: int
     department_id: int
@@ -61,6 +64,7 @@ class DepartmentObjectiveResponse(TimestampSchema):
 
 class DepartmentObjectiveDetailResponse(DepartmentObjectiveResponse):
     """部门目标详情（含个人 KPI）"""
+
     personal_kpis: List["PersonalKPIResponse"] = []
 
 
@@ -68,8 +72,10 @@ class DepartmentObjectiveDetailResponse(DepartmentObjectiveResponse):
 # PersonalKPI - 个人 KPI
 # ============================================
 
+
 class PersonalKPICreate(BaseModel):
     """创建个人 KPI"""
+
     employee_id: int = Field(description="员工ID")
     year: int = Field(description="年度")
     quarter: Optional[int] = Field(default=None, description="季度")
@@ -85,6 +91,7 @@ class PersonalKPICreate(BaseModel):
 
 class PersonalKPIUpdate(BaseModel):
     """更新个人 KPI"""
+
     kpi_name: Optional[str] = Field(default=None, max_length=200)
     kpi_description: Optional[str] = None
     unit: Optional[str] = None
@@ -100,6 +107,7 @@ class PersonalKPIUpdate(BaseModel):
 
 class PersonalKPIResponse(TimestampSchema):
     """个人 KPI 响应"""
+
     id: int
     employee_id: int
     year: int
@@ -129,6 +137,7 @@ class PersonalKPIResponse(TimestampSchema):
 
 class PersonalKPISelfRatingRequest(BaseModel):
     """个人 KPI 自评请求"""
+
     actual_value: Optional[Decimal] = Field(default=None, description="实际值")
     self_rating: int = Field(ge=0, le=100, description="自评分")
     self_comment: Optional[str] = Field(default=None, description="自评说明")
@@ -136,12 +145,14 @@ class PersonalKPISelfRatingRequest(BaseModel):
 
 class PersonalKPIManagerRatingRequest(BaseModel):
     """个人 KPI 主管评分请求"""
+
     manager_rating: int = Field(ge=0, le=100, description="主管评分")
     manager_comment: Optional[str] = Field(default=None, description="主管评语")
 
 
 class PersonalKPIBatchCreate(BaseModel):
     """批量创建个人 KPI"""
+
     employee_id: int
     year: int
     quarter: Optional[int] = None
@@ -152,8 +163,10 @@ class PersonalKPIBatchCreate(BaseModel):
 # 目标分解树
 # ============================================
 
+
 class DecompositionTreeNode(BaseModel):
     """分解树节点"""
+
     id: int
     type: str  # strategy / csf / kpi / department / team / personal
     name: str
@@ -173,6 +186,7 @@ class DecompositionTreeNode(BaseModel):
 
 class DecompositionTreeResponse(BaseModel):
     """分解树响应"""
+
     strategy_id: int
     strategy_name: str
     year: int
@@ -184,6 +198,7 @@ class DecompositionTreeResponse(BaseModel):
 
 class TraceToStrategyResponse(BaseModel):
     """向上追溯到战略"""
+
     personal_kpi: PersonalKPIResponse
     department_objective: Optional[DepartmentObjectiveResponse] = None
     csf: Optional[Dict[str, Any]] = None

@@ -25,8 +25,8 @@ from app.schemas.progress import (
     ProgressBoardResponse,
     ProgressSummaryResponse,
 )
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -63,9 +63,7 @@ def get_project_progress_summary(
 
     # 计算整体进度（按权重加权平均）
     total_weight = sum(float(task.weight) for task in tasks)
-    weighted_progress = sum(
-        float(task.weight) * task.progress_percent for task in tasks
-    )
+    weighted_progress = sum(float(task.weight) * task.progress_percent for task in tasks)
     overall_progress = (weighted_progress / total_weight) if total_weight > 0 else 0.0
 
     # 按阶段统计进度
@@ -75,9 +73,7 @@ def get_project_progress_summary(
         if stage_tasks:
             stage_weight = sum(float(t.weight) for t in stage_tasks)
             stage_weighted = sum(float(t.weight) * t.progress_percent for t in stage_tasks)
-            stage_progress[stage] = (
-                (stage_weighted / stage_weight) if stage_weight > 0 else 0.0
-            )
+            stage_progress[stage] = (stage_weighted / stage_weight) if stage_weight > 0 else 0.0
 
     # 统计任务状态
     task_count = len(tasks)
@@ -134,9 +130,7 @@ def get_project_gantt_data(
 
     # 获取所有依赖关系
     task_ids = [t.id for t in tasks]
-    dependencies = (
-        db.query(TaskDependency).filter(TaskDependency.task_id.in_(task_ids)).all()
-    )
+    dependencies = db.query(TaskDependency).filter(TaskDependency.task_id.in_(task_ids)).all()
     dep_map = {}  # task_id -> [depends_on_task_ids]
     for dep in dependencies:
         if dep.task_id not in dep_map:
@@ -240,9 +234,7 @@ def get_project_progress_board(
 # ==================== 机台进度汇总 ====================
 
 
-@router.get(
-    "/machines/{machine_id}/summary", response_model=MachineProgressSummaryResponse
-)
+@router.get("/machines/{machine_id}/summary", response_model=MachineProgressSummaryResponse)
 def get_machine_progress_summary(
     project_id: int = Path(..., description="项目ID"),
     machine_id: int = Path(..., description="机台ID"),
@@ -253,9 +245,7 @@ def get_machine_progress_summary(
     check_project_access_or_raise(db, current_user, project_id)
 
     machine = (
-        db.query(Machine)
-        .filter(Machine.id == machine_id, Machine.project_id == project_id)
-        .first()
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
     )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
@@ -277,9 +267,7 @@ def get_machine_progress_summary(
 
     # 计算整体进度
     total_weight = sum(float(task.weight) for task in tasks)
-    weighted_progress = sum(
-        float(task.weight) * task.progress_percent for task in tasks
-    )
+    weighted_progress = sum(float(task.weight) * task.progress_percent for task in tasks)
     overall_progress = (weighted_progress / total_weight) if total_weight > 0 else 0.0
 
     # 统计任务状态

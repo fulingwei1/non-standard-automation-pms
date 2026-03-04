@@ -35,8 +35,7 @@ class TestAnalyticsOverviewAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/projects/health",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/projects/health", headers=headers
         )
 
         if response.status_code == 404:
@@ -51,8 +50,7 @@ class TestAnalyticsOverviewAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/workload/overview",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/workload/overview", headers=headers
         )
 
         if response.status_code == 404:
@@ -74,8 +72,7 @@ class TestGlobalWorkloadAnalyticsAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/overview",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/overview", headers=headers
         )
 
         if response.status_code == 404:
@@ -93,8 +90,7 @@ class TestGlobalWorkloadAnalyticsAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/bottlenecks",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/bottlenecks", headers=headers
         )
 
         if response.status_code == 404:
@@ -119,8 +115,7 @@ class TestSkillMatrixAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix", headers=headers
         )
 
         if response.status_code == 404:
@@ -137,7 +132,7 @@ class TestSkillMatrixAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix",
             params={"tag_type": "SKILL"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -152,8 +147,7 @@ class TestSkillMatrixAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills", headers=headers
         )
 
         if response.status_code == 404:
@@ -169,7 +163,7 @@ class TestSkillMatrixAPI:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills/CODING",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -193,7 +187,7 @@ class TestSkillMatrixAPI:
                 "available_from": today.isoformat(),
                 "available_to": (today + timedelta(days=30)).isoformat(),
             },
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -210,8 +204,7 @@ class TestSkillMatrixAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/gaps",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/gaps", headers=headers
         )
 
         if response.status_code == 404:
@@ -234,7 +227,7 @@ class TestAnalyticsEdgeCases:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/search",
-            headers=headers
+            headers=headers,
             # 缺少必填的 skills 参数
         )
 
@@ -260,8 +253,7 @@ class TestAnalyticsIntegration:
 
         # 获取全局概览
         overview_response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/overview",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/workload/overview", headers=headers
         )
 
         if overview_response.status_code == 404:
@@ -278,8 +270,7 @@ class TestAnalyticsIntegration:
 
         # 1. 获取技能列表
         skills_response = client.get(
-            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills", headers=headers
         )
 
         if skills_response.status_code == 404:
@@ -294,7 +285,7 @@ class TestAnalyticsIntegration:
                 if skill_code:
                     detail_response = client.get(
                         f"{settings.API_V1_PREFIX}/analytics/analytics/skill-matrix/skills/{skill_code}",
-                        headers=headers
+                        headers=headers,
                     )
                     if detail_response.status_code != 404:
                         assert detail_response.status_code == 200, detail_response.text

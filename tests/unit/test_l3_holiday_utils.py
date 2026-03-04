@@ -20,10 +20,10 @@ from app.utils.holiday_utils import (
     is_workday_adjustment,
 )
 
-
 # =============================================================================
 # is_holiday
 # =============================================================================
+
 
 class TestIsHoliday:
 
@@ -64,6 +64,7 @@ class TestIsHoliday:
 # get_holiday_name
 # =============================================================================
 
+
 class TestGetHolidayName:
 
     def test_new_year_name_2026(self):
@@ -97,6 +98,7 @@ class TestGetHolidayName:
 # =============================================================================
 # is_workday_adjustment
 # =============================================================================
+
 
 class TestIsWorkdayAdjustment:
 
@@ -133,6 +135,7 @@ class TestIsWorkdayAdjustment:
 # get_work_type
 # =============================================================================
 
+
 class TestGetWorkType:
 
     def test_holiday_returns_HOLIDAY(self):
@@ -165,6 +168,7 @@ class TestGetWorkType:
 # =============================================================================
 # get_working_days
 # =============================================================================
+
 
 class TestGetWorkingDays:
 
@@ -212,6 +216,7 @@ class TestGetWorkingDays:
 # =============================================================================
 # add_working_days
 # =============================================================================
+
 
 class TestAddWorkingDays:
 

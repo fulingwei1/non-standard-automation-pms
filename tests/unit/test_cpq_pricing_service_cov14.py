@@ -2,12 +2,14 @@
 """
 第十四批：CPQ配置化报价服务 单元测试
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
     from app.services.cpq_pricing_service import CpqPricingService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -94,8 +96,10 @@ class TestCpqPricingService:
         db = make_db()
         svc = make_service(db)
         schema = {
-            "a": {"required": True}, "b": {"required": True},
-            "c": {"required": True}, "d": {"required": True}
+            "a": {"required": True},
+            "b": {"required": True},
+            "c": {"required": True},
+            "d": {"required": True},
         }
         selections = {"a": "v1"}
         level = svc._calculate_confidence(schema, selections)
@@ -109,7 +113,7 @@ class TestCpqPricingService:
             threshold,
             base_price=Decimal("80000"),
             final_price=Decimal("40000"),
-            manual_discount_pct=None
+            manual_discount_pct=None,
         )
         assert requires is True
         assert "底价" in reason

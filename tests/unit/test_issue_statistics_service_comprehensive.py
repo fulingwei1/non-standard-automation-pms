@@ -59,12 +59,12 @@ class TestCountIssuesByStatus:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.count.side_effect = [
             100,  # total
-            30,   # open
-            20,   # processing
-            25,   # resolved
-            15,   # closed
-            5,    # cancelled
-            5,    # deferred
+            30,  # open
+            20,  # processing
+            25,  # resolved
+            15,  # closed
+            5,  # cancelled
+            5,  # deferred
         ]
 
         result = count_issues_by_status(mock_db)
@@ -329,8 +329,12 @@ class TestBuildDistributionData:
         from app.services.issue_statistics_service import build_distribution_data
 
         status_counts = {
-            "open": 30, "processing": 20, "resolved": 25,
-            "closed": 15, "cancelled": 5, "deferred": 5
+            "open": 30,
+            "processing": 20,
+            "resolved": 25,
+            "closed": 15,
+            "cancelled": 5,
+            "deferred": 5,
         }
         severity_counts = {"critical": 10, "major": 20, "minor": 30}
         priority_counts = {"urgent": 5, "high": 15, "medium": 25, "low": 35}
@@ -350,8 +354,12 @@ class TestBuildDistributionData:
         from app.services.issue_statistics_service import build_distribution_data
 
         status_counts = {
-            "open": 1, "processing": 2, "resolved": 3,
-            "closed": 4, "cancelled": 5, "deferred": 6
+            "open": 1,
+            "processing": 2,
+            "resolved": 3,
+            "closed": 4,
+            "cancelled": 5,
+            "deferred": 6,
         }
         severity_counts = {"critical": 0, "major": 0, "minor": 0}
         priority_counts = {"urgent": 0, "high": 0, "medium": 0, "low": 0}
@@ -379,8 +387,13 @@ class TestCreateSnapshotRecord:
         mock_db = MagicMock()
 
         status_counts = {
-            "total": 100, "open": 30, "processing": 20, "resolved": 25,
-            "closed": 15, "cancelled": 5, "deferred": 5
+            "total": 100,
+            "open": 30,
+            "processing": 20,
+            "resolved": 25,
+            "closed": 15,
+            "cancelled": 5,
+            "deferred": 5,
         }
         severity_counts = {"critical": 10, "major": 20, "minor": 30}
         priority_counts = {"urgent": 5, "high": 15, "medium": 25, "low": 35}
@@ -390,10 +403,17 @@ class TestCreateSnapshotRecord:
         today_counts = {"new": 5, "resolved": 3, "closed": 2}
         avg_resolve_time = 6.5
         distributions = {
-            "status": {"OPEN": 30, "PROCESSING": 20, "RESOLVED": 25, "CLOSED": 15, "CANCELLED": 5, "DEFERRED": 5},
+            "status": {
+                "OPEN": 30,
+                "PROCESSING": 20,
+                "RESOLVED": 25,
+                "CLOSED": 15,
+                "CANCELLED": 5,
+                "DEFERRED": 5,
+            },
             "severity": {"CRITICAL": 10, "MAJOR": 20, "MINOR": 30},
             "priority": {"URGENT": 5, "HIGH": 15, "MEDIUM": 25, "LOW": 35},
-            "category": {"PROJECT": 50, "TASK": 30, "ACCEPTANCE": 20}
+            "category": {"PROJECT": 50, "TASK": 30, "ACCEPTANCE": 20},
         }
 
         result = create_snapshot_record(
@@ -407,7 +427,7 @@ class TestCreateSnapshotRecord:
             category_counts,
             today_counts,
             avg_resolve_time,
-            distributions
+            distributions,
         )
 
         # 验证db.add被调用
@@ -423,8 +443,13 @@ class TestCreateSnapshotRecord:
 
         snapshot_date = date(2026, 1, 30)
         status_counts = {
-            "total": 100, "open": 30, "processing": 20, "resolved": 25,
-            "closed": 15, "cancelled": 5, "deferred": 5
+            "total": 100,
+            "open": 30,
+            "processing": 20,
+            "resolved": 25,
+            "closed": 15,
+            "cancelled": 5,
+            "deferred": 5,
         }
         severity_counts = {"critical": 10, "major": 20, "minor": 30}
         priority_counts = {"urgent": 5, "high": 15, "medium": 25, "low": 35}
@@ -437,7 +462,7 @@ class TestCreateSnapshotRecord:
             "status": {"OPEN": 30},
             "severity": {"CRITICAL": 10},
             "priority": {"URGENT": 5},
-            "category": {"PROJECT": 50}
+            "category": {"PROJECT": 50},
         }
 
         result = create_snapshot_record(
@@ -451,7 +476,7 @@ class TestCreateSnapshotRecord:
             category_counts,
             today_counts,
             avg_resolve_time,
-            distributions
+            distributions,
         )
 
         assert result.snapshot_date == snapshot_date

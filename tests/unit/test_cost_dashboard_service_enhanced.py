@@ -47,7 +47,7 @@ class TestCostDashboardService(unittest.TestCase):
         mock_month_cost_project.total = Decimal("50000.00")
         mock_month_cost_financial = Mock()
         mock_month_cost_financial.total = Decimal("30000.00")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             mock_stats,  # 预算统计
             mock_month_cost_project,  # 本月项目成本
@@ -177,7 +177,7 @@ class TestCostDashboardService(unittest.TestCase):
 
         # 验证数量限制
         self.assertEqual(len(result["top_cost_projects"]), 5)
-        
+
         # 验证成本排序（应该是降序）
         costs = [p["actual_cost"] for p in result["top_cost_projects"]]
         self.assertEqual(costs, sorted(costs, reverse=True))
@@ -241,7 +241,7 @@ class TestCostDashboardService(unittest.TestCase):
 
         # 所有项目都应该在超支列表中
         self.assertEqual(len(result["top_overrun_projects"]), 5)
-        
+
         # 验证超支项目按超支百分比降序排列
         overrun_pcts = [p["cost_variance_pct"] for p in result["top_overrun_projects"]]
         self.assertEqual(overrun_pcts, sorted(overrun_pcts, reverse=True))
@@ -266,11 +266,11 @@ class TestCostDashboardService(unittest.TestCase):
         result = self.service.get_top_projects(limit=1)
 
         project_data = result["top_cost_projects"][0]
-        
+
         # 验证利润计算
         expected_profit = 120000.00 - 80000.00  # 40000
         expected_margin = (40000 / 120000) * 100  # 33.33%
-        
+
         self.assertEqual(project_data["profit"], expected_profit)
         self.assertAlmostEqual(project_data["profit_margin"], expected_margin, places=2)
 
@@ -286,7 +286,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("125000.00")  # 超支25%
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         # Mock 本月成本查询
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("10000.00")
@@ -311,7 +311,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("115000.00")  # 超支15%
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("10000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -332,7 +332,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("105000.00")  # 超支5%
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("10000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -354,7 +354,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("96000.00")  # 96%
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("8000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -376,7 +376,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("92000.00")  # 92%
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("7000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -398,7 +398,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("50000.00")  # 50%，正常
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("4000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -419,7 +419,7 @@ class TestCostDashboardService(unittest.TestCase):
         project.actual_cost = Decimal("60000.00")  # 平均月成本5000
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         # 本月成本异常高
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("20000.00")  # 是平均的4倍
@@ -447,7 +447,7 @@ class TestCostDashboardService(unittest.TestCase):
             projects.append(project)
 
         self.mock_db.query.return_value.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("8000.00")
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_month_cost
@@ -461,8 +461,7 @@ class TestCostDashboardService(unittest.TestCase):
                 next_alert = result["alerts"][i + 1]
                 level_order = {"high": 0, "medium": 1, "low": 2}
                 self.assertLessEqual(
-                    level_order[current["alert_level"]],
-                    level_order[next_alert["alert_level"]]
+                    level_order[current["alert_level"]], level_order[next_alert["alert_level"]]
                 )
 
     # ========== get_project_cost_dashboard 测试 ==========
@@ -483,7 +482,7 @@ class TestCostDashboardService(unittest.TestCase):
         # Mock 成本分类数据
         cost_breakdown = [("人力", Decimal("400000")), ("材料", Decimal("300000"))]
         financial_breakdown = [("其他", Decimal("100000"))]
-        
+
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.group_by.return_value.all.side_effect = [
             cost_breakdown,
@@ -493,7 +492,7 @@ class TestCostDashboardService(unittest.TestCase):
         # Mock 月度成本（12个月）
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("50000.00")
-        
+
         # Mock 收款数据
         mock_received = Mock()
         mock_received.total = Decimal("500000.00")
@@ -505,7 +504,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):  # 12个月 x 2次查询
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([mock_received, mock_invoiced])  # 收款数据
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -549,7 +548,9 @@ class TestCostDashboardService(unittest.TestCase):
         project.contract_amount = Decimal("0")  # 合同额为零
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = project
-        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         mock_month_cost = Mock()
         mock_month_cost.total = None
@@ -562,7 +563,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([mock_received, mock_invoiced])
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -581,9 +582,11 @@ class TestCostDashboardService(unittest.TestCase):
         project.contract_amount = Decimal("120000.00")
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = project
-        
+
         # 空成本分类
-        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         mock_month_cost = Mock()
         mock_month_cost.total = None
@@ -592,7 +595,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([Mock(total=None), Mock(total=None)])
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -611,7 +614,9 @@ class TestCostDashboardService(unittest.TestCase):
         project.contract_amount = Decimal("1500000.00")
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = project
-        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         mock_month_cost = Mock()
         mock_month_cost.total = Decimal("50000.00")
@@ -620,7 +625,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([Mock(total=None), Mock(total=None)])
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -628,11 +633,11 @@ class TestCostDashboardService(unittest.TestCase):
         # 验证成本趋势
         self.assertIn("cost_trend", result)
         self.assertEqual(len(result["cost_trend"]), 12)
-        
+
         # 验证累计成本递增
         cumulative_costs = [t["cumulative_cost"] for t in result["cost_trend"]]
         for i in range(1, len(cumulative_costs)):
-            self.assertGreaterEqual(cumulative_costs[i], cumulative_costs[i-1])
+            self.assertGreaterEqual(cumulative_costs[i], cumulative_costs[i - 1])
 
     def test_get_project_cost_dashboard_negative_profit(self):
         """测试单项目成本仪表盘 - 负利润场景"""
@@ -645,7 +650,9 @@ class TestCostDashboardService(unittest.TestCase):
         project.contract_amount = Decimal("120000.00")
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = project
-        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         mock_month_cost = Mock()
         mock_month_cost.total = None
@@ -654,7 +661,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([Mock(total=None), Mock(total=None)])
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -678,7 +685,7 @@ class TestCostDashboardService(unittest.TestCase):
         # 两个数据源有相同类型
         cost_breakdown = [("人力", Decimal("30000")), ("材料", Decimal("20000"))]
         financial_breakdown = [("人力", Decimal("20000")), ("其他", Decimal("10000"))]
-        
+
         self.mock_db.query.return_value.filter.return_value.group_by.return_value.all.side_effect = [
             cost_breakdown,
             financial_breakdown,
@@ -691,7 +698,7 @@ class TestCostDashboardService(unittest.TestCase):
         for _ in range(24):
             first_calls.extend([mock_month_cost, mock_month_cost])
         first_calls.extend([Mock(total=None), Mock(total=None)])
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = first_calls
 
         result = self.service.get_project_cost_dashboard(project_id=1)
@@ -699,7 +706,7 @@ class TestCostDashboardService(unittest.TestCase):
         # 验证同类型合并
         breakdown = result["cost_breakdown"]
         labor_items = [b for b in breakdown if b["category"] == "人力"]
-        
+
         if labor_items:
             # 人力成本应该是 30000 + 20000 = 50000
             self.assertEqual(labor_items[0]["amount"], 50000.00)

@@ -17,6 +17,6 @@ router = APIRouter()
 
 # 聚合所有子路由（静态路径在前，动态路径/{id}在后）
 router.include_router(template_analytics.router)  # /templates/recommend 等静态路径
-router.include_router(template_projects.router)   # /templates/{id}/create-project
-router.include_router(template_crud.router)       # /templates/{id} CRUD
-router.include_router(template_versions.router)   # 版本管理
+router.include_router(template_projects.router)  # /templates/{id}/create-project
+router.include_router(template_crud.router)  # /templates/{id} CRUD
+router.include_router(template_versions.router)  # 版本管理

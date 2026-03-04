@@ -2,16 +2,17 @@
 """
 Unit tests for app/services/ecn_knowledge_service/solution_extraction.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.ecn_knowledge_service.solution_extraction import (
-        extract_solution,
         _auto_extract_solution,
-        _extract_keywords,
         _build_solution_description,
+        _extract_keywords,
         _extract_solution_steps,
+        extract_solution,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -23,9 +24,15 @@ def _make_service():
     return service
 
 
-def _make_ecn(ecn_id=1, ecn_type="DESIGN", solution=None,
-              execution_note=None, change_description=None,
-              root_cause_category="HUMAN", root_cause_analysis=None):
+def _make_ecn(
+    ecn_id=1,
+    ecn_type="DESIGN",
+    solution=None,
+    execution_note=None,
+    change_description=None,
+    root_cause_category="HUMAN",
+    root_cause_analysis=None,
+):
     ecn = MagicMock()
     ecn.id = ecn_id
     ecn.ecn_type = ecn_type
@@ -40,6 +47,7 @@ def _make_ecn(ecn_id=1, ecn_type="DESIGN", solution=None,
 
 
 # ──────────────────────── extract_solution ────────────────────────
+
 
 def test_extract_solution_ecn_not_found():
     """ECN 不存在时抛出 ValueError"""
@@ -79,6 +87,7 @@ def test_extract_solution_manual():
 
 # ──────────────────────── _auto_extract_solution ────────────────────────
 
+
 def test_auto_extract_from_solution_field():
     """solution 字段有值时直接返回"""
     ecn = _make_ecn(solution="先换物料A再验证")
@@ -99,13 +108,15 @@ def test_auto_extract_empty():
 
 # ──────────────────────── _extract_keywords ────────────────────────
 
+
 def test_extract_keywords_basic():
     """基本关键词提取不报错，返回列表"""
     service = _make_service()
     service.db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
 
-    ecn = _make_ecn(ecn_type="DESIGN", root_cause_category="HUMAN",
-                    change_description="物料测试质量")
+    ecn = _make_ecn(
+        ecn_type="DESIGN", root_cause_category="HUMAN", change_description="物料测试质量"
+    )
     keywords = _extract_keywords(service, ecn)
 
     assert isinstance(keywords, list)
@@ -113,6 +124,7 @@ def test_extract_keywords_basic():
 
 
 # ──────────────────────── _build_solution_description ────────────────────────
+
 
 def test_build_solution_description_with_solution():
     """有 solution 时直接返回"""
@@ -130,10 +142,13 @@ def test_build_solution_description_no_solution():
 
 # ──────────────────────── _extract_solution_steps ────────────────────────
 
+
 def test_extract_solution_steps_numbered():
     """带序号的行被识别为步骤"""
     service = _make_service()
-    service.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    service.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
 
     ecn = _make_ecn()
     solution = "1. 第一步\n2. 第二步\n- 子步骤"

@@ -5,14 +5,15 @@ import pytest
 pytest.importorskip("app.services.ecn_notification.base")
 
 from unittest.mock import MagicMock, patch
-from app.services.ecn_notification.base import (
-    create_ecn_notification,
-    _map_priority_to_unified,
-)
-from app.services.channel_handlers.base import NotificationPriority
 
+from app.services.channel_handlers.base import NotificationPriority
+from app.services.ecn_notification.base import (
+    _map_priority_to_unified,
+    create_ecn_notification,
+)
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_map_priority_urgent():
     result = _map_priority_to_unified("URGENT")
@@ -70,8 +71,12 @@ def test_create_ecn_notification_extra_data():
         mock_disp.send_notification_request.return_value = {"success": True}
         MockDisp.return_value = mock_disp
         create_ecn_notification(
-            db=db, user_id=2, notification_type="ECN_UPDATED",
-            title="标题", content="内容", ecn_id=10,
+            db=db,
+            user_id=2,
+            notification_type="ECN_UPDATED",
+            title="标题",
+            content="内容",
+            ecn_id=10,
             extra_data={"field": "value"},
         )
     request = mock_disp.send_notification_request.call_args[0][0]
@@ -85,8 +90,12 @@ def test_create_ecn_notification_link_url_contains_ecn_id():
         mock_disp.send_notification_request.return_value = {}
         MockDisp.return_value = mock_disp
         create_ecn_notification(
-            db=db, user_id=1, notification_type="T",
-            title="T", content="C", ecn_id=99,
+            db=db,
+            user_id=1,
+            notification_type="T",
+            title="T",
+            content="C",
+            ecn_id=99,
         )
     request = mock_disp.send_notification_request.call_args[0][0]
     assert "99" in request.link_url

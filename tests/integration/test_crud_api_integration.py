@@ -36,10 +36,7 @@ class TestCRUDAPIIntegration:
         }
 
         response = helper.post(
-            "/suppliers/",
-            data=supplier_data,
-            username="admin",
-            password="admin123"
+            "/suppliers/", data=supplier_data, username="admin", password="admin123"
         )
 
         status_code = response.get("status_code")
@@ -53,9 +50,7 @@ class TestCRUDAPIIntegration:
 
                 # 获取供应商
                 response = helper.get(
-                    f"/suppliers/{supplier_id}",
-                    username="admin",
-                    password="admin123"
+                    f"/suppliers/{supplier_id}", username="admin", password="admin123"
                 )
                 assert response.get("status_code") in (200, 404)
 
@@ -68,7 +63,7 @@ class TestCRUDAPIIntegration:
                     f"/suppliers/{supplier_id}",
                     data=update_data,
                     username="admin",
-                    password="admin123"
+                    password="admin123",
                 )
                 assert response.get("status_code") in range(200, 500)
 
@@ -77,7 +72,7 @@ class TestCRUDAPIIntegration:
                     "/suppliers/",
                     params={"page": 1, "page_size": 20},
                     username="admin",
-                    password="admin123"
+                    password="admin123",
                 )
                 assert response.get("status_code") in range(200, 500)
 
@@ -86,15 +81,13 @@ class TestCRUDAPIIntegration:
                     "/suppliers/",
                     params={"keyword": "测试", "page": 1, "page_size": 20},
                     username="admin",
-                    password="admin123"
+                    password="admin123",
                 )
                 assert response.get("status_code") in range(200, 500)
 
                 # 删除供应商
                 response = helper.delete(
-                    f"/suppliers/{supplier_id}",
-                    username="admin",
-                    password="admin123"
+                    f"/suppliers/{supplier_id}", username="admin", password="admin123"
                 )
                 assert response.get("status_code") in range(200, 500)
             else:
@@ -121,10 +114,7 @@ class TestCRUDAPIIntegration:
         }
 
         response = helper.post(
-            "/materials/",
-            data=material_data,
-            username="admin",
-            password="admin123"
+            "/materials/", data=material_data, username="admin", password="admin123"
         )
 
         status_code = response.get("status_code")
@@ -137,9 +127,7 @@ class TestCRUDAPIIntegration:
 
                 # 获取物料
                 response = helper.get(
-                    f"/materials/{material_id}",
-                    username="admin",
-                    password="admin123"
+                    f"/materials/{material_id}", username="admin", password="admin123"
                 )
                 assert response.get("status_code") in range(200, 500)
 
@@ -148,16 +136,12 @@ class TestCRUDAPIIntegration:
                     "/materials/",
                     params={"page": 1, "page_size": 20},
                     username="admin",
-                    password="admin123"
+                    password="admin123",
                 )
                 assert response.get("status_code") in range(200, 500)
 
                 # 清理
-                helper.delete(
-                    f"/materials/{material_id}",
-                    username="admin",
-                    password="admin123"
-                )
+                helper.delete(f"/materials/{material_id}", username="admin", password="admin123")
         elif status_code in (400, 401, 403, 422):
             pass
         else:
@@ -175,10 +159,7 @@ class TestCRUDAPIIntegration:
                 "status": "ACTIVE" if i % 2 == 0 else "INACTIVE",
             }
             response = helper.post(
-                "/suppliers/",
-                data=supplier_data,
-                username="admin",
-                password="admin123"
+                "/suppliers/", data=supplier_data, username="admin", password="admin123"
             )
             status_code = response.get("status_code")
             if status_code and 200 <= status_code < 300:
@@ -191,10 +172,7 @@ class TestCRUDAPIIntegration:
 
         # 测试分页
         response = helper.get(
-            "/suppliers/",
-            params={"page": 1, "page_size": 2},
-            username="admin",
-            password="admin123"
+            "/suppliers/", params={"page": 1, "page_size": 2}, username="admin", password="admin123"
         )
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -205,8 +183,4 @@ class TestCRUDAPIIntegration:
 
         # 清理
         for supplier_id in supplier_ids:
-            helper.delete(
-                f"/suppliers/{supplier_id}",
-                username="admin",
-                password="admin123"
-            )
+            helper.delete(f"/suppliers/{supplier_id}", username="admin", password="admin123")

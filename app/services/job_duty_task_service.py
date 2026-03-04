@@ -15,10 +15,7 @@ from app.models.task_center import JobDutyTemplate, TaskUnified
 from app.models.user import User
 
 
-def should_generate_task(
-    template: JobDutyTemplate,
-    today: date
-) -> Tuple[bool, date]:
+def should_generate_task(template: JobDutyTemplate, today: date) -> Tuple[bool, date]:
     """
     判断是否需要生成任务
 
@@ -32,12 +29,12 @@ def should_generate_task(
     should_generate = False
     target_date = today
 
-    if template.frequency == 'DAILY':
+    if template.frequency == "DAILY":
         # 每天生成
         should_generate = True
         target_date = today + timedelta(days=template.generate_before_days or 0)
 
-    elif template.frequency == 'WEEKLY':
+    elif template.frequency == "WEEKLY":
         # 每周生成（检查是否是目标星期几）
         if template.day_of_week:
             # 计算本周的目标日期
@@ -50,7 +47,7 @@ def should_generate_task(
                 should_generate = True
                 target_date = today + timedelta(days=days_until_target)
 
-    elif template.frequency == 'MONTHLY':
+    elif template.frequency == "MONTHLY":
         # 每月生成（检查是否是目标日期）
         if template.day_of_month:
             # 计算本月的目标日期
@@ -67,12 +64,17 @@ def should_generate_task(
                 should_generate = True
                 target_date = target_date_in_month
 
-    elif template.frequency == 'YEARLY':
+    elif template.frequency == "YEARLY":
         # 每年生成（检查是否是目标月份和日期）
         if template.month_of_year and template.day_of_month:
-            target_date_in_year = date(today.year, template.month_of_year,
-                                      min(template.day_of_month,
-                                          calendar.monthrange(today.year, template.month_of_year)[1]))
+            target_date_in_year = date(
+                today.year,
+                template.month_of_year,
+                min(
+                    template.day_of_month,
+                    calendar.monthrange(today.year, template.month_of_year)[1],
+                ),
+            )
             days_until_target = (target_date_in_year - today).days
             if days_until_target == 0:  # 今天就是目标日期
                 should_generate = True
@@ -85,10 +87,7 @@ def should_generate_task(
     return should_generate, target_date
 
 
-def find_template_users(
-    db: Session,
-    template: JobDutyTemplate
-) -> List[User]:
+def find_template_users(db: Session, template: JobDutyTemplate) -> List[User]:
     """
     查找模板对应的用户列表
 
@@ -102,28 +101,24 @@ def find_template_users(
     users = []
 
     # 如果User表有position_id字段
-    if hasattr(User, 'position_id') and template.position_id:
-        users = db.query(User).filter(
-            User.position_id == template.position_id,
-            User.is_active
-        ).all()
+    if hasattr(User, "position_id") and template.position_id:
+        users = (
+            db.query(User).filter(User.position_id == template.position_id, User.is_active).all()
+        )
     elif template.department_id:
         # 如果有部门ID，通过部门查找用户
-        if hasattr(User, 'department_id'):
-            users = db.query(User).filter(
-                User.department_id == template.department_id,
-                User.is_active
-            ).all()
+        if hasattr(User, "department_id"):
+            users = (
+                db.query(User)
+                .filter(User.department_id == template.department_id, User.is_active)
+                .all()
+            )
 
     return users
 
 
 def create_task_from_template(
-    db: Session,
-    template: JobDutyTemplate,
-    user: User,
-    target_date: date,
-    generate_task_code_func
+    db: Session, template: JobDutyTemplate, user: User, target_date: date, generate_task_code_func
 ) -> TaskUnified:
     """
     根据模板为用户创建任务
@@ -148,35 +143,31 @@ def create_task_from_template(
         task_code=task_code,
         title=f"{template.duty_name}",
         description=template.duty_description,
-        task_type='JOB_DUTY',
+        task_type="JOB_DUTY",
         assignee_id=user.id,
         assignee_name=user.real_name or user.username,
         assigner_id=None,  # 系统自动生成
-        assigner_name='系统',
+        assigner_name="系统",
         plan_start_date=target_date,
         plan_end_date=target_date,
         deadline=deadline,
         estimated_hours=template.estimated_hours,
-        priority=template.default_priority or 'MEDIUM',
+        priority=template.default_priority or "MEDIUM",
         is_urgent=False,
-        tags=['岗位职责'],
-        category='JOB_DUTY',
+        tags=["岗位职责"],
+        category="JOB_DUTY",
         reminder_enabled=True,
         reminder_before_hours=24,
-        status='PENDING',
-        source_type='JOB_DUTY_TEMPLATE',
+        status="PENDING",
+        source_type="JOB_DUTY_TEMPLATE",
         source_id=template.id,
-        created_by=None  # 系统生成
+        created_by=None,  # 系统生成
     )
 
     return task
 
 
-def check_task_exists(
-    db: Session,
-    template: JobDutyTemplate,
-    target_date: date
-) -> bool:
+def check_task_exists(db: Session, template: JobDutyTemplate, target_date: date) -> bool:
     """
     检查是否已经生成过该日期的任务
 
@@ -188,11 +179,15 @@ def check_task_exists(
     Returns:
         是否存在
     """
-    existing_task = db.query(TaskUnified).filter(
-        TaskUnified.task_type == 'JOB_DUTY',
-        TaskUnified.source_type == 'JOB_DUTY_TEMPLATE',
-        TaskUnified.source_id == template.id,
-        TaskUnified.plan_start_date == target_date
-    ).first()
+    existing_task = (
+        db.query(TaskUnified)
+        .filter(
+            TaskUnified.task_type == "JOB_DUTY",
+            TaskUnified.source_type == "JOB_DUTY_TEMPLATE",
+            TaskUnified.source_id == template.id,
+            TaskUnified.plan_start_date == target_date,
+        )
+        .first()
+    )
 
     return existing_task is not None

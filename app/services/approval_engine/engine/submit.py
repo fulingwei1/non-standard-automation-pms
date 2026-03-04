@@ -196,9 +196,7 @@ class ApprovalSubmitMixin:
             entity_type=entity_type,
             entity_id=entity_id,
             initiator_id=initiator_id,
-            initiator_name=initiator.real_name or initiator.username
-            if initiator
-            else None,
+            initiator_name=initiator.real_name or initiator.username if initiator else None,
             form_data=form_data,
             status="DRAFT",
             title=title,

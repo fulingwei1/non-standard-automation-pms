@@ -15,7 +15,7 @@
 import unittest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from fastapi import HTTPException
 
@@ -451,9 +451,7 @@ class TestCreateMonthlyWorkSummary(TestEmployeePerformanceService):
         existing_summary.id = 50
         existing_summary.period = "2026-01"
 
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            existing_summary
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = existing_summary
 
         with self.assertRaises(HTTPException) as context:
             self.service.create_monthly_work_summary(current_user, summary_in)
@@ -485,9 +483,7 @@ class TestSaveMonthlySummaryDraft(TestEmployeePerformanceService):
 
         self.db.refresh = mock_refresh
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         self.db.add.assert_called_once()
         self.db.commit.assert_called_once()
@@ -509,18 +505,14 @@ class TestSaveMonthlySummaryDraft(TestEmployeePerformanceService):
         existing_draft.status = "DRAFT"
         existing_draft.work_content = "旧内容"
 
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            existing_draft
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = existing_draft
 
         def mock_refresh(obj):
             pass
 
         self.db.refresh = mock_refresh
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         self.db.commit.assert_called_once()
         self.assertEqual(existing_draft.work_content, "更新内容")
@@ -537,14 +529,10 @@ class TestSaveMonthlySummaryDraft(TestEmployeePerformanceService):
         submitted_summary = Mock()
         submitted_summary.status = "SUBMITTED"
 
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            submitted_summary
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = submitted_summary
 
         with self.assertRaises(HTTPException) as context:
-            self.service.save_monthly_summary_draft(
-                current_user, "2026-02", summary_update
-            )
+            self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("只能更新草稿", context.exception.detail)
@@ -566,18 +554,14 @@ class TestSaveMonthlySummaryDraft(TestEmployeePerformanceService):
         existing_draft.work_content = "旧内容"
         existing_draft.self_evaluation = "旧评价"
 
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            existing_draft
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = existing_draft
 
         def mock_refresh(obj):
             pass
 
         self.db.refresh = mock_refresh
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         # 验证只更新了非None字段
         self.assertEqual(existing_draft.work_content, "新内容")
@@ -704,10 +688,10 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
         # 3. 3个季度趋势查询 (循环3次)
         filter_mock.first.side_effect = [
             current_summary,  # 当前总结
-            dept_eval,        # 部门评价
-            None,             # 季度趋势1 (2026-02)
-            None,             # 季度趋势2 (2026-01)
-            None,             # 季度趋势3 (2025-12)
+            dept_eval,  # 部门评价
+            None,  # 季度趋势1 (2026-02)
+            None,  # 季度趋势2 (2026-01)
+            None,  # 季度趋势3 (2025-12)
         ]
         filter_mock.all.side_effect = [[proj_eval1]]
 
@@ -731,9 +715,7 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
         # 验证当前状态
         self.assertEqual(result["current_status"]["period"], "2026-02")
         self.assertEqual(result["current_status"]["summary_status"], "COMPLETED")
-        self.assertEqual(
-            result["current_status"]["dept_evaluation"]["status"], "COMPLETED"
-        )
+        self.assertEqual(result["current_status"]["dept_evaluation"]["status"], "COMPLETED")
 
     @patch("app.services.employee_performance.employee_performance_service.date")
     def test_get_my_performance_no_current_summary(self, mock_date):
@@ -751,9 +733,7 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
 
         # 验证默认状态
         self.assertEqual(result["current_status"]["summary_status"], "NOT_SUBMITTED")
-        self.assertEqual(
-            result["current_status"]["dept_evaluation"]["status"], "PENDING"
-        )
+        self.assertEqual(result["current_status"]["dept_evaluation"]["status"], "PENDING")
         self.assertEqual(result["current_status"]["project_evaluations"], [])
         self.assertIsNone(result["latest_result"])
 
@@ -778,10 +758,10 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
         # 需要提供：current_summary, dept_eval, 3个季度趋势查询
         filter_mock.first.side_effect = [
             current_summary,  # 当前总结
-            None,            # 部门评价为None
-            None,            # 季度趋势1
-            None,            # 季度趋势2
-            None,            # 季度趋势3
+            None,  # 部门评价为None
+            None,  # 季度趋势1
+            None,  # 季度趋势2
+            None,  # 季度趋势3
         ]
         filter_mock.all.return_value = []
 
@@ -790,9 +770,7 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
         result = self.service.get_my_performance(current_user)
 
         # 验证部门评价默认值
-        self.assertEqual(
-            result["current_status"]["dept_evaluation"]["status"], "PENDING"
-        )
+        self.assertEqual(result["current_status"]["dept_evaluation"]["status"], "PENDING")
         self.assertEqual(result["current_status"]["dept_evaluation"]["evaluator"], "未知")
         self.assertIsNone(result["current_status"]["dept_evaluation"]["score"])
 
@@ -825,10 +803,10 @@ class TestGetMyPerformance(TestEmployeePerformanceService):
         # 需要提供：current_summary, dept_eval, 3个季度趋势查询
         filter_mock.first.side_effect = [
             current_summary,  # 当前总结
-            None,            # 部门评价为None
-            None,            # 季度趋势1
-            None,            # 季度趋势2
-            None,            # 季度趋势3
+            None,  # 部门评价为None
+            None,  # 季度趋势1
+            None,  # 季度趋势2
+            None,  # 季度趋势3
         ]
         filter_mock.all.return_value = [proj_eval]
 

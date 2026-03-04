@@ -4,14 +4,17 @@ Unit tests for role_inheritance_utils.py
 Covers: app/utils/role_inheritance_utils.py
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from typing import List, Set
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.utils.role_inheritance_utils import RoleInheritanceUtils
 
 
-def make_role(id, name="role", parent_id=None, inherit_permissions=True, is_active=True, tenant_id=None):
+def make_role(
+    id, name="role", parent_id=None, inherit_permissions=True, is_active=True, tenant_id=None
+):
     """Helper to create a mock Role object."""
     role = MagicMock()
     role.id = id
@@ -245,6 +248,7 @@ class TestGetInheritedPermissions:
 
         def smart_query(model_class):
             from app.models.user import ApiPermission
+
             if model_class is ApiPermission:
                 return perm_query
             return original_query(model_class)

@@ -62,10 +62,12 @@ def get_report_version(db: Session, order_id: int, report_type: str) -> int:
     Returns:
         int: 版本号
     """
-    existing_report = db.query(AcceptanceReport).filter(
-        AcceptanceReport.order_id == order_id,
-        AcceptanceReport.report_type == report_type
-    ).order_by(desc(AcceptanceReport.version)).first()
+    existing_report = (
+        db.query(AcceptanceReport)
+        .filter(AcceptanceReport.order_id == order_id, AcceptanceReport.report_type == report_type)
+        .order_by(desc(AcceptanceReport.version))
+        .first()
+    )
 
     return (existing_report.version + 1) if existing_report else 1
 
@@ -103,12 +105,13 @@ def save_report_file(
     try:
         # 尝试生成PDF（如果reportlab可用）
         try:
+            from io import BytesIO
+
             from reportlab.lib import colors
             from reportlab.lib.pagesizes import A4
             from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
             from reportlab.lib.units import inch
             from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-            from io import BytesIO
 
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=A4)
@@ -116,10 +119,10 @@ def save_report_file(
 
             styles = getSampleStyleSheet()
             title_style = ParagraphStyle(
-                'CustomTitle',
-                parent=styles['Heading1'],
+                "CustomTitle",
+                parent=styles["Heading1"],
                 fontSize=18,
-                textColor=colors.HexColor('#366092'),
+                textColor=colors.HexColor("#366092"),
                 spaceAfter=30,
             )
 
@@ -128,39 +131,46 @@ def save_report_file(
             story.append(Spacer(1, 0.2 * inch))
 
             # 基本信息
-            story.append(Paragraph(f"<b>报告编号：</b>{report_no}", styles['Normal']))
-            order_no = order.order_no if hasattr(order, 'order_no') else f'ORDER-{order.id}'
-            story.append(Paragraph(f"<b>验收单号：</b>{order_no}", styles['Normal']))
+            story.append(Paragraph(f"<b>报告编号：</b>{report_no}", styles["Normal"]))
+            order_no = order.order_no if hasattr(order, "order_no") else f"ORDER-{order.id}"
+            story.append(Paragraph(f"<b>验收单号：</b>{order_no}", styles["Normal"]))
             story.append(Spacer(1, 0.1 * inch))
 
             # 项目信息
             project_name = order.project.project_name if getattr(order, "project", None) else "N/A"
             machine_name = order.machine.machine_name if getattr(order, "machine", None) else "N/A"
 
-            story.append(Paragraph("<b>项目信息</b>", styles['Heading2']))
-            story.append(Paragraph(f"项目名称：{project_name}", styles['Normal']))
-            story.append(Paragraph(f"机台名称：{machine_name}", styles['Normal']))
+            story.append(Paragraph("<b>项目信息</b>", styles["Heading2"]))
+            story.append(Paragraph(f"项目名称：{project_name}", styles["Normal"]))
+            story.append(Paragraph(f"机台名称：{machine_name}", styles["Normal"]))
             story.append(Spacer(1, 0.1 * inch))
 
             # 验收结果
-            story.append(Paragraph("<b>验收结果</b>", styles['Heading2']))
+            story.append(Paragraph("<b>验收结果</b>", styles["Heading2"]))
             data = [
-                ['验收状态', order.status or 'N/A'],
-                ['验收日期', order.actual_end_date.strftime('%Y-%m-%d') if order.actual_end_date else 'N/A'],
-                ['合格率', f"{order.pass_rate or 0}%"],
+                ["验收状态", order.status or "N/A"],
+                [
+                    "验收日期",
+                    order.actual_end_date.strftime("%Y-%m-%d") if order.actual_end_date else "N/A",
+                ],
+                ["合格率", f"{order.pass_rate or 0}%"],
             ]
 
             table = Table(data, colWidths=[2 * inch, 4 * inch])
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-                ('BACKGROUND', (1, 0), (1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (0, -1), colors.grey),
+                        ("TEXTCOLOR", (0, 0), (-1, -1), colors.black),
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                        ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+                        ("FONTSIZE", (0, 0), (-1, -1), 10),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                        ("BACKGROUND", (1, 0), (1, -1), colors.beige),
+                        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                    ]
+                )
+            )
             story.append(table)
             story.append(Spacer(1, 0.2 * inch))
 
@@ -199,11 +209,7 @@ def save_report_file(
 
 
 def build_report_content(
-    db: Session,
-    order: AcceptanceOrder,
-    report_no: str,
-    version: int,
-    current_user: User
+    db: Session, order: AcceptanceOrder, report_no: str, version: int, current_user: User
 ) -> str:
     """
     构建报告内容文本

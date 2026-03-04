@@ -46,17 +46,23 @@ class TestCompletionBased:
 
     def test_urgent_coefficient(self):
         c = _make_calc()
-        result = c.calculate(_make_ticket(urgency="VERY_URGENT"), _make_rule(), based_on="COMPLETION")
+        result = c.calculate(
+            _make_ticket(urgency="VERY_URGENT"), _make_rule(), based_on="COMPLETION"
+        )
         assert result.calculated_amount == Decimal("1300")
 
     def test_satisfaction_bonus(self):
         c = _make_calc()
-        result = c.calculate(_make_ticket(satisfaction_score=5), _make_rule(), based_on="COMPLETION")
+        result = c.calculate(
+            _make_ticket(satisfaction_score=5), _make_rule(), based_on="COMPLETION"
+        )
         assert result.calculated_amount == Decimal("1200")
 
     def test_low_satisfaction(self):
         c = _make_calc()
-        result = c.calculate(_make_ticket(satisfaction_score=3), _make_rule(), based_on="COMPLETION")
+        result = c.calculate(
+            _make_ticket(satisfaction_score=3), _make_rule(), based_on="COMPLETION"
+        )
         assert result.calculated_amount == Decimal("800")
 
     def test_no_assignee(self):

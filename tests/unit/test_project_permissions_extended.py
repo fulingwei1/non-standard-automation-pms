@@ -6,8 +6,9 @@
 （原 app/core/permissions/project.py 已迁移到 app/services/data_scope/）
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class MockUser:
@@ -36,9 +37,7 @@ class TestDataScopeServiceProjectAccess:
         """测试超级用户始终有项目访问权限"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         # 超级用户检查直接返回 True，不需要额外 mock
@@ -49,15 +48,13 @@ class TestDataScopeServiceProjectAccess:
         """测试 ALL 范围用户有访问权限"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock UserScopeService.get_user_data_scope 返回 ALL
         with patch(
             "app.services.data_scope.project_filter.UserScopeService.get_user_data_scope",
-            return_value="ALL"
+            return_value="ALL",
         ):
             result = DataScopeService.check_project_access(db, user, 1)
             assert result is True
@@ -66,9 +63,7 @@ class TestDataScopeServiceProjectAccess:
         """测试 OWN 范围用户可以访问自己的项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False, user_id=100,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, user_id=100, password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock 项目存在且用户是项目负责人
@@ -81,11 +76,11 @@ class TestDataScopeServiceProjectAccess:
         # Mock get_user_project_ids 返回用户参与的项目
         with patch(
             "app.services.data_scope.project_filter.UserScopeService.get_user_data_scope",
-            return_value="OWN"
+            return_value="OWN",
         ):
             with patch(
                 "app.services.data_scope.project_filter.UserScopeService.get_user_project_ids",
-                return_value={1}
+                return_value={1},
             ):
                 result = DataScopeService.check_project_access(db, user, 1)
                 assert result is True
@@ -94,9 +89,7 @@ class TestDataScopeServiceProjectAccess:
         """测试 OWN 范围用户不能访问别人的项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=False, user_id=100,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, user_id=100, password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock 项目存在但用户不是项目负责人
@@ -107,11 +100,11 @@ class TestDataScopeServiceProjectAccess:
 
         with patch(
             "app.services.data_scope.project_filter.UserScopeService.get_user_data_scope",
-            return_value="OWN"
+            return_value="OWN",
         ):
             with patch(
                 "app.services.data_scope.project_filter.UserScopeService.get_user_project_ids",
-                return_value=set()
+                return_value=set(),
             ):
                 result = DataScopeService.check_project_access(db, user, 1)
                 assert result is False
@@ -125,15 +118,11 @@ class TestProjectFilterService:
         """测试项目过滤返回查询对象"""
         from app.services.data_scope import ProjectFilterService
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
         query = MagicMock()
 
-        with patch.object(
-            ProjectFilterService, 'filter_projects_by_scope', return_value=query
-        ):
+        with patch.object(ProjectFilterService, "filter_projects_by_scope", return_value=query):
             result = ProjectFilterService.filter_projects_by_scope(db, user, query)
             assert result is not None
 
@@ -141,15 +130,11 @@ class TestProjectFilterService:
         """测试超级用户获取所有可访问项目"""
         from app.services.data_scope import DataScopeService
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         # Mock 数据库返回项目列表
-        db.query.return_value.filter.return_value.all.return_value = [
-            (1,), (2,), (3,)
-        ]
+        db.query.return_value.filter.return_value.all.return_value = [(1,), (2,), (3,)]
 
         result = DataScopeService.get_accessible_project_ids(db, user)
         assert result == {1, 2, 3}
@@ -163,9 +148,7 @@ class TestUserScopeService:
         """测试超级用户获取 ALL 范围"""
         from app.services.data_scope import UserScopeService
 
-        user = MockUser(is_superuser=True,
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=True, password_hash="test_hash_123")
         db = MagicMock()
 
         # UserScopeService.get_user_data_scope 接受 2 个参数: db, user
@@ -176,9 +159,7 @@ class TestUserScopeService:
         """测试普通用户无角色获取 OWN 范围"""
         from app.services.data_scope import UserScopeService
 
-        user = MockUser(is_superuser=False, roles=[],
-        password_hash="test_hash_123"
-    )
+        user = MockUser(is_superuser=False, roles=[], password_hash="test_hash_123")
         db = MagicMock()
 
         result = UserScopeService.get_user_data_scope(db, user)
@@ -227,38 +208,38 @@ class TestDataScopeServiceExports:
         from app.services.data_scope import DataScopeService
 
         # 用户权限范围方法
-        assert hasattr(DataScopeService, 'get_user_data_scope')
-        assert hasattr(DataScopeService, 'get_user_project_ids')
-        assert hasattr(DataScopeService, 'get_subordinate_ids')
+        assert hasattr(DataScopeService, "get_user_data_scope")
+        assert hasattr(DataScopeService, "get_user_project_ids")
+        assert hasattr(DataScopeService, "get_subordinate_ids")
 
         # 项目过滤方法
-        assert hasattr(DataScopeService, 'filter_projects_by_scope')
-        assert hasattr(DataScopeService, 'check_project_access')
-        assert hasattr(DataScopeService, 'get_accessible_project_ids')
-        assert hasattr(DataScopeService, 'filter_related_by_project')
+        assert hasattr(DataScopeService, "filter_projects_by_scope")
+        assert hasattr(DataScopeService, "check_project_access")
+        assert hasattr(DataScopeService, "get_accessible_project_ids")
+        assert hasattr(DataScopeService, "filter_related_by_project")
 
         # 问题过滤方法
-        assert hasattr(DataScopeService, 'filter_issues_by_scope')
+        assert hasattr(DataScopeService, "filter_issues_by_scope")
 
         # 通用过滤方法
-        assert hasattr(DataScopeService, 'filter_by_scope')
-        assert hasattr(DataScopeService, 'check_customer_access')
+        assert hasattr(DataScopeService, "filter_by_scope")
+        assert hasattr(DataScopeService, "check_customer_access")
 
         # 自定义规则方法
-        assert hasattr(DataScopeService, 'get_custom_rule')
-        assert hasattr(DataScopeService, 'apply_custom_filter')
-        assert hasattr(DataScopeService, 'validate_scope_config')
+        assert hasattr(DataScopeService, "get_custom_rule")
+        assert hasattr(DataScopeService, "apply_custom_filter")
+        assert hasattr(DataScopeService, "validate_scope_config")
 
     def test_subservices_available(self):
         """测试子服务类可用"""
         from app.services.data_scope import (
-            DataScopeConfig,
             DATA_SCOPE_CONFIGS,
-            UserScopeService,
-            ProjectFilterService,
-            IssueFilterService,
-            GenericFilterService,
             CustomRuleService,
+            DataScopeConfig,
+            GenericFilterService,
+            IssueFilterService,
+            ProjectFilterService,
+            UserScopeService,
         )
 
         assert DataScopeConfig is not None

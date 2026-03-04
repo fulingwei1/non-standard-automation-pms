@@ -9,9 +9,9 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
 
 from app.services.business_support_reports.business_support_reports_service import (
     BusinessSupportReportsService,
@@ -70,21 +70,21 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         # Mock filter().all() 链
         filter_mock1 = MagicMock()
         filter_mock1.all.return_value = [mock_contract1, mock_contract2]
-        
+
         new_contracts_query = MagicMock()
         new_contracts_query.filter.return_value = filter_mock1
 
         # Mock活跃合同 filter().count()
         filter_mock2 = MagicMock()
         filter_mock2.count.return_value = 15
-        
+
         active_query = MagicMock()
         active_query.filter.return_value = filter_mock2
 
         # Mock完成合同 filter().count()
         filter_mock3 = MagicMock()
         filter_mock3.count.return_value = 8
-        
+
         completed_query = MagicMock()
         completed_query.filter.return_value = filter_mock3
 
@@ -94,9 +94,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
             completed_query,
         ]
 
-        result = self.service.calculate_contract_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_contract_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["new_count"], 2)
         self.assertEqual(result["new_amount"], Decimal("80000"))
@@ -117,9 +115,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.query.side_effect = [mock_query, active_query, completed_query]
 
-        result = self.service.calculate_contract_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_contract_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["new_count"], 0)
         self.assertEqual(result["new_amount"], Decimal("0"))
@@ -144,9 +140,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.query.side_effect = [mock_query, active_query, completed_query]
 
-        result = self.service.calculate_contract_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_contract_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["new_amount"], Decimal("0"))
 
@@ -162,7 +156,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         # Mock filter().all() 链
         filter_mock = MagicMock()
         filter_mock.all.return_value = [mock_order1, mock_order2]
-        
+
         query_mock = MagicMock()
         query_mock.filter.return_value = filter_mock
 
@@ -221,9 +215,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
             overdue_result,
         ]
 
-        result = self.service.calculate_receipt_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_receipt_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["planned"], Decimal("100000"))
         self.assertEqual(result["actual"], Decimal("80000"))
@@ -243,9 +235,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.side_effect = [planned_result, actual_result, overdue_result]
 
-        result = self.service.calculate_receipt_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_receipt_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["rate"], Decimal("0"))
 
@@ -262,9 +252,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.side_effect = [planned_result, actual_result, overdue_result]
 
-        result = self.service.calculate_receipt_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_receipt_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["planned"], Decimal("0"))
         self.assertEqual(result["actual"], Decimal("0"))
@@ -283,9 +271,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.side_effect = [planned_result, actual_result, overdue_result]
 
-        result = self.service.calculate_receipt_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_receipt_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["planned"], Decimal("0"))
         self.assertEqual(result["actual"], Decimal("0"))
@@ -304,7 +290,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         # Mock filter().all() 链
         filter_mock = MagicMock()
         filter_mock.all.return_value = [mock_invoice1, mock_invoice2]
-        
+
         query_mock = MagicMock()
         query_mock.filter.return_value = filter_mock
 
@@ -316,9 +302,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.return_value = total_result
 
-        result = self.service.calculate_invoice_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_invoice_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["count"], 2)
         self.assertEqual(result["amount"], Decimal("80000"))
@@ -336,9 +320,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.return_value = total_result
 
-        result = self.service.calculate_invoice_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_invoice_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["count"], 0)
         self.assertEqual(result["amount"], Decimal("0"))
@@ -361,9 +343,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.return_value = total_result
 
-        result = self.service.calculate_invoice_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_invoice_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["amount"], Decimal("0"))
 
@@ -379,9 +359,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.execute.return_value = total_result
 
-        result = self.service.calculate_invoice_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_invoice_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["rate"], Decimal("0"))
 
@@ -411,9 +389,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
             total_query,
         ]
 
-        result = self.service.calculate_bidding_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_bidding_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["new_count"], 5)
         self.assertEqual(result["won_count"], 2)
@@ -432,9 +408,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
         self.db.query.side_effect = [new_query, won_query, total_query]
 
-        result = self.service.calculate_bidding_stats(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = self.service.calculate_bidding_stats(date(2024, 1, 1), date(2024, 1, 31))
 
         self.assertEqual(result["win_rate"], Decimal("0"))
 
@@ -547,9 +521,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         self.assertEqual(result["invoice_rate"], Decimal("10"))  # 1/10 * 100
         self.assertEqual(result["new_bidding_count"], 3)
         self.assertEqual(result["won_bidding_count"], 1)
-        self.assertAlmostEqual(
-            float(result["bidding_win_rate"]), 3.33, places=2
-        )  # 1/30*100
+        self.assertAlmostEqual(float(result["bidding_win_rate"]), 3.33, places=2)  # 1/30*100
 
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_daily_report_no_date(self, mock_date_class):

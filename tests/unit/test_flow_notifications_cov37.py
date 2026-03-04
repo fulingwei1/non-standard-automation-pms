@@ -3,9 +3,10 @@
 第三十七批覆盖率测试 - 审批流程变更通知
 tests/unit/test_flow_notifications_cov37.py
 """
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.notify.flow_notifications")
 

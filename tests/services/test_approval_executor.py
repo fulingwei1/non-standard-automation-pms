@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """ApprovalNodeExecutor 单元测试"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestApprovalNodeExecutor:
@@ -11,6 +12,7 @@ class TestApprovalNodeExecutor:
 
     def _make_executor(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         db = MagicMock()
         return ApprovalNodeExecutor(db), db
 
@@ -105,7 +107,9 @@ class TestApprovalNodeExecutor:
         node = MagicMock(approval_mode="SEQUENTIAL", timeout_hours=None)
         task = MagicMock(status="PENDING", node=node, instance_id=1, node_id=1, task_order=1)
         next_task = MagicMock(status="SKIPPED")
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = next_task
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            next_task
+        )
         ok, err = exe.process_approval(task, "APPROVE")
         assert ok is False  # still more tasks
         assert next_task.status == "PENDING"
@@ -136,7 +140,7 @@ class TestApprovalNodeExecutor:
         db.query.return_value.filter.return_value.first.return_value = result
         node = MagicMock(approver_config={"pass_rule": "ALL"})
         task = MagicMock(instance_id=1, node_id=1, node=node)
-        with patch.object(exe, '_summarize_eval_data'):
+        with patch.object(exe, "_summarize_eval_data"):
             ok, err = exe._process_countersign(task, "APPROVE")
         assert ok is True
         assert result.final_result == "PASSED"
@@ -147,7 +151,7 @@ class TestApprovalNodeExecutor:
         db.query.return_value.filter.return_value.first.return_value = result
         node = MagicMock(approver_config={"pass_rule": "MAJORITY"})
         task = MagicMock(instance_id=1, node_id=1, node=node)
-        with patch.object(exe, '_summarize_eval_data'):
+        with patch.object(exe, "_summarize_eval_data"):
             ok, _ = exe._process_countersign(task, "REJECT")
         assert result.final_result == "FAILED"
 

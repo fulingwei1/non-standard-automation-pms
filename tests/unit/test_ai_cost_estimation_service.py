@@ -10,26 +10,23 @@ AI成本估算服务单元测试
 5. 目标覆盖率: 70%+
 """
 
-import unittest
 import asyncio
-from unittest.mock import MagicMock, Mock, patch
-from decimal import Decimal
+import unittest
 from datetime import datetime
+from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
 
-from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+from app.models.sales.presale_ai_cost import PresaleAICostEstimation, PresaleCostHistory
 from app.schemas.sales.presale_ai_cost import (
+    CostBreakdown,
     CostEstimationInput,
     CostOptimizationInput,
-    PricingInput,
-    UpdateActualCostInput,
-    CostBreakdown,
     OptimizationSuggestion,
-    PricingRecommendation
+    PricingInput,
+    PricingRecommendation,
+    UpdateActualCostInput,
 )
-from app.models.sales.presale_ai_cost import (
-    PresaleAICostEstimation,
-    PresaleCostHistory
-)
+from app.services.sales.ai_cost_estimation_service import AICostEstimationService
 
 
 class TestAICostEstimationService(unittest.TestCase):
@@ -54,9 +51,7 @@ class TestAICostEstimationService(unittest.TestCase):
 
     def test_calculate_hardware_cost_single_item(self):
         """测试单个硬件项"""
-        hardware_items = [
-            {"unit_price": 1000, "quantity": 2}
-        ]
+        hardware_items = [{"unit_price": 1000, "quantity": 2}]
         result = self.service._calculate_hardware_cost(hardware_items)
         # 1000 * 2 * 1.15 = 2300
         expected = Decimal("2000") * Decimal("1.15")
@@ -67,11 +62,15 @@ class TestAICostEstimationService(unittest.TestCase):
         hardware_items = [
             {"unit_price": 1000, "quantity": 2},
             {"unit_price": 500, "quantity": 3},
-            {"unit_price": 2000, "quantity": 1}
+            {"unit_price": 2000, "quantity": 1},
         ]
         result = self.service._calculate_hardware_cost(hardware_items)
         # (1000*2 + 500*3 + 2000*1) * 1.15 = 5500 * 1.15 = 6325
-        total = Decimal("1000") * Decimal("2") + Decimal("500") * Decimal("3") + Decimal("2000") * Decimal("1")
+        total = (
+            Decimal("1000") * Decimal("2")
+            + Decimal("500") * Decimal("3")
+            + Decimal("2000") * Decimal("1")
+        )
         expected = total * Decimal("1.15")
         self.assertEqual(result, expected)
 
@@ -79,7 +78,7 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试缺失字段的硬件项"""
         hardware_items = [
             {"unit_price": 1000},  # 缺quantity，默认为1
-            {"quantity": 3}  # 缺unit_price，默认为0
+            {"quantity": 3},  # 缺unit_price，默认为0
         ]
         result = self.service._calculate_hardware_cost(hardware_items)
         # (1000 * 1 + 0 * 3) * 1.15 = 1150
@@ -183,7 +182,7 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试中等复杂度风险储备金"""
         # Mock历史偏差率查询
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = None
-        
+
         base_cost = Decimal("100000")
         result = self.service._calculate_risk_reserve("IoT", "medium", base_cost)
         # 100000 * 0.08 = 8000
@@ -193,7 +192,7 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_risk_reserve_high_complexity(self):
         """测试高复杂度风险储备金"""
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = None
-        
+
         base_cost = Decimal("100000")
         result = self.service._calculate_risk_reserve("IoT", "high", base_cost)
         # 100000 * 0.08 * 1.5 = 12000
@@ -203,7 +202,7 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_risk_reserve_low_complexity(self):
         """测试低复杂度风险储备金"""
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = None
-        
+
         base_cost = Decimal("100000")
         result = self.service._calculate_risk_reserve("IoT", "low", base_cost)
         # 100000 * 0.08 * 0.5 = 4000
@@ -214,7 +213,7 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试使用历史偏差率"""
         # Mock历史偏差率为10%
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = 10.0
-        
+
         base_cost = Decimal("100000")
         result = self.service._calculate_risk_reserve("IoT", "medium", base_cost)
         # 100000 * 0.08 * (1 + 0.1) = 8800
@@ -226,14 +225,14 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_get_historical_variance_exists(self):
         """测试获取历史偏差率-存在数据"""
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = 15.5
-        
+
         result = self.service._get_historical_variance("IoT")
         self.assertEqual(result, Decimal("0.155"))
 
     def test_get_historical_variance_not_exists(self):
         """测试获取历史偏差率-无数据"""
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = None
-        
+
         result = self.service._get_historical_variance("IoT")
         self.assertIsNone(result)
 
@@ -243,12 +242,12 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试默认毛利率的定价推荐"""
         total_cost = Decimal("100000")
         target_margin = Decimal("0.30")
-        
+
         result = self.service._generate_pricing_recommendations(total_cost, target_margin)
-        
+
         # suggested_price = 100000 / (1 - 0.30) = 142857.14
         suggested = total_cost / (Decimal("1") - target_margin)
-        
+
         self.assertIsInstance(result, PricingRecommendation)
         self.assertAlmostEqual(float(result.suggested_price), float(suggested), places=2)
         self.assertAlmostEqual(float(result.low), float(suggested * Decimal("0.90")), places=2)
@@ -260,12 +259,12 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试高毛利率的定价推荐"""
         total_cost = Decimal("50000")
         target_margin = Decimal("0.50")  # 50%毛利
-        
+
         result = self.service._generate_pricing_recommendations(total_cost, target_margin)
-        
+
         # suggested_price = 50000 / (1 - 0.50) = 100000
         suggested = Decimal("100000")
-        
+
         self.assertAlmostEqual(float(result.suggested_price), float(suggested), places=2)
         self.assertEqual(result.target_margin_rate, Decimal("50.0"))
 
@@ -275,13 +274,11 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试最少数据的置信度"""
         # Mock历史数据查询
         self.mock_db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         input_data = CostEstimationInput(
-            presale_ticket_id=1,
-            project_type="IoT",
-            complexity_level="medium"
+            presale_ticket_id=1, project_type="IoT", complexity_level="medium"
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 基础分0.5，无其他加分
         self.assertEqual(result, Decimal("0.5"))
@@ -289,14 +286,14 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_confidence_score_with_hardware(self):
         """测试有硬件清单的置信度"""
         self.mock_db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         input_data = CostEstimationInput(
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            hardware_items=[{"unit_price": 1000, "quantity": 2}]
+            hardware_items=[{"unit_price": 1000, "quantity": 2}],
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 基础分0.5 + 硬件0.2 = 0.7
         self.assertEqual(result, Decimal("0.7"))
@@ -304,15 +301,15 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_confidence_score_with_software_requirements(self):
         """测试有软件需求的置信度"""
         self.mock_db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         requirements = "A" * 150  # 超过100字符
         input_data = CostEstimationInput(
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            software_requirements=requirements
+            software_requirements=requirements,
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 基础分0.5 + 软件需求0.15 = 0.65
         self.assertEqual(result, Decimal("0.65"))
@@ -320,14 +317,14 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_confidence_score_with_man_days(self):
         """测试有人天估算的置信度"""
         self.mock_db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         input_data = CostEstimationInput(
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            estimated_man_days=10
+            estimated_man_days=10,
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 基础分0.5 + 人天0.1 = 0.6
         self.assertEqual(result, Decimal("0.6"))
@@ -336,13 +333,11 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试有历史数据的置信度"""
         # Mock历史数据>10条
         self.mock_db.query.return_value.filter.return_value.count.return_value = 15
-        
+
         input_data = CostEstimationInput(
-            presale_ticket_id=1,
-            project_type="IoT",
-            complexity_level="medium"
+            presale_ticket_id=1, project_type="IoT", complexity_level="medium"
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 基础分0.5 + 历史数据0.05 = 0.55
         self.assertEqual(result, Decimal("0.55"))
@@ -350,7 +345,7 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_calculate_confidence_score_max_score(self):
         """测试最大置信度（不超过1.0）"""
         self.mock_db.query.return_value.filter.return_value.count.return_value = 15
-        
+
         requirements = "A" * 150
         input_data = CostEstimationInput(
             presale_ticket_id=1,
@@ -358,9 +353,9 @@ class TestAICostEstimationService(unittest.TestCase):
             complexity_level="medium",
             hardware_items=[{"unit_price": 1000, "quantity": 2}],
             software_requirements=requirements,
-            estimated_man_days=10
+            estimated_man_days=10,
         )
-        
+
         result = self.service._calculate_confidence_score(input_data)
         # 0.5 + 0.2 + 0.15 + 0.1 + 0.05 = 1.0
         self.assertEqual(result, Decimal("1.0"))
@@ -373,18 +368,20 @@ class TestAICostEstimationService(unittest.TestCase):
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            installation_difficulty="low"
+            installation_difficulty="low",
         )
         cost_breakdown = {
             "hardware_cost": Decimal("60000"),
             "software_cost": Decimal("50000"),
             "installation_cost": Decimal("5000"),
             "service_cost": Decimal("10000"),
-            "risk_reserve": Decimal("5000")
+            "risk_reserve": Decimal("5000"),
         }
-        
-        suggestions = asyncio.run(self.service._generate_optimization_suggestions(input_data, cost_breakdown))
-        
+
+        suggestions = asyncio.run(
+            self.service._generate_optimization_suggestions(input_data, cost_breakdown)
+        )
+
         # 应该包含硬件优化建议
         hardware_suggestions = [s for s in suggestions if s.type == "hardware"]
         self.assertGreater(len(hardware_suggestions), 0)
@@ -396,18 +393,20 @@ class TestAICostEstimationService(unittest.TestCase):
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            installation_difficulty="low"
+            installation_difficulty="low",
         )
         cost_breakdown = {
             "hardware_cost": Decimal("40000"),
             "software_cost": Decimal("150000"),
             "installation_cost": Decimal("5000"),
             "service_cost": Decimal("10000"),
-            "risk_reserve": Decimal("5000")
+            "risk_reserve": Decimal("5000"),
         }
-        
-        suggestions = asyncio.run(self.service._generate_optimization_suggestions(input_data, cost_breakdown))
-        
+
+        suggestions = asyncio.run(
+            self.service._generate_optimization_suggestions(input_data, cost_breakdown)
+        )
+
         # 应该包含软件优化建议
         software_suggestions = [s for s in suggestions if s.type == "software"]
         self.assertGreater(len(software_suggestions), 0)
@@ -419,18 +418,20 @@ class TestAICostEstimationService(unittest.TestCase):
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            installation_difficulty="high"
+            installation_difficulty="high",
         )
         cost_breakdown = {
             "hardware_cost": Decimal("40000"),
             "software_cost": Decimal("50000"),
             "installation_cost": Decimal("15000"),
             "service_cost": Decimal("10000"),
-            "risk_reserve": Decimal("5000")
+            "risk_reserve": Decimal("5000"),
         }
-        
-        suggestions = asyncio.run(self.service._generate_optimization_suggestions(input_data, cost_breakdown))
-        
+
+        suggestions = asyncio.run(
+            self.service._generate_optimization_suggestions(input_data, cost_breakdown)
+        )
+
         # 应该包含安装优化建议
         install_suggestions = [s for s in suggestions if s.type == "installation"]
         self.assertGreater(len(install_suggestions), 0)
@@ -442,18 +443,20 @@ class TestAICostEstimationService(unittest.TestCase):
             presale_ticket_id=1,
             project_type="IoT",
             complexity_level="medium",
-            installation_difficulty="high"
+            installation_difficulty="high",
         )
         cost_breakdown = {
             "hardware_cost": Decimal("60000"),
             "software_cost": Decimal("150000"),
             "installation_cost": Decimal("15000"),
             "service_cost": Decimal("10000"),
-            "risk_reserve": Decimal("5000")
+            "risk_reserve": Decimal("5000"),
         }
-        
-        suggestions = asyncio.run(self.service._generate_optimization_suggestions(input_data, cost_breakdown))
-        
+
+        suggestions = asyncio.run(
+            self.service._generate_optimization_suggestions(input_data, cost_breakdown)
+        )
+
         # 应该包含3种优化建议
         self.assertEqual(len(suggestions), 3)
 
@@ -468,12 +471,12 @@ class TestAICostEstimationService(unittest.TestCase):
             optimized_cost=Decimal("900"),
             saving_amount=Decimal("100"),
             saving_rate=Decimal("10"),
-            feasibility_score=Decimal("0.90")
+            feasibility_score=Decimal("0.90"),
         )
-        
+
         result = self.service._is_acceptable_risk(suggestion, "low")
         self.assertTrue(result)  # 0.90 >= 0.85
-        
+
         suggestion.feasibility_score = Decimal("0.80")
         result = self.service._is_acceptable_risk(suggestion, "low")
         self.assertFalse(result)  # 0.80 < 0.85
@@ -487,9 +490,9 @@ class TestAICostEstimationService(unittest.TestCase):
             optimized_cost=Decimal("900"),
             saving_amount=Decimal("100"),
             saving_rate=Decimal("10"),
-            feasibility_score=Decimal("0.75")
+            feasibility_score=Decimal("0.75"),
         )
-        
+
         result = self.service._is_acceptable_risk(suggestion, "medium")
         self.assertTrue(result)  # 0.75 >= 0.70
 
@@ -502,9 +505,9 @@ class TestAICostEstimationService(unittest.TestCase):
             optimized_cost=Decimal("900"),
             saving_amount=Decimal("100"),
             saving_rate=Decimal("10"),
-            feasibility_score=Decimal("0.55")
+            feasibility_score=Decimal("0.55"),
         )
-        
+
         result = self.service._is_acceptable_risk(suggestion, "high")
         self.assertTrue(result)  # 0.55 >= 0.50
 
@@ -517,9 +520,9 @@ class TestAICostEstimationService(unittest.TestCase):
             optimized_cost=Decimal("900"),
             saving_amount=Decimal("100"),
             saving_rate=Decimal("10"),
-            feasibility_score=None
+            feasibility_score=None,
         )
-        
+
         result = self.service._is_acceptable_risk(suggestion, "low")
         self.assertTrue(result)  # 无评分时默认接受
 
@@ -540,10 +543,10 @@ class TestAICostEstimationService(unittest.TestCase):
                 optimized_cost=Decimal("900"),
                 saving_amount=Decimal("100"),
                 saving_rate=Decimal("10"),
-                feasibility_score=Decimal("0.85")
+                feasibility_score=Decimal("0.85"),
             )
         ]
-        
+
         result = self.service._calculate_avg_feasibility(suggestions)
         self.assertEqual(result, Decimal("0.85"))
 
@@ -557,7 +560,7 @@ class TestAICostEstimationService(unittest.TestCase):
                 optimized_cost=Decimal("900"),
                 saving_amount=Decimal("100"),
                 saving_rate=Decimal("10"),
-                feasibility_score=Decimal("0.80")
+                feasibility_score=Decimal("0.80"),
             ),
             OptimizationSuggestion(
                 type="software",
@@ -566,10 +569,10 @@ class TestAICostEstimationService(unittest.TestCase):
                 optimized_cost=Decimal("1800"),
                 saving_amount=Decimal("200"),
                 saving_rate=Decimal("10"),
-                feasibility_score=Decimal("0.90")
-            )
+                feasibility_score=Decimal("0.90"),
+            ),
         ]
-        
+
         result = self.service._calculate_avg_feasibility(suggestions)
         # (0.80 + 0.90) / 2 = 0.85
         self.assertEqual(result, Decimal("0.85"))
@@ -585,11 +588,11 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
-        
+
         result = self.service._analyze_price_sensitivity(cost, pricing, None)
-        
+
         self.assertEqual(result["cost_base"], 100000.0)
         self.assertIn("price_range", result)
         self.assertIn("margin_analysis", result)
@@ -604,12 +607,12 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         customer_budget = Decimal("150000")
-        
+
         result = self.service._analyze_price_sensitivity(cost, pricing, customer_budget)
-        
+
         self.assertIn("budget_fit", result)
         self.assertEqual(result["budget_fit"]["customer_budget"], 150000.0)
         self.assertTrue(result["budget_fit"]["fits_low"])
@@ -626,10 +629,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("170000")
-        
+
         result = self.service._get_pricing_strategy(budget, pricing)
         self.assertIn("高价档", result)
 
@@ -641,10 +644,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("145000")
-        
+
         result = self.service._get_pricing_strategy(budget, pricing)
         self.assertIn("标准报价", result)
 
@@ -656,10 +659,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("125000")
-        
+
         result = self.service._get_pricing_strategy(budget, pricing)
         self.assertIn("低价档", result)
 
@@ -671,10 +674,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("110000")
-        
+
         result = self.service._get_pricing_strategy(budget, pricing)
         self.assertIn("低于成本", result)
 
@@ -688,9 +691,9 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
-        
+
         result = self.service._calculate_competitiveness(pricing, None)
         self.assertEqual(result, Decimal("0.70"))
 
@@ -702,10 +705,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("150000")
-        
+
         result = self.service._calculate_competitiveness(pricing, budget)
         self.assertEqual(result, Decimal("0.90"))
 
@@ -717,10 +720,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("125000")
-        
+
         result = self.service._calculate_competitiveness(pricing, budget)
         self.assertEqual(result, Decimal("0.75"))
 
@@ -732,10 +735,10 @@ class TestAICostEstimationService(unittest.TestCase):
             high=Decimal("160000"),
             suggested_price=Decimal("140000"),
             target_margin_rate=Decimal("30"),
-            market_analysis="测试"
+            market_analysis="测试",
         )
         budget = Decimal("110000")
-        
+
         result = self.service._calculate_competitiveness(pricing, budget)
         self.assertEqual(result, Decimal("0.50"))
 
@@ -744,12 +747,12 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_optimize_cost_estimation_not_found(self):
         """测试估算记录不存在"""
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         input_data = CostOptimizationInput(estimation_id=999)
-        
+
         with self.assertRaises(ValueError) as ctx:
             asyncio.run(self.service.optimize_cost(input_data))
-        
+
         self.assertIn("估算记录不存在", str(ctx.exception))
 
     def test_optimize_cost_no_suggestions(self):
@@ -758,12 +761,12 @@ class TestAICostEstimationService(unittest.TestCase):
         mock_estimation.id = 1
         mock_estimation.total_cost = Decimal("100000")
         mock_estimation.optimization_suggestions = None
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         input_data = CostOptimizationInput(estimation_id=1)
         result = asyncio.run(self.service.optimize_cost(input_data))
-        
+
         self.assertEqual(result.original_total_cost, Decimal("100000"))
         self.assertEqual(result.optimized_total_cost, Decimal("100000"))
         self.assertEqual(result.total_saving, Decimal("0"))
@@ -781,15 +784,15 @@ class TestAICostEstimationService(unittest.TestCase):
                 "optimized_cost": 55200,
                 "saving_amount": 4800,
                 "saving_rate": 8.0,
-                "feasibility_score": 0.85
+                "feasibility_score": 0.85,
             }
         ]
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         input_data = CostOptimizationInput(estimation_id=1, max_risk_level="low")
         result = asyncio.run(self.service.optimize_cost(input_data))
-        
+
         self.assertEqual(result.original_total_cost, Decimal("100000"))
         self.assertEqual(result.optimized_total_cost, Decimal("95200"))
         self.assertEqual(result.total_saving, Decimal("4800"))
@@ -799,12 +802,12 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_recommend_pricing_estimation_not_found(self):
         """测试估算记录不存在"""
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         input_data = PricingInput(estimation_id=999)
-        
+
         with self.assertRaises(ValueError) as ctx:
             asyncio.run(self.service.recommend_pricing(input_data))
-        
+
         self.assertIn("估算记录不存在", str(ctx.exception))
 
     def test_recommend_pricing_low_competition(self):
@@ -812,21 +815,21 @@ class TestAICostEstimationService(unittest.TestCase):
         mock_estimation = Mock(spec=PresaleAICostEstimation)
         mock_estimation.id = 1
         mock_estimation.total_cost = Decimal("100000")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         input_data = PricingInput(
-            estimation_id=1,
-            target_margin_rate=Decimal("0.30"),
-            market_competition_level="low"
+            estimation_id=1, target_margin_rate=Decimal("0.30"), market_competition_level="low"
         )
         result = asyncio.run(self.service.recommend_pricing(input_data))
-        
+
         # 低竞争时价格上调5%
         base_price = Decimal("100000") / Decimal("0.7")
         expected_medium = base_price * Decimal("1.05")
-        
-        self.assertAlmostEqual(float(result.pricing_recommendations.medium), float(expected_medium), places=2)
+
+        self.assertAlmostEqual(
+            float(result.pricing_recommendations.medium), float(expected_medium), places=2
+        )
         self.assertEqual(result.cost_base, Decimal("100000"))
 
     def test_recommend_pricing_high_competition(self):
@@ -834,30 +837,30 @@ class TestAICostEstimationService(unittest.TestCase):
         mock_estimation = Mock(spec=PresaleAICostEstimation)
         mock_estimation.id = 1
         mock_estimation.total_cost = Decimal("100000")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         input_data = PricingInput(
-            estimation_id=1,
-            target_margin_rate=Decimal("0.30"),
-            market_competition_level="high"
+            estimation_id=1, target_margin_rate=Decimal("0.30"), market_competition_level="high"
         )
         result = asyncio.run(self.service.recommend_pricing(input_data))
-        
+
         # 高竞争时价格下调5%
         base_price = Decimal("100000") / Decimal("0.7")
         expected_medium = base_price * Decimal("0.95")
-        
-        self.assertAlmostEqual(float(result.pricing_recommendations.medium), float(expected_medium), places=2)
+
+        self.assertAlmostEqual(
+            float(result.pricing_recommendations.medium), float(expected_medium), places=2
+        )
 
     # ========== 历史准确度测试 ==========
 
     def test_get_historical_accuracy_no_data(self):
         """测试无历史数据"""
         self.mock_db.query.return_value.all.return_value = []
-        
+
         result = asyncio.run(self.service.get_historical_accuracy())
-        
+
         self.assertEqual(result.total_predictions, 0)
         self.assertEqual(result.average_variance_rate, Decimal("0"))
         self.assertEqual(result.accuracy_rate, Decimal("0"))
@@ -867,19 +870,21 @@ class TestAICostEstimationService(unittest.TestCase):
         """测试有历史数据"""
         mock_history1 = Mock(spec=PresaleCostHistory)
         mock_history1.variance_rate = Decimal("10.0")
-        
+
         mock_history2 = Mock(spec=PresaleCostHistory)
         mock_history2.variance_rate = Decimal("5.0")
-        
+
         mock_history3 = Mock(spec=PresaleCostHistory)
         mock_history3.variance_rate = Decimal("-8.0")
-        
+
         self.mock_db.query.return_value.all.return_value = [
-            mock_history1, mock_history2, mock_history3
+            mock_history1,
+            mock_history2,
+            mock_history3,
         ]
-        
+
         result = asyncio.run(self.service.get_historical_accuracy())
-        
+
         self.assertEqual(result.total_predictions, 3)
         # 平均偏差率 = (10 + 5 - 8) / 3 = 2.33...
         self.assertAlmostEqual(float(result.average_variance_rate), 7.0 / 3, places=2)
@@ -891,15 +896,12 @@ class TestAICostEstimationService(unittest.TestCase):
     def test_update_actual_cost_estimation_not_found(self):
         """测试估算记录不存在"""
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
-        
-        input_data = UpdateActualCostInput(
-            estimation_id=999,
-            actual_cost=Decimal("95000")
-        )
-        
+
+        input_data = UpdateActualCostInput(estimation_id=999, actual_cost=Decimal("95000"))
+
         with self.assertRaises(ValueError) as ctx:
             asyncio.run(self.service.update_actual_cost(input_data))
-        
+
         self.assertIn("估算记录不存在", str(ctx.exception))
 
     def test_update_actual_cost_success(self):
@@ -908,23 +910,23 @@ class TestAICostEstimationService(unittest.TestCase):
         mock_estimation.id = 1
         mock_estimation.total_cost = Decimal("100000")
         mock_estimation.input_parameters = {"project_type": "IoT"}
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         # Mock save_obj的行为（需要设置history.id）
         def mock_save(db, obj):
             obj.id = 123
-        
-        with patch('app.services.sales.ai_cost_estimation_service.save_obj', side_effect=mock_save):
+
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
             input_data = UpdateActualCostInput(
                 estimation_id=1,
                 project_id=100,
                 project_name="测试项目",
-                actual_cost=Decimal("95000")
+                actual_cost=Decimal("95000"),
             )
-            
+
             result = asyncio.run(self.service.update_actual_cost(input_data))
-        
+
         self.assertEqual(result["history_id"], 123)
         # 偏差率 = (95000 - 100000) / 100000 * 100 = -5%
         self.assertEqual(result["variance_rate"], Decimal("-5"))
@@ -936,22 +938,22 @@ class TestAICostEstimationService(unittest.TestCase):
         mock_estimation.id = 1
         mock_estimation.total_cost = Decimal("100000")
         mock_estimation.input_parameters = {"project_type": "IoT"}
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-        
+
         def mock_save(db, obj):
             obj.id = 124
-        
-        with patch('app.services.sales.ai_cost_estimation_service.save_obj', side_effect=mock_save):
+
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
             input_data = UpdateActualCostInput(
                 estimation_id=1,
                 project_id=100,
                 project_name="测试项目",
-                actual_cost=Decimal("110000")
+                actual_cost=Decimal("110000"),
             )
-            
+
             result = asyncio.run(self.service.update_actual_cost(input_data))
-        
+
         # 偏差率 = (110000 - 100000) / 100000 * 100 = 10%
         self.assertEqual(result["variance_rate"], Decimal("10"))
 
@@ -962,30 +964,28 @@ class TestAICostEstimationService(unittest.TestCase):
         # Mock历史数据查询
         self.mock_db.query.return_value.filter.return_value.scalar.return_value = None
         self.mock_db.query.return_value.filter.return_value.count.return_value = 5
-        
+
         # Mock save_obj
         def mock_save(db, obj):
             obj.id = 1
             obj.created_at = datetime.now()
-        
-        with patch('app.services.sales.ai_cost_estimation_service.save_obj', side_effect=mock_save):
+
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
             input_data = CostEstimationInput(
                 presale_ticket_id=1,
                 solution_id=1,
                 project_type="IoT",
                 complexity_level="medium",
-                hardware_items=[
-                    {"unit_price": 1000, "quantity": 10}
-                ],
+                hardware_items=[{"unit_price": 1000, "quantity": 10}],
                 software_requirements="开发智能监控系统，需要实现数据采集、分析和可视化功能",
                 estimated_man_days=20,
                 installation_difficulty="medium",
                 service_years=2,
-                target_margin_rate=Decimal("0.30")
+                target_margin_rate=Decimal("0.30"),
             )
-            
+
             result = asyncio.run(self.service.estimate_cost(input_data))
-        
+
         # 验证结果
         self.assertIsNotNone(result.id)
         self.assertEqual(result.presale_ticket_id, 1)

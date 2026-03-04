@@ -2,8 +2,9 @@
 """
 Tests for app/services/permission_crud_service.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.permission_crud_service import PermissionCRUDService

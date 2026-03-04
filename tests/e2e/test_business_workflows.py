@@ -7,17 +7,18 @@ Tests complete end-to-end flows:
 """
 
 import pytest
+
 pytestmark = pytest.mark.skip(reason="E2E tests need endpoint verification")
 
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.main import app
+from app.models.organization import Employee
 from app.models.project import Project
 from app.models.user import User
-from app.models.organization import Employee
 
 
 @pytest.mark.e2e

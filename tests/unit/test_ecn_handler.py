@@ -2,6 +2,7 @@
 """ECNStatusHandler 单元测试"""
 from datetime import timedelta
 from unittest.mock import MagicMock
+
 import pytest
 
 from app.services.status_handlers.ecn_handler import ECNStatusHandler
@@ -24,6 +25,7 @@ class TestECNStatusHandler:
 
     def test_schedule_impact_small(self):
         from datetime import date
+
         project = MagicMock()
         project.planned_end_date = date(2024, 6, 30)
         project.health = "H1"
@@ -40,6 +42,7 @@ class TestECNStatusHandler:
 
     def test_schedule_impact_large(self):
         from datetime import date
+
         project = MagicMock()
         project.planned_end_date = date(2024, 6, 30)
         project.health = "H1"

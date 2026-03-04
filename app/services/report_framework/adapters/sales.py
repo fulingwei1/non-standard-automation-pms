@@ -7,18 +7,17 @@
 
 from typing import Any, Dict, Optional
 
-
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 
 
 class SalesReportAdapter(BaseReportAdapter):
     """销售报表适配器"""
-    
+
     def get_report_code(self) -> str:
         """返回报表代码"""
         return "SALES_MONTHLY"
-    
+
     def generate_data(
         self,
         params: Dict[str, Any],
@@ -26,16 +25,17 @@ class SalesReportAdapter(BaseReportAdapter):
     ) -> Dict[str, Any]:
         """
         生成销售报表数据
-        
+
         Args:
             params: 报表参数（包含month字段，格式：YYYY-MM）
             user: 当前用户
-            
+
         Returns:
             报表数据字典
         """
         from datetime import date
         from decimal import Decimal
+
         from sqlalchemy import func, text
 
         from app.common.date_range import get_month_range_by_ym
@@ -62,15 +62,19 @@ class SalesReportAdapter(BaseReportAdapter):
             .filter(
                 Contract.signing_date >= month_start,
                 Contract.signing_date <= month_end,
-                Contract.status.in_(["SIGNED", "EXECUTING"])
+                Contract.status.in_(["SIGNED", "EXECUTING"]),
             )
             .all()
         )
         contract_stats = {
             "new_contracts_count": len(new_contracts),
             "new_contracts_amount": sum(c.contract_amount or Decimal("0") for c in new_contracts),
-            "active_contracts": self.db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count(),
-            "completed_contracts": self.db.query(Contract).filter(Contract.status == "COMPLETED").count(),
+            "active_contracts": self.db.query(Contract)
+            .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
+            .count(),
+            "completed_contracts": self.db.query(Contract)
+            .filter(Contract.status == "COMPLETED")
+            .count(),
         }
 
         # 计算订单统计
@@ -78,7 +82,7 @@ class SalesReportAdapter(BaseReportAdapter):
             self.db.query(SalesOrder)
             .filter(
                 func.date(SalesOrder.created_at) >= month_start,
-                func.date(SalesOrder.created_at) <= month_end
+                func.date(SalesOrder.created_at) <= month_end,
             )
             .all()
         )
@@ -88,32 +92,67 @@ class SalesReportAdapter(BaseReportAdapter):
         }
 
         # 计算回款统计
-        planned_result = self.db.execute(text("""
+        planned_result = self.db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount), 0) as planned
             FROM project_payment_plans
             WHERE planned_date >= :start_date
             AND planned_date <= :end_date
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        planned_receipt_amount = Decimal(str(planned_result[0])) if planned_result and planned_result[0] else Decimal("0")
+        """
+            ),
+            {
+                "start_date": month_start.strftime("%Y-%m-%d"),
+                "end_date": month_end.strftime("%Y-%m-%d"),
+            },
+        ).fetchone()
+        planned_receipt_amount = (
+            Decimal(str(planned_result[0]))
+            if planned_result and planned_result[0]
+            else Decimal("0")
+        )
 
-        actual_result = self.db.execute(text("""
+        actual_result = self.db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(actual_amount), 0) as actual
             FROM project_payment_plans
             WHERE planned_date >= :start_date
             AND planned_date <= :end_date
             AND actual_amount > 0
-        """), {"start_date": month_start.strftime("%Y-%m-%d"), "end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        actual_receipt_amount = Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
+        """
+            ),
+            {
+                "start_date": month_start.strftime("%Y-%m-%d"),
+                "end_date": month_end.strftime("%Y-%m-%d"),
+            },
+        ).fetchone()
+        actual_receipt_amount = (
+            Decimal(str(actual_result[0])) if actual_result and actual_result[0] else Decimal("0")
+        )
 
-        receipt_completion_rate = (actual_receipt_amount / planned_receipt_amount * 100) if planned_receipt_amount > 0 else Decimal("0")
+        receipt_completion_rate = (
+            (actual_receipt_amount / planned_receipt_amount * 100)
+            if planned_receipt_amount > 0
+            else Decimal("0")
+        )
 
-        overdue_result = self.db.execute(text("""
+        overdue_result = self.db.execute(
+            text(
+                """
             SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
             FROM project_payment_plans
             WHERE planned_date < :end_date
             AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        overdue_amount = Decimal(str(overdue_result[0])) if overdue_result and overdue_result[0] else Decimal("0")
+        """
+            ),
+            {"end_date": month_end.strftime("%Y-%m-%d")},
+        ).fetchone()
+        overdue_amount = (
+            Decimal(str(overdue_result[0]))
+            if overdue_result and overdue_result[0]
+            else Decimal("0")
+        )
 
         receipt_stats = {
             "planned_receipt_amount": planned_receipt_amount,
@@ -128,20 +167,29 @@ class SalesReportAdapter(BaseReportAdapter):
             .filter(
                 func.date(Invoice.issue_date) >= month_start,
                 func.date(Invoice.issue_date) <= month_end,
-                Invoice.status == "ISSUED"
+                Invoice.status == "ISSUED",
             )
             .all()
         )
         invoices_count = len(invoices)
         invoices_amount = sum(i.invoice_amount or Decimal("0") for i in invoices)
 
-        total_needed = self.db.execute(text("""
+        total_needed = self.db.execute(
+            text(
+                """
             SELECT COUNT(*) as count
             FROM project_payment_plans
             WHERE planned_date <= :end_date
             AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
-        """), {"end_date": month_end.strftime("%Y-%m-%d")}).fetchone()
-        invoice_rate = (Decimal(invoices_count) / Decimal(total_needed[0]) * 100) if total_needed and total_needed[0] > 0 else Decimal("0")
+        """
+            ),
+            {"end_date": month_end.strftime("%Y-%m-%d")},
+        ).fetchone()
+        invoice_rate = (
+            (Decimal(invoices_count) / Decimal(total_needed[0]) * 100)
+            if total_needed and total_needed[0] > 0
+            else Decimal("0")
+        )
 
         invoice_stats = {
             "invoices_count": invoices_count,
@@ -154,7 +202,7 @@ class SalesReportAdapter(BaseReportAdapter):
             self.db.query(BiddingProject)
             .filter(
                 func.date(BiddingProject.created_at) >= month_start,
-                func.date(BiddingProject.created_at) <= month_end
+                func.date(BiddingProject.created_at) <= month_end,
             )
             .count()
         )
@@ -163,19 +211,23 @@ class SalesReportAdapter(BaseReportAdapter):
             .filter(
                 BiddingProject.result_date >= month_start,
                 BiddingProject.result_date <= month_end,
-                BiddingProject.bid_result == "won"
+                BiddingProject.bid_result == "won",
             )
             .count()
         )
         total_bidding = self.db.query(BiddingProject).count()
-        bidding_win_rate = (Decimal(won_bidding) / Decimal(total_bidding) * 100) if total_bidding > 0 else Decimal("0")
+        bidding_win_rate = (
+            (Decimal(won_bidding) / Decimal(total_bidding) * 100)
+            if total_bidding > 0
+            else Decimal("0")
+        )
 
         bidding_stats = {
             "new_bidding": new_bidding,
             "won_bidding": won_bidding,
             "bidding_win_rate": bidding_win_rate,
         }
-        
+
         return {
             "report_date": month_str or f"{year}-{month_num:02d}",
             "report_type": "monthly",

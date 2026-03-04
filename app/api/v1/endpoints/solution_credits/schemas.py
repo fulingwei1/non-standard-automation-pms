@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class CreditInfoResponse(BaseModel):
     """用户积分信息响应"""
+
     user_id: int
     balance: int = Field(..., description="当前积分余额")
     generate_cost: int = Field(..., description="每次生成消耗积分")
@@ -21,6 +22,7 @@ class CreditInfoResponse(BaseModel):
 
 class TransactionResponse(BaseModel):
     """交易记录响应"""
+
     id: int
     transaction_type: str
     amount: int
@@ -38,6 +40,7 @@ class TransactionResponse(BaseModel):
 
 class TransactionListResponse(BaseModel):
     """交易记录列表响应"""
+
     items: List[TransactionResponse]
     total: int
     page: int
@@ -46,6 +49,7 @@ class TransactionListResponse(BaseModel):
 
 class AdminAddCreditsRequest(BaseModel):
     """管理员充值请求"""
+
     user_id: int = Field(..., description="目标用户ID")
     amount: int = Field(..., ge=1, le=1000, description="充值数量（1-1000）")
     remark: Optional[str] = Field(None, max_length=200, description="充值备注")
@@ -53,6 +57,7 @@ class AdminAddCreditsRequest(BaseModel):
 
 class BatchAddCreditsRequest(BaseModel):
     """批量���值请求"""
+
     user_ids: List[int] = Field(..., min_length=1, max_length=100, description="用户ID列表")
     amount: int = Field(..., ge=1, le=1000, description="每人充值数量（1-1000）")
     remark: Optional[str] = Field(None, max_length=200, description="充值备注")
@@ -60,6 +65,7 @@ class BatchAddCreditsRequest(BaseModel):
 
 class AdminDeductCreditsRequest(BaseModel):
     """管理员扣除请求"""
+
     user_id: int = Field(..., description="目标用户ID")
     amount: int = Field(..., ge=1, le=1000, description="扣除数量（1-1000）")
     remark: str = Field(..., min_length=2, max_length=200, description="扣除原因（必填）")
@@ -67,6 +73,7 @@ class AdminDeductCreditsRequest(BaseModel):
 
 class UserCreditItem(BaseModel):
     """用户积分项"""
+
     user_id: int
     username: str
     real_name: Optional[str]
@@ -79,6 +86,7 @@ class UserCreditItem(BaseModel):
 
 class UserCreditListResponse(BaseModel):
     """用户积分列表响应"""
+
     items: List[UserCreditItem]
     total: int
     page: int
@@ -87,6 +95,7 @@ class UserCreditListResponse(BaseModel):
 
 class CreditConfigItem(BaseModel):
     """积分配置项"""
+
     key: str
     value: str
     description: Optional[str]
@@ -95,6 +104,7 @@ class CreditConfigItem(BaseModel):
 
 class UpdateConfigRequest(BaseModel):
     """更新配置请求"""
+
     key: str = Field(..., description="配置键")
     value: str = Field(..., description="配置值")
     description: Optional[str] = Field(None, description="配置说明")
@@ -102,6 +112,7 @@ class UpdateConfigRequest(BaseModel):
 
 class OperationResponse(BaseModel):
     """操作响应"""
+
     success: bool
     message: str
     data: Optional[dict] = None

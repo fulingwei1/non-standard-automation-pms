@@ -6,6 +6,7 @@ pytest.importorskip("app.services.ecn_bom_analysis_service.calculation")
 
 from decimal import Decimal
 from unittest.mock import MagicMock
+
 from app.services.ecn_bom_analysis_service.calculation import (
     calculate_cost_impact,
     calculate_schedule_impact,
@@ -17,7 +18,9 @@ def make_service():
     return svc
 
 
-def make_affected_mat(cost_impact=None, change_type="UPDATE", material_code="M001", material_id=None):
+def make_affected_mat(
+    cost_impact=None, change_type="UPDATE", material_code="M001", material_id=None
+):
     m = MagicMock()
     m.cost_impact = cost_impact
     m.change_type = change_type
@@ -36,6 +39,7 @@ def make_bom_item(item_id=1, material_code="M001", material_id=None, amount=None
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_calculate_cost_impact_zero_when_empty():
     svc = make_service()

@@ -165,18 +165,12 @@ class TestTenantServiceUpdate:
         """测试成功更新租户"""
         mock_db = MagicMock()
         existing_tenant = Tenant(
-            id=1,
-            tenant_code="T12345678",
-            tenant_name="原名称",
-            contact_name="原联系人"
+            id=1, tenant_code="T12345678", tenant_name="原名称", contact_name="原联系人"
         )
         mock_db.query.return_value.filter.return_value.first.return_value = existing_tenant
 
         service = TenantService(mock_db)
-        tenant_in = TenantUpdate(
-            tenant_name="新名称",
-            contact_name="新联系人"
-        )
+        tenant_in = TenantUpdate(tenant_name="新名称", contact_name="新联系人")
 
         tenant = service.update_tenant(1, tenant_in)
 
@@ -204,10 +198,7 @@ class TestTenantServiceDelete:
         """测试成功删除租户（软删除）"""
         mock_db = MagicMock()
         existing_tenant = Tenant(
-            id=1,
-            tenant_code="T12345678",
-            tenant_name="待删除",
-            status="ACTIVE"
+            id=1, tenant_code="T12345678", tenant_name="待删除", status="ACTIVE"
         )
         mock_db.query.return_value.filter.return_value.first.return_value = existing_tenant
 

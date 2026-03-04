@@ -3,11 +3,13 @@
 第四十批覆盖测试 - 预警规则管理器
 """
 
-import pytest
 from unittest.mock import MagicMock, call
+
+import pytest
 
 try:
     from app.services.alert_rule_engine.rule_manager import RuleManager
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -42,6 +44,7 @@ class TestRuleManagerGetOrCreate:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         from app.models.alert import AlertRule
+
         with MagicMock() as mock_alert_rule:
             created_instances = []
 

@@ -2,9 +2,10 @@
 """
 第十九批 - 管理节律 Dashboard 适配器单元测试
 """
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.dashboard_adapters.management_rhythm")
 
@@ -23,6 +24,7 @@ def _make_level_enum():
 
 def make_adapter():
     from app.services.dashboard_adapters.management_rhythm import ManagementRhythmDashboardAdapter
+
     db = MagicMock()
     user = MagicMock()
     user.id = 1
@@ -66,8 +68,10 @@ def test_get_stats_returns_stat_cards():
     mock_query.first.return_value = None
     mock_query.count.return_value = 5
 
-    with patch(f"{_MOD}.MeetingRhythmLevel", fake_level), \
-         patch(f"{_MOD}.ActionItemStatus") as mock_status:
+    with (
+        patch(f"{_MOD}.MeetingRhythmLevel", fake_level),
+        patch(f"{_MOD}.ActionItemStatus") as mock_status,
+    ):
         mock_status.COMPLETED.value = "COMPLETED"
         mock_status.OVERDUE.value = "OVERDUE"
         stats = adapter.get_stats()
@@ -90,8 +94,10 @@ def test_get_stats_completion_rate():
     mock_query.first.return_value = None
     mock_query.count.return_value = 10
 
-    with patch(f"{_MOD}.MeetingRhythmLevel", fake_level), \
-         patch(f"{_MOD}.ActionItemStatus") as mock_status:
+    with (
+        patch(f"{_MOD}.MeetingRhythmLevel", fake_level),
+        patch(f"{_MOD}.ActionItemStatus") as mock_status,
+    ):
         mock_status.COMPLETED.value = "COMPLETED"
         mock_status.OVERDUE.value = "OVERDUE"
         stats = adapter.get_stats()
@@ -113,8 +119,10 @@ def test_get_widgets_returns_list():
     mock_query.limit.return_value = mock_query
     mock_query.all.return_value = []
 
-    with patch(f"{_MOD}.MeetingRhythmLevel", fake_level), \
-         patch(f"{_MOD}.ActionItemStatus") as mock_status:
+    with (
+        patch(f"{_MOD}.MeetingRhythmLevel", fake_level),
+        patch(f"{_MOD}.ActionItemStatus") as mock_status,
+    ):
         mock_status.PENDING.value = "PENDING"
         mock_status.IN_PROGRESS.value = "IN_PROGRESS"
         widgets = adapter.get_widgets()
@@ -140,8 +148,10 @@ def test_get_detailed_data_structure():
     mock_query.limit.return_value = mock_query
     mock_query.all.return_value = []
 
-    with patch(f"{_MOD}.MeetingRhythmLevel", fake_level), \
-         patch(f"{_MOD}.ActionItemStatus") as mock_status:
+    with (
+        patch(f"{_MOD}.MeetingRhythmLevel", fake_level),
+        patch(f"{_MOD}.ActionItemStatus") as mock_status,
+    ):
         mock_status.COMPLETED.value = "COMPLETED"
         mock_status.OVERDUE.value = "OVERDUE"
         mock_status.PENDING.value = "PENDING"
@@ -173,12 +183,14 @@ def test_get_widgets_upcoming_meetings_data():
     mock_query.limit.return_value = mock_query
     mock_query.all.side_effect = [[meeting], []]
 
-    with patch(f"{_MOD}.MeetingRhythmLevel", fake_level), \
-         patch(f"{_MOD}.ActionItemStatus") as mock_status:
+    with (
+        patch(f"{_MOD}.MeetingRhythmLevel", fake_level),
+        patch(f"{_MOD}.ActionItemStatus") as mock_status,
+    ):
         mock_status.PENDING.value = "PENDING"
         mock_status.IN_PROGRESS.value = "IN_PROGRESS"
         widgets = adapter.get_widgets()
 
     upcoming_widget = next(w for w in widgets if w.widget_id == "upcoming_meetings")
     assert len(upcoming_widget.data) == 1
-    assert upcoming_widget.data[0]['title'] == "战略会议"
+    assert upcoming_widget.data[0]["title"] == "战略会议"

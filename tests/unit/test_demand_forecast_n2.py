@@ -5,10 +5,11 @@
       batch_forecast_for_project, get_forecast_accuracy_report,
       _generate_forecast_no, 置信区间 90/other 分支
 """
-import pytest
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.shortage.demand_forecast_engine import DemandForecastEngine
 
@@ -20,6 +21,7 @@ def engine():
 
 
 # ======================= _detect_seasonality =======================
+
 
 class TestDetectSeasonality:
     def test_short_data_returns_one(self, engine):
@@ -68,6 +70,7 @@ class TestDetectSeasonality:
 
 # ======================= _linear_regression_forecast =======================
 
+
 class TestLinearRegressionForecast:
     def test_single_data_point_returns_average(self, engine):
         """单数据点时返回均值"""
@@ -103,38 +106,32 @@ class TestLinearRegressionForecast:
 
 # ======================= _calculate_confidence_interval 分支 =======================
 
+
 class TestConfidenceIntervalBranches:
     def test_95_confidence_uses_1_96(self, engine):
-        lower, upper = engine._calculate_confidence_interval(
-            Decimal("100"), Decimal("10"), 95.0
-        )
+        lower, upper = engine._calculate_confidence_interval(Decimal("100"), Decimal("10"), 95.0)
         margin = Decimal("1.96") * Decimal("10")
         assert upper == Decimal("100") + margin
         assert lower == Decimal("100") - margin
 
     def test_90_confidence_uses_1_645(self, engine):
-        lower, upper = engine._calculate_confidence_interval(
-            Decimal("100"), Decimal("10"), 90.0
-        )
+        lower, upper = engine._calculate_confidence_interval(Decimal("100"), Decimal("10"), 90.0)
         margin = Decimal("1.645") * Decimal("10")
         assert upper == Decimal("100") + margin
 
     def test_other_confidence_uses_1_0(self, engine):
-        lower, upper = engine._calculate_confidence_interval(
-            Decimal("100"), Decimal("10"), 80.0
-        )
+        lower, upper = engine._calculate_confidence_interval(Decimal("100"), Decimal("10"), 80.0)
         margin = Decimal("1.0") * Decimal("10")
         assert upper == Decimal("100") + margin
 
     def test_lower_bound_not_negative(self, engine):
         """下限不低于0"""
-        lower, upper = engine._calculate_confidence_interval(
-            Decimal("5"), Decimal("20"), 95.0
-        )
+        lower, upper = engine._calculate_confidence_interval(Decimal("5"), Decimal("20"), 95.0)
         assert lower >= Decimal("0")
 
 
 # ======================= batch_forecast_for_project =======================
+
 
 class TestBatchForecastForProject:
     @patch("app.services.shortage.demand_forecast_engine.save_obj")
@@ -145,6 +142,7 @@ class TestBatchForecastForProject:
         engine.db.query.return_value.filter.return_value.all.return_value = [(1,), (2,), (3,)]
 
         call_count = [0]
+
         def forecast_side(material_id, **kwargs):
             call_count[0] += 1
             if material_id == 2:
@@ -165,6 +163,7 @@ class TestBatchForecastForProject:
 
 
 # ======================= get_forecast_accuracy_report =======================
+
 
 class TestGetForecastAccuracyReport:
     def test_empty_forecasts_returns_zeros(self, engine):
@@ -232,6 +231,7 @@ class TestGetForecastAccuracyReport:
 
 
 # ======================= _generate_forecast_no =======================
+
 
 class TestGenerateForecastNo:
     def test_generates_formatted_no(self, engine):

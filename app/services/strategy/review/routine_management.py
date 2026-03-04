@@ -14,23 +14,19 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.models.strategy import StrategyCalendarEvent
 from app.common.date_range import get_month_range_by_ym
+from app.models.strategy import StrategyCalendarEvent
 from app.schemas.strategy import (
     RoutineManagementCycleItem,
     RoutineManagementCycleResponse,
 )
 
-
-
 # ============================================
 # 例行管理周期
 # ============================================
 
-def get_routine_management_cycle(
-    db: Session,
-    strategy_id: int
-) -> RoutineManagementCycleResponse:
+
+def get_routine_management_cycle(db: Session, strategy_id: int) -> RoutineManagementCycleResponse:
     """
     获取例行管理周期配置
 
@@ -92,9 +88,7 @@ def get_routine_management_cycle(
 
 
 def generate_routine_events(
-    db: Session,
-    strategy_id: int,
-    year: int
+    db: Session, strategy_id: int, year: int
 ) -> List[StrategyCalendarEvent]:
     """
     生成年度例行管理事件

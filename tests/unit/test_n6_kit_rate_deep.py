@@ -13,19 +13,19 @@ Coverage target: app/services/kit_rate/kit_rate_service.py
 7. dashboard — complete/partial/shortage 统计
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
 from fastapi import HTTPException
 
 from app.services.kit_rate.kit_rate_service import KitRateService
 
-
 # ─────────────────────────────────────────────────
 # Mock helpers
 # ─────────────────────────────────────────────────
+
 
 def make_material(stock=0):
     m = MagicMock()
@@ -106,6 +106,7 @@ def make_db_no_po():
 # 1. calculate_kit_rate — 数量法
 # ─────────────────────────────────────────────────
 
+
 class TestCalculateKitRateByQuantity:
 
     def test_all_items_fulfilled_100pct(self):
@@ -148,7 +149,9 @@ class TestCalculateKitRateByQuantity:
         """在途数量可补足库存缺口 → fulfilled"""
         db = MagicMock()
         # PO: 订购 50, 已收 30 → 在途 20
-        po_item = MagicMock(); po_item.quantity = 50; po_item.received_qty = 30
+        po_item = MagicMock()
+        po_item.quantity = 50
+        po_item.received_qty = 30
         db.query.return_value.filter.return_value.all.return_value = [po_item]
 
         svc = KitRateService(db)
@@ -161,7 +164,9 @@ class TestCalculateKitRateByQuantity:
         """库存不足但有在途 → in_transit_items += 1"""
         db = MagicMock()
         # 在途 5，库存 0，需求 10 → 仍缺，但 total_available > 0
-        po_item = MagicMock(); po_item.quantity = 5; po_item.received_qty = 0
+        po_item = MagicMock()
+        po_item.quantity = 5
+        po_item.received_qty = 0
         db.query.return_value.filter.return_value.all.return_value = [po_item]
 
         svc = KitRateService(db)
@@ -198,6 +203,7 @@ class TestCalculateKitRateByQuantity:
 # 2. calculate_kit_rate — 金额法
 # ─────────────────────────────────────────────────
 
+
 class TestCalculateKitRateByAmount:
 
     def test_amount_fulfilled_amount_correct(self):
@@ -207,7 +213,7 @@ class TestCalculateKitRateByAmount:
         # Item2: qty=5,  price=200 → amount=1000, stock=0  → shortage
         items = [
             make_bom_item(id=1, quantity=10, unit_price=100, stock=10),
-            make_bom_item(id=2, quantity=5,  unit_price=200, stock=0),
+            make_bom_item(id=2, quantity=5, unit_price=200, stock=0),
         ]
         result = svc.calculate_kit_rate(items, "amount")
 
@@ -229,7 +235,7 @@ class TestCalculateKitRateByAmount:
         svc = KitRateService(db)
         items = [
             make_bom_item(id=1, quantity=10, unit_price=100, stock=20),
-            make_bom_item(id=2, quantity=5,  unit_price=200, stock=10),
+            make_bom_item(id=2, quantity=5, unit_price=200, stock=10),
         ]
         result = svc.calculate_kit_rate(items, "amount")
         assert result["kit_rate"] == 100.0
@@ -240,6 +246,7 @@ class TestCalculateKitRateByAmount:
 # 3. _get_in_transit_qty — 多订单累积
 # ─────────────────────────────────────────────────
 
+
 class TestGetInTransitQty:
 
     def test_no_material_id_returns_zero(self):
@@ -248,8 +255,12 @@ class TestGetInTransitQty:
 
     def test_multiple_po_items_summed(self):
         db = MagicMock()
-        po1 = MagicMock(); po1.quantity = 100; po1.received_qty = 40
-        po2 = MagicMock(); po2.quantity = 50;  po2.received_qty = 20
+        po1 = MagicMock()
+        po1.quantity = 100
+        po1.received_qty = 40
+        po2 = MagicMock()
+        po2.quantity = 50
+        po2.received_qty = 20
         db.query.return_value.filter.return_value.all.return_value = [po1, po2]
 
         svc = KitRateService(db)
@@ -259,7 +270,9 @@ class TestGetInTransitQty:
 
     def test_fully_received_po_contributes_zero(self):
         db = MagicMock()
-        po = MagicMock(); po.quantity = 50; po.received_qty = 50
+        po = MagicMock()
+        po.quantity = 50
+        po.received_qty = 50
         db.query.return_value.filter.return_value.all.return_value = [po]
 
         svc = KitRateService(db)
@@ -269,7 +282,9 @@ class TestGetInTransitQty:
     def test_none_quantities_handled(self):
         """po.quantity 或 received_qty 为 None 时不崩溃"""
         db = MagicMock()
-        po = MagicMock(); po.quantity = None; po.received_qty = None
+        po = MagicMock()
+        po.quantity = None
+        po.received_qty = None
         db.query.return_value.filter.return_value.all.return_value = [po]
 
         svc = KitRateService(db)
@@ -280,6 +295,7 @@ class TestGetInTransitQty:
 # ─────────────────────────────────────────────────
 # 4. get_machine_material_status — 物料状态分类
 # ─────────────────────────────────────────────────
+
 
 class TestGetMachineMaterialStatus:
 
@@ -292,11 +308,11 @@ class TestGetMachineMaterialStatus:
             q.filter.return_value = q
             idx = call_seq[0]
             call_seq[0] += 1
-            if idx == 0:    # Machine query
+            if idx == 0:  # Machine query
                 q.first.return_value = machine
             elif idx == 1:  # BomHeader query
                 q.first.return_value = bom
-            else:           # PO query
+            else:  # PO query
                 q.all.return_value = []
             return q
 
@@ -356,7 +372,8 @@ class TestGetMachineMaterialStatus:
         def side_effect(model):
             q = MagicMock()
             q.filter.return_value = q
-            idx = call_seq[0]; call_seq[0] += 1
+            idx = call_seq[0]
+            call_seq[0] += 1
             q.first.return_value = machine if idx == 0 else None
             return q
 
@@ -380,6 +397,7 @@ class TestGetMachineMaterialStatus:
 # ─────────────────────────────────────────────────
 # 5. get_trend — day/month 分组
 # ─────────────────────────────────────────────────
+
 
 class TestGetTrendGrouping:
 
@@ -493,11 +511,13 @@ class TestGetTrendGrouping:
 # 6. get_snapshots — 快照查询
 # ─────────────────────────────────────────────────
 
+
 class TestGetSnapshots:
 
     def test_returns_snapshot_list(self):
         db = MagicMock()
-        insp = MagicMock(); insp.has_table.return_value = True
+        insp = MagicMock()
+        insp.has_table.return_value = True
         db.get_bind.return_value = MagicMock()
 
         project = make_project()
@@ -535,11 +555,14 @@ class TestGetSnapshots:
 
     def test_empty_snapshots(self):
         db = MagicMock()
-        insp = MagicMock(); insp.has_table.return_value = True
+        insp = MagicMock()
+        insp.has_table.return_value = True
         db.get_bind.return_value = MagicMock()
 
         project = make_project()
-        q = MagicMock(); q.filter.return_value = q; q.order_by.return_value = q
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
         q.all.return_value = []
         q.first.return_value = project
         db.query.return_value = q
@@ -556,6 +579,7 @@ class TestGetSnapshots:
 # 7. get_dashboard — complete/partial/shortage 统计
 # ─────────────────────────────────────────────────
 
+
 class TestGetDashboard:
 
     def test_dashboard_counts_status_correctly(self):
@@ -565,17 +589,36 @@ class TestGetDashboard:
         db.query.return_value.filter.return_value.first.return_value = projects[0]
 
         kit_rates = [
-            {"kit_rate": 100.0, "kit_status": "complete", "total_items": 10,
-             "fulfilled_items": 10, "shortage_items": 0, "in_transit_items": 0},
-            {"kit_rate": 85.0, "kit_status": "partial", "total_items": 10,
-             "fulfilled_items": 8, "shortage_items": 2, "in_transit_items": 0},
-            {"kit_rate": 50.0, "kit_status": "shortage", "total_items": 10,
-             "fulfilled_items": 5, "shortage_items": 5, "in_transit_items": 0},
+            {
+                "kit_rate": 100.0,
+                "kit_status": "complete",
+                "total_items": 10,
+                "fulfilled_items": 10,
+                "shortage_items": 0,
+                "in_transit_items": 0,
+            },
+            {
+                "kit_rate": 85.0,
+                "kit_status": "partial",
+                "total_items": 10,
+                "fulfilled_items": 8,
+                "shortage_items": 2,
+                "in_transit_items": 0,
+            },
+            {
+                "kit_rate": 50.0,
+                "kit_status": "shortage",
+                "total_items": 10,
+                "fulfilled_items": 5,
+                "shortage_items": 5,
+                "in_transit_items": 0,
+            },
         ]
         call_idx = [0]
 
         def mock_project_kit_rate(project_id, calculate_by):
-            idx = call_idx[0]; call_idx[0] += 1
+            idx = call_idx[0]
+            call_idx[0] += 1
             return kit_rates[idx]
 
         svc = KitRateService(db)

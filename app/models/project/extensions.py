@@ -15,12 +15,23 @@
 - 逐步迁移代码使用新表
 """
 
-from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text
+from datetime import date
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
-
-from datetime import date
 
 
 class ProjectFinancial(Base, TimestampMixin):
@@ -31,8 +42,9 @@ class ProjectFinancial(Base, TimestampMixin):
     字段来源：Project 表的财务字段
     - 合同金额、预算金额、实际成本
     - 开票状态、付款状态、付款日期
-    
+
     【状态】未启用 - 项目财务扩展"""
+
     __tablename__ = "project_financials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -53,9 +65,7 @@ class ProjectFinancial(Base, TimestampMixin):
     # 关系
     project = relationship("Project", back_populates="financial_info")
 
-    __table_args__ = (
-        Index("idx_project_financials_project", "project_id"),
-    )
+    __table_args__ = (Index("idx_project_financials_project", "project_id"),)
 
     @property
     def payment_progress_pct(self) -> float:
@@ -83,8 +93,9 @@ class ProjectERP(Base, TimestampMixin):
     """项目ERP集成信息表
 
     存储项目与ERP系统集成的相关字段，从 Project 表拆分。
-    
+
     【状态】未启用 - 项目ERP集成"""
+
     __tablename__ = "project_erp"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -96,7 +107,9 @@ class ProjectERP(Base, TimestampMixin):
     erp_synced = Column(Boolean, default=False, comment="是否已录入ERP系统")
     erp_sync_time = Column(DateTime, comment="ERP同步时间")
     erp_order_no = Column(String(50), comment="ERP订单号")
-    erp_sync_status = Column(String(20), default="PENDING", comment="ERP同步状态：PENDING/SYNCED/FAILED")
+    erp_sync_status = Column(
+        String(20), default="PENDING", comment="ERP同步状态：PENDING/SYNCED/FAILED"
+    )
 
     # 同步错误信息
     erp_sync_error = Column(Text, comment="同步错误信息")
@@ -133,8 +146,9 @@ class ProjectWarranty(Base, TimestampMixin):
     """项目质保信息表
 
     存储项目的质保相关信息，从 Project 表拆分。
-    
+
     【状态】未启用 - 项目质保"""
+
     __tablename__ = "project_warranties"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -148,7 +162,9 @@ class ProjectWarranty(Base, TimestampMixin):
     warranty_end_date = Column(Date, comment="质保结束日期")
 
     # 质保状态
-    warranty_status = Column(String(20), default="ACTIVE", comment="质保状态：ACTIVE/EXPIRED/EXTENDED")
+    warranty_status = Column(
+        String(20), default="ACTIVE", comment="质保状态：ACTIVE/EXPIRED/EXTENDED"
+    )
     warranty_notes = Column(Text, comment="质保备注")
 
     # 关系
@@ -190,8 +206,9 @@ class ProjectImplementation(Base, TimestampMixin):
     """项目实施信息表
 
     存储项目的实施相关信息，从 Project 表拆分。
-    
+
     【状态】未启用 - 项目实施"""
+
     __tablename__ = "project_implementations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -215,9 +232,7 @@ class ProjectImplementation(Base, TimestampMixin):
     # 关系
     project = relationship("Project", back_populates="implementation_info")
 
-    __table_args__ = (
-        Index("idx_project_implementations_project", "project_id"),
-    )
+    __table_args__ = (Index("idx_project_implementations_project", "project_id"),)
 
     @property
     def has_site_contact(self) -> bool:
@@ -228,9 +243,9 @@ class ProjectImplementation(Base, TimestampMixin):
     def contact_info(self) -> dict:
         """获取现场联系人信息"""
         return {
-            'name': self.site_contact_name,
-            'phone': self.site_contact_phone,
-            'email': self.site_contact_email,
+            "name": self.site_contact_name,
+            "phone": self.site_contact_phone,
+            "email": self.site_contact_email,
         }
 
     def __repr__(self):
@@ -241,8 +256,9 @@ class ProjectPresale(Base, TimestampMixin):
     """项目售前评估信息表
 
     存储项目的售前评估相关信息，从 Project 表拆分。
-    
+
     【状态】未启用 - 项目售前"""
+
     __tablename__ = "project_presales"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

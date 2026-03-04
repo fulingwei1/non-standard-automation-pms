@@ -4,10 +4,11 @@
 覆盖: 自定义配置参数, ICT行业数据(28万预算), 边界分支,
       evaluate_prediction_accuracy, predict_win_probability customer_factor
 """
-import pytest
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.sales_prediction_service import SalesPredictionService
 
@@ -31,13 +32,11 @@ def make_contract(amount=None, signed_date=None):
 
 # ======================= 自定义配置参数 =======================
 
+
 class TestCustomConfig:
     def test_custom_stage_weights_applied(self):
         db = MagicMock()
-        service = SalesPredictionService(
-            db,
-            stage_weights={"PROPOSAL": 0.7, "NEGOTIATION": 0.9}
-        )
+        service = SalesPredictionService(db, stage_weights={"PROPOSAL": 0.7, "NEGOTIATION": 0.9})
         assert service.stage_weights["PROPOSAL"] == 0.7
 
     def test_custom_smoothing_alpha(self):
@@ -52,6 +51,7 @@ class TestCustomConfig:
 
 
 # ======================= ICT 行业数据 (平均28万预算) =======================
+
 
 class TestICTIndustryData:
     """ICT行业平均28万预算的预测场景"""
@@ -113,10 +113,7 @@ class TestICTIndustryData:
 
         service = SalesPredictionService(db)
         # 75万（50-100万区间）
-        result = service.predict_win_probability(
-            stage="NEGOTIATION",
-            amount=Decimal("750000")
-        )
+        result = service.predict_win_probability(stage="NEGOTIATION", amount=Decimal("750000"))
         # 金额在50-100万区间，factor=0.95
         assert result["amount_factor"] == 0.95
 
@@ -128,13 +125,13 @@ class TestICTIndustryData:
 
         service = SalesPredictionService(db)
         result = service.predict_win_probability(
-            stage="PROPOSAL",
-            amount=Decimal("80000")  # < 10万
+            stage="PROPOSAL", amount=Decimal("80000")  # < 10万
         )
         assert result["amount_factor"] == 1.1
 
 
 # ======================= predict_win_probability 分支 =======================
+
 
 class TestPredictWinProbabilityBranches:
     def test_customer_factor_applied_when_history_exists(self):
@@ -147,6 +144,7 @@ class TestPredictWinProbabilityBranches:
 
         # _get_customer_win_rate will be called with customer_id=5
         call_count = [0]
+
         def all_side():
             call_count[0] += 1
             if call_count[0] == 1:
@@ -165,9 +163,7 @@ class TestPredictWinProbabilityBranches:
 
         service = SalesPredictionService(db)
         result = service.predict_win_probability(
-            stage="PROPOSAL",
-            amount=Decimal("280000"),
-            customer_id=5
+            stage="PROPOSAL", amount=Decimal("280000"), customer_id=5
         )
         assert "customer_factor" in result
         assert result["win_probability"] >= 0.1
@@ -182,8 +178,7 @@ class TestPredictWinProbabilityBranches:
         service = SalesPredictionService(db, probability_bounds=(0.1, 0.95))
         # DISCOVERY stage 通常很低
         result = service.predict_win_probability(
-            stage="DISCOVERY",
-            amount=Decimal("5000000")  # Very large, reducing factor to 0.9
+            stage="DISCOVERY", amount=Decimal("5000000")  # Very large, reducing factor to 0.9
         )
         assert result["win_probability"] >= 0.1
 
@@ -198,6 +193,7 @@ class TestPredictWinProbabilityBranches:
 
 
 # ======================= _exponential_smoothing 内部 alpha =======================
+
 
 class TestExponentialSmoothingInternal:
     def test_uses_instance_alpha_by_default(self):
@@ -218,14 +214,16 @@ class TestExponentialSmoothingInternal:
         db = MagicMock()
         service = SalesPredictionService(db)
 
-        monthly_data = [{"month": f"2024-{i:02d}", "revenue": 100000, "count": 1}
-                        for i in range(1, 13)]
+        monthly_data = [
+            {"month": f"2024-{i:02d}", "revenue": 100000, "count": 1} for i in range(1, 13)
+        ]
         result = service._exponential_smoothing_forecast(monthly_data, 30)
         # Uniform data → forecast ≈ 100000
         assert abs(float(result) - 100000) < 5000
 
 
 # ======================= evaluate_prediction_accuracy =======================
+
 
 class TestEvaluatePredictionAccuracy:
     def test_zero_actual_revenue_gives_zero_accuracy(self):
@@ -239,9 +237,11 @@ class TestEvaluatePredictionAccuracy:
         opps_q.all.return_value = []
 
         cnt = [0]
+
         def q_side(model):
             cnt[0] += 1
             return contracts_q if cnt[0] == 1 else opps_q
+
         db.query.side_effect = q_side
 
         service = SalesPredictionService(db)
@@ -254,8 +254,7 @@ class TestEvaluatePredictionAccuracy:
         db = MagicMock()
 
         # Actual: 2 contracts @ 50000 each = 100000
-        contracts = [make_contract(amount=Decimal("50000")),
-                     make_contract(amount=Decimal("50000"))]
+        contracts = [make_contract(amount=Decimal("50000")), make_contract(amount=Decimal("50000"))]
         contracts_q = MagicMock()
         contracts_q.filter.return_value = contracts_q
         contracts_q.all.return_value = contracts
@@ -267,9 +266,11 @@ class TestEvaluatePredictionAccuracy:
         opps_q.all.return_value = opps
 
         cnt = [0]
+
         def q_side(model):
             cnt[0] += 1
             return contracts_q if cnt[0] == 1 else opps_q
+
         db.query.side_effect = q_side
 
         service = SalesPredictionService(db)
@@ -279,6 +280,7 @@ class TestEvaluatePredictionAccuracy:
 
 
 # ======================= _calculate_confidence 边界 =======================
+
 
 class TestCalculateConfidenceBoundary:
     def test_exactly_6_months_5_opps_gives_high(self):

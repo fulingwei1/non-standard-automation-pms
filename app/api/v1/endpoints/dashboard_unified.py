@@ -14,6 +14,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+# 导入所有适配器（触发自动注册）
+import app.services.dashboard_adapters  # noqa: F401
 from app.api import deps
 from app.core import security
 from app.models.user import User
@@ -25,13 +27,12 @@ from app.schemas.dashboard import (
 )
 from app.services.dashboard_adapter import dashboard_registry
 
-# 导入所有适配器（触发自动注册）
-import app.services.dashboard_adapters  # noqa: F401
-
 router = APIRouter()
 
 
-@router.get("/dashboard/unified/{role_code}", response_model=ResponseModel[UnifiedDashboardResponse])
+@router.get(
+    "/dashboard/unified/{role_code}", response_model=ResponseModel[UnifiedDashboardResponse]
+)
 def get_unified_dashboard(
     role_code: str,
     db: Session = Depends(deps.get_db),
@@ -68,7 +69,7 @@ def get_unified_dashboard(
             continue
 
     # 按order排序widgets
-    all_widgets.sort(key=lambda w: getattr(w, 'order', 0))
+    all_widgets.sort(key=lambda w: getattr(w, "order", 0))
 
     return ResponseModel(
         data=UnifiedDashboardResponse(
@@ -82,7 +83,10 @@ def get_unified_dashboard(
     )
 
 
-@router.get("/dashboard/unified/{role_code}/detailed", response_model=ResponseModel[List[DetailedDashboardResponse]])
+@router.get(
+    "/dashboard/unified/{role_code}/detailed",
+    response_model=ResponseModel[List[DetailedDashboardResponse]],
+)
 def get_unified_dashboard_detailed(
     role_code: str,
     module_id: Optional[str] = Query(None, description="指定模块ID，不指定则返回所有模块"),
@@ -109,8 +113,7 @@ def get_unified_dashboard_detailed(
 
         if not adapter.supports_role(role_code):
             raise HTTPException(
-                status_code=403,
-                detail=f"Module '{module_id}' does not support role '{role_code}'"
+                status_code=403, detail=f"Module '{module_id}' does not support role '{role_code}'"
             )
 
         adapters = [adapter]

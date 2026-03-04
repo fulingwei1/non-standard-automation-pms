@@ -16,12 +16,14 @@ def mock_db():
 
 # ─── create_target ─────────────────────────────────────────────────────────────
 
+
 class TestCreateTarget:
     def test_team_target_without_team_id_raises(self, mock_db):
         """团队目标未指定 team_id 应报错"""
-        from app.services.sales_target_service import SalesTargetService
-        from app.schemas.sales_target import SalesTargetV2Create
         from fastapi import HTTPException
+
+        from app.schemas.sales_target import SalesTargetV2Create
+        from app.services.sales_target_service import SalesTargetService
 
         data = SalesTargetV2Create(
             target_period="month",
@@ -43,9 +45,10 @@ class TestCreateTarget:
 
     def test_personal_target_without_user_id_raises(self, mock_db):
         """个人目标未指定 user_id 应报错"""
-        from app.services.sales_target_service import SalesTargetService
-        from app.schemas.sales_target import SalesTargetV2Create
         from fastapi import HTTPException
+
+        from app.schemas.sales_target import SalesTargetV2Create
+        from app.services.sales_target_service import SalesTargetService
 
         data = SalesTargetV2Create(
             target_period="month",
@@ -66,9 +69,10 @@ class TestCreateTarget:
 
     def test_duplicate_target_raises(self, mock_db):
         """重复目标应报错"""
-        from app.services.sales_target_service import SalesTargetService
-        from app.schemas.sales_target import SalesTargetV2Create
         from fastapi import HTTPException
+
+        from app.schemas.sales_target import SalesTargetV2Create
+        from app.services.sales_target_service import SalesTargetService
 
         data = SalesTargetV2Create(
             target_period="month",
@@ -92,8 +96,8 @@ class TestCreateTarget:
 
     def test_create_target_success(self, mock_db):
         """正常创建目标"""
-        from app.services.sales_target_service import SalesTargetService
         from app.schemas.sales_target import SalesTargetV2Create
+        from app.services.sales_target_service import SalesTargetService
 
         data = SalesTargetV2Create(
             target_period="month",
@@ -110,8 +114,10 @@ class TestCreateTarget:
         )
         mock_db.query.return_value.filter.return_value.first.return_value = None  # no existing
 
-        with patch("app.services.sales_target_service.SalesTargetV2") as MockTarget, \
-             patch("app.services.sales_target_service.save_obj"):
+        with (
+            patch("app.services.sales_target_service.SalesTargetV2") as MockTarget,
+            patch("app.services.sales_target_service.save_obj"),
+        ):
             mock_target = MagicMock()
             MockTarget.return_value = mock_target
             result = SalesTargetService.create_target(mock_db, data, created_by=1)
@@ -120,10 +126,12 @@ class TestCreateTarget:
 
 # ─── get_target / get_targets ──────────────────────────────────────────────────
 
+
 class TestGetTargets:
     def test_get_target_by_id(self, mock_db):
         """根据ID获取目标"""
         from app.services.sales_target_service import SalesTargetService
+
         mock_target = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = mock_target
         result = SalesTargetService.get_target(mock_db, 1)
@@ -132,6 +140,7 @@ class TestGetTargets:
     def test_get_target_not_found(self, mock_db):
         """目标不存在返回 None"""
         from app.services.sales_target_service import SalesTargetService
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = SalesTargetService.get_target(mock_db, 999)
         assert result is None
@@ -139,6 +148,7 @@ class TestGetTargets:
     def test_get_targets_with_filters(self, mock_db):
         """带过滤条件查询目标列表"""
         from app.services.sales_target_service import SalesTargetService
+
         mock_targets = [MagicMock(), MagicMock()]
         # chain: filter.filter.filter...order_by.offset.limit.all
         q = mock_db.query.return_value
@@ -159,11 +169,13 @@ class TestGetTargets:
 
 # ─── delete_target ─────────────────────────────────────────────────────────────
 
+
 class TestDeleteTarget:
     def test_delete_with_sub_targets_raises(self, mock_db):
         """有子目标时应拒绝删除"""
-        from app.services.sales_target_service import SalesTargetService
         from fastapi import HTTPException
+
+        from app.services.sales_target_service import SalesTargetService
 
         mock_target = MagicMock()
         with patch("app.services.sales_target_service.get_or_404", return_value=mock_target):
@@ -177,8 +189,10 @@ class TestDeleteTarget:
         from app.services.sales_target_service import SalesTargetService
 
         mock_target = MagicMock()
-        with patch("app.services.sales_target_service.get_or_404", return_value=mock_target), \
-             patch("app.services.sales_target_service.delete_obj") as mock_del:
+        with (
+            patch("app.services.sales_target_service.get_or_404", return_value=mock_target),
+            patch("app.services.sales_target_service.delete_obj") as mock_del,
+        ):
             mock_db.query.return_value.filter.return_value.count.return_value = 0
             result = SalesTargetService.delete_target(mock_db, 1)
         assert result is True
@@ -187,10 +201,12 @@ class TestDeleteTarget:
 
 # ─── _calculate_completion_rate ────────────────────────────────────────────────
 
+
 class TestCalculateCompletionRate:
     def test_zero_target_returns_zero(self):
         """目标为0时完成率为0"""
         from app.services.sales_target_service import SalesTargetService
+
         target = MagicMock()
         target.sales_target = Decimal("0")
         target.actual_sales = Decimal("50000")
@@ -200,6 +216,7 @@ class TestCalculateCompletionRate:
     def test_normal_completion_rate(self):
         """正常计算完成率"""
         from app.services.sales_target_service import SalesTargetService
+
         target = MagicMock()
         target.sales_target = Decimal("100000")
         target.actual_sales = Decimal("80000")
@@ -209,6 +226,7 @@ class TestCalculateCompletionRate:
     def test_over_completion(self):
         """超额完成时完成率超过100"""
         from app.services.sales_target_service import SalesTargetService
+
         target = MagicMock()
         target.sales_target = Decimal("100000")
         target.actual_sales = Decimal("120000")
@@ -217,6 +235,7 @@ class TestCalculateCompletionRate:
 
 
 # ─── get_team_ranking / get_personal_ranking ───────────────────────────────────
+
 
 class TestRanking:
     def test_get_team_ranking(self, mock_db):
@@ -266,6 +285,7 @@ class TestRanking:
 
 
 # ─── get_completion_distribution ──────────────────────────────────────────────
+
 
 class TestCompletionDistribution:
     def test_distribution_categorizes_correctly(self, mock_db):

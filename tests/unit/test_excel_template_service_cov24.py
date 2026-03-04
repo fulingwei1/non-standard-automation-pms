@@ -43,7 +43,13 @@ class TestGetTemplateConfig:
 class TestTemplatConfigStructure:
     def test_required_keys_exist(self):
         for key, cfg in TEMPLATE_CONFIGS.items():
-            for req in ("template_data", "sheet_name", "column_widths", "instructions", "filename_prefix"):
+            for req in (
+                "template_data",
+                "sheet_name",
+                "column_widths",
+                "instructions",
+                "filename_prefix",
+            ):
                 assert req in cfg, f"Config {key} missing key: {req}"
 
     def test_template_data_not_empty(self):

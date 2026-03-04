@@ -45,24 +45,29 @@ class TestUpdateWorkLog:
             service.update_work_log(1, 1, MagicMock())
 
     def test_wrong_user(self, service, db):
-        work_log = MagicMock(user_id=2, status='DRAFT')
+        work_log = MagicMock(user_id=2, status="DRAFT")
         db.query.return_value.filter.return_value.first.return_value = work_log
         with pytest.raises(ValueError, match="只能更新自己的"):
             service.update_work_log(1, 1, MagicMock())
 
     def test_not_draft(self, service, db):
-        work_log = MagicMock(user_id=1, status='SUBMITTED')
+        work_log = MagicMock(user_id=1, status="SUBMITTED")
         db.query.return_value.filter.return_value.first.return_value = work_log
         with pytest.raises(ValueError, match="草稿"):
             service.update_work_log(1, 1, MagicMock())
 
     def test_update_content_too_long(self, service, db):
-        work_log = MagicMock(user_id=1, status='DRAFT')
+        work_log = MagicMock(user_id=1, status="DRAFT")
         db.query.return_value.filter.return_value.first.return_value = work_log
         update_in = MagicMock(
             content="x" * 301,
-            mentioned_projects=None, mentioned_machines=None, mentioned_users=None,
-            work_hours=None, work_type=None, project_id=None, rd_project_id=None
+            mentioned_projects=None,
+            mentioned_machines=None,
+            mentioned_users=None,
+            work_hours=None,
+            work_type=None,
+            project_id=None,
+            rd_project_id=None,
         )
         with pytest.raises(ValueError, match="300字"):
             service.update_work_log(1, 1, update_in)
@@ -73,6 +78,6 @@ class TestGetMentionOptions:
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.join.return_value.filter.return_value.all.return_value = []
         result = service.get_mention_options(1)
-        assert hasattr(result, 'projects')
-        assert hasattr(result, 'machines')
-        assert hasattr(result, 'users')
+        assert hasattr(result, "projects")
+        assert hasattr(result, "machines")
+        assert hasattr(result, "users")

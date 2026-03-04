@@ -40,12 +40,12 @@ class TestAnalyzeMissing:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_lead
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_missing('LEAD', entity_id=1)
+        result = service.analyze_missing("LEAD", entity_id=1)
 
-        assert result['entity_type'] == 'LEAD'
-        assert result['entity_id'] == 1
-        assert result['completeness_score'] == 100
-        assert result['quality_level'] == 'HIGH'
+        assert result["entity_type"] == "LEAD"
+        assert result["entity_id"] == 1
+        assert result["completeness_score"] == 100
+        assert result["quality_level"] == "HIGH"
 
     def test_analyzes_lead_with_missing_fields(self):
         """测试分析有缺失字段的线索"""
@@ -63,12 +63,12 @@ class TestAnalyzeMissing:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_lead
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_missing('LEAD', entity_id=1)
+        result = service.analyze_missing("LEAD", entity_id=1)
 
-        assert 'contact_name' in result['missing_fields']
-        assert 'contact_phone' in result['missing_fields']
-        assert 'source' in result['missing_fields']
-        assert result['completeness_score'] < 100
+        assert "contact_name" in result["missing_fields"]
+        assert "contact_phone" in result["missing_fields"]
+        assert "source" in result["missing_fields"]
+        assert result["completeness_score"] < 100
 
     def test_analyzes_batch_leads(self):
         """测试批量分析线索"""
@@ -95,11 +95,11 @@ class TestAnalyzeMissing:
         mock_db.query.return_value.all.return_value = [mock_lead1, mock_lead2]
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_missing('LEAD')
+        result = service.analyze_missing("LEAD")
 
-        assert result['entity_type'] == 'LEAD'
-        assert result['total'] == 2
-        assert 'quality_distribution' in result
+        assert result["entity_type"] == "LEAD"
+        assert result["total"] == 2
+        assert "quality_distribution" in result
 
     def test_analyzes_single_opportunity(self):
         """测试分析单个商机"""
@@ -117,10 +117,10 @@ class TestAnalyzeMissing:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_opp
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_missing('OPPORTUNITY', entity_id=1)
+        result = service.analyze_missing("OPPORTUNITY", entity_id=1)
 
-        assert result['entity_type'] == 'OPPORTUNITY'
-        assert result['completeness_score'] == 100
+        assert result["entity_type"] == "OPPORTUNITY"
+        assert result["completeness_score"] == 100
 
     def test_analyzes_single_quote(self):
         """测试分析单个报价"""
@@ -135,10 +135,10 @@ class TestAnalyzeMissing:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_quote
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_missing('QUOTE', entity_id=1)
+        result = service.analyze_missing("QUOTE", entity_id=1)
 
-        assert result['entity_type'] == 'QUOTE'
-        assert result['completeness_score'] == 100
+        assert result["entity_type"] == "QUOTE"
+        assert result["completeness_score"] == 100
 
 
 class TestAnalyzeImpact:
@@ -178,6 +178,7 @@ class TestAnalyzeImpact:
 
         # Setup query chain
         call_count = [0]
+
         def query_side_effect(model):
             query_mock = MagicMock()
             call_count[0] += 1
@@ -194,10 +195,10 @@ class TestAnalyzeImpact:
         service = InformationGapAnalysisService(mock_db)
         result = service.analyze_impact()
 
-        assert 'lead_quality_impact' in result
-        assert 'quote_quality_impact' in result
-        assert result['lead_quality_impact']['high_quality_count'] == 1
-        assert result['lead_quality_impact']['low_quality_count'] == 1
+        assert "lead_quality_impact" in result
+        assert "quote_quality_impact" in result
+        assert result["lead_quality_impact"]["high_quality_count"] == 1
+        assert result["lead_quality_impact"]["low_quality_count"] == 1
 
     def test_handles_date_range(self):
         """测试处理日期范围"""
@@ -207,13 +208,10 @@ class TestAnalyzeImpact:
         mock_db.query.return_value.all.return_value = []
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.analyze_impact(
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 12, 31)
-        )
+        result = service.analyze_impact(start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
 
-        assert result['analysis_period']['start_date'] == '2026-01-01'
-        assert result['analysis_period']['end_date'] == '2026-12-31'
+        assert result["analysis_period"]["start_date"] == "2026-01-01"
+        assert result["analysis_period"]["end_date"] == "2026-12-31"
 
 
 class TestGetQualityScore:
@@ -235,12 +233,12 @@ class TestGetQualityScore:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_lead
 
         service = InformationGapAnalysisService(mock_db)
-        result = service.get_quality_score('LEAD', 1)
+        result = service.get_quality_score("LEAD", 1)
 
-        assert 'quality_score' in result
-        assert 'quality_level' in result
-        assert 'recommendations' in result
-        assert len(result['recommendations']) > 0
+        assert "quality_score" in result
+        assert "quality_level" in result
+        assert "recommendations" in result
+        assert len(result["recommendations"]) > 0
 
 
 class TestAnalyzeLeadMissing:
@@ -283,8 +281,8 @@ class TestAnalyzeLeadMissing:
 
         missing, score = service._analyze_lead_missing(mock_lead)
 
-        assert 'customer_name' in missing
-        assert 'contact_name' in missing
+        assert "customer_name" in missing
+        assert "contact_name" in missing
         assert score == 80
 
     def test_handles_empty_string_as_missing(self):
@@ -304,8 +302,8 @@ class TestAnalyzeLeadMissing:
 
         missing, score = service._analyze_lead_missing(mock_lead)
 
-        assert 'customer_name' in missing
-        assert 'contact_phone' in missing
+        assert "customer_name" in missing
+        assert "contact_phone" in missing
 
 
 class TestAnalyzeOpportunityMissing:
@@ -348,7 +346,7 @@ class TestAnalyzeOpportunityMissing:
 
         missing, score = service._analyze_opportunity_missing(mock_opp)
 
-        assert 'est_amount' in missing
+        assert "est_amount" in missing
         assert score == 85
 
 
@@ -386,7 +384,7 @@ class TestAnalyzeQuoteMissing:
 
         missing, score = service._analyze_quote_missing(mock_quote)
 
-        assert 'quote_items' in missing
+        assert "quote_items" in missing
         assert score == 80
 
 
@@ -400,8 +398,8 @@ class TestGetQualityLevel:
         mock_db = MagicMock()
         service = InformationGapAnalysisService(mock_db)
 
-        assert service._get_quality_level(100) == 'HIGH'
-        assert service._get_quality_level(80) == 'HIGH'
+        assert service._get_quality_level(100) == "HIGH"
+        assert service._get_quality_level(80) == "HIGH"
 
     def test_returns_medium_for_score_60_to_79(self):
         """测试60-79分返回MEDIUM"""
@@ -410,8 +408,8 @@ class TestGetQualityLevel:
         mock_db = MagicMock()
         service = InformationGapAnalysisService(mock_db)
 
-        assert service._get_quality_level(79) == 'MEDIUM'
-        assert service._get_quality_level(60) == 'MEDIUM'
+        assert service._get_quality_level(79) == "MEDIUM"
+        assert service._get_quality_level(60) == "MEDIUM"
 
     def test_returns_low_for_score_below_60(self):
         """测试60分以下返回LOW"""
@@ -420,8 +418,8 @@ class TestGetQualityLevel:
         mock_db = MagicMock()
         service = InformationGapAnalysisService(mock_db)
 
-        assert service._get_quality_level(59) == 'LOW'
-        assert service._get_quality_level(0) == 'LOW'
+        assert service._get_quality_level(59) == "LOW"
+        assert service._get_quality_level(0) == "LOW"
 
 
 class TestGetRecommendations:
@@ -434,11 +432,11 @@ class TestGetRecommendations:
         mock_db = MagicMock()
         service = InformationGapAnalysisService(mock_db)
 
-        recommendations = service._get_recommendations(['customer_name', 'contact_phone'])
+        recommendations = service._get_recommendations(["customer_name", "contact_phone"])
 
         assert len(recommendations) == 2
-        assert any('客户名称' in r for r in recommendations)
-        assert any('联系电话' in r for r in recommendations)
+        assert any("客户名称" in r for r in recommendations)
+        assert any("联系电话" in r for r in recommendations)
 
     def test_returns_empty_for_no_missing_fields(self):
         """测试无缺失字段返回空"""

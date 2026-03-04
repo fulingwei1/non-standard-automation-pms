@@ -33,16 +33,10 @@ from .definitions import (
     StageTemplateWithStages,
 )
 
-# 项目阶段和节点实例
-from .instances import (
-    ProjectNodeInstanceBase,
-    ProjectNodeInstanceComplete,
-    ProjectNodeInstanceResponse,
-    ProjectNodeInstanceUpdate,
-    ProjectStageInstanceBase,
-    ProjectStageInstanceDetail,
-    ProjectStageInstanceResponse,
-    ProjectStageInstanceUpdate,
+# 导入导出
+from .import_export import (
+    TemplateExportData,
+    TemplateImportRequest,
 )
 
 # 初始化项目阶段
@@ -53,20 +47,16 @@ from .initialization import (
     StageAdjustment,
 )
 
-# 进度和排序
-from .progress import (
-    CurrentStageInfo,
-    ProjectProgressResponse,
-    ReorderNodesRequest,
-    ReorderStagesRequest,
-    SetNodeDependenciesRequest,
-    StageProgress,
-)
-
-# 导入导出
-from .import_export import (
-    TemplateExportData,
-    TemplateImportRequest,
+# 项目阶段和节点实例
+from .instances import (
+    ProjectNodeInstanceBase,
+    ProjectNodeInstanceComplete,
+    ProjectNodeInstanceResponse,
+    ProjectNodeInstanceUpdate,
+    ProjectStageInstanceBase,
+    ProjectStageInstanceDetail,
+    ProjectStageInstanceResponse,
+    ProjectStageInstanceUpdate,
 )
 
 # 节点子任务
@@ -82,12 +72,28 @@ from .node_tasks import (
     ReorderTasksRequest,
 )
 
+# 进度和排序
+from .progress import (
+    CurrentStageInfo,
+    ProjectProgressResponse,
+    ReorderNodesRequest,
+    ReorderStagesRequest,
+    SetNodeDependenciesRequest,
+    StageProgress,
+)
+
+# 状态更新
+from .status import (
+    StageReviewRequest,
+    UpdateStageStatusRequest,
+)
+
 # 视图
 from .views import (
-    TemplateGroup,
     PipelineStatistics,
     PipelineViewResponse,
     ProjectStageOverview,
+    TemplateGroup,
     TimelineNode,
     TimelineStage,
     TimelineViewResponse,
@@ -95,12 +101,6 @@ from .views import (
     TreeStage,
     TreeTask,
     TreeViewResponse,
-)
-
-# 状态更新
-from .status import (
-    StageReviewRequest,
-    UpdateStageStatusRequest,
 )
 
 # Rebuild models to resolve forward references (Pydantic v2 requirement)

@@ -33,7 +33,9 @@ class InvoiceRequest(Base, TimestampMixin):
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
     customer_name = Column(String(200), comment="客户名称")
 
-    payment_plan_id = Column(Integer, ForeignKey("project_payment_plans.id"), comment="关联回款计划ID")
+    payment_plan_id = Column(
+        Integer, ForeignKey("project_payment_plans.id"), comment="关联回款计划ID"
+    )
 
     invoice_type = Column(String(20), comment="发票类型")
     invoice_title = Column(String(200), comment="发票抬头")
@@ -49,7 +51,9 @@ class InvoiceRequest(Base, TimestampMixin):
     attachments = Column(Text, comment="附件列表JSON")
     remark = Column(Text, comment="备注")
 
-    status = Column(String(20), default="PENDING", comment="状态：DRAFT/PENDING/APPROVED/REJECTED/CANCELLED")
+    status = Column(
+        String(20), default="PENDING", comment="状态：DRAFT/PENDING/APPROVED/REJECTED/CANCELLED"
+    )
     approval_comment = Column(Text, comment="审批意见")
     requested_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="申请人ID")
     requested_by_name = Column(String(50), comment="申请人姓名")

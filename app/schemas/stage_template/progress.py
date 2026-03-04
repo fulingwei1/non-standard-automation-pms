@@ -13,12 +13,12 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-
-
 # ==================== 进度 Schemas ====================
+
 
 class StageProgress(BaseModel):
     """阶段进度信息"""
+
     id: int
     stage_code: str
     stage_name: str
@@ -38,6 +38,7 @@ class StageProgress(BaseModel):
 
 class CurrentStageInfo(BaseModel):
     """当前阶段信息"""
+
     id: int
     stage_code: str
     stage_name: str
@@ -46,6 +47,7 @@ class CurrentStageInfo(BaseModel):
 
 class ProjectProgressResponse(BaseModel):
     """项目进度响应"""
+
     total_stages: int = Field(description="总阶段数")
     completed_stages: int = Field(description="已完成阶段数")
     current_stage: Optional[CurrentStageInfo] = Field(default=None, description="当前阶段")
@@ -57,18 +59,20 @@ class ProjectProgressResponse(BaseModel):
 
 # ==================== 排序 Schemas ====================
 
+
 class ReorderStagesRequest(BaseModel):
     """重排阶段顺序请求"""
+
     stage_ids: List[int] = Field(..., description="按新顺序排列的阶段ID列表")
 
 
 class ReorderNodesRequest(BaseModel):
     """重排节点顺序请求"""
+
     node_ids: List[int] = Field(..., description="按新顺序排列的节点ID列表")
 
 
 class SetNodeDependenciesRequest(BaseModel):
     """设置节点依赖请求"""
+
     dependency_node_ids: List[int] = Field(default=[], description="依赖节点ID列表")
-
-

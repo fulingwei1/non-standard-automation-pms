@@ -25,7 +25,10 @@ router = APIRouter()
 
 # ==================== 合同数据同步 ====================
 
-@router.post("/{project_id}/sync-from-contract", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/{project_id}/sync-from-contract", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def sync_project_from_contract(
     *,
     db: Session = Depends(deps.get_db),
@@ -49,42 +52,41 @@ def sync_project_from_contract(
         get_or_404(db, Project, project_id, detail="项目不存在")
 
         from app.models.sales import Contract
+
         contracts = db.query(Contract).filter(Contract.project_id == project_id).all()
 
         if not contracts:
             return ResponseModel(
-                code=200,
-                message="项目未关联合同，无需同步",
-                data={"synced_contracts": []}
+                code=200, message="项目未关联合同，无需同步", data={"synced_contracts": []}
             )
 
         synced_contracts = []
         for contract in contracts:
             result = sync_service.sync_contract_to_project(contract.id)
             if result.get("success"):
-                synced_contracts.append({
-                    "contract_id": contract.id,
-                    "contract_code": contract.contract_code,
-                    "updated_fields": result.get("updated_fields", [])
-                })
+                synced_contracts.append(
+                    {
+                        "contract_id": contract.id,
+                        "contract_code": contract.contract_code,
+                        "updated_fields": result.get("updated_fields", []),
+                    }
+                )
 
         return ResponseModel(
             code=200,
             message=f"已同步 {len(synced_contracts)} 个合同",
-            data={"synced_contracts": synced_contracts}
+            data={"synced_contracts": synced_contracts},
         )
 
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "同步失败"))
 
-    return ResponseModel(
-        code=200,
-        message=result.get("message", "同步成功"),
-        data=result
-    )
+    return ResponseModel(code=200, message=result.get("message", "同步成功"), data=result)
 
 
-@router.post("/{project_id}/sync-to-contract", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{project_id}/sync-to-contract", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def sync_project_to_contract(
     *,
     db: Session = Depends(deps.get_db),
@@ -105,14 +107,12 @@ def sync_project_to_contract(
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "同步失败"))
 
-    return ResponseModel(
-        code=200,
-        message=result.get("message", "同步成功"),
-        data=result
-    )
+    return ResponseModel(code=200, message=result.get("message", "同步成功"), data=result)
 
 
-@router.get("/{project_id}/sync-status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{project_id}/sync-status", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_project_sync_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -133,16 +133,15 @@ def get_project_sync_status(
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "查询失败"))
 
-    return ResponseModel(
-        code=200,
-        message="获取同步状态成功",
-        data=result
-    )
+    return ResponseModel(code=200, message="获取同步状态成功", data=result)
 
 
 # ==================== ERP集成 ====================
 
-@router.post("/{project_id}/sync-to-erp", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/{project_id}/sync-to-erp", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def sync_project_to_erp(
     *,
     db: Session = Depends(deps.get_db),
@@ -161,13 +160,13 @@ def sync_project_to_erp(
 
     sync_result = _sync_to_erp_system(project, erp_order_no)
 
-    if sync_result['success']:
+    if sync_result["success"]:
         project.erp_synced = True
         project.erp_sync_time = datetime.now()
         project.erp_sync_status = "SYNCED"
     else:
         project.erp_sync_status = "FAILED"
-        project.erp_error_message = sync_result.get('error', '同步失败')
+        project.erp_error_message = sync_result.get("error", "同步失败")
         db.commit()
         raise HTTPException(status_code=500, detail=f"ERP同步失败: {sync_result.get('error')}")
 
@@ -187,12 +186,14 @@ def sync_project_to_erp(
             "project_code": project.project_code,
             "erp_order_no": project.erp_order_no,
             "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
-            "erp_sync_status": project.erp_sync_status
-        }
+            "erp_sync_status": project.erp_sync_status,
+        },
     )
 
 
-@router.get("/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_project_erp_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -217,12 +218,14 @@ def get_project_erp_status(
             "erp_synced": project.erp_synced,
             "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
             "erp_order_no": project.erp_order_no,
-            "erp_sync_status": project.erp_sync_status
-        }
+            "erp_sync_status": project.erp_sync_status,
+        },
     )
 
 
-@router.put("/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{project_id}/erp-status", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def update_project_erp_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -266,6 +269,6 @@ def update_project_erp_status(
             "erp_synced": project.erp_synced,
             "erp_sync_time": project.erp_sync_time.isoformat() if project.erp_sync_time else None,
             "erp_order_no": project.erp_order_no,
-            "erp_sync_status": project.erp_sync_status
-        }
+            "erp_sync_status": project.erp_sync_status,
+        },
     )

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """等级确定模块单元测试"""
 import pytest
+
 from app.services.lead_priority_scoring.level_determination import LevelDeterminationMixin
 
 

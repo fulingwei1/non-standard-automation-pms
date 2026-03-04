@@ -31,7 +31,9 @@ class Quote(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     quote_code = Column(String(20), unique=True, nullable=False, comment="报价编码")
-    opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID")
+    opportunity_id = Column(
+        Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID"
+    )
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
     status = Column(String(20), default=QuoteStatusEnum.DRAFT, comment="状态")
     current_version_id = Column(Integer, ForeignKey("quote_versions.id"), comment="当前版本ID")
@@ -43,8 +45,15 @@ class Quote(Base, TimestampMixin):
     opportunity = relationship("Opportunity", back_populates="quotes")
     customer = relationship("Customer", foreign_keys=[customer_id])
     owner = relationship("User", foreign_keys=[owner_id])
-    versions = relationship("QuoteVersion", back_populates="quote", cascade="all, delete-orphan", foreign_keys="QuoteVersion.quote_id")
-    current_version = relationship("QuoteVersion", foreign_keys=[current_version_id], post_update=True)
+    versions = relationship(
+        "QuoteVersion",
+        back_populates="quote",
+        cascade="all, delete-orphan",
+        foreign_keys="QuoteVersion.quote_id",
+    )
+    current_version = relationship(
+        "QuoteVersion", foreign_keys=[current_version_id], post_update=True
+    )
     approvals = relationship("QuoteApproval", back_populates="quote", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -70,7 +79,9 @@ class QuoteVersion(Base, TimestampMixin):
     approved_at = Column(DateTime, comment="审批时间")
 
     # 成本管理扩展字段
-    cost_template_id = Column(Integer, ForeignKey("quote_cost_templates.id"), comment="使用的成本模板ID")
+    cost_template_id = Column(
+        Integer, ForeignKey("quote_cost_templates.id"), comment="使用的成本模板ID"
+    )
     cost_breakdown_complete = Column(Boolean, default=False, comment="成本拆解是否完整")
     margin_warning = Column(Boolean, default=False, comment="毛利率预警标志")
 
@@ -81,8 +92,16 @@ class QuoteVersion(Base, TimestampMixin):
     items = relationship("QuoteItem", back_populates="quote_version", cascade="all, delete-orphan")
     contracts = relationship("Contract", back_populates="quote_version")
     cost_template = relationship("QuoteCostTemplate", foreign_keys=[cost_template_id])
-    cost_approvals = relationship("QuoteCostApproval", back_populates="quote_version", foreign_keys="QuoteCostApproval.quote_version_id")
-    cost_histories = relationship("QuoteCostHistory", back_populates="quote_version", foreign_keys="QuoteCostHistory.quote_version_id")
+    cost_approvals = relationship(
+        "QuoteCostApproval",
+        back_populates="quote_version",
+        foreign_keys="QuoteCostApproval.quote_version_id",
+    )
+    cost_histories = relationship(
+        "QuoteCostHistory",
+        back_populates="quote_version",
+        foreign_keys="QuoteCostHistory.quote_version_id",
+    )
 
     def __repr__(self):
         return f"<QuoteVersion {self.quote_id}-{self.version_no}>"
@@ -94,7 +113,9 @@ class QuoteItem(Base):
     __tablename__ = "quote_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID")
+    quote_version_id = Column(
+        Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
+    )
     item_type = Column(String(20), comment="明细类型")
     item_name = Column(String(200), comment="明细名称")
     qty = Column(Numeric(10, 2), comment="数量")
@@ -117,6 +138,7 @@ class QuoteItem(Base):
 
 
 # ==================== 报价成本管理 ====================
+
 
 class QuoteCostTemplate(Base, TimestampMixin):
     """报价成本模板表"""
@@ -150,7 +172,7 @@ class QuoteCostTemplate(Base, TimestampMixin):
         Index("idx_template_type", "template_type"),
         Index("idx_equipment_type", "equipment_type"),
         Index("idx_quote_is_active", "is_active"),
-        {"comment": "报价成本模板表"}
+        {"comment": "报价成本模板表"},
     )
 
     def __repr__(self):
@@ -159,17 +181,24 @@ class QuoteCostTemplate(Base, TimestampMixin):
 
 class QuoteCostApproval(Base, TimestampMixin):
     """报价成本审批表
-    
+
     【状态】未启用 - 报价成本审批"""
+
     __tablename__ = "quote_cost_approvals"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
-    quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID")
+    quote_version_id = Column(
+        Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
+    )
 
     # 审批信息
-    approval_status = Column(String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED")
-    approval_level = Column(Integer, default=1, comment="审批层级（1=销售经理，2=销售总监，3=财务）")
+    approval_status = Column(
+        String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED"
+    )
+    approval_level = Column(
+        Integer, default=1, comment="审批层级（1=销售经理，2=销售总监，3=财务）"
+    )
     current_approver_id = Column(Integer, ForeignKey("users.id"), comment="当前审批人ID")
 
     # 成本检查结果
@@ -199,7 +228,7 @@ class QuoteCostApproval(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_cost_approval_quote_id", "quote_id"),
         Index("idx_cost_approval_status", "approval_status"),
-        {"comment": "报价成本审批表"}
+        {"comment": "报价成本审批表"},
     )
 
     def __repr__(self):
@@ -208,13 +237,16 @@ class QuoteCostApproval(Base, TimestampMixin):
 
 class QuoteCostHistory(Base):
     """报价成本历史记录表
-    
+
     【状态】未启用 - 报价成本历史"""
+
     __tablename__ = "quote_cost_histories"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
-    quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID")
+    quote_version_id = Column(
+        Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
+    )
 
     # 成本快照
     total_price = Column(Numeric(12, 2), comment="总价")
@@ -239,7 +271,7 @@ class QuoteCostHistory(Base):
     __table_args__ = (
         Index("idx_cost_history_quote_id", "quote_id"),
         Index("idx_cost_history_created_at", "created_at"),
-        {"comment": "报价成本历史记录表"}
+        {"comment": "报价成本历史记录表"},
     )
 
     def __repr__(self):
@@ -304,7 +336,7 @@ class PurchaseMaterialCost(Base, TimestampMixin):
         Index("idx_is_standard", "is_standard_part"),
         Index("idx_purchase_material_is_active", "is_active"),
         Index("idx_match_priority", "match_priority"),
-        {"comment": "采购物料成本清单表"}
+        {"comment": "采购物料成本清单表"},
     )
 
     def __repr__(self):
@@ -319,7 +351,9 @@ class MaterialCostUpdateReminder(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
     # 提醒配置
-    reminder_type = Column(String(50), default="PERIODIC", comment="提醒类型：PERIODIC（定期）/MANUAL（手动）")
+    reminder_type = Column(
+        String(50), default="PERIODIC", comment="提醒类型：PERIODIC（定期）/MANUAL（手动）"
+    )
     reminder_interval_days = Column(Integer, default=30, comment="提醒间隔（天），默认30天")
 
     # 提醒状态
@@ -348,7 +382,7 @@ class MaterialCostUpdateReminder(Base, TimestampMixin):
         Index("idx_reminder_type", "reminder_type"),
         Index("idx_next_reminder_date", "next_reminder_date"),
         Index("idx_is_enabled", "is_enabled"),
-        {"comment": "物料成本更新提醒表"}
+        {"comment": "物料成本更新提醒表"},
     )
 
     def __repr__(self):
@@ -399,7 +433,9 @@ class QuoteTemplate(Base, TimestampMixin):
     status = Column(String(20), default="DRAFT", comment="状态")
     visibility_scope = Column(String(30), default="TEAM", comment="可见范围")
     is_default = Column(Boolean, default=False, comment="是否默认模板")
-    current_version_id = Column(Integer, ForeignKey("quote_template_versions.id"), comment="当前版本ID")
+    current_version_id = Column(
+        Integer, ForeignKey("quote_template_versions.id"), comment="当前版本ID"
+    )
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
 
     # 关系
@@ -409,7 +445,9 @@ class QuoteTemplate(Base, TimestampMixin):
         cascade="all, delete-orphan",
         foreign_keys="QuoteTemplateVersion.template_id",
     )
-    current_version = relationship("QuoteTemplateVersion", foreign_keys=[current_version_id], post_update=True, uselist=False)
+    current_version = relationship(
+        "QuoteTemplateVersion", foreign_keys=[current_version_id], post_update=True, uselist=False
+    )
     owner = relationship("User", foreign_keys=[owner_id])
 
     __table_args__ = (
@@ -427,7 +465,9 @@ class QuoteTemplateVersion(Base, TimestampMixin):
     __tablename__ = "quote_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    template_id = Column(Integer, ForeignKey("quote_templates.id"), nullable=False, comment="模板ID")
+    template_id = Column(
+        Integer, ForeignKey("quote_templates.id"), nullable=False, comment="模板ID"
+    )
     version_no = Column(String(20), nullable=False, comment="版本号")
     status = Column(String(20), default="DRAFT", comment="状态")
     sections = Column(JSON, comment="模板结构配置")
@@ -443,8 +483,12 @@ class QuoteTemplateVersion(Base, TimestampMixin):
     # 关系
     template = relationship("QuoteTemplate", back_populates="versions", foreign_keys=[template_id])
     rule_set = relationship("CpqRuleSet", back_populates="quote_template_versions")
-    creator = relationship("User", foreign_keys=[created_by], backref="quote_template_versions_created")
-    publisher = relationship("User", foreign_keys=[published_by], backref="quote_template_versions_published")
+    creator = relationship(
+        "User", foreign_keys=[created_by], backref="quote_template_versions_created"
+    )
+    publisher = relationship(
+        "User", foreign_keys=[published_by], backref="quote_template_versions_published"
+    )
 
     __table_args__ = (
         Index("idx_quote_template_version_template", "template_id"),

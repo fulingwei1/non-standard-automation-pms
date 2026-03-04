@@ -3,17 +3,19 @@
 第四十批覆盖测试 - ECN 相似度计算
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.ecn_knowledge_service.similarity import (
-        find_similar_ecns,
         _calculate_similarity,
-        _text_similarity,
         _cost_similarity,
         _get_match_reasons,
+        _text_similarity,
+        find_similar_ecns,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -21,8 +23,16 @@ except Exception:
 pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="模块导入失败，跳过测试")
 
 
-def _make_ecn(ecn_id=1, ecn_no="ECN-001", ecn_type="DESIGN", root_cause="DESIGN_ERROR",
-              change_desc="更改设计参数", cost_impact=1000.0, status="COMPLETED", solution="解决方案"):
+def _make_ecn(
+    ecn_id=1,
+    ecn_no="ECN-001",
+    ecn_type="DESIGN",
+    root_cause="DESIGN_ERROR",
+    change_desc="更改设计参数",
+    cost_impact=1000.0,
+    status="COMPLETED",
+    solution="解决方案",
+):
     ecn = MagicMock()
     ecn.id = ecn_id
     ecn.ecn_no = ecn_no
@@ -110,6 +120,7 @@ class TestFindSimilarEcns:
         service = MagicMock()
 
         call_count = [0]
+
         def query_side(*args):
             qm = MagicMock()
             call_count[0] += 1

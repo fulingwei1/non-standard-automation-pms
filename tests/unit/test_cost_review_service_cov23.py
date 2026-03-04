@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十三批：cost_review_service 单元测试"""
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cost_review_service")
 
@@ -14,9 +15,18 @@ def _make_db():
     return MagicMock()
 
 
-def _mock_project(pid=1, stage="S9", status="ST30", project_code="P001",
-                  budget_amount=Decimal("100000"), actual_cost=None,
-                  planned_start=None, planned_end=None, actual_start=None, actual_end=None):
+def _mock_project(
+    pid=1,
+    stage="S9",
+    status="ST30",
+    project_code="P001",
+    budget_amount=Decimal("100000"),
+    actual_cost=None,
+    planned_start=None,
+    planned_end=None,
+    actual_start=None,
+    actual_end=None,
+):
     p = MagicMock()
     p.id = pid
     p.stage = stage
@@ -52,6 +62,7 @@ class TestGenerateCostReviewReport:
         existing = MagicMock()
 
         call_count = [0]
+
         def side_effect(model):
             call_count[0] += 1
             q = MagicMock()
@@ -92,28 +103,29 @@ class TestGenerateReviewNo:
 class TestGenerateCostSummary:
     def test_overbudget_summary(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("115000"), Decimal("15000"),
-            {"材料费": Decimal("60000")}, {}, 2
+            Decimal("100000"),
+            Decimal("115000"),
+            Decimal("15000"),
+            {"材料费": Decimal("60000")},
+            {},
+            2,
         )
         assert "超支" in result
 
     def test_under_budget_summary(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("90000"), Decimal("-10000"),
-            {}, {}, 0
+            Decimal("100000"), Decimal("90000"), Decimal("-10000"), {}, {}, 0
         )
         assert "良好" in result or "低于预算" in result
 
     def test_within_budget_summary(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("101000"), Decimal("1000"),
-            {}, {}, 0
+            Decimal("100000"), Decimal("101000"), Decimal("1000"), {}, {}, 0
         )
         assert "基本一致" in result
 
     def test_ecn_count_included(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("102000"), Decimal("2000"),
-            {}, {}, 3
+            Decimal("100000"), Decimal("102000"), Decimal("2000"), {}, {}, 3
         )
         assert "3" in result

@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - timesheet_reminder/sync_reminders.py 单元测试（数据同步失败提醒）"""
 
-import pytest
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_reminder.sync_reminders")
 
 from app.services.timesheet_reminder.sync_reminders import notify_sync_failure
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -39,13 +40,16 @@ def _make_timesheet(
 
 # ─── 测试 ────────────────────────────────────────────────────
 
+
 class TestNotifySyncFailure:
     """测试同步失败提醒逻辑"""
 
     @patch("app.services.timesheet_reminder.sync_reminders.create_timesheet_notification")
     def test_returns_zero_when_no_approved_timesheets(self, mock_create_notification):
         db = _make_db()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.all.return_value = []
 
         result = notify_sync_failure(db)
@@ -57,10 +61,10 @@ class TestNotifySyncFailure:
     def test_skips_recently_approved_timesheets(self, mock_create_notification):
         db = _make_db()
         # 审批时间刚刚过（30分钟前，不超过1小时阈值）
-        recent_timesheet = _make_timesheet(
-            approve_time=datetime.now() - timedelta(minutes=30)
-        )
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [recent_timesheet]
+        recent_timesheet = _make_timesheet(approve_time=datetime.now() - timedelta(minutes=30))
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            recent_timesheet
+        ]
         db.query.return_value.filter.return_value.all.return_value = [recent_timesheet]
 
         result = notify_sync_failure(db)
@@ -77,11 +81,17 @@ class TestNotifySyncFailure:
             ts_id=200,
         )
         # approved timesheets列表
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [old_timesheet]
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            old_timesheet
+        ]
         db.query.return_value.filter.return_value.all.return_value = [old_timesheet]
         # 检查今天是否已有通知 - 返回None（没有）
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
         db.query.return_value.filter.return_value.first.return_value = None
 
         result = notify_sync_failure(db)
@@ -98,7 +108,9 @@ class TestNotifySyncFailure:
         db.query.return_value.filter.return_value.first.return_value = None
 
         # 模拟：第一次check返回None（无已有通知）
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
 
         result = notify_sync_failure(db)
 
@@ -116,7 +128,9 @@ class TestNotifySyncFailure:
         db.query.return_value.filter.return_value.all.return_value = [ts]
         # 今天已有通知
         existing_notification = MagicMock()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing_notification
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            existing_notification
+        )
 
         result = notify_sync_failure(db)
 
@@ -142,7 +156,9 @@ class TestNotifySyncFailure:
             ts_id=10,
         )
         db.query.return_value.filter.return_value.all.return_value = [ts]
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
         db.query.return_value.filter.return_value.first.return_value = None
 
         notify_sync_failure(db)

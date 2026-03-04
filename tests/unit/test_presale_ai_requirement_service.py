@@ -4,25 +4,26 @@ I1组: AI需求理解服务 单元测试
 直接实例化类，AI调用用 @patch mock
 """
 import json
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from app.schemas.presale_ai_requirement import (
+    ClarificationQuestion,
+    FeasibilityAnalysis,
+    RequirementAnalysisRequest,
+    RequirementRefinementRequest,
+    RequirementUpdateRequest,
+)
 from app.services.presale_ai_requirement_service import (
     AIRequirementAnalyzer,
     PresaleAIRequirementService,
 )
-from app.schemas.presale_ai_requirement import (
-    RequirementAnalysisRequest,
-    RequirementRefinementRequest,
-    RequirementUpdateRequest,
-    ClarificationQuestion,
-    FeasibilityAnalysis,
-)
-
 
 # ============================================================
 # Helper factory
 # ============================================================
+
 
 def _make_analyzer():
     return AIRequirementAnalyzer(api_key="test-key", model="gpt-4")
@@ -54,6 +55,7 @@ def _make_mock_analysis(**kwargs):
 # ============================================================
 # TestAIRequirementAnalyzer - 静态/纯方法
 # ============================================================
+
 
 class TestAIRequirementAnalyzerHelpers:
     def test_build_system_prompt_standard(self):
@@ -166,18 +168,21 @@ class TestAIRequirementAnalyzerHelpers:
 # TestAIRequirementAnalyzer - async 方法（patch AI调用）
 # ============================================================
 
+
 class TestAIRequirementAnalyzerAsync:
     @pytest.mark.asyncio
     async def test_analyze_requirement_success(self):
         """AI分析成功时返回解析结果"""
         analyzer = _make_analyzer()
-        mock_result = json.dumps({
-            "structured_requirement": {"project_type": "非标"},
-            "equipment_list": [],
-            "process_flow": [],
-            "technical_parameters": [],
-            "acceptance_criteria": [],
-        })
+        mock_result = json.dumps(
+            {
+                "structured_requirement": {"project_type": "非标"},
+                "equipment_list": [],
+                "process_flow": [],
+                "technical_parameters": [],
+                "acceptance_criteria": [],
+            }
+        )
 
         with patch.object(analyzer, "_call_openai_api", new=AsyncMock(return_value=mock_result)):
             result = await analyzer.analyze_requirement("需要一套装配系统")
@@ -190,7 +195,9 @@ class TestAIRequirementAnalyzerAsync:
         """AI调用失败时使用规则降级"""
         analyzer = _make_analyzer()
 
-        with patch.object(analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("API Error"))):
+        with patch.object(
+            analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("API Error"))
+        ):
             result = await analyzer.analyze_requirement("需要机器人传送带")
 
         assert result["confidence_score"] == 0.35
@@ -199,14 +206,16 @@ class TestAIRequirementAnalyzerAsync:
     async def test_generate_clarification_questions_success(self):
         """成功生成澄清问题"""
         analyzer = _make_analyzer()
-        mock_response = json.dumps([
-            {
-                "question_id": 1,
-                "category": "技术参数",
-                "question": "精度要求是多少?",
-                "importance": "critical",
-            }
-        ])
+        mock_response = json.dumps(
+            [
+                {
+                    "question_id": 1,
+                    "category": "技术参数",
+                    "question": "精度要求是多少?",
+                    "importance": "critical",
+                }
+            ]
+        )
 
         with patch.object(analyzer, "_call_openai_api", new=AsyncMock(return_value=mock_response)):
             questions = await analyzer.generate_clarification_questions("需要一套系统")
@@ -219,7 +228,9 @@ class TestAIRequirementAnalyzerAsync:
         """AI失败时降级生成问题"""
         analyzer = _make_analyzer()
 
-        with patch.object(analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("timeout"))):
+        with patch.object(
+            analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("timeout"))
+        ):
             questions = await analyzer.generate_clarification_questions("需要一套系统")
 
         assert len(questions) == 5
@@ -228,14 +239,16 @@ class TestAIRequirementAnalyzerAsync:
     async def test_perform_feasibility_analysis_success(self):
         """可行性分析成功"""
         analyzer = _make_analyzer()
-        mock_response = json.dumps({
-            "overall_feasibility": "high",
-            "technical_risks": [],
-            "resource_requirements": {},
-            "estimated_complexity": "low",
-            "development_challenges": [],
-            "recommendations": [],
-        })
+        mock_response = json.dumps(
+            {
+                "overall_feasibility": "high",
+                "technical_risks": [],
+                "resource_requirements": {},
+                "estimated_complexity": "low",
+                "development_challenges": [],
+                "recommendations": [],
+            }
+        )
 
         with patch.object(analyzer, "_call_openai_api", new=AsyncMock(return_value=mock_response)):
             result = await analyzer.perform_feasibility_analysis("需求", {})
@@ -248,7 +261,9 @@ class TestAIRequirementAnalyzerAsync:
         """可行性分析失败时降级"""
         analyzer = _make_analyzer()
 
-        with patch.object(analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("err"))):
+        with patch.object(
+            analyzer, "_call_openai_api", new=AsyncMock(side_effect=Exception("err"))
+        ):
             result = await analyzer.perform_feasibility_analysis("需求", {})
 
         assert isinstance(result, FeasibilityAnalysis)
@@ -257,6 +272,7 @@ class TestAIRequirementAnalyzerAsync:
 # ============================================================
 # TestPresaleAIRequirementService
 # ============================================================
+
 
 class TestPresaleAIRequirementService:
     @pytest.mark.asyncio
@@ -272,9 +288,11 @@ class TestPresaleAIRequirementService:
             "acceptance_criteria": [],
             "confidence_score": 0.7,
         }
-        mock_questions = [ClarificationQuestion(
-            question_id=1, category="技术", question="精度?", importance="high"
-        )]
+        mock_questions = [
+            ClarificationQuestion(
+                question_id=1, category="技术", question="精度?", importance="high"
+            )
+        ]
         mock_feasibility = FeasibilityAnalysis(
             overall_feasibility="medium",
             technical_risks=[],
@@ -284,10 +302,24 @@ class TestPresaleAIRequirementService:
             recommendations=[],
         )
 
-        with patch.object(service.analyzer, "analyze_requirement", new=AsyncMock(return_value=mock_analysis_result)), \
-             patch.object(service.analyzer, "generate_clarification_questions", new=AsyncMock(return_value=mock_questions)), \
-             patch.object(service.analyzer, "perform_feasibility_analysis", new=AsyncMock(return_value=mock_feasibility)), \
-             patch("app.services.presale_ai_requirement_service.save_obj") as mock_save:
+        with (
+            patch.object(
+                service.analyzer,
+                "analyze_requirement",
+                new=AsyncMock(return_value=mock_analysis_result),
+            ),
+            patch.object(
+                service.analyzer,
+                "generate_clarification_questions",
+                new=AsyncMock(return_value=mock_questions),
+            ),
+            patch.object(
+                service.analyzer,
+                "perform_feasibility_analysis",
+                new=AsyncMock(return_value=mock_feasibility),
+            ),
+            patch("app.services.presale_ai_requirement_service.save_obj") as mock_save,
+        ):
 
             req = RequirementAnalysisRequest(
                 presale_ticket_id=1,
@@ -340,7 +372,9 @@ class TestPresaleAIRequirementService:
             "confidence_score": 0.85,
         }
 
-        with patch.object(service.analyzer, "analyze_requirement", new=AsyncMock(return_value=refined_result)):
+        with patch.object(
+            service.analyzer, "analyze_requirement", new=AsyncMock(return_value=refined_result)
+        ):
             req = RequirementRefinementRequest(analysis_id=1, additional_context="补充信息")
             result = await service.refine_requirement(req, user_id=1)
 
@@ -360,9 +394,11 @@ class TestPresaleAIRequirementService:
     def test_get_clarification_questions_with_data(self):
         """获取澄清问题列表"""
         service, db = _make_service()
-        mock_a = _make_mock_analysis(clarification_questions=[
-            {"question_id": 1, "category": "技术", "question": "精度?", "importance": "high"}
-        ])
+        mock_a = _make_mock_analysis(
+            clarification_questions=[
+                {"question_id": 1, "category": "技术", "question": "精度?", "importance": "high"}
+            ]
+        )
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_a
 
         questions, analysis_id = service.get_clarification_questions(ticket_id=1)

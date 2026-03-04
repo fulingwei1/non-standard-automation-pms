@@ -12,12 +12,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project_review import ProjectLesson
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
@@ -59,31 +59,34 @@ def get_project_lessons(
         query = query.filter(ProjectLesson.status == status)
 
     total = query.count()
-    lessons = apply_pagination(query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit).all()
+    lessons = apply_pagination(
+        query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit
+    ).all()
 
-    lessons_data = [{
-        "id": l.id,
-        "review_id": l.review_id,
-        "lesson_type": l.lesson_type,
-        "title": l.title,
-        "description": l.description,
-        "root_cause": l.root_cause,
-        "impact": l.impact,
-        "improvement_action": l.improvement_action,
-        "responsible_person": l.responsible_person,
-        "due_date": l.due_date.isoformat() if l.due_date else None,
-        "category": l.category,
-        "tags": l.tags,
-        "priority": l.priority,
-        "status": l.status,
-        "resolved_date": l.resolved_date.isoformat() if l.resolved_date else None,
-        "created_at": l.created_at.isoformat() if l.created_at else None,
-    } for l in lessons]
+    lessons_data = [
+        {
+            "id": l.id,
+            "review_id": l.review_id,
+            "lesson_type": l.lesson_type,
+            "title": l.title,
+            "description": l.description,
+            "root_cause": l.root_cause,
+            "impact": l.impact,
+            "improvement_action": l.improvement_action,
+            "responsible_person": l.responsible_person,
+            "due_date": l.due_date.isoformat() if l.due_date else None,
+            "category": l.category,
+            "tags": l.tags,
+            "priority": l.priority,
+            "status": l.status,
+            "resolved_date": l.resolved_date.isoformat() if l.resolved_date else None,
+            "created_at": l.created_at.isoformat() if l.created_at else None,
+        }
+        for l in lessons
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取经验教训列表成功",
-        data={"total": total, "items": lessons_data}
+        code=200, message="获取经验教训列表成功", data={"total": total, "items": lessons_data}
     )
 
 
@@ -127,7 +130,7 @@ def get_lesson_detail(
             "status": lesson.status,
             "resolved_date": lesson.resolved_date.isoformat() if lesson.resolved_date else None,
             "created_at": lesson.created_at.isoformat() if lesson.created_at else None,
-        }
+        },
     )
 
 
@@ -160,7 +163,9 @@ def create_project_lesson(
         impact=lesson_data.get("impact"),
         improvement_action=lesson_data.get("improvement_action"),
         responsible_person=lesson_data.get("responsible_person"),
-        due_date=date.fromisoformat(lesson_data["due_date"]) if lesson_data.get("due_date") else None,
+        due_date=(
+            date.fromisoformat(lesson_data["due_date"]) if lesson_data.get("due_date") else None
+        ),
         category=lesson_data.get("category"),
         tags=lesson_data.get("tags"),
         priority=lesson_data.get("priority", "MEDIUM"),
@@ -168,11 +173,7 @@ def create_project_lesson(
     )
     save_obj(db, lesson)
 
-    return ResponseModel(
-        code=200,
-        message="经验教训创建成功",
-        data={"id": lesson.id}
-    )
+    return ResponseModel(code=200, message="经验教训创建成功", data={"id": lesson.id})
 
 
 @router.put("/lessons/{lesson_id}", response_model=ResponseModel)
@@ -197,16 +198,26 @@ def update_project_lesson(
     lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
 
     updatable = [
-        "lesson_type", "title", "description", "root_cause", "impact",
-        "improvement_action", "responsible_person", "category", "tags",
-        "priority", "status"
+        "lesson_type",
+        "title",
+        "description",
+        "root_cause",
+        "impact",
+        "improvement_action",
+        "responsible_person",
+        "category",
+        "tags",
+        "priority",
+        "status",
     ]
     for field in updatable:
         if field in lesson_data:
             setattr(lesson, field, lesson_data[field])
 
     if "due_date" in lesson_data:
-        lesson.due_date = date.fromisoformat(lesson_data["due_date"]) if lesson_data["due_date"] else None
+        lesson.due_date = (
+            date.fromisoformat(lesson_data["due_date"]) if lesson_data["due_date"] else None
+        )
 
     if lesson_data.get("status") == "RESOLVED" and not lesson.resolved_date:
         lesson.resolved_date = date.today()
@@ -265,7 +276,9 @@ def search_lessons(
         ResponseModel: 搜索结果
     """
     query = db.query(ProjectLesson)
-    query = apply_keyword_filter(query, ProjectLesson, keyword, ["title", "description", "improvement_action"])
+    query = apply_keyword_filter(
+        query, ProjectLesson, keyword, ["title", "description", "improvement_action"]
+    )
 
     if lesson_type:
         query = query.filter(ProjectLesson.lesson_type == lesson_type)
@@ -273,20 +286,21 @@ def search_lessons(
         query = query.filter(ProjectLesson.category == category)
 
     total = query.count()
-    lessons = apply_pagination(query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit).all()
+    lessons = apply_pagination(
+        query.order_by(desc(ProjectLesson.created_at)), pagination.offset, pagination.limit
+    ).all()
 
-    results = [{
-        "id": l.id,
-        "project_id": l.project_id,
-        "lesson_type": l.lesson_type,
-        "title": l.title,
-        "category": l.category,
-        "priority": l.priority,
-        "status": l.status,
-    } for l in lessons]
+    results = [
+        {
+            "id": l.id,
+            "project_id": l.project_id,
+            "lesson_type": l.lesson_type,
+            "title": l.title,
+            "category": l.category,
+            "priority": l.priority,
+            "status": l.status,
+        }
+        for l in lessons
+    ]
 
-    return ResponseModel(
-        code=200,
-        message="搜索完成",
-        data={"total": total, "items": results}
-    )
+    return ResponseModel(code=200, message="搜索完成", data={"total": total, "items": results})

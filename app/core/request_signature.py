@@ -38,23 +38,17 @@ class RequestSignatureVerifier:
     SIGNATURE_EXPIRY_SECONDS = 300  # 5分钟
 
     @staticmethod
-    def compute_signature(
-        method: str,
-        path: str,
-        timestamp: str,
-        body: bytes,
-        secret: str
-    ) -> str:
+    def compute_signature(method: str, path: str, timestamp: str, body: bytes, secret: str) -> str:
         """
         计算请求签名
-        
+
         Args:
             method: HTTP方法（GET, POST等）
             path: 请求路径（包含query参数）
             timestamp: 时间戳（毫秒）
             body: 请求体（字节）
             secret: 签名密钥
-            
+
         Returns:
             str: Base64编码的签名
         """
@@ -66,13 +60,11 @@ class RequestSignatureVerifier:
 
         # 使用HMAC-SHA256计算签名
         signature_bytes = hmac.new(
-            secret.encode('utf-8'),
-            signature_string.encode('utf-8'),
-            hashlib.sha256
+            secret.encode("utf-8"), signature_string.encode("utf-8"), hashlib.sha256
         ).digest()
 
         # Base64编码
-        return base64.b64encode(signature_bytes).decode('utf-8')
+        return base64.b64encode(signature_bytes).decode("utf-8")
 
     @staticmethod
     def verify_signature(
@@ -81,11 +73,11 @@ class RequestSignatureVerifier:
         timestamp: str,
         body: bytes,
         secret: str,
-        nonce: Optional[str] = None
+        nonce: Optional[str] = None,
     ) -> bool:
         """
         验证请求签名
-        
+
         Args:
             request: FastAPI请求对象
             signature: 请求携带的签名
@@ -93,10 +85,10 @@ class RequestSignatureVerifier:
             body: 请求体
             secret: 签名密钥
             nonce: 随机数（可选）
-            
+
         Returns:
             bool: 验证是否通过
-            
+
         Raises:
             HTTPException: 验证失败
         """
@@ -105,8 +97,7 @@ class RequestSignatureVerifier:
             ts = int(timestamp)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid timestamp format"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timestamp format"
             )
 
         current_time = int(time.time() * 1000)
@@ -114,8 +105,7 @@ class RequestSignatureVerifier:
 
         if time_diff > RequestSignatureVerifier.SIGNATURE_EXPIRY_SECONDS * 1000:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Request signature expired"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Request signature expired"
             )
 
         # 2. 计算期望的签名
@@ -125,19 +115,15 @@ class RequestSignatureVerifier:
             path += f"?{request.url.query}"
 
         expected_signature = RequestSignatureVerifier.compute_signature(
-            method=method,
-            path=path,
-            timestamp=timestamp,
-            body=body,
-            secret=secret
+            method=method, path=path, timestamp=timestamp, body=body, secret=secret
         )
 
         # 3. 比较签名（恒定时间比较，防止时序攻击）
         import secrets
+
         if not secrets.compare_digest(signature, expected_signature):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid request signature"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid request signature"
             )
 
         # 4. 验证Nonce（可选，需要Redis或数据库存储）
@@ -148,20 +134,17 @@ class RequestSignatureVerifier:
         return True
 
     @staticmethod
-    async def verify_request(
-        request: Request,
-        secret: Optional[str] = None
-    ) -> bool:
+    async def verify_request(request: Request, secret: Optional[str] = None) -> bool:
         """
         验证请求签名（从请求头提取信息）
-        
+
         Args:
             request: FastAPI请求对象
             secret: 签名密钥（默认使用settings.SECRET_KEY）
-            
+
         Returns:
             bool: 验证是否通过
-            
+
         Raises:
             HTTPException: 验证失败
         """
@@ -173,7 +156,7 @@ class RequestSignatureVerifier:
         if not signature or not timestamp:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing signature headers (X-Signature, X-Timestamp)"
+                detail="Missing signature headers (X-Signature, X-Timestamp)",
             )
 
         # 读取请求体
@@ -189,28 +172,23 @@ class RequestSignatureVerifier:
             timestamp=timestamp,
             body=body,
             secret=secret,
-            nonce=nonce
+            nonce=nonce,
         )
 
 
-def generate_client_signature(
-    method: str,
-    url: str,
-    body: bytes,
-    secret: str
-) -> tuple[str, str]:
+def generate_client_signature(method: str, url: str, body: bytes, secret: str) -> tuple[str, str]:
     """
     生成客户端请求签名（工具函数）
-    
+
     Args:
         method: HTTP方法
         url: 完整URL（包含query参数）
         body: 请求体
         secret: 签名密钥
-        
+
     Returns:
         tuple: (signature, timestamp)
-        
+
     Example:
         >>> signature, timestamp = generate_client_signature(
         ...     method="POST",
@@ -224,7 +202,7 @@ def generate_client_signature(
         ... }
     """
     from urllib.parse import urlparse
-    
+
     parsed_url = urlparse(url)
     path = parsed_url.path
     if parsed_url.query:
@@ -235,17 +213,10 @@ def generate_client_signature(
 
     # 计算签名
     signature = RequestSignatureVerifier.compute_signature(
-        method=method,
-        path=path,
-        timestamp=timestamp,
-        body=body,
-        secret=secret
+        method=method, path=path, timestamp=timestamp, body=body, secret=secret
     )
 
     return signature, timestamp
 
 
-__all__ = [
-    "RequestSignatureVerifier",
-    "generate_client_signature"
-]
+__all__ = ["RequestSignatureVerifier", "generate_client_signature"]

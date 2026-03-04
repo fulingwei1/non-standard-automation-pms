@@ -11,12 +11,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -42,7 +42,9 @@ def get_payment_records(
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
 
     # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有收款数据）
-    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
+    query = security.filter_sales_finance_data_by_scope(
+        query, current_user, db, Invoice, "owner_id"
+    )
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -63,36 +65,50 @@ def get_payment_records(
         query = query.filter(Invoice.paid_date <= end_date)
 
     total = query.count()
-    invoices = apply_pagination(query.order_by(desc(Invoice.paid_date)), pagination.offset, pagination.limit).all()
+    invoices = apply_pagination(
+        query.order_by(desc(Invoice.paid_date)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for invoice in invoices:
         contract = invoice.contract
-        items.append({
-            "id": invoice.id,
-            "invoice_code": invoice.invoice_code,
-            "contract_id": invoice.contract_id,
-            "contract_code": contract.contract_code if contract else None,
-            "project_id": invoice.project_id,
-            "project_code": invoice.project.project_code if invoice.project else None,
-            "customer_id": contract.customer_id if contract else None,
-            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
-            "invoice_amount": float(invoice.total_amount or invoice.amount or 0),
-            "paid_amount": float(invoice.paid_amount or 0),
-            "unpaid_amount": float((invoice.total_amount or invoice.amount or 0) - (invoice.paid_amount or 0)),
-            "payment_status": invoice.payment_status,
-            "issue_date": invoice.issue_date,
-            "due_date": invoice.due_date,
-            "paid_date": invoice.paid_date,
-            "overdue_days": (date.today() - invoice.due_date).days if invoice.due_date and invoice.due_date < date.today() and invoice.payment_status in ["PENDING", "PARTIAL"] else None,
-        })
+        items.append(
+            {
+                "id": invoice.id,
+                "invoice_code": invoice.invoice_code,
+                "contract_id": invoice.contract_id,
+                "contract_code": contract.contract_code if contract else None,
+                "project_id": invoice.project_id,
+                "project_code": invoice.project.project_code if invoice.project else None,
+                "customer_id": contract.customer_id if contract else None,
+                "customer_name": (
+                    contract.customer.customer_name if contract and contract.customer else None
+                ),
+                "invoice_amount": float(invoice.total_amount or invoice.amount or 0),
+                "paid_amount": float(invoice.paid_amount or 0),
+                "unpaid_amount": float(
+                    (invoice.total_amount or invoice.amount or 0) - (invoice.paid_amount or 0)
+                ),
+                "payment_status": invoice.payment_status,
+                "issue_date": invoice.issue_date,
+                "due_date": invoice.due_date,
+                "paid_date": invoice.paid_date,
+                "overdue_days": (
+                    (date.today() - invoice.due_date).days
+                    if invoice.due_date
+                    and invoice.due_date < date.today()
+                    and invoice.payment_status in ["PENDING", "PARTIAL"]
+                    else None
+                ),
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -151,8 +167,8 @@ def create_payment_record(
             "invoice_id": invoice.id,
             "paid_amount": float(new_paid),
             "payment_status": invoice.payment_status,
-            "unpaid_amount": float(total - new_paid)
-        }
+            "unpaid_amount": float(total - new_paid),
+        },
     )
 
 
@@ -166,10 +182,12 @@ def get_payment_detail(
     """
     获取回款详情（基于发票ID）
     """
-    invoice = db.query(Invoice).options(
-        joinedload(Invoice.contract),
-        joinedload(Invoice.project)
-    ).filter(Invoice.id == payment_id).first()
+    invoice = (
+        db.query(Invoice)
+        .options(joinedload(Invoice.contract), joinedload(Invoice.project))
+        .filter(Invoice.id == payment_id)
+        .first()
+    )
 
     if not invoice:
         raise HTTPException(status_code=404, detail="发票不存在")
@@ -182,7 +200,11 @@ def get_payment_detail(
     unpaid = total - paid
 
     overdue_days = None
-    if invoice.due_date and invoice.due_date < date.today() and invoice.payment_status in ["PENDING", "PARTIAL"]:
+    if (
+        invoice.due_date
+        and invoice.due_date < date.today()
+        and invoice.payment_status in ["PENDING", "PARTIAL"]
+    ):
         overdue_days = (date.today() - invoice.due_date).days
 
     return ResponseModel(
@@ -196,7 +218,9 @@ def get_payment_detail(
             "project_id": invoice.project_id,
             "project_code": project.project_code if project else None,
             "customer_id": contract.customer_id if contract else None,
-            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
+            "customer_name": (
+                contract.customer.customer_name if contract and contract.customer else None
+            ),
             "invoice_amount": float(total),
             "paid_amount": float(paid),
             "unpaid_amount": float(unpaid),
@@ -206,7 +230,7 @@ def get_payment_detail(
             "paid_date": invoice.paid_date,
             "overdue_days": overdue_days,
             "remark": invoice.remark,
-        }
+        },
     )
 
 
@@ -258,6 +282,6 @@ def match_payment_to_invoice(
             "invoice_id": invoice.id,
             "matched_amount": float(match_amount or unpaid),
             "paid_amount": float(new_paid),
-            "payment_status": invoice.payment_status
-        }
+            "payment_status": invoice.payment_status,
+        },
     )

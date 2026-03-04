@@ -75,6 +75,7 @@ class TestCacheService:
     def test_redis_cache_basic(self):
         """测试Redis缓存基本功能（需要Redis服务）"""
         import redis
+
         redis_client = redis.from_url("redis://localhost:6379/1", decode_responses=True)
         cache = CacheService(redis_client=redis_client)
 
@@ -152,10 +153,11 @@ class TestCacheService:
 class TestCacheServiceRedis:
     """Redis 缓存功能测试（使用 Mock）"""
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_get_hit(self):
         """测试 Redis 缓存命中"""
         import json
+
         mock_redis = Mock()
         mock_redis.get.return_value = json.dumps({"data": "redis_value"})
 
@@ -167,7 +169,7 @@ class TestCacheServiceRedis:
         assert cache.stats["hits"] == 1
         mock_redis.get.assert_called_once_with("test_key")
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_get_miss(self):
         """测试 Redis 缓存未命中"""
         mock_redis = Mock()
@@ -181,7 +183,7 @@ class TestCacheServiceRedis:
         # Redis miss + memory cache miss = 2
         assert cache.stats["misses"] == 2
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_get_error_fallback(self):
         """测试 Redis 获取错误时降级到内存"""
         mock_redis = Mock()
@@ -196,7 +198,7 @@ class TestCacheServiceRedis:
         assert result == {"data": "memory_value"}
         assert cache.stats["errors"] == 1
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_set_success(self):
         """测试 Redis 设置成功"""
         mock_redis = Mock()
@@ -208,7 +210,7 @@ class TestCacheServiceRedis:
         mock_redis.setex.assert_called_once()
         assert cache.stats["sets"] == 1
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_set_error_fallback(self):
         """测试 Redis 设置错误时降级到内存"""
         mock_redis = Mock()
@@ -221,7 +223,7 @@ class TestCacheServiceRedis:
         assert "test_key" in cache.memory_cache
         assert cache.stats["errors"] == 1
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_delete(self):
         """测试 Redis 删除"""
         mock_redis = Mock()
@@ -232,7 +234,7 @@ class TestCacheServiceRedis:
         mock_redis.delete.assert_called_once_with("test_key")
         assert cache.stats["deletes"] == 1
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_delete_error(self):
         """测试 Redis 删除错误"""
         mock_redis = Mock()
@@ -244,7 +246,7 @@ class TestCacheServiceRedis:
         # 删除总是返回 True
         assert result is True
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_delete_pattern(self):
         """测试 Redis 按模式删除"""
         mock_redis = Mock()
@@ -257,7 +259,7 @@ class TestCacheServiceRedis:
         mock_redis.keys.assert_called_once_with("project:*")
         assert deleted >= 2
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_delete_pattern_error(self):
         """测试 Redis 按模式删除错误"""
         mock_redis = Mock()
@@ -272,7 +274,7 @@ class TestCacheServiceRedis:
         # 应该仍然删除内存缓存
         assert deleted >= 1
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_clear(self):
         """测试 Redis 清空"""
         mock_redis = Mock()
@@ -286,7 +288,7 @@ class TestCacheServiceRedis:
         mock_redis.flushdb.assert_called_once()
         assert len(cache.memory_cache) == 0
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_clear_error(self):
         """测试 Redis 清空错误"""
         mock_redis = Mock()
@@ -377,17 +379,17 @@ class TestRedisInfo:
 
         assert info is None
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_get_redis_info_success(self):
         """测试成功获取 Redis 信息"""
         mock_redis = Mock()
         mock_redis.info.return_value = {
-        "connected_clients": 5,
-        "used_memory_human": "1.5M",
-        "used_memory_peak_human": "2M",
-        "keyspace_hits": 100,
-        "keyspace_misses": 10,
-        "db0": {"keys": "50"}
+            "connected_clients": 5,
+            "used_memory_human": "1.5M",
+            "used_memory_peak_human": "2M",
+            "keyspace_hits": 100,
+            "keyspace_misses": 10,
+            "db0": {"keys": "50"},
         }
 
         cache = CacheService(redis_client=mock_redis)
@@ -398,7 +400,7 @@ class TestRedisInfo:
         assert info["used_memory_human"] == "1.5M"
         assert info["keyspace_hits"] == 100
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_get_redis_info_error(self):
         """测试获取 Redis 信息错误"""
         mock_redis = Mock()
@@ -409,16 +411,16 @@ class TestRedisInfo:
 
         assert info is None
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_get_redis_info_no_db0(self):
         """测试 Redis 信息中没有 db0"""
         mock_redis = Mock()
         mock_redis.info.return_value = {
-        "connected_clients": 1,
-        "used_memory_human": "1M",
-        "used_memory_peak_human": "1M",
-        "keyspace_hits": 0,
-        "keyspace_misses": 0
+            "connected_clients": 1,
+            "used_memory_human": "1M",
+            "used_memory_peak_human": "1M",
+            "keyspace_hits": 0,
+            "keyspace_misses": 0,
             # 没有 db0
         }
 
@@ -433,7 +435,7 @@ class TestRedisInfo:
 class TestCacheServiceInit:
     """缓存服务初始化测试"""
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', False)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", False)
     def test_init_redis_not_available(self):
         """测试 Redis 不可用时的初始化"""
         mock_redis = Mock()
@@ -443,8 +445,8 @@ class TestCacheServiceInit:
         # 即使传入了 redis_client，use_redis 也应该是 False
         assert cache.use_redis is False
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
-    @patch('app.utils.redis_client.get_redis_client')
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
+    @patch("app.utils.redis_client.get_redis_client")
     def test_init_get_redis_from_utils(self, mock_get_client):
         """测试从工具模块获取 Redis 客户端"""
         mock_redis = Mock()
@@ -455,8 +457,8 @@ class TestCacheServiceInit:
         mock_get_client.assert_called_once()
         assert cache.redis_client is mock_redis
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
-    @patch('app.utils.redis_client.get_redis_client')
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
+    @patch("app.utils.redis_client.get_redis_client")
     def test_init_get_redis_from_utils_fails(self, mock_get_client):
         """测试从工具模块获取 Redis 客户端失败"""
         mock_get_client.side_effect = Exception("Connection failed")
@@ -504,7 +506,7 @@ class TestCacheServiceIntegration:
         assert cache.get_project_detail(1) is None
         assert cache.get_project_list(page=1, limit=10) is None
 
-    @patch('app.services.cache_service.REDIS_AVAILABLE', True)
+    @patch("app.services.cache_service.REDIS_AVAILABLE", True)
     def test_redis_fallback_workflow(self):
         """测试 Redis 降级工作流程"""
         mock_redis = Mock()

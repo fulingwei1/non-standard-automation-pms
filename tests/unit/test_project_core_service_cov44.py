@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 项目核心聚合服务"""
 
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.project.core_service import ProjectCoreService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -36,7 +38,9 @@ class TestProjectCoreService:
 
     def test_get_scoped_query_calls_data_scope(self, service):
         mock_user = MagicMock()
-        with patch("app.services.project.core_service.DataScopeService.filter_projects_by_scope") as mock_scope:
+        with patch(
+            "app.services.project.core_service.DataScopeService.filter_projects_by_scope"
+        ) as mock_scope:
             mock_scope.return_value = MagicMock()
             service.get_scoped_query(mock_user)
             mock_scope.assert_called_once()
@@ -53,8 +57,8 @@ class TestProjectCoreService:
         mock_user = MagicMock(id=42)
         # 两次查询分别返回成员项目和PM项目
         mock_db.query.return_value.filter.return_value.all.side_effect = [
-            [(1,), (2,)],   # member_ids
-            [(2,), (3,)],   # owned_ids
+            [(1,), (2,)],  # member_ids
+            [(2,), (3,)],  # owned_ids
         ]
         ids = service._collect_user_project_ids(mock_user)
         assert set(ids) == {1, 2, 3}
@@ -74,8 +78,10 @@ class TestProjectCoreService:
         mock_query.all.return_value = []
         mock_query.offset.return_value = mock_query
         mock_query.limit.return_value = mock_query
-        with patch("app.services.project.core_service.apply_pagination", return_value=mock_query), \
-             patch("app.services.project.core_service.get_pagination_params") as mock_params:
+        with (
+            patch("app.services.project.core_service.apply_pagination", return_value=mock_query),
+            patch("app.services.project.core_service.get_pagination_params") as mock_params,
+        ):
             mock_params.return_value = MagicMock(offset=0, limit=20, pages_for_total=lambda t: 1)
             total, pages, items = ProjectCoreService._paginate(mock_query, 1, 20)
         assert total == 5

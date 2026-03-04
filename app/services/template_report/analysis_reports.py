@@ -25,15 +25,12 @@ class AnalysisReportMixin:
         start_date: date,
         end_date: date,
         sections_config: Dict,
-        metrics_config: Dict
+        metrics_config: Dict,
     ) -> Dict[str, Any]:
         """生成负荷分析报表"""
         # 获取人员范围
         if department_id:
-            users = db.query(User).filter(
-                User.department_id == department_id,
-                User.is_active
-            ).all()
+            users = db.query(User).filter(User.department_id == department_id, User.is_active).all()
             dept = db.query(Department).filter(Department.id == department_id).first()
             scope_name = dept.name if dept else "部门"
         else:
@@ -43,10 +40,13 @@ class AnalysisReportMixin:
         user_ids = [u.id for u in users]
 
         # 工时统计
-        timesheets = db.query(Timesheet).filter(
-            Timesheet.user_id.in_(user_ids),
-            Timesheet.work_date.between(start_date, end_date)
-        ).all()
+        timesheets = (
+            db.query(Timesheet)
+            .filter(
+                Timesheet.user_id.in_(user_ids), Timesheet.work_date.between(start_date, end_date)
+            )
+            .all()
+        )
 
         # 按人员统计
         workload_list = []
@@ -74,14 +74,16 @@ class AnalysisReportMixin:
                 load_level = "LOW"
                 low_count += 1
 
-            workload_list.append({
-                "user_id": user.id,
-                "user_name": user.real_name or user.username,
-                "department": user.department or "",
-                "total_hours": round(hours, 2),
-                "working_days": round(working_days, 1),
-                "load_level": load_level
-            })
+            workload_list.append(
+                {
+                    "user_id": user.id,
+                    "user_name": user.real_name or user.username,
+                    "department": user.department or "",
+                    "total_hours": round(hours, 2),
+                    "working_days": round(working_days, 1),
+                    "load_level": load_level,
+                }
+            )
 
         # 排序
         workload_list.sort(key=lambda x: x["working_days"], reverse=True)
@@ -91,20 +93,16 @@ class AnalysisReportMixin:
                 "scope": scope_name,
                 "period_start": start_date.isoformat(),
                 "period_end": end_date.isoformat(),
-                "total_users": len(users)
+                "total_users": len(users),
             },
             "sections": {
-                "workload": {
-                    "title": "人员负荷详情",
-                    "type": "table",
-                    "data": workload_list
-                }
+                "workload": {"title": "人员负荷详情", "type": "table", "data": workload_list}
             },
             "metrics": {
                 "overload_count": overload_count,
                 "high_count": high_count,
                 "medium_count": medium_count,
-                "low_count": low_count
+                "low_count": low_count,
             },
             "charts": [
                 {
@@ -114,10 +112,10 @@ class AnalysisReportMixin:
                         {"name": "超负荷", "value": overload_count},
                         {"name": "高负荷", "value": high_count},
                         {"name": "中等负荷", "value": medium_count},
-                        {"name": "低负荷", "value": low_count}
-                    ]
+                        {"name": "低负荷", "value": low_count},
+                    ],
                 }
-            ]
+            ],
         }
 
     @staticmethod
@@ -127,69 +125,76 @@ class AnalysisReportMixin:
         start_date: date,
         end_date: date,
         sections_config: Dict,
-        metrics_config: Dict
+        metrics_config: Dict,
     ) -> Dict[str, Any]:
         """生成成本分析报表"""
         if project_id:
             projects = db.query(Project).filter(Project.id == project_id).all()
         else:
-            projects = db.query(Project).filter(
-                Project.is_active,
-                Project.status.in_(["IN_PROGRESS", "ON_HOLD"])
-            ).all()
+            projects = (
+                db.query(Project)
+                .filter(Project.is_active, Project.status.in_(["IN_PROGRESS", "ON_HOLD"]))
+                .all()
+            )
 
         project_data = []
         total_budget = 0
         total_actual = 0
 
         for project in projects:
-            budget = float(project.budget_amount or 0) if hasattr(project, 'budget_amount') else 0
+            budget = float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
             total_budget += budget
 
             # 获取工时成本
-            timesheets = db.query(Timesheet).filter(
-                Timesheet.project_id == project.id,
-                Timesheet.work_date.between(start_date, end_date)
-            ).all()
+            timesheets = (
+                db.query(Timesheet)
+                .filter(
+                    Timesheet.project_id == project.id,
+                    Timesheet.work_date.between(start_date, end_date),
+                )
+                .all()
+            )
 
             labor_hours = sum(float(t.hours or 0) for t in timesheets)
             estimated_labor_cost = labor_hours * 100  # 假设时薪100元
 
             total_actual += estimated_labor_cost
 
-            project_data.append({
-                "project_id": project.id,
-                "project_name": project.project_name,
-                "budget": round(budget, 2),
-                "actual_cost": round(estimated_labor_cost, 2),
-                "variance": round(budget - estimated_labor_cost, 2),
-                "variance_percent": round((budget - estimated_labor_cost) / budget * 100, 2) if budget > 0 else 0
-            })
+            project_data.append(
+                {
+                    "project_id": project.id,
+                    "project_name": project.project_name,
+                    "budget": round(budget, 2),
+                    "actual_cost": round(estimated_labor_cost, 2),
+                    "variance": round(budget - estimated_labor_cost, 2),
+                    "variance_percent": (
+                        round((budget - estimated_labor_cost) / budget * 100, 2)
+                        if budget > 0
+                        else 0
+                    ),
+                }
+            )
 
         return {
             "summary": {
                 "project_count": len(projects),
                 "period_start": start_date.isoformat(),
-                "period_end": end_date.isoformat()
+                "period_end": end_date.isoformat(),
             },
             "sections": {
-                "cost_breakdown": {
-                    "title": "项目成本明细",
-                    "type": "table",
-                    "data": project_data
-                }
+                "cost_breakdown": {"title": "项目成本明细", "type": "table", "data": project_data}
             },
             "metrics": {
                 "total_budget": round(total_budget, 2),
                 "total_actual": round(total_actual, 2),
-                "total_variance": round(total_budget - total_actual, 2)
+                "total_variance": round(total_budget - total_actual, 2),
             },
             "charts": [
                 {
                     "type": "bar",
                     "title": "预算 vs 实际成本",
                     "x_field": "project_name",
-                    "y_fields": ["budget", "actual_cost"]
+                    "y_fields": ["budget", "actual_cost"],
                 }
-            ]
+            ],
         }

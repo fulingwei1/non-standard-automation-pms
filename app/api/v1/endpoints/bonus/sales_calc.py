@@ -46,20 +46,22 @@ from app.services.bonus import BonusCalculator
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/bonus/sales-calc",
-    tags=["sales_calc"]
-)
+router = APIRouter(prefix="/bonus/sales-calc", tags=["sales_calc"])
 
 # 共 6 个路由
 
 # ==================== 销售奖金计算 ====================
 
-@router.post("/calculate/sales", response_model=ResponseModel[BonusCalculationResponse], status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/calculate/sales",
+    response_model=ResponseModel[BonusCalculationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_sales_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -85,7 +87,7 @@ def calculate_sales_bonus(
         if not rule:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='SALES_BASED')
+        rules = calculator.get_active_rules(bonus_type="SALES_BASED")
         if not rules:
             raise HTTPException(status_code=404, detail="未找到销售奖金规则")
         rule = rules[0]
@@ -101,7 +103,11 @@ def calculate_sales_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
-@router.post("/calculate/sales-director", response_model=ResponseModel[BonusCalculationResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculate/sales-director",
+    response_model=ResponseModel[BonusCalculationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_sales_director_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -119,16 +125,13 @@ def calculate_sales_director_bonus(
         if not rule:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='SALES_DIRECTOR_BASED')
+        rules = calculator.get_active_rules(bonus_type="SALES_DIRECTOR_BASED")
         if not rules:
             raise HTTPException(status_code=404, detail="未找到销售总监奖金规则")
         rule = rules[0]
 
     calculation = calculator.calculate_sales_director_bonus(
-        request.director_id,
-        request.period_start,
-        request.period_end,
-        rule
+        request.director_id, request.period_start, request.period_end, rule
     )
 
     if not calculation:
@@ -141,7 +144,11 @@ def calculate_sales_director_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
-@router.post("/calculate/presale", response_model=ResponseModel[BonusCalculationResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculate/presale",
+    response_model=ResponseModel[BonusCalculationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_presale_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -155,9 +162,9 @@ def calculate_presale_bonus(
     1. COMPLETION: 基于工单完成
     2. WON: 基于中标
     """
-    ticket = db.query(PresaleSupportTicket).filter(
-        PresaleSupportTicket.id == request.ticket_id
-    ).first()
+    ticket = (
+        db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == request.ticket_id).first()
+    )
     if not ticket:
         raise HTTPException(status_code=404, detail="售前支持工单不存在")
 
@@ -169,7 +176,7 @@ def calculate_presale_bonus(
         if not rule:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='PRESALE_BASED')
+        rules = calculator.get_active_rules(bonus_type="PRESALE_BASED")
         if not rules:
             raise HTTPException(status_code=404, detail="未找到售前技术支持奖金规则")
         rule = rules[0]
@@ -185,7 +192,9 @@ def calculate_presale_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
-@router.get("/calculations", response_model=BonusCalculationListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/calculations", response_model=BonusCalculationListResponse, status_code=status.HTTP_200_OK
+)
 def get_bonus_calculations(
     *,
     db: Session = Depends(deps.get_db),
@@ -210,26 +219,36 @@ def get_bonus_calculations(
     if query_params.bonus_type:
         query = query.join(BonusRule).filter(BonusRule.bonus_type == query_params.bonus_type)
     if query_params.start_date:
-        query = query.filter(BonusCalculation.calculated_at >= datetime.combine(query_params.start_date, datetime.min.time()))
+        query = query.filter(
+            BonusCalculation.calculated_at
+            >= datetime.combine(query_params.start_date, datetime.min.time())
+        )
     if query_params.end_date:
-        query = query.filter(BonusCalculation.calculated_at <= datetime.combine(query_params.end_date, datetime.max.time()))
+        query = query.filter(
+            BonusCalculation.calculated_at
+            <= datetime.combine(query_params.end_date, datetime.max.time())
+        )
 
     total = query.count()
     pg = get_pagination_params(page=query_params.page, page_size=query_params.page_size)
-    calculations = query.order_by(desc(BonusCalculation.calculated_at)).offset(
-        pg.offset
-    ).limit(pg.limit).all()
+    calculations = (
+        query.order_by(desc(BonusCalculation.calculated_at)).offset(pg.offset).limit(pg.limit).all()
+    )
 
     return BonusCalculationListResponse(
         items=calculations,
         total=total,
         page=pg.page,
         page_size=pg.page_size,
-        pages=pg.pages_for_total(total)
+        pages=pg.pages_for_total(total),
     )
 
 
-@router.get("/calculations/{calc_id}", response_model=ResponseModel[BonusCalculationResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/calculations/{calc_id}",
+    response_model=ResponseModel[BonusCalculationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_bonus_calculation(
     *,
     db: Session = Depends(deps.get_db),
@@ -244,7 +263,11 @@ def get_bonus_calculation(
     return ResponseModel(code=200, data=calculation)
 
 
-@router.post("/calculations/{calc_id}/approve", response_model=ResponseModel[BonusCalculationResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculations/{calc_id}/approve",
+    response_model=ResponseModel[BonusCalculationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def approve_bonus_calculation(
     *,
     db: Session = Depends(deps.get_db),
@@ -258,12 +281,12 @@ def approve_bonus_calculation(
     calculation = get_or_404(db, BonusCalculation, calc_id, "计算记录不存在")
 
     if approve_in.approved:
-        calculation.status = 'APPROVED'
+        calculation.status = "APPROVED"
         calculation.approved_by = current_user.id
         calculation.approved_at = datetime.now()
         calculation.approval_comment = approve_in.comment
     else:
-        calculation.status = 'CANCELLED'
+        calculation.status = "CANCELLED"
         calculation.approved_by = current_user.id
         calculation.approved_at = datetime.now()
         calculation.approval_comment = approve_in.comment
@@ -272,6 +295,3 @@ def approve_bonus_calculation(
     db.refresh(calculation)
 
     return ResponseModel(code=200, message="审批完成", data=calculation)
-
-
-

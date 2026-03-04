@@ -16,10 +16,8 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
-from app.utils.wechat_client import WeChatClient
-
-
 from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+from app.utils.wechat_client import WeChatClient
 
 __all__ = ["WeChatChannelHandler", "WeChatNotificationHandler"]
 
@@ -63,9 +61,7 @@ class WeChatChannelHandler(ChannelHandler):
             )
         except Exception as e:
             self.logger.error(f"企业微信发送消息失败: {e}")
-            return NotificationResult(
-                channel=self.channel, success=False, error_message=str(e)
-            )
+            return NotificationResult(channel=self.channel, success=False, error_message=str(e))
 
     def is_enabled(self) -> bool:
         return bool(settings.WECHAT_ENABLED)

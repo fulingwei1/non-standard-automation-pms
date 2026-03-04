@@ -12,11 +12,11 @@
 """
 
 from .base import ChannelHandler, NotificationResult
-from .system_handler import SystemChannelHandler
 from .email_handler import EmailChannelHandler
-from .wechat_handler import WeChatChannelHandler
 from .sms_handler import SMSChannelHandler
+from .system_handler import SystemChannelHandler
 from .webhook_handler import WebhookChannelHandler
+from .wechat_handler import WeChatChannelHandler
 
 __all__ = [
     "ChannelHandler",

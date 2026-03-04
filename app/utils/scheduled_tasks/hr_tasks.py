@@ -35,10 +35,11 @@ def check_contract_expiry_reminder():
             ]
 
             # 查询所有生效中的合同
-            active_contracts = db.query(EmployeeContract).filter(
-                EmployeeContract.status == "active",
-                EmployeeContract.end_date.isnot(None)
-            ).all()
+            active_contracts = (
+                db.query(EmployeeContract)
+                .filter(EmployeeContract.status == "active", EmployeeContract.end_date.isnot(None))
+                .all()
+            )
 
             for contract in active_contracts:
                 if not contract.end_date:
@@ -63,10 +64,14 @@ def check_contract_expiry_reminder():
                         continue
 
                     # 检查是否已存在相同类型的提醒
-                    existing = db.query(ContractReminder).filter(
-                        ContractReminder.contract_id == contract.id,
-                        ContractReminder.reminder_type == reminder_type
-                    ).first()
+                    existing = (
+                        db.query(ContractReminder)
+                        .filter(
+                            ContractReminder.contract_id == contract.id,
+                            ContractReminder.reminder_type == reminder_type,
+                        )
+                        .first()
+                    )
 
                     if existing:
                         continue
@@ -79,7 +84,7 @@ def check_contract_expiry_reminder():
                         reminder_date=today,
                         contract_end_date=contract.end_date,
                         days_until_expiry=days_until_expiry if days_until_expiry > 0 else 0,
-                        status="pending"
+                        status="pending",
                     )
                     db.add(reminder)
                     reminders_created += 1
@@ -96,16 +101,17 @@ def check_contract_expiry_reminder():
             )
 
             return {
-                'contracts_checked': len(active_contracts),
-                'reminders_created': reminders_created,
-                'timestamp': datetime.now().isoformat()
+                "contracts_checked": len(active_contracts),
+                "reminders_created": reminders_created,
+                "timestamp": datetime.now().isoformat(),
             }
 
     except Exception as e:
         logger.error(f"[{datetime.now()}] 合同到期提醒检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def check_employee_confirmation_reminder():
@@ -117,9 +123,9 @@ def check_employee_confirmation_reminder():
     logger.info(f"[{datetime.now()}] 开始执行员工转正提醒检查...")
 
     try:
+        from app.common.query_filters import apply_keyword_filter
         from app.models.organization import Employee, EmployeeHrProfile, HrTransaction
         from app.models.user import Role, User, UserRole
-        from app.common.query_filters import apply_keyword_filter
         from app.services.notification_dispatcher import NotificationDispatcher
 
         with get_db_session() as db:
@@ -154,21 +160,27 @@ def check_employee_confirmation_reminder():
 
                 role_ids = [role.id for role in roles]
                 if role_ids:
-                    user_roles = db.query(UserRole).filter(
-                        UserRole.role_id.in_(role_ids)
-                    ).all()
+                    user_roles = db.query(UserRole).filter(UserRole.role_id.in_(role_ids)).all()
                     user_ids = {ur.user_id for ur in user_roles}
                     if user_ids:
-                        users = db.query(User).filter(
-                            User.id.in_(list(user_ids)),
-                            User.is_active,
-                        ).all()
+                        users = (
+                            db.query(User)
+                            .filter(
+                                User.id.in_(list(user_ids)),
+                                User.is_active,
+                            )
+                            .all()
+                        )
                         return [user.id for user in users]
 
-                admins = db.query(User).filter(
-                    User.is_superuser,
-                    User.is_active,
-                ).all()
+                admins = (
+                    db.query(User)
+                    .filter(
+                        User.is_superuser,
+                        User.is_active,
+                    )
+                    .all()
+                )
                 return [user.id for user in admins]
 
             hr_recipient_ids = _get_hr_recipient_ids()
@@ -176,21 +188,25 @@ def check_employee_confirmation_reminder():
                 logger.warning("员工转正提醒未找到HR接收人，将跳过通知发送")
 
             # 查询试用期员工
-            probation_employees = db.query(Employee).join(
-                EmployeeHrProfile,
-                Employee.id == EmployeeHrProfile.employee_id
-            ).filter(
-                Employee.employment_status == "active",
-                Employee.employment_type == "probation",
-                EmployeeHrProfile.probation_end_date.isnot(None),
-                EmployeeHrProfile.probation_end_date <= reminder_date,
-                EmployeeHrProfile.probation_end_date >= today
-            ).all()
+            probation_employees = (
+                db.query(Employee)
+                .join(EmployeeHrProfile, Employee.id == EmployeeHrProfile.employee_id)
+                .filter(
+                    Employee.employment_status == "active",
+                    Employee.employment_type == "probation",
+                    EmployeeHrProfile.probation_end_date.isnot(None),
+                    EmployeeHrProfile.probation_end_date <= reminder_date,
+                    EmployeeHrProfile.probation_end_date >= today,
+                )
+                .all()
+            )
 
             for employee in probation_employees:
-                profile = db.query(EmployeeHrProfile).filter(
-                    EmployeeHrProfile.employee_id == employee.id
-                ).first()
+                profile = (
+                    db.query(EmployeeHrProfile)
+                    .filter(EmployeeHrProfile.employee_id == employee.id)
+                    .first()
+                )
 
                 if not profile or not profile.probation_end_date:
                     continue
@@ -198,11 +214,15 @@ def check_employee_confirmation_reminder():
                 days_until_confirmation = (profile.probation_end_date - today).days
 
                 # 检查是否已有转正事务记录
-                existing = db.query(HrTransaction).filter(
-                    HrTransaction.employee_id == employee.id,
-                    HrTransaction.transaction_type == "confirmation",
-                    HrTransaction.status == "pending"
-                ).first()
+                existing = (
+                    db.query(HrTransaction)
+                    .filter(
+                        HrTransaction.employee_id == employee.id,
+                        HrTransaction.transaction_type == "confirmation",
+                        HrTransaction.status == "pending",
+                    )
+                    .first()
+                )
 
                 if existing:
                     continue
@@ -215,7 +235,7 @@ def check_employee_confirmation_reminder():
                     status="pending",
                     confirmation_date=profile.probation_end_date,
                     remark=f"系统自动生成：{employee.name}试用期将于"
-                           f"{profile.probation_end_date}结束，请安排转正评估"
+                    f"{profile.probation_end_date}结束，请安排转正评估",
                 )
                 db.add(transaction)
                 reminders_created += 1
@@ -247,13 +267,14 @@ def check_employee_confirmation_reminder():
             )
 
             return {
-                'employees_checked': len(probation_employees),
-                'reminders_created': reminders_created,
-                'timestamp': datetime.now().isoformat()
+                "employees_checked": len(probation_employees),
+                "reminders_created": reminders_created,
+                "timestamp": datetime.now().isoformat(),
             }
 
     except Exception as e:
         logger.error(f"[{datetime.now()}] 员工转正提醒检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

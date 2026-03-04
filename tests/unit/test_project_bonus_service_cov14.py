@@ -2,12 +2,14 @@
 """
 第十四批：项目奖金查询服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.project_bonus_service import ProjectBonusService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -51,6 +53,7 @@ class TestProjectBonusService:
     def test_is_rule_applicable_expired_rule(self):
         """规则已过期（effective_end_date < today）时应返回 False"""
         from datetime import date, timedelta
+
         db = make_db()
         svc = make_service(db)
         rule = MagicMock()
@@ -64,6 +67,7 @@ class TestProjectBonusService:
     def test_is_rule_applicable_future_rule(self):
         """规则尚未生效（effective_start_date > today）时应返回 False"""
         from datetime import date, timedelta
+
         db = make_db()
         svc = make_service(db)
         rule = MagicMock()
@@ -104,9 +108,7 @@ class TestProjectBonusService:
         mock_q.all.return_value = []
         svc = make_service(db)
         result = svc.get_project_bonus_calculations(
-            project_id=1,
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 12, 31)
+            project_id=1, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
         assert result == []
 

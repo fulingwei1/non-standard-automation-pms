@@ -29,10 +29,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -46,8 +43,7 @@ class TestProjectMachinesAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -67,10 +63,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -86,7 +79,7 @@ class TestProjectMachinesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -103,10 +96,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -122,7 +112,7 @@ class TestProjectMachinesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -135,10 +125,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -154,7 +141,7 @@ class TestProjectMachinesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"stage": "S1"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -163,7 +150,7 @@ class TestProjectMachinesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"status": "ST01"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -172,7 +159,7 @@ class TestProjectMachinesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"health": "H1"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -185,10 +172,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -208,7 +192,7 @@ class TestProjectMachinesAPI:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -230,10 +214,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -254,7 +235,7 @@ class TestProjectMachinesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -264,8 +245,7 @@ class TestProjectMachinesAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -281,10 +261,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -297,8 +274,7 @@ class TestProjectMachinesAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -311,10 +287,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -335,7 +308,7 @@ class TestProjectMachinesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -351,7 +324,7 @@ class TestProjectMachinesAPI:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -369,10 +342,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -393,7 +363,7 @@ class TestProjectMachinesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -403,8 +373,7 @@ class TestProjectMachinesAPI:
 
         # 删除机台
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}", headers=headers
         )
 
         if response.status_code == 403:
@@ -420,10 +389,7 @@ class TestProjectMachinesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -437,8 +403,7 @@ class TestProjectMachinesAPI:
 
         # 测试机台汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/summary", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -458,10 +423,7 @@ class TestProjectMachinesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -485,7 +447,7 @@ class TestProjectMachinesAdvanced:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/batch",
             json=machines_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -508,10 +470,7 @@ class TestProjectMachinesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -532,7 +491,7 @@ class TestProjectMachinesAdvanced:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -548,7 +507,7 @@ class TestProjectMachinesAdvanced:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -564,10 +523,7 @@ class TestProjectMachinesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -588,7 +544,7 @@ class TestProjectMachinesAdvanced:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -604,7 +560,7 @@ class TestProjectMachinesAdvanced:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -620,10 +576,7 @@ class TestProjectMachinesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -639,7 +592,7 @@ class TestProjectMachinesAdvanced:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"order_by": "created_at", "order_direction": "desc"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -648,7 +601,7 @@ class TestProjectMachinesAdvanced:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             params={"order_by": "machine_name", "order_direction": "asc"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -661,10 +614,7 @@ class TestProjectMachinesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -686,7 +636,7 @@ class TestProjectMachinesAdvanced:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project1_id}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -697,7 +647,7 @@ class TestProjectMachinesAdvanced:
         # 尝试从项目2访问项目1的机台
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project2_id}/machines/{machine_id}",
-            headers=headers
+            headers=headers,
         )
 
         # 应该返回404（机台不属于该项目）

@@ -8,10 +8,11 @@ File Size: 13 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 # UserImporter 使用 @classmethod，不需要实例化
@@ -24,9 +25,8 @@ class TestUserImporter:
     def test_init(self, db_session: Session):
         """测试 UserImporter 是一个类（使用 classmethod）"""
         # UserImporter 使用 @classmethod，不需要实例化
-        assert hasattr(UserImporter, 'import_user_data')
-        assert callable(getattr(UserImporter, 'import_user_data'))
-
+        assert hasattr(UserImporter, "import_user_data")
+        assert callable(getattr(UserImporter, "import_user_data"))
 
     def test_import_user_data(self, db_session: Session):
         """测试 import_user_data 方法"""
@@ -35,7 +35,6 @@ class TestUserImporter:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

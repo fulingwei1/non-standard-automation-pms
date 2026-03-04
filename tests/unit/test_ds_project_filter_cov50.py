@@ -5,12 +5,13 @@ Unit tests for app/services/data_scope/project_filter.py
 注意: data_scope 模块有已知 bug (DataScopeEnum.CUSTOMER)，遇到跳过相关测试
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.data_scope.project_filter import ProjectFilterService
     from app.models.enums import DataScopeEnum
+    from app.services.data_scope.project_filter import ProjectFilterService
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -93,11 +94,7 @@ def test_filter_related_by_project_regular_user():
     user = _make_regular_user()
     col = MagicMock()
 
-    with patch.object(
-        ProjectFilterService,
-        "get_accessible_project_ids",
-        return_value={1, 2, 3}
-    ):
+    with patch.object(ProjectFilterService, "get_accessible_project_ids", return_value={1, 2, 3}):
         result = ProjectFilterService.filter_related_by_project(db, query, user, col)
         query.filter.assert_called_once()
 
@@ -109,11 +106,7 @@ def test_filter_related_by_project_no_accessible():
     user = _make_regular_user()
     col = MagicMock()
 
-    with patch.object(
-        ProjectFilterService,
-        "get_accessible_project_ids",
-        return_value=set()
-    ):
+    with patch.object(ProjectFilterService, "get_accessible_project_ids", return_value=set()):
         result = ProjectFilterService.filter_related_by_project(db, query, user, col)
         # Should filter with col == -1
         query.filter.assert_called_once()

@@ -19,21 +19,25 @@ import pytest
 # Patch missing symbols BEFORE importing the service module
 # ──────────────────────────────────────────────────────────
 
+
 def _inject_missing_models():
     """Inject placeholder classes for symbols that don't exist in the real app."""
 
     # Ensure app.models.material has ProjectMaterial
     import app.models.material as mat_mod  # noqa: F401
+
     if not hasattr(mat_mod, "ProjectMaterial"):
         mat_mod.ProjectMaterial = MagicMock(name="ProjectMaterial")
 
     # Patch app.models.shortage to expose MaterialTransfer
     import app.models.shortage as shortage_mod  # noqa: F401
+
     if not hasattr(shortage_mod, "MaterialTransfer"):
         shortage_mod.MaterialTransfer = MagicMock(name="MaterialTransfer")
 
     # Patch the inventory_tracking module to expose the two missing classes
     import app.models.inventory_tracking as inv_mod  # noqa: F401
+
     if not hasattr(inv_mod, "InventoryStock"):
         inv_mod.InventoryStock = MagicMock(name="InventoryStock")
     if not hasattr(inv_mod, "InventoryTransaction"):
@@ -42,12 +46,12 @@ def _inject_missing_models():
 
 _inject_missing_models()
 
-from app.services.material_transfer_service import MaterialTransferService  # noqa: E402
-
 # Also inject InventoryStock / InventoryTransaction directly into the service
 # module's global namespace, because they are referenced in the function bodies
 # but the import lines are commented out (FIXME in the original source).
 import app.services.material_transfer_service as _svc_mod  # noqa: E402
+from app.services.material_transfer_service import MaterialTransferService  # noqa: E402
+
 if not hasattr(_svc_mod, "InventoryStock"):
     _svc_mod.InventoryStock = MagicMock(name="InventoryStock")
 if not hasattr(_svc_mod, "InventoryTransaction"):
@@ -57,6 +61,7 @@ if not hasattr(_svc_mod, "InventoryTransaction"):
 # ────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -71,8 +76,9 @@ def _make_project(project_id=1, name="项目A", code="P001", is_active=True):
     return p
 
 
-def _make_material(material_id=1, code="MAT-001", name="物料A",
-                   current_stock=None, default_supplier_id=None):
+def _make_material(
+    material_id=1, code="MAT-001", name="物料A", current_stock=None, default_supplier_id=None
+):
     m = MagicMock()
     m.id = material_id
     m.material_code = code
@@ -82,10 +88,14 @@ def _make_material(material_id=1, code="MAT-001", name="物料A",
     return m
 
 
-def _make_project_material(pm_id=1, project_id=1, material_id=1,
-                            available_qty=Decimal("100"),
-                            reserved_qty=Decimal("0"),
-                            total_qty=Decimal("100")):
+def _make_project_material(
+    pm_id=1,
+    project_id=1,
+    material_id=1,
+    available_qty=Decimal("100"),
+    reserved_qty=Decimal("0"),
+    total_qty=Decimal("100"),
+):
     pm = MagicMock()
     pm.id = pm_id
     pm.project_id = project_id
@@ -117,6 +127,7 @@ def _make_transfer(
 # ────────────────────────────────────────────────
 # 1. get_project_material_stock
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestGetProjectMaterialStock:
@@ -163,6 +174,7 @@ class TestGetProjectMaterialStock:
 # 2. check_transfer_available
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestCheckTransferAvailable:
 
@@ -206,6 +218,7 @@ class TestCheckTransferAvailable:
 # 3. validate_transfer_before_execute
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestValidateTransferBeforeExecute:
 
@@ -218,7 +231,10 @@ class TestValidateTransferBeforeExecute:
 
         # Sequence: to_project, from_project, material, project_material(stock check)
         db.query.return_value.filter.return_value.first.side_effect = [
-            project_to, project_from, material, pm,
+            project_to,
+            project_from,
+            material,
+            pm,
         ]
         return db
 
@@ -234,9 +250,7 @@ class TestValidateTransferBeforeExecute:
     def test_missing_to_project_gives_error(self):
         db = _make_db()
         # Sequence: to_project=None triggers error immediately
-        db.query.return_value.filter.return_value.first.side_effect = [
-            None, None, None, None
-        ]
+        db.query.return_value.filter.return_value.first.side_effect = [None, None, None, None]
         transfer = _make_transfer(status="APPROVED")
 
         result = MaterialTransferService.validate_transfer_before_execute(db, transfer)
@@ -251,7 +265,10 @@ class TestValidateTransferBeforeExecute:
         material = _make_material()
         pm = _make_project_material(available_qty=Decimal("100"))
         db.query.return_value.filter.return_value.first.side_effect = [
-            project_to, project_from, material, pm,
+            project_to,
+            project_from,
+            material,
+            pm,
         ]
         transfer = _make_transfer(status="DRAFT", transfer_qty=Decimal("10"))
 
@@ -267,7 +284,10 @@ class TestValidateTransferBeforeExecute:
         material = _make_material()
         pm = _make_project_material(available_qty=Decimal("100"))
         db.query.return_value.filter.return_value.first.side_effect = [
-            project_to, project_from, material, pm,
+            project_to,
+            project_from,
+            material,
+            pm,
         ]
         transfer = _make_transfer(status="APPROVED", transfer_qty=Decimal("10"))
 
@@ -282,7 +302,10 @@ class TestValidateTransferBeforeExecute:
         material = _make_material()
         pm = _make_project_material(available_qty=Decimal("3"))  # not enough
         db.query.return_value.filter.return_value.first.side_effect = [
-            project_to, project_from, material, pm,
+            project_to,
+            project_from,
+            material,
+            pm,
         ]
         transfer = _make_transfer(status="APPROVED", transfer_qty=Decimal("10"))
 
@@ -295,6 +318,7 @@ class TestValidateTransferBeforeExecute:
 # ────────────────────────────────────────────────
 # 4. _update_project_stock – increase path
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestUpdateProjectStock:
@@ -361,6 +385,7 @@ class TestUpdateProjectStock:
 # 5. suggest_transfer_sources
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestSuggestTransferSources:
 
@@ -407,9 +432,12 @@ class TestSuggestTransferSources:
 
     def test_sorts_by_priority(self):
         db = _make_db()
-        pm1 = _make_project_material(project_id=3, available_qty=Decimal("5"))   # partial
-        pm2 = _make_project_material(project_id=4, available_qty=Decimal("100")) # full
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [pm1, pm2]
+        pm1 = _make_project_material(project_id=3, available_qty=Decimal("5"))  # partial
+        pm2 = _make_project_material(project_id=4, available_qty=Decimal("100"))  # full
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            pm1,
+            pm2,
+        ]
 
         proj3 = _make_project(project_id=3, name="项目3")
         proj4 = _make_project(project_id=4, name="项目4")

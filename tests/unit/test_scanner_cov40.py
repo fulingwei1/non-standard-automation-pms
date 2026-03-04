@@ -3,11 +3,13 @@
 第四十批覆盖测试 - 销售提醒扫描器
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.sales_reminder.scanner import scan_and_notify_all, scan_sales_reminders
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -49,10 +51,19 @@ class TestScanAndNotifyAll:
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=5)
     def test_stats_keys_present(self, m1, m2, m3, m4, m5, m6, m7, m8, mock_db):
         stats = scan_and_notify_all(mock_db)
-        for key in ("milestone_upcoming_7d", "milestone_upcoming_3d", "milestone_overdue",
-                    "payment_upcoming_7d", "payment_upcoming_3d", "payment_overdue",
-                    "gate_timeout", "quote_expiring", "quote_expired",
-                    "contract_expiring", "approval_pending"):
+        for key in (
+            "milestone_upcoming_7d",
+            "milestone_upcoming_3d",
+            "milestone_overdue",
+            "payment_upcoming_7d",
+            "payment_upcoming_3d",
+            "payment_overdue",
+            "gate_timeout",
+            "quote_expiring",
+            "quote_expired",
+            "contract_expiring",
+            "approval_pending",
+        ):
             assert key in stats
 
     @patch(f"{PATCH_PREFIX}.notify_milestone_upcoming", return_value=5)

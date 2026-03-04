@@ -6,9 +6,9 @@ Opportunity Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
     from app.schemas.sales import OpportunityCreate, OpportunityUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False

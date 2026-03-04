@@ -6,8 +6,8 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
@@ -15,12 +15,12 @@ from app.models.project.customer import Customer
 from app.models.sales.customer_tags import CustomerTag, PredefinedTags
 from app.models.user import User
 from app.schemas.sales import (
-    CustomerTagCreate,
     CustomerTagBatchCreate,
+    CustomerTagCreate,
     CustomerTagResponse,
     PredefinedTagsResponse,
 )
-from app.utils.db_helpers import get_or_404, delete_obj
+from app.utils.db_helpers import delete_obj, get_or_404
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ def read_customer_tags(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权访问该客户的标签")
 
     # 查询标签
@@ -76,7 +76,7 @@ def create_customer_tag(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权为该客户添加标签")
 
     # 确保 customer_id 一致
@@ -84,10 +84,13 @@ def create_customer_tag(
     tag_data["customer_id"] = customer_id
 
     # 检查标签是否已存在
-    existing_tag = db.query(CustomerTag).filter(
-        CustomerTag.customer_id == customer_id,
-        CustomerTag.tag_name == tag_data["tag_name"]
-    ).first()
+    existing_tag = (
+        db.query(CustomerTag)
+        .filter(
+            CustomerTag.customer_id == customer_id, CustomerTag.tag_name == tag_data["tag_name"]
+        )
+        .first()
+    )
 
     if existing_tag:
         raise HTTPException(status_code=400, detail="该客户已有此标签")
@@ -95,7 +98,7 @@ def create_customer_tag(
     # 创建标签
     tag = CustomerTag(**tag_data)
     db.add(tag)
-    
+
     try:
         db.commit()
         db.refresh(tag)
@@ -106,7 +109,9 @@ def create_customer_tag(
     return CustomerTagResponse(**{c.name: getattr(tag, c.name) for c in tag.__table__.columns})
 
 
-@router.post("/customers/{customer_id}/tags/batch", response_model=List[CustomerTagResponse], status_code=201)
+@router.post(
+    "/customers/{customer_id}/tags/batch", response_model=List[CustomerTagResponse], status_code=201
+)
 def create_customer_tags_batch(
     customer_id: int,
     *,
@@ -120,13 +125,13 @@ def create_customer_tags_batch(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权为该客户添加标签")
 
     # 获取已有标签
-    existing_tags = db.query(CustomerTag.tag_name).filter(
-        CustomerTag.customer_id == customer_id
-    ).all()
+    existing_tags = (
+        db.query(CustomerTag.tag_name).filter(CustomerTag.customer_id == customer_id).all()
+    )
     existing_tag_names = {tag[0] for tag in existing_tags}
 
     # 过滤掉已存在的标签
@@ -167,15 +172,16 @@ def delete_customer_tag(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该客户的标签")
 
     # 查找标签
-    tag = db.query(CustomerTag).filter(
-        CustomerTag.id == tag_id,
-        CustomerTag.customer_id == customer_id
-    ).first()
+    tag = (
+        db.query(CustomerTag)
+        .filter(CustomerTag.id == tag_id, CustomerTag.customer_id == customer_id)
+        .first()
+    )
 
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
@@ -196,15 +202,16 @@ def delete_customer_tags_by_name(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该客户的标签")
 
     # 查找并删除标签
-    tag = db.query(CustomerTag).filter(
-        CustomerTag.customer_id == customer_id,
-        CustomerTag.tag_name == tag_name
-    ).first()
+    tag = (
+        db.query(CustomerTag)
+        .filter(CustomerTag.customer_id == customer_id, CustomerTag.tag_name == tag_name)
+        .first()
+    )
 
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")

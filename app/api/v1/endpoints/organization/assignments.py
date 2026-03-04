@@ -10,10 +10,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.core.schemas import list_response, success_response
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import EmployeeOrgAssignment
 from app.models.user import User
 from app.schemas.organization import (
@@ -68,10 +68,7 @@ def list_assignments(
         result.append(a_dict)
 
     # 使用统一响应格式
-    return list_response(
-        items=result,
-        message="获取员工分配列表成功"
-    )
+    return list_response(items=result, message="获取员工分配列表成功")
 
 
 @router.post("/")
@@ -124,10 +121,7 @@ def create_assignment(
     }
 
     # 使用统一响应格式
-    return success_response(
-        data=a_dict,
-        message="员工分配创建成功"
-    )
+    return success_response(data=a_dict, message="员工分配创建成功")
 
 
 @router.put("/{id}")
@@ -139,9 +133,7 @@ def update_assignment(
     current_user: User = Depends(security.get_current_active_superuser),
 ) -> Any:
     """更新员工组织分配"""
-    assign = (
-        db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
-    )
+    assign = db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
     if not assign:
         raise HTTPException(status_code=404, detail="分配记录不存在")
 
@@ -183,10 +175,7 @@ def update_assignment(
     }
 
     # 使用统一响应格式
-    return success_response(
-        data=a_dict,
-        message="员工分配更新成功"
-    )
+    return success_response(data=a_dict, message="员工分配更新成功")
 
 
 @router.delete("/{id}")
@@ -196,9 +185,7 @@ def delete_assignment(
     current_user: User = Depends(security.get_current_active_superuser),
 ) -> Any:
     """删除员工组织分配"""
-    assign = (
-        db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
-    )
+    assign = db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
     if not assign:
         raise HTTPException(status_code=404, detail="分配记录不存在")
 
@@ -206,7 +193,4 @@ def delete_assignment(
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data={"id": id},
-        message="员工分配删除成功"
-    )
+    return success_response(data={"id": id}, message="员工分配删除成功")

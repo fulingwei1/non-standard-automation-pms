@@ -8,10 +8,11 @@ win_rate_prediction (factors, prediction, ai_service), approval adapters,
 ai_client, report_framework, quality_risk, stage_instance helpers, etc.
 """
 import json
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 # ─────────────────────────────────────────────
@@ -22,6 +23,7 @@ class TestPMInvolvementService:
 
     def _svc(self):
         from app.services.pm_involvement_service import PMInvolvementService
+
         return PMInvolvementService
 
     def test_high_risk_project_early_involvement(self):
@@ -120,7 +122,9 @@ class TestPMInvolvementService:
     def test_check_has_standard_solution(self):
         svc = self._svc()
         # This is a classmethod - test it doesn't crash
-        result = svc.check_has_standard_solution("视觉检测系统", )
+        result = svc.check_has_standard_solution(
+            "视觉检测系统",
+        )
         assert isinstance(result, bool)
 
 
@@ -132,6 +136,7 @@ class TestDashboardCacheService:
 
     def _svc(self, redis_url=None):
         from app.services.dashboard_cache_service import DashboardCacheService
+
         return DashboardCacheService(redis_url=redis_url)
 
     def test_init_without_redis(self):
@@ -190,6 +195,7 @@ class TestAIClientService:
 
     def _svc(self):
         from app.services.ai_client_service import AIClientService
+
         return AIClientService()
 
     def test_init_without_api_keys(self):
@@ -236,55 +242,64 @@ class TestWinRateFactors:
 
     def test_calculate_salesperson_factor_zero_win_rate(self):
         from app.services.win_rate_prediction_service.factors import calculate_salesperson_factor
+
         result = calculate_salesperson_factor(0.0)
         assert result == pytest.approx(0.5)
 
     def test_calculate_salesperson_factor_perfect_win_rate(self):
         from app.services.win_rate_prediction_service.factors import calculate_salesperson_factor
+
         result = calculate_salesperson_factor(1.0)
         assert result == pytest.approx(1.0)
 
     def test_calculate_competitor_factor_no_competition(self):
         from app.services.win_rate_prediction_service.factors import calculate_competitor_factor
+
         result = calculate_competitor_factor(1)
         assert result == pytest.approx(1.20)
 
     def test_calculate_competitor_factor_many_competitors(self):
         from app.services.win_rate_prediction_service.factors import calculate_competitor_factor
+
         result = calculate_competitor_factor(6)
         assert result < 1.0
 
     def test_calculate_customer_factor_deep_cooperation(self):
         from app.services.win_rate_prediction_service.factors import calculate_customer_factor
+
         result = calculate_customer_factor(6, 4, False)
         assert result == pytest.approx(1.30)
 
     def test_calculate_customer_factor_new_customer(self):
         from app.services.win_rate_prediction_service.factors import calculate_customer_factor
+
         result = calculate_customer_factor(0, 0, False)
         assert result == pytest.approx(1.0)
 
     def test_calculate_amount_factor_none(self):
         from app.services.win_rate_prediction_service.factors import calculate_amount_factor
+
         result = calculate_amount_factor(None)
         assert result == pytest.approx(1.0)
 
     def test_calculate_product_factor_advantage(self):
-        from app.services.win_rate_prediction_service.factors import calculate_product_factor
         from app.models.enums import ProductMatchTypeEnum
+        from app.services.win_rate_prediction_service.factors import calculate_product_factor
+
         result = calculate_product_factor(ProductMatchTypeEnum.ADVANTAGE.value)
         assert result > 1.0
 
     def test_calculate_base_score(self):
-        from app.services.win_rate_prediction_service.factors import calculate_base_score
         from app.schemas.presales import DimensionScore
+        from app.services.win_rate_prediction_service.factors import calculate_base_score
+
         svc = MagicMock()
         svc.DIMENSION_WEIGHTS = {
-            'requirement_maturity': 0.20,
-            'technical_feasibility': 0.25,
-            'business_feasibility': 0.20,
-            'delivery_risk': 0.15,
-            'customer_relationship': 0.20,
+            "requirement_maturity": 0.20,
+            "technical_feasibility": 0.25,
+            "business_feasibility": 0.20,
+            "delivery_risk": 0.15,
+            "customer_relationship": 0.20,
         }
         dims = DimensionScore(
             requirement_maturity=80,
@@ -305,6 +320,7 @@ class TestWinRatePrediction:
 
     def _make_service_mock(self):
         from app.services.win_rate_prediction_service.base import WinRatePredictionService
+
         db = MagicMock()
         # Mock history queries
         db.query.return_value.filter.return_value.first.return_value = None
@@ -314,15 +330,24 @@ class TestWinRatePrediction:
         return svc
 
     def test_predict_returns_dict(self):
-        from app.services.win_rate_prediction_service.prediction import predict
         from app.schemas.presales import DimensionScore
+        from app.services.win_rate_prediction_service.prediction import predict
+
         svc = self._make_service_mock()
-        with patch('app.services.win_rate_prediction_service.history.get_salesperson_historical_win_rate',
-                   return_value=(0.4, 10)), \
-             patch('app.services.win_rate_prediction_service.history.get_customer_cooperation_history',
-                   return_value=(2, 1)), \
-             patch('app.services.win_rate_prediction_service.history.get_similar_leads_statistics',
-                   return_value=(5, 0.35)):
+        with (
+            patch(
+                "app.services.win_rate_prediction_service.history.get_salesperson_historical_win_rate",
+                return_value=(0.4, 10),
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.history.get_customer_cooperation_history",
+                return_value=(2, 1),
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.history.get_similar_leads_statistics",
+                return_value=(5, 0.35),
+            ),
+        ):
             dims = DimensionScore(
                 requirement_maturity=70,
                 technical_feasibility=65,
@@ -331,13 +356,14 @@ class TestWinRatePrediction:
                 customer_relationship=55,
             )
             result = predict(svc, dims, salesperson_id=1)
-        assert 'predicted_rate' in result
-        assert 'probability_level' in result
-        assert 'recommendations' in result
+        assert "predicted_rate" in result
+        assert "probability_level" in result
+        assert "recommendations" in result
 
     def test_generate_recommendations_low_rate(self):
-        from app.services.win_rate_prediction_service.prediction import _generate_recommendations
         from app.schemas.presales import DimensionScore
+        from app.services.win_rate_prediction_service.prediction import _generate_recommendations
+
         dims = DimensionScore(
             requirement_maturity=40,
             technical_feasibility=40,
@@ -351,8 +377,9 @@ class TestWinRatePrediction:
         assert any("资源" in r or "中标" in r for r in recs)
 
     def test_generate_recommendations_high_rate(self):
-        from app.services.win_rate_prediction_service.prediction import _generate_recommendations
         from app.schemas.presales import DimensionScore
+        from app.services.win_rate_prediction_service.prediction import _generate_recommendations
+
         dims = DimensionScore(
             requirement_maturity=90,
             technical_feasibility=85,
@@ -372,6 +399,7 @@ class TestAIWinRatePredictionService:
 
     def _svc(self):
         from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
+
         return AIWinRatePredictionService()
 
     def test_init_no_keys(self):
@@ -387,14 +415,16 @@ class TestAIWinRatePredictionService:
 
     def test_parse_ai_response_valid_json(self):
         svc = self._svc()
-        ai_response = json.dumps({
-            "win_rate_score": 65,
-            "confidence_interval": "55-75%",
-            "influencing_factors": ["factor1"],
-            "competitor_analysis": {},
-            "improvement_suggestions": {},
-            "ai_analysis_report": "test",
-        })
+        ai_response = json.dumps(
+            {
+                "win_rate_score": 65,
+                "confidence_interval": "55-75%",
+                "influencing_factors": ["factor1"],
+                "competitor_analysis": {},
+                "improvement_suggestions": {},
+                "ai_analysis_report": "test",
+            }
+        )
         result = svc._parse_ai_response(ai_response, {})
         assert result["win_rate_score"] == 65
 
@@ -418,6 +448,7 @@ class TestKPICalculation:
 
     def test_calculate_formula_basic(self):
         from app.services.strategy.kpi_collector.calculation import calculate_formula
+
         try:
             result = calculate_formula("a + b", {"a": 10, "b": 20})
             assert result == Decimal("30")
@@ -427,6 +458,7 @@ class TestKPICalculation:
 
     def test_calculate_formula_division(self):
         from app.services.strategy.kpi_collector.calculation import calculate_formula
+
         try:
             result = calculate_formula("a / b * 100", {"a": 30, "b": 100})
             assert result == Decimal("30")
@@ -435,24 +467,28 @@ class TestKPICalculation:
 
     def test_calculate_formula_none_formula(self):
         from app.services.strategy.kpi_collector.calculation import calculate_formula
+
         result = calculate_formula(None, {"a": 1})
         assert result is None
 
     def test_calculate_formula_empty_formula(self):
         from app.services.strategy.kpi_collector.calculation import calculate_formula
+
         result = calculate_formula("", {"a": 1})
         assert result is None
 
     def test_collect_kpi_value_kpi_not_found(self):
         from app.services.strategy.kpi_collector.calculation import collect_kpi_value
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = collect_kpi_value(db, kpi_id=999)
         assert result is None
 
     def test_collect_kpi_value_no_data_source(self):
-        from app.services.strategy.kpi_collector.calculation import collect_kpi_value
         from app.models.strategy import KPI
+        from app.services.strategy.kpi_collector.calculation import collect_kpi_value
+
         db = MagicMock()
         mock_kpi = MagicMock(spec=KPI)
         mock_kpi.id = 1
@@ -471,6 +507,7 @@ class TestPipelineHealthService:
 
     def _make_svc(self, db=None):
         from app.services.pipeline_health_service import PipelineHealthService
+
         return PipelineHealthService(db or MagicMock())
 
     def test_lead_not_found_raises(self):
@@ -483,21 +520,21 @@ class TestPipelineHealthService:
     def test_lead_converted_returns_h4(self):
         db = MagicMock()
         mock_lead = MagicMock()
-        mock_lead.status = 'CONVERTED'
+        mock_lead.status = "CONVERTED"
         db.query.return_value.filter.return_value.first.return_value = mock_lead
         svc = self._make_svc(db)
         result = svc.calculate_lead_health(1)
-        assert result['health_status'] == 'H4'
+        assert result["health_status"] == "H4"
 
     def test_lead_invalid_returns_h4(self):
         db = MagicMock()
         mock_lead = MagicMock()
-        mock_lead.status = 'INVALID'
+        mock_lead.status = "INVALID"
         db.query.return_value.filter.return_value.first.return_value = mock_lead
         svc = self._make_svc(db)
         result = svc.calculate_lead_health(1)
-        assert result['health_status'] == 'H4'
-        assert '无效' in str(result.get('risk_factors', ''))
+        assert result["health_status"] == "H4"
+        assert "无效" in str(result.get("risk_factors", ""))
 
     def test_opportunity_not_found_raises(self):
         db = MagicMock()
@@ -515,9 +552,9 @@ class TestPipelineHealthService:
 
     def test_health_thresholds_structure(self):
         svc = self._make_svc()
-        assert 'LEAD' in svc.HEALTH_THRESHOLDS
-        assert 'OPPORTUNITY' in svc.HEALTH_THRESHOLDS
-        assert 'QUOTE' in svc.HEALTH_THRESHOLDS
+        assert "LEAD" in svc.HEALTH_THRESHOLDS
+        assert "OPPORTUNITY" in svc.HEALTH_THRESHOLDS
+        assert "QUOTE" in svc.HEALTH_THRESHOLDS
 
 
 # ─────────────────────────────────────────────
@@ -528,6 +565,7 @@ class TestSolutionCreditService:
 
     def _make_svc(self, db=None):
         from app.services.solution_credit_service import SolutionCreditService
+
         return SolutionCreditService(db or MagicMock())
 
     def test_get_config_returns_default_when_not_found(self):
@@ -577,6 +615,7 @@ class TestUserImportService:
 
     def _svc_cls(self):
         from app.services.user_import_service import UserImportService
+
         return UserImportService
 
     def test_validate_file_format_excel(self):
@@ -616,6 +655,7 @@ class TestKnowledgeContributionService:
 
     def _make_svc(self, db=None):
         from app.services.knowledge_contribution_service import KnowledgeContributionService
+
         return KnowledgeContributionService(db or MagicMock())
 
     def test_get_contribution_not_found(self):
@@ -648,7 +688,7 @@ class TestKnowledgeContributionService:
         mock_contrib = MagicMock()
         mock_contrib.id = 1
         mock_contrib.contributor_id = 100  # different user
-        mock_contrib.status = 'submitted'
+        mock_contrib.status = "submitted"
         db.query.return_value.filter.return_value.first.return_value = mock_contrib
         svc = self._make_svc(db)
         update_data = MagicMock()
@@ -659,6 +699,7 @@ class TestKnowledgeContributionService:
 
     def test_create_contribution_calls_save(self):
         from unittest.mock import patch
+
         db = MagicMock()
         svc = self._make_svc(db)
         data = MagicMock()
@@ -669,7 +710,7 @@ class TestKnowledgeContributionService:
         data.file_path = "/path/to/file"
         data.tags = "tag1,tag2"
         data.status = "draft"
-        with patch('app.services.knowledge_contribution_service.save_obj') as mock_save:
+        with patch("app.services.knowledge_contribution_service.save_obj") as mock_save:
             result = svc.create_contribution(data, contributor_id=1)
             mock_save.assert_called_once()
 
@@ -682,6 +723,7 @@ class TestNodeTaskService:
 
     def _make_svc(self, db=None):
         from app.services.node_task_service import NodeTaskService
+
         return NodeTaskService(db or MagicMock())
 
     def test_create_task_node_not_found_raises(self):
@@ -722,14 +764,18 @@ class TestSLAService:
 
     def test_match_sla_policy_exact_match(self):
         from app.services.sla_service import match_sla_policy
+
         db = MagicMock()
         mock_policy = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_policy
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_policy
+        )
         result = match_sla_policy(db, "SOFTWARE", "HIGH")
         assert result is mock_policy
 
     def test_match_sla_policy_no_match_returns_none(self):
         from app.services.sla_service import match_sla_policy
+
         db = MagicMock()
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
         result = match_sla_policy(db, "UNKNOWN", "UNKNOWN")
@@ -737,7 +783,8 @@ class TestSLAService:
 
     def test_sla_service_module_imports(self):
         from app.services import sla_service
-        assert hasattr(sla_service, 'match_sla_policy')
+
+        assert hasattr(sla_service, "match_sla_policy")
 
 
 # ─────────────────────────────────────────────
@@ -748,6 +795,7 @@ class TestCSFService:
 
     def test_get_csf_not_found(self):
         from app.services.strategy.csf_service import get_csf
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = get_csf(db, csf_id=999)
@@ -755,6 +803,7 @@ class TestCSFService:
 
     def test_get_csf_found(self):
         from app.services.strategy.csf_service import get_csf
+
         db = MagicMock()
         mock_csf = MagicMock()
         mock_csf.id = 1
@@ -764,6 +813,7 @@ class TestCSFService:
 
     def test_create_csf_calls_db_add_and_commit(self):
         from app.services.strategy.csf_service import create_csf
+
         db = MagicMock()
         data = MagicMock()
         data.strategy_id = 1
@@ -782,6 +832,7 @@ class TestCSFService:
 
     def test_csf_module_functions_exist(self):
         import app.services.strategy.csf_service as csf_svc
+
         assert callable(csf_svc.create_csf)
         assert callable(csf_svc.get_csf)
 
@@ -794,12 +845,15 @@ class TestShortageManagementService:
 
     def _make_svc(self, db=None):
         from app.services.shortage.shortage_management_service import ShortageManagementService
+
         return ShortageManagementService(db or MagicMock())
 
     def test_get_shortage_list_empty(self):
         db = MagicMock()
         db.query.return_value.count.return_value = 0
-        db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         svc = self._make_svc(db)
         # Setup filter chain
         q = db.query.return_value
@@ -809,11 +863,18 @@ class TestShortageManagementService:
         q.offset.return_value = q
         q.limit.return_value = q
         q.all.return_value = []
-        with patch('app.services.shortage.shortage_management_service.apply_keyword_filter',
-                   return_value=q), \
-             patch('app.services.shortage.shortage_management_service.apply_pagination',
-                   return_value=q), \
-             patch('app.services.shortage.shortage_management_service.get_pagination_params') as mock_pp:
+        with (
+            patch(
+                "app.services.shortage.shortage_management_service.apply_keyword_filter",
+                return_value=q,
+            ),
+            patch(
+                "app.services.shortage.shortage_management_service.apply_pagination", return_value=q
+            ),
+            patch(
+                "app.services.shortage.shortage_management_service.get_pagination_params"
+            ) as mock_pp,
+        ):
             mock_pp.return_value = MagicMock(offset=0, limit=20)
             result = svc.get_shortage_list(page=1, page_size=20)
         assert result is not None
@@ -831,6 +892,7 @@ class TestApprovalAdapters:
 
     def test_acceptance_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = AcceptanceOrderApprovalAdapter(db)
@@ -839,6 +901,7 @@ class TestApprovalAdapters:
 
     def test_acceptance_adapter_get_entity_data_not_found(self):
         from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = AcceptanceOrderApprovalAdapter(db)
@@ -847,6 +910,7 @@ class TestApprovalAdapters:
 
     def test_quote_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = QuoteApprovalAdapter(db)
@@ -855,12 +919,14 @@ class TestApprovalAdapters:
 
     def test_quote_adapter_entity_type(self):
         from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
+
         db = MagicMock()
         adapter = QuoteApprovalAdapter(db)
         assert adapter.entity_type == "QUOTE"
 
     def test_contract_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.contract import ContractApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = ContractApprovalAdapter(db)
@@ -869,6 +935,7 @@ class TestApprovalAdapters:
 
     def test_contract_adapter_get_entity_data_empty_when_not_found(self):
         from app.services.approval_engine.adapters.contract import ContractApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = ContractApprovalAdapter(db)
@@ -877,6 +944,7 @@ class TestApprovalAdapters:
 
     def test_invoice_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = InvoiceApprovalAdapter(db)
@@ -885,12 +953,14 @@ class TestApprovalAdapters:
 
     def test_invoice_adapter_entity_type(self):
         from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+
         db = MagicMock()
         adapter = InvoiceApprovalAdapter(db)
         assert adapter.entity_type == "INVOICE"
 
     def test_purchase_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.purchase import PurchaseOrderApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = PurchaseOrderApprovalAdapter(db)
@@ -899,12 +969,14 @@ class TestApprovalAdapters:
 
     def test_purchase_adapter_entity_type(self):
         from app.services.approval_engine.adapters.purchase import PurchaseOrderApprovalAdapter
+
         db = MagicMock()
         adapter = PurchaseOrderApprovalAdapter(db)
         assert adapter.entity_type == "PURCHASE_ORDER"
 
     def test_project_adapter_get_entity_data_not_found(self):
         from app.services.approval_engine.adapters.project import ProjectApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = ProjectApprovalAdapter(db)
@@ -913,12 +985,14 @@ class TestApprovalAdapters:
 
     def test_project_adapter_entity_type(self):
         from app.services.approval_engine.adapters.project import ProjectApprovalAdapter
+
         db = MagicMock()
         adapter = ProjectApprovalAdapter(db)
         assert adapter.entity_type == "PROJECT"
 
     def test_timesheet_adapter_get_entity_not_found(self):
         from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         adapter = TimesheetApprovalAdapter(db)
@@ -927,6 +1001,7 @@ class TestApprovalAdapters:
 
     def test_timesheet_adapter_entity_type(self):
         from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
+
         db = MagicMock()
         adapter = TimesheetApprovalAdapter(db)
         assert adapter.entity_type == "TIMESHEET"
@@ -975,6 +1050,7 @@ class TestStageInstanceHelpers:
 
     def test_check_tasks_completion_all_completed(self):
         from app.models.enums import StageStatusEnum
+
         db = MagicMock()
         mock_task = MagicMock()
         mock_task.status = StageStatusEnum.COMPLETED.value
@@ -1005,6 +1081,7 @@ class TestITRService:
 
     def test_get_ticket_timeline_not_found(self):
         from app.services.itr_service import get_ticket_timeline
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = get_ticket_timeline(db, ticket_id=999)
@@ -1012,6 +1089,7 @@ class TestITRService:
 
     def test_get_ticket_timeline_with_empty_ticket(self):
         from app.services.itr_service import get_ticket_timeline
+
         db = MagicMock()
         mock_ticket = MagicMock()
         mock_ticket.timeline = []
@@ -1020,7 +1098,7 @@ class TestITRService:
         # Mock the issues query
         db.query.return_value.filter.return_value.first.side_effect = [mock_ticket]
         db.query.return_value.filter.return_value.all.return_value = []
-        with patch('app.services.itr_service.apply_keyword_filter') as mock_filter:
+        with patch("app.services.itr_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value = MagicMock()
             mock_filter.return_value.subquery.return_value = MagicMock()
             # Just test that it imports and runs
@@ -1040,6 +1118,7 @@ class TestServiceRecordsService:
 
     def _make_svc(self, db=None):
         from app.services.service.service_records_service import ServiceRecordsService
+
         return ServiceRecordsService(db or MagicMock())
 
     def test_get_record_statistics_empty(self):
@@ -1086,6 +1165,7 @@ class TestPipelineAccountabilityService:
 
     def _make_svc(self, db=None):
         from app.services.pipeline_accountability_service import PipelineAccountabilityService
+
         return PipelineAccountabilityService(db or MagicMock())
 
     def test_init(self):
@@ -1098,14 +1178,14 @@ class TestPipelineAccountabilityService:
         svc = self._make_svc(db)
         mock_break_svc = MagicMock()
         mock_break_svc.analyze_pipeline_breaks.return_value = {
-            'breaks': {
-                'LEAD': {'break_records': []},
-                'OPPORTUNITY': {'break_records': []},
+            "breaks": {
+                "LEAD": {"break_records": []},
+                "OPPORTUNITY": {"break_records": []},
             }
         }
         with patch(
-            'app.services.pipeline_accountability_service.PipelineBreakAnalysisService',
-            return_value=mock_break_svc
+            "app.services.pipeline_accountability_service.PipelineBreakAnalysisService",
+            return_value=mock_break_svc,
         ):
             result = svc.analyze_by_stage()
         assert result is not None
@@ -1120,21 +1200,23 @@ class TestAnalysisReportGenerator:
 
     def test_load_thresholds_exist(self):
         from app.services.report_framework.generators.analysis import AnalysisReportGenerator
-        assert 'OVERLOAD' in AnalysisReportGenerator.LOAD_THRESHOLDS
-        assert 'HIGH' in AnalysisReportGenerator.LOAD_THRESHOLDS
+
+        assert "OVERLOAD" in AnalysisReportGenerator.LOAD_THRESHOLDS
+        assert "HIGH" in AnalysisReportGenerator.LOAD_THRESHOLDS
 
     def test_generate_workload_analysis_empty_db(self):
         from app.services.report_framework.generators.analysis import AnalysisReportGenerator
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.all.return_value = []
-        with patch.object(AnalysisReportGenerator, '_get_user_scope',
-                         return_value=([], "全公司")):
+        with patch.object(AnalysisReportGenerator, "_get_user_scope", return_value=([], "全公司")):
             result = AnalysisReportGenerator.generate_workload_analysis(db)
         assert isinstance(result, dict)
 
     def test_default_hourly_rate(self):
         from app.services.report_framework.generators.analysis import AnalysisReportGenerator
+
         assert AnalysisReportGenerator.DEFAULT_HOURLY_RATE > 0
 
 
@@ -1146,13 +1228,14 @@ class TestQualityRiskAnalyzer:
 
     def _make_svc(self, db=None):
         from app.services.quality_risk_ai.quality_risk_analyzer import QualityRiskAnalyzer
+
         return QualityRiskAnalyzer(db or MagicMock())
 
     def test_analyze_empty_logs(self):
         svc = self._make_svc()
         result = svc.analyze_work_logs([])
-        assert result['risk_level'] == 'LOW'
-        assert result['risk_score'] == 0.0
+        assert result["risk_level"] == "LOW"
+        assert result["risk_score"] == 0.0
 
     def test_analyze_with_low_risk_logs(self):
         svc = self._make_svc()
@@ -1161,8 +1244,8 @@ class TestQualityRiskAnalyzer:
             {"content": "完成了模块测试", "date": "2026-01-02", "author": "user1"},
         ]
         result = svc.analyze_work_logs(logs)
-        assert 'risk_level' in result
-        assert 'risk_score' in result
+        assert "risk_level" in result
+        assert "risk_score" in result
 
     def test_analyze_with_risk_keywords(self):
         svc = self._make_svc()
@@ -1171,9 +1254,9 @@ class TestQualityRiskAnalyzer:
             {"content": "质量缺陷导致返工", "date": "2026-01-04", "author": "user1"},
         ]
         result = svc.analyze_work_logs(logs)
-        assert 'risk_level' in result
+        assert "risk_level" in result
         # With risk keywords, score should be higher
-        assert result['risk_score'] >= 0
+        assert result["risk_score"] >= 0
 
 
 # ─────────────────────────────────────────────
@@ -1184,6 +1267,7 @@ class TestAIQuotationGeneratorService:
 
     def _make_svc(self, db=None):
         from app.services.presale_ai_quotation_service import AIQuotationGeneratorService
+
         return AIQuotationGeneratorService(db or MagicMock())
 
     def test_generate_quotation_number_format(self):
@@ -1215,15 +1299,18 @@ class TestQuotationPDFService:
 
     def _svc(self):
         from app.services.quotation_pdf_service import QuotationPDFService
+
         return QuotationPDFService()
 
     def test_init_creates_output_dir(self):
         import os
+
         svc = self._svc()
         assert os.path.exists(svc.output_dir)
 
     def test_generate_pdf_raises_when_reportlab_unavailable(self):
-        from app.services.quotation_pdf_service import QuotationPDFService, REPORTLAB_AVAILABLE
+        from app.services.quotation_pdf_service import REPORTLAB_AVAILABLE, QuotationPDFService
+
         if REPORTLAB_AVAILABLE:
             pytest.skip("reportlab is available - skipping unavailability test")
         svc = QuotationPDFService()
@@ -1240,6 +1327,7 @@ class TestTimesheetAggregationService:
 
     def _make_svc(self, db=None):
         from app.services.timesheet_aggregation_service import TimesheetAggregationService
+
         return TimesheetAggregationService(db or MagicMock())
 
     def test_init(self):
@@ -1252,20 +1340,31 @@ class TestTimesheetAggregationService:
         mock_summary = MagicMock()
         mock_summary.id = 1
 
-        with patch('app.services.timesheet_aggregation_service.calculate_month_range',
-                   return_value=(date(2026, 1, 1), date(2026, 1, 31))), \
-             patch('app.services.timesheet_aggregation_service.query_timesheets',
-                   return_value=[]), \
-             patch('app.services.timesheet_aggregation_service.calculate_hours_summary',
-                   return_value={"total_hours": 0}), \
-             patch('app.services.timesheet_aggregation_service.build_project_breakdown',
-                   return_value={}), \
-             patch('app.services.timesheet_aggregation_service.build_daily_breakdown',
-                   return_value={}), \
-             patch('app.services.timesheet_aggregation_service.build_task_breakdown',
-                   return_value={}), \
-             patch('app.services.timesheet_aggregation_service.get_or_create_summary',
-                   return_value=mock_summary):
+        with (
+            patch(
+                "app.services.timesheet_aggregation_service.calculate_month_range",
+                return_value=(date(2026, 1, 1), date(2026, 1, 31)),
+            ),
+            patch("app.services.timesheet_aggregation_service.query_timesheets", return_value=[]),
+            patch(
+                "app.services.timesheet_aggregation_service.calculate_hours_summary",
+                return_value={"total_hours": 0},
+            ),
+            patch(
+                "app.services.timesheet_aggregation_service.build_project_breakdown",
+                return_value={},
+            ),
+            patch(
+                "app.services.timesheet_aggregation_service.build_daily_breakdown", return_value={}
+            ),
+            patch(
+                "app.services.timesheet_aggregation_service.build_task_breakdown", return_value={}
+            ),
+            patch(
+                "app.services.timesheet_aggregation_service.get_or_create_summary",
+                return_value=mock_summary,
+            ),
+        ):
             result = svc.aggregate_monthly_timesheet(year=2026, month=1)
         assert result is not None
 
@@ -1277,24 +1376,26 @@ class TestGenericFilterService:
     """Tests for data_scope/generic_filter.py"""
 
     def test_filter_by_scope_admin_user(self):
-        from app.services.data_scope.generic_filter import GenericFilterService
         from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
+
         db = MagicMock()
         query = MagicMock()
         user = MagicMock()
         user.data_scope = DataScopeEnum.ALL.value
 
-        with patch('app.services.data_scope.generic_filter.UserScopeService') as mock_uss:
+        with patch("app.services.data_scope.generic_filter.UserScopeService") as mock_uss:
             mock_uss.get_scope.return_value = DataScopeEnum.ALL.value
             result = GenericFilterService.filter_by_scope(db, query, MagicMock, user)
         assert result is not None  # returns query (possibly unchanged)
 
     def test_filter_by_scope_returns_query_type(self):
         from app.services.data_scope.generic_filter import GenericFilterService
+
         db = MagicMock()
         query = MagicMock()
         user = MagicMock()
-        with patch('app.services.data_scope.generic_filter.UserScopeService'):
+        with patch("app.services.data_scope.generic_filter.UserScopeService"):
             try:
                 result = GenericFilterService.filter_by_scope(db, query, MagicMock, user)
                 assert result is not None
@@ -1310,6 +1411,7 @@ class TestStrategyDashboardAdapter:
 
     def _make_adapter(self, db=None):
         from app.services.dashboard_adapters.strategy import StrategyDashboardAdapter
+
         adapter = StrategyDashboardAdapter.__new__(StrategyDashboardAdapter)
         adapter.db = db or MagicMock()
         return adapter
@@ -1331,7 +1433,7 @@ class TestStrategyDashboardAdapter:
         db = MagicMock()
         db.query.return_value.filter.return_value.count.return_value = 0
         adapter = self._make_adapter(db)
-        with patch('app.services.dashboard_adapters.strategy.strategy_service') as mock_svc_module:
+        with patch("app.services.dashboard_adapters.strategy.strategy_service") as mock_svc_module:
             mock_svc_module.get_active_strategy.return_value = None
             try:
                 result = adapter.get_stats()
@@ -1349,6 +1451,7 @@ class TestAIScheduleOptimizer:
 
     def _make_svc(self, db=None):
         from app.services.ai_planning.schedule_optimizer import AIScheduleOptimizer
+
         return AIScheduleOptimizer(db or MagicMock())
 
     def test_init(self):
@@ -1380,6 +1483,7 @@ class TestAIWbsDecomposer:
 
     def _make_svc(self, db=None):
         from app.services.ai_planning.wbs_decomposer import AIWbsDecomposer
+
         return AIWbsDecomposer(db or MagicMock(), glm_service=MagicMock())
 
     def test_init(self):
@@ -1403,6 +1507,7 @@ class TestGLMService:
 
     def _make_svc(self):
         from app.services.ai_planning.glm_service import GLMService
+
         return GLMService(api_key=None)
 
     def test_init_no_key(self):
@@ -1411,6 +1516,7 @@ class TestGLMService:
 
     def test_init_with_key_no_zhipuai(self):
         from app.services.ai_planning import glm_service
+
         original = glm_service.ZhipuAI
         glm_service.ZhipuAI = None
         try:
@@ -1432,6 +1538,7 @@ class TestAIResourceOptimizer:
 
     def _make_svc(self, db=None):
         from app.services.ai_planning.resource_optimizer import AIResourceOptimizer
+
         return AIResourceOptimizer(db or MagicMock(), glm_service=MagicMock())
 
     def test_init(self):
@@ -1452,7 +1559,7 @@ class TestAIResourceOptimizer:
         mock_wbs = MagicMock()
         db.query.return_value.get.return_value = mock_wbs
         svc = self._make_svc(db)
-        with patch.object(svc, '_get_available_users', return_value=[]):
+        with patch.object(svc, "_get_available_users", return_value=[]):
             result = await svc.allocate_resources(wbs_suggestion_id=1)
         assert result == []
 
@@ -1465,6 +1572,7 @@ class TestProjectKnowledgeSyncer:
 
     def _make_svc(self, db=None):
         from app.services.project_review_ai.knowledge_syncer import ProjectKnowledgeSyncer
+
         return ProjectKnowledgeSyncer(db or MagicMock())
 
     def test_init(self):
@@ -1473,7 +1581,9 @@ class TestProjectKnowledgeSyncer:
             assert svc.db is not None
             assert svc.ai_client is not None
         except (ImportError, SyntaxError):
-            pytest.skip("ProjectKnowledgeSyncer cannot be imported due to syntax error in dependency")
+            pytest.skip(
+                "ProjectKnowledgeSyncer cannot be imported due to syntax error in dependency"
+            )
 
     def test_sync_to_knowledge_base_review_not_found(self):
         try:
@@ -1482,9 +1592,11 @@ class TestProjectKnowledgeSyncer:
             svc = self._make_svc(db)
             result = svc.sync_to_knowledge_base(review_id=999)
             # Should return error dict or None when review not found
-            assert result is None or (isinstance(result, dict) and 'error' in result)
+            assert result is None or (isinstance(result, dict) and "error" in result)
         except (ImportError, SyntaxError):
-            pytest.skip("ProjectKnowledgeSyncer cannot be imported due to syntax error in dependency")
+            pytest.skip(
+                "ProjectKnowledgeSyncer cannot be imported due to syntax error in dependency"
+            )
 
 
 # ─────────────────────────────────────────────
@@ -1495,6 +1607,7 @@ class TestSalesFlowReminders:
 
     def test_notify_gate_timeout_no_leads(self):
         from app.services.sales_reminder.sales_flow_reminders import notify_gate_timeout
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         count = notify_gate_timeout(db, timeout_days=3)
@@ -1502,6 +1615,7 @@ class TestSalesFlowReminders:
 
     def test_notify_gate_timeout_returns_int(self):
         from app.services.sales_reminder.sales_flow_reminders import notify_gate_timeout
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = notify_gate_timeout(db)
@@ -1509,7 +1623,8 @@ class TestSalesFlowReminders:
 
     def test_module_has_notify_function(self):
         from app.services.sales_reminder import sales_flow_reminders
-        assert hasattr(sales_flow_reminders, 'notify_gate_timeout')
+
+        assert hasattr(sales_flow_reminders, "notify_gate_timeout")
 
 
 # ─────────────────────────────────────────────
@@ -1520,19 +1635,23 @@ class TestApprovalEngineCore:
 
     def test_module_imports(self):
         from app.services.approval_engine.engine import approve
-        assert hasattr(approve, 'ApprovalProcessMixin')
+
+        assert hasattr(approve, "ApprovalProcessMixin")
 
     def test_approval_mixin_methods_exist(self):
         from app.services.approval_engine.engine.approve import ApprovalProcessMixin
-        assert hasattr(ApprovalProcessMixin, 'approve')
+
+        assert hasattr(ApprovalProcessMixin, "approve")
 
     def test_approval_mixin_approve_method_present(self):
-        from app.services.approval_engine.engine.approve import ApprovalProcessMixin
         import inspect
+
+        from app.services.approval_engine.engine.approve import ApprovalProcessMixin
+
         sig = inspect.signature(ApprovalProcessMixin.approve)
         params = list(sig.parameters)
-        assert 'task_id' in params
-        assert 'approver_id' in params
+        assert "task_id" in params
+        assert "approver_id" in params
 
 
 # ─────────────────────────────────────────────
@@ -1542,11 +1661,13 @@ class TestAIPlanningGLMService:
     """Additional GLM service tests"""
 
     def test_glm_service_has_generate_method(self):
-        from app.services.ai_planning.glm_service import GLMService
         import inspect
+
+        from app.services.ai_planning.glm_service import GLMService
+
         # GLM service should have project plan and WBS generation methods
         methods = [m for m, _ in inspect.getmembers(GLMService)]
-        assert any('generate' in m or 'chat' in m or 'decompose' in m for m in methods)
+        assert any("generate" in m or "chat" in m or "decompose" in m for m in methods)
 
 
 # ─────────────────────────────────────────────
@@ -1557,9 +1678,11 @@ class TestWinRatePredictionServiceAsync:
 
     def _make_svc(self, db=None):
         from app.services.win_rate_prediction_service.service import WinRatePredictionService
+
         svc = WinRatePredictionService.__new__(WinRatePredictionService)
         svc.db = db or AsyncMock()
         from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
+
         svc.ai_service = AIWinRatePredictionService()
         return svc
 
@@ -1578,11 +1701,15 @@ class TestWinRatePredictionServiceAsync:
             "ai_analysis_report": "test",
         }
 
-        with patch.object(svc.ai_service, 'predict_with_ai',
-                         new=AsyncMock(return_value=fallback_result)), \
-             patch.object(svc, '_get_historical_data',
-                         new=AsyncMock(return_value=[])):
-            with patch('app.services.win_rate_prediction_service.service.PresaleAIWinRate') as mock_cls:
+        with (
+            patch.object(
+                svc.ai_service, "predict_with_ai", new=AsyncMock(return_value=fallback_result)
+            ),
+            patch.object(svc, "_get_historical_data", new=AsyncMock(return_value=[])),
+        ):
+            with patch(
+                "app.services.win_rate_prediction_service.service.PresaleAIWinRate"
+            ) as mock_cls:
                 mock_instance = MagicMock()
                 mock_cls.return_value = mock_instance
                 db.add = AsyncMock()
@@ -1604,10 +1731,12 @@ class TestITRServiceAdditional:
 
     def test_itr_module_imports(self):
         import app.services.itr_service as itr_module
-        assert hasattr(itr_module, 'get_ticket_timeline')
+
+        assert hasattr(itr_module, "get_ticket_timeline")
 
     def test_get_ticket_timeline_with_timeline_data(self):
         from app.services.itr_service import get_ticket_timeline
+
         db = MagicMock()
         mock_ticket = MagicMock()
         mock_ticket.timeline = [
@@ -1618,14 +1747,14 @@ class TestITRServiceAdditional:
         db.query.return_value.filter.return_value.first.side_effect = [mock_ticket, None]
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
-        with patch('app.services.itr_service.apply_keyword_filter') as mock_akf:
+        with patch("app.services.itr_service.apply_keyword_filter") as mock_akf:
             mock_q = MagicMock()
             mock_q.subquery.return_value = MagicMock()
             mock_akf.return_value = mock_q
             try:
                 result = get_ticket_timeline(db, ticket_id=1)
                 if result:
-                    assert 'timeline' in result
+                    assert "timeline" in result
             except Exception:
                 pass  # Partial test - just check it executes
 
@@ -1638,6 +1767,7 @@ class TestPMInvolvementEdgeCases:
 
     def test_exactly_at_threshold_amount(self):
         from app.services.pm_involvement_service import PMInvolvementService
+
         data = {
             "项目金额": 100,  # exactly at threshold
             "是否首次做": False,
@@ -1652,6 +1782,7 @@ class TestPMInvolvementEdgeCases:
 
     def test_result_has_required_keys(self):
         from app.services.pm_involvement_service import PMInvolvementService
+
         data = {
             "项目金额": 0,
             "是否首次做": False,
@@ -1667,6 +1798,7 @@ class TestPMInvolvementEdgeCases:
 
     def test_all_risk_factors_max_risk(self):
         from app.services.pm_involvement_service import PMInvolvementService
+
         data = {
             "项目金额": 200,
             "是否首次做": True,
@@ -1688,17 +1820,22 @@ class TestSLAServiceAdditional:
 
     def test_sla_service_has_create_sla_monitor(self):
         import app.services.sla_service as sla_module
+
         # Check what functions are available
-        funcs = [name for name in dir(sla_module) if not name.startswith('_')]
+        funcs = [name for name in dir(sla_module) if not name.startswith("_")]
         assert len(funcs) > 0  # module has exports
 
     def test_match_sla_policy_fallthrough_to_general(self):
         from app.services.sla_service import match_sla_policy
+
         db = MagicMock()
         # First 3 queries return None, 4th returns a general policy
         general_policy = MagicMock()
         db.query.return_value.filter.return_value.order_by.return_value.first.side_effect = [
-            None, None, None, general_policy
+            None,
+            None,
+            None,
+            general_policy,
         ]
         result = match_sla_policy(db, "UNKNOWN_TYPE", "UNKNOWN_URGENCY")
         assert result is general_policy
@@ -1712,6 +1849,7 @@ class TestDashboardCacheWithMockRedis:
 
     def test_get_returns_data_when_cached(self):
         from app.services.dashboard_cache_service import DashboardCacheService
+
         svc = DashboardCacheService.__new__(DashboardCacheService)
         svc.ttl = 300
         svc.cache_enabled = True
@@ -1723,6 +1861,7 @@ class TestDashboardCacheWithMockRedis:
 
     def test_set_stores_data_when_enabled(self):
         from app.services.dashboard_cache_service import DashboardCacheService
+
         svc = DashboardCacheService.__new__(DashboardCacheService)
         svc.ttl = 300
         svc.cache_enabled = True
@@ -1734,6 +1873,7 @@ class TestDashboardCacheWithMockRedis:
 
     def test_delete_key_when_enabled(self):
         from app.services.dashboard_cache_service import DashboardCacheService
+
         svc = DashboardCacheService.__new__(DashboardCacheService)
         svc.ttl = 300
         svc.cache_enabled = True
@@ -1745,6 +1885,7 @@ class TestDashboardCacheWithMockRedis:
 
     def test_clear_pattern_counts_deleted_keys(self):
         from app.services.dashboard_cache_service import DashboardCacheService
+
         svc = DashboardCacheService.__new__(DashboardCacheService)
         svc.ttl = 300
         svc.cache_enabled = True

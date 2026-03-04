@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for approval_engine/execution_logger.py"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestApprovalExecutionLogger:
@@ -10,12 +11,20 @@ class TestApprovalExecutionLogger:
         self.db = MagicMock()
         with patch("app.services.approval_engine.execution_logger.get_logger"):
             from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
             self.logger = ApprovalExecutionLogger(self.db)
 
     @patch("app.services.approval_engine.execution_logger.log_info_with_context")
     def test_log_instance_created(self, mock_log):
-        instance = MagicMock(id=1, instance_no="INS-001", entity_type="PROJECT",
-                             entity_id=10, template_id=1, flow_id=1, status="PENDING")
+        instance = MagicMock(
+            id=1,
+            instance_no="INS-001",
+            entity_type="PROJECT",
+            entity_id=10,
+            template_id=1,
+            flow_id=1,
+            status="PENDING",
+        )
         user = MagicMock(id=1, username="admin", real_name="管理员")
         self.logger.log_instance_created(instance, user)
         mock_log.assert_called_once()
@@ -52,7 +61,9 @@ class TestApprovalExecutionLogger:
         assert result == []
 
     def test_get_approval_logs_with_filters(self):
-        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         result = self.logger.get_approval_logs(1, node_id=1, approver_id=2)
         assert result == []
 
@@ -63,7 +74,9 @@ class TestApprovalExecutionLogger:
     def test_create_action_log_exception_handled(self):
         self.db.add.side_effect = Exception("DB error")
         # Should not raise
-        self.logger._create_action_log(instance_id=1, operator_id=1, operator_name="test", action="TEST")
+        self.logger._create_action_log(
+            instance_id=1, operator_id=1, operator_name="test", action="TEST"
+        )
 
     @patch("app.services.approval_engine.execution_logger.log_info_with_context")
     def test_log_flow_selection(self, mock_log):

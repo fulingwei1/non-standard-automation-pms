@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - cost_forecast_service"""
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.cost_forecast_service")
 
@@ -100,7 +101,9 @@ class TestGetBurnDownData:
 
     def test_with_budget(self):
         db = make_db()
-        project = make_project(budget_amount=Decimal("100000"), actual_cost=Decimal("40000"), progress_pct=40.0)
+        project = make_project(
+            budget_amount=Decimal("100000"), actual_cost=Decimal("40000"), progress_pct=40.0
+        )
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
         monthly_costs = [
@@ -123,7 +126,9 @@ class TestCheckCostAlerts:
 
     def test_overspend_alert_triggered(self):
         db = make_db()
-        project = make_project(budget_amount=Decimal("100000"), actual_cost=Decimal("90000"), progress_pct=50.0)
+        project = make_project(
+            budget_amount=Decimal("100000"), actual_cost=Decimal("90000"), progress_pct=50.0
+        )
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
 
@@ -132,15 +137,19 @@ class TestCheckCostAlerts:
             "PROGRESS_MISMATCH": {"deviation_threshold": 15},
             "TREND_ANOMALY": {"growth_rate_threshold": 0.3},
         }
-        with patch.object(svc, "_get_alert_rules", return_value=rules), \
-             patch.object(svc, "_get_monthly_costs", return_value=[]), \
-             patch.object(svc, "_create_alert_record"):
+        with (
+            patch.object(svc, "_get_alert_rules", return_value=rules),
+            patch.object(svc, "_get_monthly_costs", return_value=[]),
+            patch.object(svc, "_create_alert_record"),
+        ):
             alerts = svc.check_cost_alerts(1, auto_create=False)
         assert any(a["alert_type"] == "OVERSPEND" for a in alerts)
 
     def test_no_alerts_when_within_budget(self):
         db = make_db()
-        project = make_project(budget_amount=Decimal("100000"), actual_cost=Decimal("30000"), progress_pct=30.0)
+        project = make_project(
+            budget_amount=Decimal("100000"), actual_cost=Decimal("30000"), progress_pct=30.0
+        )
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
 
@@ -149,8 +158,10 @@ class TestCheckCostAlerts:
             "PROGRESS_MISMATCH": {"deviation_threshold": 15},
             "TREND_ANOMALY": {"growth_rate_threshold": 0.3},
         }
-        with patch.object(svc, "_get_alert_rules", return_value=rules), \
-             patch.object(svc, "_get_monthly_costs", return_value=[]):
+        with (
+            patch.object(svc, "_get_alert_rules", return_value=rules),
+            patch.object(svc, "_get_monthly_costs", return_value=[]),
+        ):
             alerts = svc.check_cost_alerts(1, auto_create=False)
         assert len(alerts) == 0
 

@@ -16,13 +16,14 @@ ReportEngine 深度覆盖测试（N3组）
 - _get_context_value (plain key / dot notation / missing)
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
-import pytest
+from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_db():
@@ -48,12 +49,15 @@ def mock_config():
 
 @pytest.fixture
 def engine(mock_db):
-    with patch("app.services.report_framework.engine.ConfigLoader"), \
-         patch("app.services.report_framework.engine.DataResolver"), \
-         patch("app.services.report_framework.engine.ReportCacheManager"), \
-         patch("app.services.report_framework.engine.ExpressionParser"), \
-         patch("app.services.report_framework.engine.JsonRenderer"):
+    with (
+        patch("app.services.report_framework.engine.ConfigLoader"),
+        patch("app.services.report_framework.engine.DataResolver"),
+        patch("app.services.report_framework.engine.ReportCacheManager"),
+        patch("app.services.report_framework.engine.ExpressionParser"),
+        patch("app.services.report_framework.engine.JsonRenderer"),
+    ):
         from app.services.report_framework.engine import ReportEngine
+
         eng = ReportEngine(db=mock_db)
     return eng
 
@@ -62,24 +66,31 @@ def engine(mock_db):
 # __init__
 # ---------------------------------------------------------------------------
 
+
 class TestReportEngineInit:
     def test_default_json_renderer_registered(self, mock_db):
-        with patch("app.services.report_framework.engine.ConfigLoader"), \
-             patch("app.services.report_framework.engine.DataResolver"), \
-             patch("app.services.report_framework.engine.ReportCacheManager"), \
-             patch("app.services.report_framework.engine.ExpressionParser"), \
-             patch("app.services.report_framework.engine.JsonRenderer") as MockJson:
+        with (
+            patch("app.services.report_framework.engine.ConfigLoader"),
+            patch("app.services.report_framework.engine.DataResolver"),
+            patch("app.services.report_framework.engine.ReportCacheManager"),
+            patch("app.services.report_framework.engine.ExpressionParser"),
+            patch("app.services.report_framework.engine.JsonRenderer") as MockJson,
+        ):
             from app.services.report_framework.engine import ReportEngine
+
             eng = ReportEngine(db=mock_db)
         assert "json" in eng.renderers
 
     def test_custom_cache_manager_used(self, mock_db):
         custom_cache = MagicMock()
-        with patch("app.services.report_framework.engine.ConfigLoader"), \
-             patch("app.services.report_framework.engine.DataResolver"), \
-             patch("app.services.report_framework.engine.ExpressionParser"), \
-             patch("app.services.report_framework.engine.JsonRenderer"):
+        with (
+            patch("app.services.report_framework.engine.ConfigLoader"),
+            patch("app.services.report_framework.engine.DataResolver"),
+            patch("app.services.report_framework.engine.ExpressionParser"),
+            patch("app.services.report_framework.engine.JsonRenderer"),
+        ):
             from app.services.report_framework.engine import ReportEngine
+
             eng = ReportEngine(db=mock_db, cache_manager=custom_cache)
         assert eng.cache is custom_cache
 
@@ -87,6 +98,7 @@ class TestReportEngineInit:
 # ---------------------------------------------------------------------------
 # register_renderer
 # ---------------------------------------------------------------------------
+
 
 class TestRegisterRenderer:
     def test_registers_custom_renderer(self, engine):
@@ -104,9 +116,11 @@ class TestRegisterRenderer:
 # _check_permission
 # ---------------------------------------------------------------------------
 
+
 class TestCheckPermission:
     def test_superuser_always_passes(self, engine):
         from app.services.report_framework.engine import PermissionError as PE
+
         config = MagicMock()
         config.permissions.roles = ["admin"]
         user = MagicMock()
@@ -115,6 +129,7 @@ class TestCheckPermission:
 
     def test_user_without_matching_role_raises(self, engine):
         from app.services.report_framework.engine import PermissionError as PE
+
         config = MagicMock()
         config.meta.code = "restricted"
         config.permissions.roles = ["finance"]
@@ -162,9 +177,11 @@ class TestCheckPermission:
 # _validate_params
 # ---------------------------------------------------------------------------
 
+
 class TestValidateParams:
     def _make_param(self, name, required=False, default=None, ptype="string"):
         from app.services.report_framework.models import ParameterType
+
         p = MagicMock()
         p.name = name
         p.required = required
@@ -175,6 +192,7 @@ class TestValidateParams:
 
     def test_required_param_missing_raises(self, engine):
         from app.services.report_framework.engine import ParameterError
+
         config = MagicMock()
         config.parameters = [self._make_param("project_id", required=True)]
         with pytest.raises(ParameterError):
@@ -202,6 +220,7 @@ class TestValidateParams:
 # ---------------------------------------------------------------------------
 # _convert_param_type
 # ---------------------------------------------------------------------------
+
 
 class TestConvertParamType:
     def _get_type(self, value_str):
@@ -232,11 +251,13 @@ class TestConvertParamType:
 
     def test_date_from_string(self, engine):
         from datetime import date
+
         result = engine._convert_param_type("2025-06-15", self._get_type("date"))
         assert result == date(2025, 6, 15)
 
     def test_date_already_date(self, engine):
         from datetime import date
+
         d = date(2025, 1, 1)
         result = engine._convert_param_type(d, self._get_type("date"))
         assert result == d
@@ -255,6 +276,7 @@ class TestConvertParamType:
 
     def test_invalid_integer_raises_param_error(self, engine):
         from app.services.report_framework.engine import ParameterError
+
         with pytest.raises(ParameterError):
             engine._convert_param_type("not_a_number", self._get_type("integer"))
 
@@ -262,6 +284,7 @@ class TestConvertParamType:
 # ---------------------------------------------------------------------------
 # _get_context_value
 # ---------------------------------------------------------------------------
+
 
 class TestGetContextValue:
     def test_plain_key(self, engine):
@@ -296,6 +319,7 @@ class TestGetContextValue:
 # _render_metrics
 # ---------------------------------------------------------------------------
 
+
 class TestRenderMetrics:
     def test_renders_metric_items(self, engine):
         section = MagicMock()
@@ -323,6 +347,7 @@ class TestRenderMetrics:
 # _render_table
 # ---------------------------------------------------------------------------
 
+
 class TestRenderTable:
     def test_returns_empty_when_no_source(self, engine):
         section = MagicMock()
@@ -349,6 +374,7 @@ class TestRenderTable:
 # ---------------------------------------------------------------------------
 # _render_chart
 # ---------------------------------------------------------------------------
+
 
 class TestRenderChart:
     def test_returns_empty_when_no_source(self, engine):
@@ -384,14 +410,18 @@ class TestRenderChart:
 # generate
 # ---------------------------------------------------------------------------
 
+
 class TestGenerate:
     def test_generate_raises_when_format_unsupported(self, engine, mock_config):
         engine.config_loader.get.return_value = mock_config
         engine.data_resolver.resolve_all.return_value = {}
         engine.cache.get.return_value = None
-        with patch.object(engine, "_validate_params", return_value={}), \
-             patch.object(engine, "_render_sections", return_value=[]):
+        with (
+            patch.object(engine, "_validate_params", return_value={}),
+            patch.object(engine, "_render_sections", return_value=[]),
+        ):
             from app.services.report_framework.engine import ConfigError
+
             with pytest.raises(ConfigError):
                 engine.generate("test_report", {}, format="unsupported_format")
 
@@ -413,8 +443,10 @@ class TestGenerate:
         engine.renderers["json"] = mock_renderer
         user = MagicMock()
         user.is_superuser = True
-        with patch.object(engine, "_validate_params", return_value={}), \
-             patch.object(engine, "_render_sections", return_value=[]):
+        with (
+            patch.object(engine, "_validate_params", return_value={}),
+            patch.object(engine, "_render_sections", return_value=[]),
+        ):
             result = engine.generate("test_report", {}, user=user)
         assert result is mock_result
 
@@ -423,8 +455,10 @@ class TestGenerate:
         engine.data_resolver.resolve_all.return_value = {}
         mock_result = MagicMock()
         engine.renderers["json"] = MagicMock(render=MagicMock(return_value=mock_result))
-        with patch.object(engine, "_validate_params", return_value={}), \
-             patch.object(engine, "_render_sections", return_value=[]):
+        with (
+            patch.object(engine, "_validate_params", return_value={}),
+            patch.object(engine, "_render_sections", return_value=[]),
+        ):
             result = engine.generate("test_report", {}, skip_cache=True)
         engine.cache.get.assert_not_called()
 
@@ -432,6 +466,7 @@ class TestGenerate:
 # ---------------------------------------------------------------------------
 # list_available
 # ---------------------------------------------------------------------------
+
 
 class TestListAvailable:
     def test_returns_all_when_no_user(self, engine):
@@ -442,6 +477,7 @@ class TestListAvailable:
 
     def test_filters_by_user_permission(self, engine):
         from app.services.report_framework.engine import PermissionError as PE
+
         meta1 = MagicMock()
         meta1.code = "report_a"
         meta2 = MagicMock()
@@ -467,6 +503,7 @@ class TestListAvailable:
 # ---------------------------------------------------------------------------
 # get_schema
 # ---------------------------------------------------------------------------
+
 
 class TestGetSchema:
     def test_returns_schema_structure(self, engine, mock_config):

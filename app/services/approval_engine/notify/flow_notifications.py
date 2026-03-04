@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from app.models.approval import ApprovalInstance, ApprovalTask
 
+
 class FlowNotificationsMixin:
     """流程变更通知 Mixin"""
 

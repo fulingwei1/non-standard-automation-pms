@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第十二批：项目状态联动服务单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     # 需要 patch 掉所有处理器以避免循环导入
@@ -20,11 +21,14 @@ pytestmark = pytest.mark.skipif(SKIP, reason="导入失败")
 
 def _make_service():
     db = MagicMock()
-    with patch("app.services.status_transition_service.StatusTransitionService.__init__",
-               lambda self, db: setattr(self, 'db', db) or setattr(self, 'contract_handler', MagicMock())
-               or setattr(self, 'material_handler', MagicMock())
-               or setattr(self, 'acceptance_handler', MagicMock())
-               or setattr(self, 'ecn_handler', MagicMock())):
+    with patch(
+        "app.services.status_transition_service.StatusTransitionService.__init__",
+        lambda self, db: setattr(self, "db", db)
+        or setattr(self, "contract_handler", MagicMock())
+        or setattr(self, "material_handler", MagicMock())
+        or setattr(self, "acceptance_handler", MagicMock())
+        or setattr(self, "ecn_handler", MagicMock()),
+    ):
         svc = StatusTransitionService.__new__(StatusTransitionService)
         svc.db = db
         svc.contract_handler = MagicMock()
@@ -53,7 +57,7 @@ class TestHandleContractSigned:
         mock_project = MagicMock()
         svc.contract_handler.handle_contract_signed = MagicMock(return_value=mock_project)
 
-        if hasattr(svc, 'handle_contract_signed'):
+        if hasattr(svc, "handle_contract_signed"):
             result = svc.handle_contract_signed(contract_id=1)
             svc.contract_handler.handle_contract_signed.assert_called()
 
@@ -61,7 +65,7 @@ class TestHandleContractSigned:
         svc, _ = _make_service()
         svc.contract_handler.handle_contract_signed = MagicMock(return_value=None)
 
-        if hasattr(svc, 'handle_contract_signed'):
+        if hasattr(svc, "handle_contract_signed"):
             svc.handle_contract_signed(contract_id=1, auto_create_project=False)
             svc.contract_handler.handle_contract_signed.assert_called()
 
@@ -70,14 +74,14 @@ class TestHandleMaterialEvents:
     def test_handle_bom_published_delegates(self):
         svc, _ = _make_service()
         svc.material_handler.handle_bom_published = MagicMock()
-        if hasattr(svc, 'handle_bom_published'):
+        if hasattr(svc, "handle_bom_published"):
             svc.handle_bom_published(project_id=1)
             svc.material_handler.handle_bom_published.assert_called()
 
     def test_handle_materials_ready_delegates(self):
         svc, _ = _make_service()
         svc.material_handler.handle_materials_ready = MagicMock()
-        if hasattr(svc, 'handle_materials_ready'):
+        if hasattr(svc, "handle_materials_ready"):
             svc.handle_materials_ready(project_id=1)
             svc.material_handler.handle_materials_ready.assert_called()
 
@@ -86,7 +90,7 @@ class TestHandleAcceptanceEvents:
     def test_handle_fat_completed_delegates(self):
         svc, _ = _make_service()
         svc.acceptance_handler.handle_fat_completed = MagicMock()
-        if hasattr(svc, 'handle_fat_completed'):
+        if hasattr(svc, "handle_fat_completed"):
             svc.handle_fat_completed(project_id=1)
             svc.acceptance_handler.handle_fat_completed.assert_called()
 
@@ -95,6 +99,6 @@ class TestHandleEcnEvents:
     def test_handle_ecn_approved_delegates(self):
         svc, _ = _make_service()
         svc.ecn_handler.handle_ecn_approved = MagicMock()
-        if hasattr(svc, 'handle_ecn_approved'):
+        if hasattr(svc, "handle_ecn_approved"):
             svc.handle_ecn_approved(project_id=1, ecn_id=1)
             svc.ecn_handler.handle_ecn_approved.assert_called()

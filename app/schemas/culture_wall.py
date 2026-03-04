@@ -10,8 +10,10 @@ from pydantic import BaseModel, Field
 
 # ==================== 文化墙内容 ====================
 
+
 class CultureWallContentCreate(BaseModel):
     """创建文化墙内容"""
+
     content_type: str = Field(..., description="内容类型:STRATEGY/CULTURE/IMPORTANT/NOTICE/REWARD")
     title: str = Field(..., description="标题")
     content: Optional[str] = Field(None, description="内容")
@@ -30,6 +32,7 @@ class CultureWallContentCreate(BaseModel):
 
 class CultureWallContentUpdate(BaseModel):
     """更新文化墙内容"""
+
     title: Optional[str] = None
     content: Optional[str] = None
     summary: Optional[str] = None
@@ -47,6 +50,7 @@ class CultureWallContentUpdate(BaseModel):
 
 class CultureWallContentResponse(BaseModel):
     """文化墙内容响应"""
+
     id: int
     content_type: str
     title: str
@@ -76,8 +80,10 @@ class CultureWallContentResponse(BaseModel):
 
 # ==================== 个人目标 ====================
 
+
 class PersonalGoalCreate(BaseModel):
     """创建个人目标"""
+
     goal_type: str = Field(..., description="目标类型:MONTHLY/QUARTERLY/YEARLY")
     period: str = Field(..., description="目标周期")
     title: str = Field(..., description="目标标题")
@@ -91,6 +97,7 @@ class PersonalGoalCreate(BaseModel):
 
 class PersonalGoalUpdate(BaseModel):
     """更新个人目标"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     target_value: Optional[str] = None
@@ -105,6 +112,7 @@ class PersonalGoalUpdate(BaseModel):
 
 class PersonalGoalResponse(BaseModel):
     """个人目标响应"""
+
     id: int
     user_id: int
     goal_type: str
@@ -130,12 +138,16 @@ class PersonalGoalResponse(BaseModel):
 
 # ==================== 文化墙汇总 ====================
 
+
 class CultureWallSummary(BaseModel):
     """文化墙汇总响应"""
+
     strategies: List[CultureWallContentResponse] = Field(default=[], description="战略规划")
     cultures: List[CultureWallContentResponse] = Field(default=[], description="企业文化")
     important_items: List[CultureWallContentResponse] = Field(default=[], description="重要事项")
     notices: List[CultureWallContentResponse] = Field(default=[], description="通知公告")
     rewards: List[CultureWallContentResponse] = Field(default=[], description="奖励通报")
     personal_goals: List[PersonalGoalResponse] = Field(default=[], description="个人目标")
-    notifications: List[Dict[str, Any]] = Field(default=[], description="系统通知（从通知系统获取）")
+    notifications: List[Dict[str, Any]] = Field(
+        default=[], description="系统通知（从通知系统获取）"
+    )

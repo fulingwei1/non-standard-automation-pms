@@ -2,11 +2,13 @@
 """
 第八批覆盖率测试 - 移动端AI销售助手服务
 """
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 try:
     from app.services.presale_mobile_service import PresaleMobileService
+
     HAS_PMS = True
 except Exception:
     HAS_PMS = False
@@ -28,7 +30,7 @@ class TestClassifyQuestion:
         """问题分类方法存在"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        assert hasattr(svc, '_classify_question')
+        assert hasattr(svc, "_classify_question")
 
     def test_classify_returns_string(self):
         """分类结果是字符串"""
@@ -60,14 +62,14 @@ class TestSyncData:
         """同步方法存在"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        sync_methods = [m for m in dir(svc) if 'sync' in m.lower() and not m.startswith('__')]
+        sync_methods = [m for m in dir(svc) if "sync" in m.lower() and not m.startswith("__")]
         assert len(sync_methods) > 0 or True  # 有或无都可以
 
     def test_get_offline_data_method(self):
         """获取离线数据方法"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        if hasattr(svc, 'get_offline_data'):
+        if hasattr(svc, "get_offline_data"):
             db.query.return_value.filter.return_value.first.return_value = None
             try:
                 result = svc.get_offline_data(user_id=1)
@@ -85,8 +87,10 @@ class TestGetChatHistory:
         """获取聊天历史返回列表"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        if hasattr(svc, 'get_chat_history'):
-            db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        if hasattr(svc, "get_chat_history"):
+            db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                []
+            )
             result = svc.get_chat_history(user_id=1)
             assert isinstance(result, list)
         else:
@@ -100,13 +104,9 @@ class TestQuickEstimate:
         """快速估价方法存在检查"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        if hasattr(svc, 'quick_estimate'):
+        if hasattr(svc, "quick_estimate"):
             try:
-                result = svc.quick_estimate(
-                    user_id=1,
-                    project_type="标准",
-                    parameters={}
-                )
+                result = svc.quick_estimate(user_id=1, project_type="标准", parameters={})
                 assert result is not None
             except Exception:
                 pass
@@ -117,13 +117,10 @@ class TestQuickEstimate:
         """保存拜访记录"""
         db = MagicMock()
         svc = PresaleMobileService(db)
-        if hasattr(svc, 'save_visit_record'):
+        if hasattr(svc, "save_visit_record"):
             try:
                 result = svc.save_visit_record(
-                    user_id=1,
-                    customer_name="测试客户",
-                    visit_type="PHONE",
-                    summary="测试摘要"
+                    user_id=1, customer_name="测试客户", visit_type="PHONE", summary="测试摘要"
                 )
                 assert result is not None
             except Exception:

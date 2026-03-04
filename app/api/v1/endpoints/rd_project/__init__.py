@@ -36,4 +36,4 @@ router.include_router(initiation_router)
 router.include_router(worklogs_router)
 router.include_router(documents_router)
 
-__all__ = ['router']
+__all__ = ["router"]

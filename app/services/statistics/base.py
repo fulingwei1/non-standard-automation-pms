@@ -89,9 +89,7 @@ class SyncStatisticsService:
             {字段值: 数量}
         """
         col = getattr(self.model, field)
-        q = self.db.query(col, func.count(self.model.id)).filter(
-            col.isnot(None)
-        )
+        q = self.db.query(col, func.count(self.model.id)).filter(col.isnot(None))
         # 应用排除状态
         if self.default_exclude_statuses:
             status_col = getattr(self.model, self.default_status_field)

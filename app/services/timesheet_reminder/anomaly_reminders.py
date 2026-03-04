@@ -23,7 +23,6 @@ from app.services.timesheet_reminder.base import create_timesheet_notification
 logger = logging.getLogger(__name__)
 
 
-
 def notify_timesheet_anomaly(db: Session, days: int = 1) -> int:
     """
     提醒异常工时记录
@@ -39,20 +38,14 @@ def notify_timesheet_anomaly(db: Session, days: int = 1) -> int:
 
     # 使用质量服务检测异常
     quality_service = TimesheetQualityService(db)
-    anomalies = quality_service.detect_anomalies(
-        start_date=target_date, end_date=date.today()
-    )
+    anomalies = quality_service.detect_anomalies(start_date=target_date, end_date=date.today())
 
     reminder_count = 0
     notified_users = set()
 
     for anomaly in anomalies:
         # 获取工时记录
-        timesheet = (
-            db.query(Timesheet)
-            .filter(Timesheet.id == anomaly.get("timesheet_id"))
-            .first()
-        )
+        timesheet = db.query(Timesheet).filter(Timesheet.id == anomaly.get("timesheet_id")).first()
         if not timesheet:
             continue
 
@@ -68,8 +61,7 @@ def notify_timesheet_anomaly(db: Session, days: int = 1) -> int:
                 Notification.user_id == user_id,
                 Notification.notification_type == "TIMESHEET_ANOMALY",
                 Notification.source_id == timesheet.id,
-                Notification.created_at
-                >= datetime.combine(date.today(), datetime.min.time()),
+                Notification.created_at >= datetime.combine(date.today(), datetime.min.time()),
             )
             .first()
         )
@@ -100,5 +92,3 @@ def notify_timesheet_anomaly(db: Session, days: int = 1) -> int:
     logger.info(f"异常工时预警完成: 发送 {reminder_count} 条提醒")
 
     return reminder_count
-
-

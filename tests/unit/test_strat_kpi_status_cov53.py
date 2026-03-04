@@ -2,9 +2,10 @@
 """
 Unit tests for app/services/strategy/kpi_collector/status.py
 """
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.strategy.kpi_collector.status import get_collection_status
@@ -12,7 +13,9 @@ except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
 
-def _make_kpi(data_source_type="AUTO", frequency="MONTHLY", current_value=None, last_collected_at=None):
+def _make_kpi(
+    data_source_type="AUTO", frequency="MONTHLY", current_value=None, last_collected_at=None
+):
     k = MagicMock()
     k.data_source_type = data_source_type
     k.frequency = frequency
@@ -88,6 +91,13 @@ def test_get_collection_status_structure_keys():
     db = MagicMock()
     db.query.return_value.join.return_value.filter.return_value.all.return_value = []
     result = get_collection_status(db, strategy_id=5)
-    expected_keys = {"total_kpis", "auto_kpis", "manual_kpis", "collected_kpis",
-                     "pending_kpis", "frequency_stats", "last_collected_at"}
+    expected_keys = {
+        "total_kpis",
+        "auto_kpis",
+        "manual_kpis",
+        "collected_kpis",
+        "pending_kpis",
+        "frequency_stats",
+        "last_collected_at",
+    }
     assert expected_keys == set(result.keys())

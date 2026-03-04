@@ -12,8 +12,10 @@ from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 技术规格要求 ====================
 
+
 class TechnicalSpecRequirementCreate(BaseModel):
     """创建技术规格要求"""
+
     project_id: int = Field(description="项目ID")
     document_id: Optional[int] = Field(default=None, description="关联技术规格书文档ID")
     material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码")
@@ -22,12 +24,15 @@ class TechnicalSpecRequirementCreate(BaseModel):
     brand: Optional[str] = Field(default=None, max_length=100, description="品牌要求")
     model: Optional[str] = Field(default=None, max_length=100, description="型号要求")
     key_parameters: Optional[Dict[str, Any]] = Field(default=None, description="关键参数（JSON）")
-    requirement_level: str = Field(default="REQUIRED", description="要求级别：REQUIRED/OPTIONAL/STRICT")
+    requirement_level: str = Field(
+        default="REQUIRED", description="要求级别：REQUIRED/OPTIONAL/STRICT"
+    )
     remark: Optional[str] = Field(default=None, description="备注说明")
 
 
 class TechnicalSpecRequirementUpdate(BaseModel):
     """更新技术规格要求"""
+
     material_code: Optional[str] = None
     material_name: Optional[str] = None
     specification: Optional[str] = None
@@ -40,6 +45,7 @@ class TechnicalSpecRequirementUpdate(BaseModel):
 
 class TechnicalSpecRequirementResponse(TimestampSchema):
     """技术规格要求响应"""
+
     id: int
     project_id: int
     document_id: Optional[int] = None
@@ -57,13 +63,16 @@ class TechnicalSpecRequirementResponse(TimestampSchema):
 
 class TechnicalSpecRequirementListResponse(PaginatedResponse[TechnicalSpecRequirementResponse]):
     """技术规格要求列表响应"""
+
     pass
 
 
 # ==================== 规格匹配记录 ====================
 
+
 class SpecMatchRecordResponse(TimestampSchema):
     """规格匹配记录响应"""
+
     id: int
     project_id: int
     spec_requirement_id: Optional[int] = None
@@ -81,13 +90,16 @@ class SpecMatchRecordResponse(TimestampSchema):
 
 class SpecMatchRecordListResponse(PaginatedResponse[SpecMatchRecordResponse]):
     """规格匹配记录列表响应"""
+
     pass
 
 
 # ==================== 规格匹配检查 ====================
 
+
 class SpecMatchCheckRequest(BaseModel):
     """规格匹配检查请求"""
+
     project_id: int = Field(description="项目ID")
     match_type: str = Field(description="匹配类型：BOM/PURCHASE_ORDER")
     match_target_id: Optional[int] = Field(default=None, description="匹配对象ID，为空则检查所有")
@@ -95,6 +107,7 @@ class SpecMatchCheckRequest(BaseModel):
 
 class SpecMatchResult(BaseModel):
     """规格匹配结果"""
+
     spec_requirement_id: int
     material_name: str
     match_status: str
@@ -105,6 +118,7 @@ class SpecMatchResult(BaseModel):
 
 class SpecMatchCheckResponse(BaseModel):
     """规格匹配检查响应"""
+
     total_checked: int = Field(description="检查总数")
     matched_count: int = Field(description="匹配数量")
     mismatched_count: int = Field(description="不匹配数量")
@@ -114,8 +128,10 @@ class SpecMatchCheckResponse(BaseModel):
 
 # ==================== 规格提取 ====================
 
+
 class SpecExtractRequest(BaseModel):
     """规格提取请求"""
+
     document_id: int = Field(description="文档ID")
     project_id: int = Field(description="项目ID")
     auto_extract: bool = Field(default=False, description="是否自动提取")
@@ -123,9 +139,8 @@ class SpecExtractRequest(BaseModel):
 
 class SpecExtractResponse(BaseModel):
     """规格提取响应"""
+
     extracted_count: int = Field(description="提取数量")
-    requirements: List[TechnicalSpecRequirementResponse] = Field(default=[], description="提取的规格要求")
-
-
-
-
+    requirements: List[TechnicalSpecRequirementResponse] = Field(
+        default=[], description="提取的规格要求"
+    )

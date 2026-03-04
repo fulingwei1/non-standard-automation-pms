@@ -78,9 +78,7 @@ class DeptReportAdapter(BaseReportAdapter):
                 self.db, department_id, start_date, end_date
             )
         else:
-            data = DeptReportGenerator.generate_weekly(
-                self.db, department_id, start_date, end_date
-            )
+            data = DeptReportGenerator.generate_weekly(self.db, department_id, start_date, end_date)
 
         # 添加报表元信息
         data["title"] = f"部门{'月' if self.report_type == 'monthly' else '周'}报"

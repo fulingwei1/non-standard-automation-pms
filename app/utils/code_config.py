@@ -7,32 +7,32 @@
 
 # 编码前缀
 CODE_PREFIX = {
-    'EMPLOYEE': 'EMP',
-    'CUSTOMER': 'CUS',
-    'MATERIAL': 'MAT',
-    'PROJECT': 'PJ',
-    'MACHINE': 'PN',  # 用于机台序号
+    "EMPLOYEE": "EMP",
+    "CUSTOMER": "CUS",
+    "MATERIAL": "MAT",
+    "PROJECT": "PJ",
+    "MACHINE": "PN",  # 用于机台序号
 }
 
 # 序号长度
 SEQ_LENGTH = {
-    'EMPLOYEE': 5,
-    'CUSTOMER': 7,
-    'MATERIAL': 5,
-    'PROJECT': 3,
-    'MACHINE': 3,
+    "EMPLOYEE": 5,
+    "CUSTOMER": 7,
+    "MATERIAL": 5,
+    "PROJECT": 3,
+    "MACHINE": 3,
 }
 
 # 物料类别码映射（从类别编码到类别码）
 # 类别编码格式：ME-01-01, EL-02-03 等
 # 提取第一个部分作为类别码
 MATERIAL_CATEGORY_CODES = {
-    'ME': '机械件',
-    'EL': '电气件',
-    'PN': '气动件',
-    'ST': '标准件',
-    'OT': '其他',
-    'TR': '贸易件',  # 扩展支持
+    "ME": "机械件",
+    "EL": "电气件",
+    "PN": "气动件",
+    "ST": "标准件",
+    "OT": "其他",
+    "TR": "贸易件",  # 扩展支持
 }
 
 # 物料类别码验证（允许的类别码）
@@ -56,10 +56,10 @@ def get_material_category_code(category_code: str) -> str:
         'EL'
     """
     if not category_code:
-        return 'OT'  # 默认其他
+        return "OT"  # 默认其他
 
     # 提取第一个部分（类别码）
-    parts = category_code.split('-')
+    parts = category_code.split("-")
     category_code_part = parts[0].upper()
 
     # 验证类别码是否有效
@@ -67,7 +67,7 @@ def get_material_category_code(category_code: str) -> str:
         return category_code_part
 
     # 如果不在有效列表中，返回默认值
-    return 'OT'
+    return "OT"
 
 
 def validate_material_category_code(category_code: str) -> bool:

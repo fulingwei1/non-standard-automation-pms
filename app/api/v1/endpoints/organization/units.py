@@ -10,11 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.core.schemas import list_response, success_response
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
-from app.models.organization import OrganizationUnit, Employee
+from app.core import security
+from app.core.schemas import list_response, success_response
+from app.models.organization import Employee, OrganizationUnit
 from app.models.user import User
 from app.schemas.organization import (
     OrganizationUnitCreate,
@@ -42,17 +42,15 @@ def list_org_units(
 
     units = apply_pagination(
         query.order_by(OrganizationUnit.sort_order, OrganizationUnit.unit_code),
-        pagination.offset, pagination.limit
+        pagination.offset,
+        pagination.limit,
     ).all()
 
     # 转换为Pydantic模型
     unit_responses = [OrganizationUnitResponse.model_validate(unit) for unit in units]
 
     # 使用统一响应格式
-    return list_response(
-        items=unit_responses,
-        message="获取组织单元列表成功"
-    )
+    return list_response(items=unit_responses, message="获取组织单元列表成功")
 
 
 @router.get("/tree")
@@ -66,9 +64,7 @@ def get_org_tree(
     if is_active is not None:
         query = query.filter(OrganizationUnit.is_active == is_active)
 
-    units = query.order_by(
-        OrganizationUnit.sort_order, OrganizationUnit.unit_code
-    ).all()
+    units = query.order_by(OrganizationUnit.sort_order, OrganizationUnit.unit_code).all()
 
     # 构建树形结构
     unit_dict = {
@@ -97,10 +93,7 @@ def get_org_tree(
             tree.append(u_data)
 
     # 使用统一响应格式
-    return list_response(
-        items=tree,
-        message="获取组织架构树成功"
-    )
+    return list_response(items=tree, message="获取组织架构树成功")
 
 
 @router.post("/")
@@ -112,9 +105,7 @@ def create_org_unit(
 ) -> Any:
     """创建组织单元"""
     unit = (
-        db.query(OrganizationUnit)
-        .filter(OrganizationUnit.unit_code == unit_in.unit_code)
-        .first()
+        db.query(OrganizationUnit).filter(OrganizationUnit.unit_code == unit_in.unit_code).first()
     )
     if unit:
         raise HTTPException(status_code=400, detail="组织编码已存在")
@@ -123,11 +114,7 @@ def create_org_unit(
     level = 1
     path = ""
     if unit_in.parent_id:
-        parent = (
-            db.query(OrganizationUnit)
-            .filter(OrganizationUnit.id == unit_in.parent_id)
-            .first()
-        )
+        parent = db.query(OrganizationUnit).filter(OrganizationUnit.id == unit_in.parent_id).first()
         if not parent:
             raise HTTPException(status_code=404, detail="父组织不存在")
         level = parent.level + 1
@@ -144,10 +131,7 @@ def create_org_unit(
     unit_response = OrganizationUnitResponse.model_validate(unit)
 
     # 使用统一响应格式
-    return success_response(
-        data=unit_response,
-        message="组织单元创建成功"
-    )
+    return success_response(data=unit_response, message="组织单元创建成功")
 
 
 @router.get("/{id}")
@@ -165,10 +149,7 @@ def get_org_unit(
     unit_response = OrganizationUnitResponse.model_validate(unit)
 
     # 使用统一响应格式
-    return success_response(
-        data=unit_response,
-        message="获取组织单元成功"
-    )
+    return success_response(data=unit_response, message="获取组织单元成功")
 
 
 @router.put("/{id}")
@@ -213,10 +194,7 @@ def update_org_unit(
     unit_response = OrganizationUnitResponse.model_validate(unit)
 
     # 使用统一响应格式
-    return success_response(
-        data=unit_response,
-        message="组织单元更新成功"
-    )
+    return success_response(data=unit_response, message="组织单元更新成功")
 
 
 @router.delete("/{id}")
@@ -231,9 +209,7 @@ def delete_org_unit(
         raise HTTPException(status_code=404, detail="组织单元不存在")
 
     # 检查是否有子组织
-    has_children = (
-        db.query(OrganizationUnit).filter(OrganizationUnit.parent_id == id).first()
-    )
+    has_children = db.query(OrganizationUnit).filter(OrganizationUnit.parent_id == id).first()
     if has_children:
         raise HTTPException(status_code=400, detail="该组织下有子组织，不能删除")
 
@@ -241,10 +217,7 @@ def delete_org_unit(
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data={"id": id},
-        message="组织单元删除成功"
-    )
+    return success_response(data={"id": id}, message="组织单元删除成功")
 
 
 @router.get("/{id}/employees")
@@ -260,13 +233,11 @@ def get_org_unit_employees(
 
     # 查找在该部门下的员工
     from app.schemas.organization import EmployeeResponse
+
     employees = db.query(Employee).filter(Employee.department == unit.unit_name).all()
 
     # 转换为Pydantic模型
     emp_responses = [EmployeeResponse.model_validate(emp) for emp in employees]
 
     # 使用统一响应格式
-    return list_response(
-        items=emp_responses,
-        message="获取组织单元员工成功"
-    )
+    return list_response(items=emp_responses, message="获取组织单元员工成功")

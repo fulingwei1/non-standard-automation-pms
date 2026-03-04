@@ -194,11 +194,13 @@ class ProjectRiskService:
                 results.append(result)
             except Exception as e:
                 logger.error(f"计算项目 {project.id} 风险失败: {e}")
-                results.append({
-                    "project_id": project.id,
-                    "project_code": project.project_code,
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "project_id": project.id,
+                        "project_code": project.project_code,
+                        "error": str(e),
+                    }
+                )
 
         return results
 
@@ -308,7 +310,8 @@ class ProjectRiskService:
         total_count = (
             self.db.query(func.count(ProjectMilestone.id))
             .filter(ProjectMilestone.project_id == project_id)
-            .scalar() or 0
+            .scalar()
+            or 0
         )
 
         # 查询逾期里程碑
@@ -374,9 +377,14 @@ class ProjectRiskService:
         # 计算进度偏差（如果有计划结束日期）
         if project.planned_end_date:
             today = date.today()
-            total_duration = (project.planned_end_date - (project.planned_start_date or project.contract_date or today)).days
+            total_duration = (
+                project.planned_end_date
+                - (project.planned_start_date or project.contract_date or today)
+            ).days
             if total_duration > 0:
-                elapsed_days = (today - (project.actual_start_date or project.planned_start_date or today)).days
+                elapsed_days = (
+                    today - (project.actual_start_date or project.planned_start_date or today)
+                ).days
                 expected_progress = min(100, (elapsed_days / total_duration) * 100)
                 actual_progress = float(project.progress_pct or 0)
                 factors["schedule_variance"] = round(actual_progress - expected_progress, 2)
@@ -469,13 +477,9 @@ class ProjectRiskService:
                         f"逾期里程碑: {risk_factors['overdue_milestones_count']}个"
                     )
                 if risk_factors.get("high_risks_count", 0) > 0:
-                    content_parts.append(
-                        f"高风险项: {risk_factors['high_risks_count']}个"
-                    )
+                    content_parts.append(f"高风险项: {risk_factors['high_risks_count']}个")
                 if risk_factors.get("schedule_variance", 0) < -10:
-                    content_parts.append(
-                        f"进度偏差: {risk_factors['schedule_variance']:.1f}%"
-                    )
+                    content_parts.append(f"进度偏差: {risk_factors['schedule_variance']:.1f}%")
 
             content_parts.append("请及时关注并采取措施。")
 

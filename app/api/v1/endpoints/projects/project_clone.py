@@ -21,7 +21,9 @@ from app.utils.db_helpers import save_obj
 router = APIRouter()
 
 
-@router.post("/{project_id}/clone", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/clone", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
+)
 def clone_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -33,7 +35,10 @@ def clone_project(
     克隆项目
     """
     from app.utils.permission_helpers import check_project_access_or_raise
-    source_project = check_project_access_or_raise(db, current_user, project_id, "您没有权限克隆该项目")
+
+    source_project = check_project_access_or_raise(
+        db, current_user, project_id, "您没有权限克隆该项目"
+    )
 
     # 检查项目编码是否已存在
     existing = db.query(Project).filter(Project.project_code == clone_request.project_code).first()
@@ -51,9 +56,9 @@ def clone_project(
         customer_phone=source_project.customer_phone,
         pm_id=current_user.id,
         pm_name=current_user.real_name or current_user.username,
-        stage='S1',
-        status='ST01',
-        health='H1',
+        stage="S1",
+        status="ST01",
+        health="H1",
         description=source_project.description,
         requirements=source_project.requirements,
         budget_amount=source_project.budget_amount,
@@ -71,16 +76,16 @@ def clone_project(
                 machine_code=source_machine.machine_code,
                 machine_name=source_machine.machine_name,
                 machine_type=source_machine.machine_type,
-                status='PENDING',
+                status="PENDING",
                 progress_pct=0,
             )
             db.add(new_machine)
 
     # 克隆里程碑（如果需要）
     if clone_request.clone_milestones:
-        source_milestones = db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == project_id
-        ).all()
+        source_milestones = (
+            db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).all()
+        )
         for source_milestone in source_milestones:
             new_milestone = ProjectMilestone(
                 project_id=new_project.id,
@@ -93,6 +98,7 @@ def clone_project(
 
     # 初始化标准阶段
     from app.utils.project_utils import init_project_stages
+
     init_project_stages(db, new_project.id)
 
     db.commit()
@@ -105,5 +111,5 @@ def clone_project(
             "project_code": new_project.project_code,
             "project_name": new_project.project_name,
             "source_project_id": project_id,
-        }
+        },
     )

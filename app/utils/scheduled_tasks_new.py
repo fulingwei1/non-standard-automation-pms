@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 
 # 为了向后兼容，导出所有任务函数
 __all__ = list(SCHEDULED_TASKS.keys()) + [
-    'SCHEDULED_TASKS',
-    'TASK_GROUPS',
-    'get_task',
-    'get_tasks_by_group',
-    'list_all_tasks',
-    'execute_task',
+    "SCHEDULED_TASKS",
+    "TASK_GROUPS",
+    "get_task",
+    "get_tasks_by_group",
+    "list_all_tasks",
+    "execute_task",
 ]
 
 # 向后兼容：将所有任务函数直接导出到模块级别

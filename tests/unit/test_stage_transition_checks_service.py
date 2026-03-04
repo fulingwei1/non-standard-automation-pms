@@ -29,20 +29,20 @@ class TestCheckS3ToS4Transition:
 
     def test_contract_not_signed(self, db_session):
         """测试合同未签订"""
-        from app.services.stage_transition_checks import check_s3_to_s4_transition
         from app.models.sales import Contract
+        from app.services.stage_transition_checks import check_s3_to_s4_transition
 
         project = MagicMock()
         project.contract_no = "CT001"
         project.contract_date = "2025-01-15"
         project.contract_amount = 100000
 
-            # 合同状态不是SIGNED
+        # 合同状态不是SIGNED
         contract = Contract(
-        contract_code="CT001",
-        status="DRAFT",
-        opportunity_id=1,  # Required field
-        customer_id=1  # Required field
+            contract_code="CT001",
+            status="DRAFT",
+            opportunity_id=1,  # Required field
+            customer_id=1,  # Required field
         )
         db_session.add(contract)
         db_session.flush()
@@ -54,8 +54,8 @@ class TestCheckS3ToS4Transition:
 
     def test_contract_signed_can_advance(self, db_session):
         """测试合同已签订可推进"""
-        from app.services.stage_transition_checks import check_s3_to_s4_transition
         from app.models.sales import Contract
+        from app.services.stage_transition_checks import check_s3_to_s4_transition
 
         project = MagicMock()
         project.contract_no = "CT002"
@@ -63,10 +63,10 @@ class TestCheckS3ToS4Transition:
         project.contract_amount = 100000
 
         contract = Contract(
-        contract_code="CT002",
-        status="SIGNED",
-        opportunity_id=1,  # Required field
-        customer_id=1  # Required field
+            contract_code="CT002",
+            status="SIGNED",
+            opportunity_id=1,  # Required field
+            customer_id=1,  # Required field
         )
         db_session.add(contract)
         db_session.flush()
@@ -93,14 +93,14 @@ class TestCheckS4ToS5Transition:
 
     def test_released_bom_can_advance(self, db_session):
         """测试有已发布BOM可推进"""
-        from app.services.stage_transition_checks import check_s4_to_s5_transition
         from app.models.material import BomHeader
+        from app.services.stage_transition_checks import check_s4_to_s5_transition
 
         bom = BomHeader(
-        bom_no="BOM-001",  # Required field
-        bom_name="Test BOM",  # Required field
-        project_id=1,
-        status="RELEASED"
+            bom_no="BOM-001",  # Required field
+            bom_name="Test BOM",  # Required field
+            project_id=1,
+            status="RELEASED",
         )
         db_session.add(bom)
         db_session.flush()
@@ -127,15 +127,15 @@ class TestCheckS7ToS8Transition:
 
     def test_fat_passed_can_advance(self, db_session):
         """测试FAT验收通过可推进"""
-        from app.services.stage_transition_checks import check_s7_to_s8_transition
         from app.models.acceptance import AcceptanceOrder
+        from app.services.stage_transition_checks import check_s7_to_s8_transition
 
         order = AcceptanceOrder(
-        order_no="AO-001",  # Required field
-        project_id=1,
-        acceptance_type="FAT",
-        status="COMPLETED",
-        overall_result="PASSED"
+            order_no="AO-001",  # Required field
+            project_id=1,
+            acceptance_type="FAT",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.add(order)
         db_session.flush()
@@ -164,16 +164,16 @@ class TestCheckS8ToS9Transition:
 
     def test_no_payment_plan(self, db_session):
         """测试无收款计划"""
-        from app.services.stage_transition_checks import check_s8_to_s9_transition
         from app.models.acceptance import AcceptanceOrder
+        from app.services.stage_transition_checks import check_s8_to_s9_transition
 
-            # 创建终验收
+        # 创建终验收
         order = AcceptanceOrder(
-        order_no="AO-002",  # Required field
-        project_id=1,
-        acceptance_type="FINAL",
-        status="COMPLETED",
-        overall_result="PASSED"
+            order_no="AO-002",  # Required field
+            project_id=1,
+            acceptance_type="FINAL",
+            status="COMPLETED",
+            overall_result="PASSED",
         )
         db_session.add(order)
         db_session.flush()
@@ -205,7 +205,7 @@ class TestGetStageStatusMapping:
 
         mapping = get_stage_status_mapping()
 
-        assert mapping.get('S4') == 'ST09'
+        assert mapping.get("S4") == "ST09"
 
     def test_s9_maps_to_st30(self):
         """测试S9映射到ST30"""
@@ -213,7 +213,7 @@ class TestGetStageStatusMapping:
 
         mapping = get_stage_status_mapping()
 
-        assert mapping.get('S9') == 'ST30'
+        assert mapping.get("S9") == "ST30"
 
 
 class TestExecuteStageTransition:
@@ -226,12 +226,10 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
+        with patch("app.api.v1.endpoints.projects.utils.check_gate") as mock_gate:
             mock_gate.return_value = (False, ["缺少必要条件"])
 
-            success, result = execute_stage_transition(
-            db_session, project, "S4", "测试原因"
-            )
+            success, result = execute_stage_transition(db_session, project, "S4", "测试原因")
 
             assert success is False
             assert result["can_advance"] is False
@@ -244,12 +242,10 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
+        with patch("app.api.v1.endpoints.projects.utils.check_gate") as mock_gate:
             mock_gate.return_value = (True, [])
 
-            success, result = execute_stage_transition(
-            db_session, project, "S4", "合同已签订"
-            )
+            success, result = execute_stage_transition(db_session, project, "S4", "合同已签订")
 
             assert success is True
             assert result["auto_advanced"] is True
@@ -262,12 +258,10 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
+        with patch("app.api.v1.endpoints.projects.utils.check_gate") as mock_gate:
             mock_gate.side_effect = Exception("测试异常")
 
-            success, result = execute_stage_transition(
-            db_session, project, "S4", "测试"
-            )
+            success, result = execute_stage_transition(db_session, project, "S4", "测试")
 
             assert success is False
             assert "自动推进失败" in result["message"]
@@ -312,31 +306,38 @@ class TestTransitionResultStructure:
     def test_result_fields(self):
         """测试结果字段"""
         result = {
-        "can_advance": True,
-        "auto_advanced": True,
-        "message": "已自动推进至 S4 阶段",
-        "current_stage": "S3",
-        "target_stage": "S4",
-        "missing_items": [],
-        "transition_reason": "合同已签订"
+            "can_advance": True,
+            "auto_advanced": True,
+            "message": "已自动推进至 S4 阶段",
+            "current_stage": "S3",
+            "target_stage": "S4",
+            "missing_items": [],
+            "transition_reason": "合同已签订",
         }
 
         expected_fields = [
-        "can_advance", "auto_advanced", "message",
-        "current_stage", "target_stage", "missing_items", "transition_reason"
+            "can_advance",
+            "auto_advanced",
+            "message",
+            "current_stage",
+            "target_stage",
+            "missing_items",
+            "transition_reason",
         ]
 
         for field in expected_fields:
             assert field in result
 
-
             # pytest fixtures
+
+
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -148,7 +148,9 @@ class TestGetSalespersonWasteRanking:
                 inner.all.return_value = projects
             elif call_count[0] == 2:
                 inner.filter.return_value = inner
-                inner.group_by.return_value.all.return_value = [(i + 1, Decimal("10")) for i in range(4)]
+                inner.group_by.return_value.all.return_value = [
+                    (i + 1, Decimal("10")) for i in range(4)
+                ]
             else:
                 inner.filter.return_value.first.return_value = user
             return inner

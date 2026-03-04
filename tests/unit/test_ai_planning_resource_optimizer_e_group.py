@@ -5,12 +5,12 @@ E组 - AI资源优化器 单元测试
 """
 import json
 from datetime import datetime
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def glm_service():
@@ -23,6 +23,7 @@ def glm_service():
 @pytest.fixture
 def optimizer(db_session, glm_service):
     from app.services.ai_planning.resource_optimizer import AIResourceOptimizer
+
     return AIResourceOptimizer(db=db_session, glm_service=glm_service)
 
 
@@ -34,8 +35,14 @@ def _make_user(user_id=1, role="developer", is_active=True):
     return user
 
 
-def _make_wbs(wbs_id=1, project_id=10, required_skills=None, estimated_effort_hours=80,
-              estimated_duration_days=10, task_type="DEV"):
+def _make_wbs(
+    wbs_id=1,
+    project_id=10,
+    required_skills=None,
+    estimated_effort_hours=80,
+    estimated_duration_days=10,
+    task_type="DEV",
+):
     wbs = MagicMock()
     wbs.id = wbs_id
     wbs.project_id = project_id
@@ -47,6 +54,7 @@ def _make_wbs(wbs_id=1, project_id=10, required_skills=None, estimated_effort_ho
 
 
 # ─── _calculate_skill_match ──────────────────────────────────────────────────
+
 
 class TestCalculateSkillMatch:
 
@@ -70,47 +78,62 @@ class TestCalculateSkillMatch:
 
     def test_max_capped_at_100(self, optimizer):
         user = _make_user(role="python java frontend backend")
-        wbs = _make_wbs(required_skills=[
-            {"skill": "python"}, {"skill": "java"}, {"skill": "frontend"}, {"skill": "backend"}
-        ])
+        wbs = _make_wbs(
+            required_skills=[
+                {"skill": "python"},
+                {"skill": "java"},
+                {"skill": "frontend"},
+                {"skill": "backend"},
+            ]
+        )
         result = optimizer._calculate_skill_match(user, wbs)
         assert result <= 100.0
 
 
 # ─── _calculate_experience_match ─────────────────────────────────────────────
 
+
 class TestCalculateExperienceMatch:
 
     def test_zero_similar_tasks_returns_40(self, optimizer, db_session):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = 0
+        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
+            0
+        )
         result = optimizer._calculate_experience_match(user, wbs)
         assert result == 40.0
 
     def test_few_tasks_returns_60(self, optimizer, db_session):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = 2
+        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
+            2
+        )
         result = optimizer._calculate_experience_match(user, wbs)
         assert result == 60.0
 
     def test_many_tasks_returns_95(self, optimizer, db_session):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = 15
+        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
+            15
+        )
         result = optimizer._calculate_experience_match(user, wbs)
         assert result == 95.0
 
     def test_moderate_tasks_returns_80(self, optimizer, db_session):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = 5
+        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
+            5
+        )
         result = optimizer._calculate_experience_match(user, wbs)
         assert result == 80.0
 
 
 # ─── _get_current_workload ────────────────────────────────────────────────────
+
 
 class TestGetCurrentWorkload:
 
@@ -123,19 +146,24 @@ class TestGetCurrentWorkload:
     def test_5_tasks_100_percent(self, optimizer, db_session):
         user = _make_user()
         tasks = [MagicMock() for _ in range(5)]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = tasks
+        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
+            tasks
+        )
         result = optimizer._get_current_workload(user)
         assert result == 100.0  # 5 * 20 = 100, capped
 
     def test_2_tasks_40_percent(self, optimizer, db_session):
         user = _make_user()
         tasks = [MagicMock(), MagicMock()]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = tasks
+        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
+            tasks
+        )
         result = optimizer._get_current_workload(user)
         assert result == 40.0
 
 
 # ─── _calculate_availability ─────────────────────────────────────────────────
+
 
 class TestCalculateAvailability:
 
@@ -150,19 +178,24 @@ class TestCalculateAvailability:
         user = _make_user()
         wbs = _make_wbs()
         tasks = [MagicMock() for _ in range(5)]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = tasks
+        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
+            tasks
+        )
         result = optimizer._calculate_availability(user, wbs)
         assert result == 0.0  # 100 - 100 = 0
 
 
 # ─── _calculate_performance_score ────────────────────────────────────────────
 
+
 class TestCalculatePerformanceScore:
 
     def test_no_completed_tasks_returns_70(self, optimizer, db_session):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = []
+        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = optimizer._calculate_performance_score(user, wbs)
         assert result == 70.0
 
@@ -170,15 +203,19 @@ class TestCalculatePerformanceScore:
         user = _make_user()
         wbs = _make_wbs()
         from datetime import date
+
         task = MagicMock()
         task.planned_end_date = date(2025, 6, 1)
         task.actual_end_date = date(2025, 5, 28)  # before deadline
-        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = [task]
+        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = [
+            task
+        ]
         result = optimizer._calculate_performance_score(user, wbs)
         assert result == 100.0
 
 
 # ─── _get_hourly_rate ─────────────────────────────────────────────────────────
+
 
 class TestGetHourlyRate:
 
@@ -205,6 +242,7 @@ class TestGetHourlyRate:
 
 # ─── _calculate_cost_efficiency ──────────────────────────────────────────────
 
+
 class TestCalculateCostEfficiency:
 
     def test_zero_rate_returns_match_score(self, optimizer):
@@ -222,6 +260,7 @@ class TestCalculateCostEfficiency:
 
 
 # ─── _generate_recommendation_reason ─────────────────────────────────────────
+
 
 class TestGenerateRecommendationReason:
 
@@ -245,6 +284,7 @@ class TestGenerateRecommendationReason:
 
 
 # ─── _analyze_strengths / _analyze_weaknesses ────────────────────────────────
+
 
 class TestAnalyzeStrengthsWeaknesses:
 
@@ -273,6 +313,7 @@ class TestAnalyzeStrengthsWeaknesses:
 
 # ─── _optimize_allocations ───────────────────────────────────────────────────
 
+
 class TestOptimizeAllocations:
 
     def test_empty_input_returns_empty(self, optimizer):
@@ -293,6 +334,7 @@ class TestOptimizeAllocations:
 
 
 # ─── allocate_resources (integration mock) ──────────────────────────────────
+
 
 class TestAllocateResources:
 

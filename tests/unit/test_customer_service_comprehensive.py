@@ -32,8 +32,8 @@ class TestCustomerServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.customer_service import CustomerService
         from app.models.project.customer import Customer
+        from app.services.customer_service import CustomerService
 
         mock_db = MagicMock()
 
@@ -58,13 +58,13 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_customers(page=1, page_size=20)
 
-            assert result['items'] == mock_result.items
-            assert result['total'] == 2
-            assert result['page'] == 1
-            assert result['page_size'] == 20
+            assert result["items"] == mock_result.items
+            assert result["total"] == 2
+            assert result["page"] == 1
+            assert result["page_size"] == 20
 
     def test_filters_by_customer_type(self):
         """测试按客户类型过滤"""
@@ -79,12 +79,12 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_customers(customer_type="ENTERPRISE")
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('customer_type') == "ENTERPRISE"
+            assert call_args.filters.get("customer_type") == "ENTERPRISE"
 
     def test_filters_by_industry(self):
         """测试按行业过滤"""
@@ -99,11 +99,11 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_customers(industry="ELECTRONICS")
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('industry') == "ELECTRONICS"
+            assert call_args.filters.get("industry") == "ELECTRONICS"
 
     def test_filters_by_status(self):
         """测试按状态过滤"""
@@ -118,11 +118,11 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_customers(status="ACTIVE")
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('status') == "ACTIVE"
+            assert call_args.filters.get("status") == "ACTIVE"
 
     def test_searches_by_keyword(self):
         """测试关键字搜索"""
@@ -137,7 +137,7 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_customers(keyword="华为")
 
             call_args = mock_list.call_args[0][0]
@@ -158,11 +158,11 @@ class TestListCustomers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_customers()
 
             # (45 + 20 - 1) // 20 = 3
-            assert result['pages'] == 3
+            assert result["pages"] == 3
 
 
 class TestBeforeDelete:
@@ -170,8 +170,9 @@ class TestBeforeDelete:
 
     def test_raises_error_when_projects_exist(self):
         """测试有关联项目时抛出错误"""
-        from app.services.customer_service import CustomerService
         from fastapi import HTTPException
+
+        from app.services.customer_service import CustomerService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.count.return_value = 5
@@ -237,7 +238,7 @@ class TestAfterUpdate:
         mock_customer = MagicMock()
         mock_customer.id = 1
 
-        with patch('app.services.customer_service.DataSyncService') as mock_sync_class:
+        with patch("app.services.customer_service.DataSyncService") as mock_sync_class:
             mock_sync_service = MagicMock()
             mock_sync_class.return_value = mock_sync_service
 
@@ -258,7 +259,7 @@ class TestAfterUpdate:
         mock_customer = MagicMock()
         mock_customer.id = 1
 
-        with patch('app.services.customer_service.DataSyncService') as mock_sync_class:
+        with patch("app.services.customer_service.DataSyncService") as mock_sync_class:
             result = service._after_update(mock_customer)
 
             mock_sync_class.assert_not_called()
@@ -275,7 +276,7 @@ class TestAfterUpdate:
         mock_customer = MagicMock()
         mock_customer.id = 1
 
-        with patch('app.services.customer_service.DataSyncService') as mock_sync_class:
+        with patch("app.services.customer_service.DataSyncService") as mock_sync_class:
             mock_sync_class.side_effect = Exception("同步失败")
 
             # 不应抛出异常
@@ -294,7 +295,9 @@ class TestGenerateCode:
         mock_db = MagicMock()
         service = CustomerService(mock_db)
 
-        with patch('app.services.customer_service.generate_customer_code', return_value="CUS20260101001") as mock_gen:
+        with patch(
+            "app.services.customer_service.generate_customer_code", return_value="CUS20260101001"
+        ) as mock_gen:
             result = service.generate_code()
 
             mock_gen.assert_called_once_with(mock_db)

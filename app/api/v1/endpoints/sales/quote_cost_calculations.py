@@ -4,7 +4,7 @@
 包含：成本计算、毛利计算、价格建议
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
-from app.models.sales import Quote, QuoteVersion, QuoteItem
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
@@ -23,15 +23,15 @@ router = APIRouter()
 def calculate_margin(price: Decimal, cost: Decimal) -> Decimal:
     """计算毛利率"""
     if price and price > 0:
-        return ((price - cost) / price * 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    return Decimal('0')
+        return ((price - cost) / price * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return Decimal("0")
 
 
 def calculate_markup(price: Decimal, cost: Decimal) -> Decimal:
     """计算加价率"""
     if cost and cost > 0:
-        return ((price - cost) / cost * 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    return Decimal('0')
+        return ((price - cost) / cost * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return Decimal("0")
 
 
 @router.get("/quotes/{quote_id}/cost-calculations", response_model=ResponseModel)
@@ -64,14 +64,14 @@ def get_cost_calculations(
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).all()
 
     # 计算各项
-    total_cost = Decimal('0')
-    total_price = Decimal('0')
+    total_cost = Decimal("0")
+    total_price = Decimal("0")
     item_details = []
 
     for item in items:
-        item_cost = item.cost or Decimal('0')
-        item_qty = item.qty or Decimal('0')
-        item_unit_price = item.unit_price or Decimal('0')
+        item_cost = item.cost or Decimal("0")
+        item_qty = item.qty or Decimal("0")
+        item_unit_price = item.unit_price or Decimal("0")
         item_amount = item_qty * item_unit_price
 
         total_cost += item_cost
@@ -80,17 +80,19 @@ def get_cost_calculations(
         item_margin = calculate_margin(item_amount, item_cost)
         item_markup = calculate_markup(item_amount, item_cost)
 
-        item_details.append({
-            "id": item.id,
-            "item_name": item.item_name,
-            "qty": float(item_qty),
-            "unit_price": float(item_unit_price),
-            "amount": float(item_amount),
-            "cost": float(item_cost),
-            "profit": float(item_amount - item_cost),
-            "margin_rate": float(item_margin),
-            "markup_rate": float(item_markup),
-        })
+        item_details.append(
+            {
+                "id": item.id,
+                "item_name": item.item_name,
+                "qty": float(item_qty),
+                "unit_price": float(item_unit_price),
+                "amount": float(item_amount),
+                "cost": float(item_cost),
+                "profit": float(item_amount - item_cost),
+                "margin_rate": float(item_margin),
+                "markup_rate": float(item_markup),
+            }
+        )
 
     # 总体计算
     gross_profit = total_price - total_cost
@@ -110,8 +112,8 @@ def get_cost_calculations(
                 "margin_rate": float(margin_rate),
                 "markup_rate": float(markup_rate),
             },
-            "items": item_details
-        }
+            "items": item_details,
+        },
     )
 
 
@@ -136,8 +138,8 @@ def simulate_cost(
     if not items:
         raise HTTPException(status_code=400, detail="请提供明细项")
 
-    total_cost = Decimal('0')
-    total_price = Decimal('0')
+    total_cost = Decimal("0")
+    total_price = Decimal("0")
     results = []
 
     for item in items:
@@ -151,15 +153,17 @@ def simulate_cost(
         total_cost += item_cost
         total_price += item_amount
 
-        results.append({
-            "cost": float(cost),
-            "price": float(price),
-            "qty": float(qty),
-            "amount": float(item_amount),
-            "total_cost": float(item_cost),
-            "profit": float(item_amount - item_cost),
-            "margin_rate": float(calculate_margin(item_amount, item_cost)),
-        })
+        results.append(
+            {
+                "cost": float(cost),
+                "price": float(price),
+                "qty": float(qty),
+                "amount": float(item_amount),
+                "total_cost": float(item_cost),
+                "profit": float(item_amount - item_cost),
+                "margin_rate": float(calculate_margin(item_amount, item_cost)),
+            }
+        )
 
     gross_profit = total_price - total_cost
     margin_rate = calculate_margin(total_price, total_cost)
@@ -174,8 +178,8 @@ def simulate_cost(
                 "gross_profit": float(gross_profit),
                 "margin_rate": float(margin_rate),
             },
-            "items": results
-        }
+            "items": results,
+        },
     )
 
 
@@ -205,19 +209,23 @@ def get_price_suggestion(
 
     # 根据毛利率公式: margin = (price - cost) / price
     # 推导: price = cost / (1 - margin/100)
-    suggested_price = (cost / (1 - target_margin / 100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    suggested_price = (cost / (1 - target_margin / 100)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
 
     # 提供多档建议
     suggestions = []
     for margin in [15, 20, 25, 30, 35]:
         m = Decimal(str(margin))
-        price = (cost / (1 - m / 100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        price = (cost / (1 - m / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         profit = price - cost
-        suggestions.append({
-            "margin_rate": margin,
-            "suggested_price": float(price),
-            "expected_profit": float(profit),
-        })
+        suggestions.append(
+            {
+                "margin_rate": margin,
+                "suggested_price": float(price),
+                "expected_profit": float(profit),
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -227,8 +235,8 @@ def get_price_suggestion(
             "target_margin": float(target_margin),
             "suggested_price": float(suggested_price),
             "expected_profit": float(suggested_price - cost),
-            "suggestions": suggestions
-        }
+            "suggestions": suggestions,
+        },
     )
 
 
@@ -267,12 +275,16 @@ def batch_update_prices(
         if item.cost and item.cost > 0:
             if mode == "markup":
                 # 加价率: price = cost * (1 + rate/100)
-                new_price = (item.cost * (1 + rate / 100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                new_price = (item.cost * (1 + rate / 100)).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
             else:
                 # 毛利率: price = cost / (1 - rate/100)
                 if rate >= 100:
                     continue
-                new_price = (item.cost / (1 - rate / 100)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                new_price = (item.cost / (1 - rate / 100)).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
 
             item.unit_price = new_price
             updated_count += 1
@@ -282,7 +294,7 @@ def batch_update_prices(
     return ResponseModel(
         code=200,
         message=f"已更新 {updated_count} 个明细项的价格",
-        data={"updated_count": updated_count, "mode": mode, "rate": float(rate)}
+        data={"updated_count": updated_count, "mode": mode, "rate": float(rate)},
     )
 
 
@@ -305,17 +317,19 @@ def get_margin_analysis(
     Returns:
         ResponseModel: 分析结果
     """
-    versions = db.query(QuoteVersion).filter(
-        QuoteVersion.gross_margin is not None,
-        QuoteVersion.gross_margin >= min_margin,
-        QuoteVersion.gross_margin <= max_margin
-    ).all()
+    versions = (
+        db.query(QuoteVersion)
+        .filter(
+            QuoteVersion.gross_margin is not None,
+            QuoteVersion.gross_margin >= min_margin,
+            QuoteVersion.gross_margin <= max_margin,
+        )
+        .all()
+    )
 
     if not versions:
         return ResponseModel(
-            code=200,
-            message="无数据",
-            data={"count": 0, "avg_margin": 0, "distribution": []}
+            code=200, message="无数据", data={"count": 0, "avg_margin": 0, "distribution": []}
         )
 
     margins = [float(v.gross_margin) for v in versions if v.gross_margin]
@@ -353,6 +367,6 @@ def get_margin_analysis(
             "avg_margin": round(avg_margin, 2),
             "min_margin": round(min(margins), 2) if margins else 0,
             "max_margin": round(max(margins), 2) if margins else 0,
-            "distribution": [{"range": k, "count": v} for k, v in distribution.items()]
-        }
+            "distribution": [{"range": k, "count": v} for k, v in distribution.items()],
+        },
     )

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """节点管理模块 单元测试"""
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 

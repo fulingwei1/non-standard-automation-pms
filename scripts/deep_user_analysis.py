@@ -6,7 +6,7 @@
 
 import sys
 
-sys.path.append('/Users/flw/non-standard-automation-pm')
+sys.path.append("/Users/flw/non-standard-automation-pm")
 
 
 from app.models.base import SessionLocal
@@ -49,12 +49,12 @@ def analyze_user_discrepancy():
                 superuser_users += 1
 
             # 检查是否是演示/测试用户
-            if (user.username and (
-                'admin' in user.username.lower() or
-                'test' in user.username.lower() or
-                'demo' in user.username.lower() or
-                'guest' in user.username.lower()
-            )):
+            if user.username and (
+                "admin" in user.username.lower()
+                or "test" in user.username.lower()
+                or "demo" in user.username.lower()
+                or "guest" in user.username.lower()
+            ):
                 demo_users += 1
             else:
                 real_users += 1
@@ -84,6 +84,7 @@ def analyze_user_discrepancy():
         if duplicate_employee_ids > 0:
             # 找出重复的员工ID
             from collections import Counter
+
             id_counts = Counter(employee_ids)
             duplicates = [id for id, count in id_counts.items() if count > 1]
             print(f"  重复的员工ID: {duplicates}")
@@ -99,9 +100,12 @@ def analyze_user_discrepancy():
         for username in usernames:
             if username:
                 # 检查是否是自动生成的用户名
-                if any(pattern in username.lower() for pattern in ['user', 'user_', 'test', 'demo', 'guest']):
+                if any(
+                    pattern in username.lower()
+                    for pattern in ["user", "user_", "test", "demo", "guest"]
+                ):
                     pattern_users += 1
-                if any(username.startswith(prefix) for prefix in ['user_', 'test_', 'demo_']):
+                if any(username.startswith(prefix) for prefix in ["user_", "test_", "demo_"]):
                     auto_generated += 1
 
         print(f"  模式化用户名: {pattern_users}")
@@ -139,25 +143,29 @@ def analyze_user_discrepancy():
         test_accounts = []
         for user in users:
             if user.username and (
-                'admin' in user.username.lower() or
-                'test' in user.username.lower() or
-                'demo' in user.username.lower()
+                "admin" in user.username.lower()
+                or "test" in user.username.lower()
+                or "demo" in user.username.lower()
             ):
-                test_accounts.append({
-                    'username': user.username,
-                    'real_name': user.real_name,
-                    'department': user.department,
-                    'is_active': user.is_active,
-                    'is_superuser': user.is_superuser,
-                    'created_at': user.created_at
-                })
+                test_accounts.append(
+                    {
+                        "username": user.username,
+                        "real_name": user.real_name,
+                        "department": user.department,
+                        "is_active": user.is_active,
+                        "is_superuser": user.is_superuser,
+                        "created_at": user.created_at,
+                    }
+                )
 
         print(f"  可能的测试账户数: {len(test_accounts)}")
 
         if test_accounts:
             print("  测试账户列表:")
             for i, account in enumerate(test_accounts, 1):
-                print(f"    {i}. {account['username']} - {account['real_name']} ({account['department']})")
+                print(
+                    f"    {i}. {account['username']} - {account['real_name']} ({account['department']})"
+                )
 
         # 8. 检查账户创建时间
         print(f"\n📅 账户创建时间分析:")
@@ -170,7 +178,9 @@ def analyze_user_discrepancy():
         recent_month = now - timedelta(days=30)
         recent_year = now - timedelta(days=365)
 
-        recent_month_users = len([u for u in users if u.created_at and u.created_at >= recent_month])
+        recent_month_users = len(
+            [u for u in users if u.created_at and u.created_at >= recent_month]
+        )
         recent_year_users = len([u for u in users if u.created_at and u.created_at >= recent_year])
         old_users = len([u for u in users if u.created_at and u.created_at < recent_year])
 
@@ -210,18 +220,20 @@ def analyze_user_discrepancy():
         print("4. 建立定期账户清理机制")
 
         return {
-            'total_users': total_users,
-            'active_users': active_users,
-            'demo_users': demo_users,
-            'real_users': real_users,
-            'departments': dept_counts,
-            'test_accounts': test_accounts
+            "total_users": total_users,
+            "active_users": active_users,
+            "demo_users": demo_users,
+            "real_users": real_users,
+            "departments": dept_counts,
+            "test_accounts": test_accounts,
         }
+
 
 if __name__ == "__main__":
     result = analyze_user_discrepancy()
 
     # 保存分析结果
     import json
-    with open('user_discrepancy_analysis.json', 'w', encoding='utf-8') as f:
+
+    with open("user_discrepancy_analysis.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2, default=str)

@@ -13,12 +13,12 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from app.core.auth import (
-    verify_password,
-    get_password_hash,
     create_access_token,
-    revoke_token,
-    is_token_revoked,
     get_current_user,
+    get_password_hash,
+    is_token_revoked,
+    revoke_token,
+    verify_password,
 )
 
 
@@ -208,9 +208,11 @@ class TestTokenRevocation:
         mock_redis.return_value = redis_mock
 
         # 先生成一个有效的 JWT token（带 jti）
-        import jwt
-        from datetime import datetime, timezone, timedelta
         import uuid
+        from datetime import datetime, timedelta, timezone
+
+        import jwt
+
         payload = {
             "sub": "user123",
             "jti": str(uuid.uuid4()),
@@ -261,9 +263,7 @@ class TestGetCurrentUser:
     @patch("app.core.auth.is_token_revoked")
     @patch("app.core.auth.settings")
     @patch("app.core.auth.oauth2_scheme")
-    def test_get_current_user_valid_token(
-        self, mock_scheme, mock_settings, mock_revoked
-    ):
+    def test_get_current_user_valid_token(self, mock_scheme, mock_settings, mock_revoked):
         """测试有效 Token 获取用户"""
 
         mock_settings.SECRET_KEY = "test_secret_key"
@@ -335,13 +335,11 @@ class TestAuthModule:
     @patch("app.core.auth.is_token_revoked")
     @patch("app.core.auth.settings")
     @patch("app.core.auth.oauth2_scheme")
-    async def test_get_current_user_success_flow(
-        self, mock_scheme, mock_settings, mock_revoked
-    ):
+    async def test_get_current_user_success_flow(self, mock_scheme, mock_settings, mock_revoked):
         """测试成功获取用户流程"""
+        from fastapi import Depends
         from jose import jwt
         from sqlalchemy.orm import Session
-        from fastapi import Depends
 
         # 设置 mocks
         mock_settings.SECRET_KEY = "test_secret_key"
@@ -357,9 +355,7 @@ class TestAuthModule:
         mock_user.email = "test@example.com"
 
         # Mock query
-        mock_session.query.return_value.filter.return_value.first.return_value = (
-            mock_user
-        )
+        mock_session.query.return_value.filter.return_value.first.return_value = mock_user
 
         # 创建有效 token
         now = datetime.utcnow()

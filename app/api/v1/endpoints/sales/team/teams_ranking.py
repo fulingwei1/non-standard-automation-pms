@@ -23,7 +23,10 @@ router = APIRouter()
 def get_sales_teams_ranking(
     *,
     db: Session = Depends(deps.get_db),
-    ranking_type: str = Query("contract_amount", description="排名类型：contract_amount/collection_amount/lead_count/opportunity_count"),
+    ranking_type: str = Query(
+        "contract_amount",
+        description="排名类型：contract_amount/collection_amount/lead_count/opportunity_count",
+    ),
     period_type: str = Query("MONTHLY", description="周期类型：DAILY/WEEKLY/MONTHLY/QUARTERLY"),
     period_value: Optional[str] = Query(None, description="周期标识，如 2026-01（默认当前月）"),
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
@@ -72,10 +75,14 @@ def get_sales_teams_ranking(
     # 计算各团队业绩
     rankings = []
     for team in teams:
-        members = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active,
-        ).all()
+        members = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team.id,
+                SalesTeamMember.is_active,
+            )
+            .all()
+        )
         member_ids = [m.user_id for m in members]
 
         lead_count = 0
@@ -86,55 +93,82 @@ def get_sales_teams_ranking(
 
         if member_ids:
             # 线索数量
-            lead_count = db.query(Lead).filter(
-                Lead.owner_id.in_(member_ids),
-                Lead.created_at >= start_datetime,
-                Lead.created_at <= end_datetime,
-            ).count()
+            lead_count = (
+                db.query(Lead)
+                .filter(
+                    Lead.owner_id.in_(member_ids),
+                    Lead.created_at >= start_datetime,
+                    Lead.created_at <= end_datetime,
+                )
+                .count()
+            )
 
             # 商机数量
-            opportunity_count = db.query(Opportunity).filter(
-                Opportunity.owner_id.in_(member_ids),
-                Opportunity.created_at >= start_datetime,
-                Opportunity.created_at <= end_datetime,
-            ).count()
+            opportunity_count = (
+                db.query(Opportunity)
+                .filter(
+                    Opportunity.owner_id.in_(member_ids),
+                    Opportunity.created_at >= start_datetime,
+                    Opportunity.created_at <= end_datetime,
+                )
+                .count()
+            )
 
             # 合同数量和金额
-            contracts = db.query(Contract).filter(
-                Contract.sales_owner_id.in_(member_ids),
-                Contract.created_at >= start_datetime,
-                Contract.created_at <= end_datetime,
-            ).all()
+            contracts = (
+                db.query(Contract)
+                .filter(
+                    Contract.sales_owner_id.in_(member_ids),
+                    Contract.created_at >= start_datetime,
+                    Contract.created_at <= end_datetime,
+                )
+                .all()
+            )
             contract_count = len(contracts)
             contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
 
             # 回款金额
-            invoices = db.query(Invoice).join(Contract).filter(
-                Contract.sales_owner_id.in_(member_ids),
-                Invoice.paid_date.isnot(None),
-                Invoice.paid_date >= start_date_value,
-                Invoice.paid_date <= end_date_value,
-                Invoice.payment_status.in_(["PAID", "PARTIAL"]),
-            ).all()
+            invoices = (
+                db.query(Invoice)
+                .join(Contract)
+                .filter(
+                    Contract.sales_owner_id.in_(member_ids),
+                    Invoice.paid_date.isnot(None),
+                    Invoice.paid_date >= start_date_value,
+                    Invoice.paid_date <= end_date_value,
+                    Invoice.payment_status.in_(["PAID", "PARTIAL"]),
+                )
+                .all()
+            )
             collection_amount = sum(float(inv.paid_amount or 0) for inv in invoices)
 
-        rankings.append({
-            "team_id": team.id,
-            "team_code": team.team_code,
-            "team_name": team.team_name,
-            "team_type": team.team_type,
-            "leader_name": (team.leader.real_name or team.leader.username) if team.leader else None,
-            "member_count": len(member_ids),
-            "lead_count": lead_count,
-            "opportunity_count": opportunity_count,
-            "contract_count": contract_count,
-            "contract_amount": contract_amount,
-            "collection_amount": collection_amount,
-        })
+        rankings.append(
+            {
+                "team_id": team.id,
+                "team_code": team.team_code,
+                "team_name": team.team_name,
+                "team_type": team.team_type,
+                "leader_name": (
+                    (team.leader.real_name or team.leader.username) if team.leader else None
+                ),
+                "member_count": len(member_ids),
+                "lead_count": lead_count,
+                "opportunity_count": opportunity_count,
+                "contract_count": contract_count,
+                "contract_amount": contract_amount,
+                "collection_amount": collection_amount,
+            }
+        )
 
     # 按指定指标排序
     sort_key = ranking_type
-    if sort_key not in ["contract_amount", "collection_amount", "lead_count", "opportunity_count", "contract_count"]:
+    if sort_key not in [
+        "contract_amount",
+        "collection_amount",
+        "lead_count",
+        "opportunity_count",
+        "contract_count",
+    ]:
         sort_key = "contract_amount"
     rankings.sort(key=lambda x: x.get(sort_key, 0), reverse=True)
 
@@ -153,5 +187,5 @@ def get_sales_teams_ranking(
             "end_date": end_date_value.isoformat(),
             "rankings": rankings[:limit],
             "total_count": len(rankings),
-        }
+        },
     )

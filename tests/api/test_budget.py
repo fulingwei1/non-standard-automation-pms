@@ -31,8 +31,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -69,13 +68,11 @@ class TestBudgetCRUD:
                     "cost_item": "工时费用",
                     "budget_amount": 40000.00,
                 },
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/",
-            json=budget_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/", json=budget_data, headers=headers
         )
 
         assert response.status_code == 201
@@ -99,9 +96,7 @@ class TestBudgetCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/",
-            json=budget_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/", json=budget_data, headers=headers
         )
 
         # API 可能返回 404（项目不存在）或 422（验证失败）
@@ -117,10 +112,7 @@ class TestBudgetCRUD:
             pytest.skip("No budget available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/budgets/{budget.id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -133,10 +125,7 @@ class TestBudgetCRUD:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/999999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/budgets/999999", headers=headers)
 
         assert response.status_code == 404
 
@@ -151,8 +140,7 @@ class TestBudgetCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/projects/{project.id}/budgets",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/projects/{project.id}/budgets", headers=headers
         )
 
         assert response.status_code == 200
@@ -168,9 +156,7 @@ class TestBudgetUpdate:
             pytest.skip("Admin token not available")
 
         # 查找草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status == "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status == "DRAFT").first()
         if not budget:
             pytest.skip("No draft budget available for testing")
 
@@ -181,24 +167,22 @@ class TestBudgetUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 200
         data = response.json()
         assert float(data["total_amount"]) == 120000.00
 
-    def test_update_non_draft_budget_fails(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_update_non_draft_budget_fails(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试更新非草稿状态的预算失败"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找非草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status != "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status != "DRAFT").first()
         if not budget:
             pytest.skip("No non-draft budget available for testing")
 
@@ -208,9 +192,7 @@ class TestBudgetUpdate:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 400
@@ -226,38 +208,34 @@ class TestBudgetApproval:
             pytest.skip("Admin token not available")
 
         # 查找草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status == "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status == "DRAFT").first()
         if not budget:
             pytest.skip("No draft budget available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit", headers=headers
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "SUBMITTED"
 
-    def test_submit_non_draft_fails(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_submit_non_draft_fails(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试提交非草稿状态的预算失败"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找非草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status != "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status != "DRAFT").first()
         if not budget:
             pytest.skip("No non-draft budget available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/submit", headers=headers
         )
 
         assert response.status_code == 400
@@ -268,9 +246,7 @@ class TestBudgetApproval:
             pytest.skip("Admin token not available")
 
         # 查找已提交状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status == "SUBMITTED"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status == "SUBMITTED").first()
         if not budget:
             pytest.skip("No submitted budget available for testing")
 
@@ -283,7 +259,7 @@ class TestBudgetApproval:
         response = client.post(
             f"{settings.API_V1_PREFIX}/budgets/{budget.id}/approve",
             json=approve_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -296,9 +272,7 @@ class TestBudgetApproval:
             pytest.skip("Admin token not available")
 
         # 查找已提交状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status == "SUBMITTED"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status == "SUBMITTED").first()
         if not budget:
             pytest.skip("No submitted budget available for testing")
 
@@ -311,7 +285,7 @@ class TestBudgetApproval:
         response = client.post(
             f"{settings.API_V1_PREFIX}/budgets/{budget.id}/approve",
             json=reject_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -341,9 +315,7 @@ class TestBudgetDelete:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/",
-            json=budget_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/", json=budget_data, headers=headers
         )
 
         if create_response.status_code != 201:
@@ -353,29 +325,25 @@ class TestBudgetDelete:
 
         # 删除预算
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/budgets/{budget_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget_id}", headers=headers
         )
 
         assert delete_response.status_code == 200
 
-    def test_delete_non_draft_fails(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_delete_non_draft_fails(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试删除非草稿状态的预算失败"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找非草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status != "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status != "DRAFT").first()
         if not budget:
             pytest.skip("No non-draft budget available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/budgets/{budget.id}", headers=headers)
 
         assert response.status_code == 400
 
@@ -394,8 +362,7 @@ class TestBudgetItems:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -407,9 +374,7 @@ class TestBudgetItems:
             pytest.skip("Admin token not available")
 
         # 查找草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status == "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status == "DRAFT").first()
         if not budget:
             pytest.skip("No draft budget available for testing")
 
@@ -422,24 +387,22 @@ class TestBudgetItems:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
-            json=item_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items", json=item_data, headers=headers
         )
 
         assert response.status_code == 201
         data = response.json()
         assert data["cost_item"] == "测试成本项"
 
-    def test_create_item_non_draft_fails(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_create_item_non_draft_fails(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试为非草稿预算添加明细失败"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找非草稿状态的预算
-        budget = db_session.query(ProjectBudget).filter(
-            ProjectBudget.status != "DRAFT"
-        ).first()
+        budget = db_session.query(ProjectBudget).filter(ProjectBudget.status != "DRAFT").first()
         if not budget:
             pytest.skip("No non-draft budget available for testing")
 
@@ -452,9 +415,7 @@ class TestBudgetItems:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items",
-            json=item_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/{budget.id}/items", json=item_data, headers=headers
         )
 
         # 非草稿预算添加明细应该失败（400或422）
@@ -466,9 +427,12 @@ class TestBudgetItems:
             pytest.skip("Admin token not available")
 
         # 查找草稿预算的明细
-        item = db_session.query(ProjectBudgetItem).join(ProjectBudget).filter(
-            ProjectBudget.status == "DRAFT"
-        ).first()
+        item = (
+            db_session.query(ProjectBudgetItem)
+            .join(ProjectBudget)
+            .filter(ProjectBudget.status == "DRAFT")
+            .first()
+        )
         if not item:
             pytest.skip("No budget item in draft budget available for testing")
 
@@ -478,9 +442,7 @@ class TestBudgetItems:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -491,16 +453,18 @@ class TestBudgetItems:
             pytest.skip("Admin token not available")
 
         # 查找草稿预算的明细
-        item = db_session.query(ProjectBudgetItem).join(ProjectBudget).filter(
-            ProjectBudget.status == "DRAFT"
-        ).first()
+        item = (
+            db_session.query(ProjectBudgetItem)
+            .join(ProjectBudget)
+            .filter(ProjectBudget.status == "DRAFT")
+            .first()
+        )
         if not item:
             pytest.skip("No budget item in draft budget available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/items/{item.id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -515,10 +479,7 @@ class TestAllocationRules:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/budgets/allocation-rules", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -539,9 +500,7 @@ class TestAllocationRules:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
-            json=rule_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules", json=rule_data, headers=headers
         )
 
         assert response.status_code == 201
@@ -555,8 +514,7 @@ class TestAllocationRules:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/999999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/999999", headers=headers
         )
 
         assert response.status_code == 404
@@ -576,9 +534,7 @@ class TestAllocationRules:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/budgets/allocation-rules",
-            json=rule_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules", json=rule_data, headers=headers
         )
 
         if create_response.status_code != 201:
@@ -588,8 +544,7 @@ class TestAllocationRules:
 
         # 删除规则
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/{rule_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/budgets/allocation-rules/{rule_id}", headers=headers
         )
 
         assert delete_response.status_code == 200

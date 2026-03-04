@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - quality_risk_analyzer 单元测试（质量风险AI分析器）"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.quality_risk_ai.quality_risk_analyzer")
 
 from app.services.quality_risk_ai.quality_risk_analyzer import QualityRiskAnalyzer
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_log(
     work_date="2024-01-01",
@@ -41,6 +42,7 @@ def _make_analyzer(db=None):
 
 
 # ─── analyze_work_logs ───────────────────────────────────────
+
 
 class TestAnalyzeWorkLogs:
 
@@ -102,6 +104,7 @@ class TestAnalyzeWorkLogs:
 
 
 # ─── _analyze_with_keywords ──────────────────────────────────
+
 
 class TestAnalyzeWithKeywords:
 

@@ -135,9 +135,7 @@ class ApprovalProcessMixin:
             # 通知发起人
             self.notify.notify_rejected(
                 instance,
-                rejector_name=approver.real_name or approver.username
-                if approver
-                else None,
+                rejector_name=approver.real_name or approver.username if approver else None,
                 reject_comment=comment,
             )
         elif reject_to == "PREV":
@@ -284,9 +282,7 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=from_user_id,
-            operator_name=from_user.real_name or from_user.username
-            if from_user
-            else None,
+            operator_name=from_user.real_name or from_user.username if from_user else None,
             action="TRANSFER",
             comment=comment,
             action_detail={"from_user_id": from_user_id, "to_user_id": to_user_id},
@@ -296,9 +292,7 @@ class ApprovalProcessMixin:
         self.notify.notify_transferred(
             new_task,
             from_user_id=from_user_id,
-            from_user_name=from_user.real_name or from_user.username
-            if from_user
-            else None,
+            from_user_name=from_user.real_name or from_user.username if from_user else None,
         )
 
         self.db.commit()
@@ -369,9 +363,7 @@ class ApprovalProcessMixin:
             node_id=task.node_id,
             operator_id=operator_id,
             operator_name=operator.real_name or operator.username if operator else None,
-            action="ADD_APPROVER_BEFORE"
-            if position == "BEFORE"
-            else "ADD_APPROVER_AFTER",
+            action="ADD_APPROVER_BEFORE" if position == "BEFORE" else "ADD_APPROVER_AFTER",
             comment=comment,
             action_detail={"approver_ids": approver_ids, "position": position},
         )
@@ -381,9 +373,7 @@ class ApprovalProcessMixin:
             if new_task.status == "PENDING":
                 self.notify.notify_add_approver(
                     new_task,
-                    added_by_name=operator.real_name or operator.username
-                    if operator
-                    else None,
+                    added_by_name=operator.real_name or operator.username if operator else None,
                     position=position,
                 )
 

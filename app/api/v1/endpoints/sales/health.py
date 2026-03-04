@@ -104,10 +104,7 @@ def get_pipeline_health(
     """获取全链条健康度"""
     service = PipelineHealthService(db)
     result = service.calculate_pipeline_health(
-        lead_id=lead_id,
-        opportunity_id=opportunity_id,
-        quote_id=quote_id,
-        contract_id=contract_id
+        lead_id=lead_id, opportunity_id=opportunity_id, quote_id=quote_id, contract_id=contract_id
     )
     return ResponseModel(code=200, message="查询成功", data=result)
 
@@ -121,4 +118,4 @@ def get_health_warnings(
     # 这里可以查询健康度为H2或H3的线索/商机/报价/合同
     warnings = []
     # 实现逻辑...
-    return ResponseModel(code=200, message="查询成功", data={'warnings': warnings})
+    return ResponseModel(code=200, message="查询成功", data={"warnings": warnings})

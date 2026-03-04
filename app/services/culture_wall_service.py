@@ -29,9 +29,7 @@ def get_culture_wall_config(db: Session) -> Optional[CultureWallConfig]:
     # 优先获取默认配置
     config = (
         db.query(CultureWallConfig)
-        .filter(
-            CultureWallConfig.is_default, CultureWallConfig.is_enabled
-        )
+        .filter(CultureWallConfig.is_default, CultureWallConfig.is_enabled)
         .first()
     )
 
@@ -112,24 +110,18 @@ def query_content_by_type(
         return []
 
     max_count = (
-        type_config.get("max_count", default_max_count)
-        if type_config
-        else default_max_count
+        type_config.get("max_count", default_max_count) if type_config else default_max_count
     )
 
     return (
         content_query.filter(CultureWallContent.content_type == content_type)
-        .order_by(
-            desc(CultureWallContent.priority), desc(CultureWallContent.publish_date)
-        )
+        .order_by(desc(CultureWallContent.priority), desc(CultureWallContent.publish_date))
         .limit(max_count)
         .all()
     )
 
 
-def get_read_records(
-    db: Session, content_ids: List[int], user_id: int
-) -> Dict[int, bool]:
+def get_read_records(db: Session, content_ids: List[int], user_id: int) -> Dict[int, bool]:
     """
     获取阅读记录
 

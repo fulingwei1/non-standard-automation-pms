@@ -66,9 +66,7 @@ def get_culture_wall_summary(
     # 按类型查询内容
     strategies = query_content_by_type(content_query, "STRATEGY", content_types_config)
     cultures = query_content_by_type(content_query, "CULTURE", content_types_config)
-    important_items = query_content_by_type(
-        content_query, "IMPORTANT", content_types_config
-    )
+    important_items = query_content_by_type(content_query, "IMPORTANT", content_types_config)
     notices = query_content_by_type(content_query, "NOTICE", content_types_config)
     rewards = query_content_by_type(content_query, "REWARD", content_types_config)
 
@@ -78,9 +76,7 @@ def get_culture_wall_summary(
     read_records = get_read_records(db, content_ids, current_user.id)
 
     # 获取个人目标
-    personal_goals = get_personal_goals(
-        db, current_user.id, today, content_types_config
-    )
+    personal_goals = get_personal_goals(db, current_user.id, today, content_types_config)
 
     # 获取系统通知
     notification_list = get_notifications(db, current_user.id, content_types_config)

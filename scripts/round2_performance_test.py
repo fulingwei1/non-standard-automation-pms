@@ -20,26 +20,26 @@ def test_code_reduction():
             "file": "schemas/sales.py",
             "before": 1888,
             "after": 111,
-            "reduction_percent": ((1888 - 111) / 1888) * 100
+            "reduction_percent": ((1888 - 111) / 1888) * 100,
         },
         {
             "file": "purchase.py",
             "before": 1569,
             "after": 315,
-            "reduction_percent": ((1569 - 315) / 1569) * 100
+            "reduction_percent": ((1569 - 315) / 1569) * 100,
         },
         {
             "file": "outsourcing.py",
             "before": 1498,
             "after": 98,
-            "reduction_percent": ((1498 - 98) / 1498) * 100
+            "reduction_percent": ((1498 - 98) / 1498) * 100,
         },
         {
             "file": "bonus.py",
             "before": 1472,
             "after": 121,
-            "reduction_percent": ((1472 - 121) / 1472) * 100
-        }
+            "reduction_percent": ((1472 - 121) / 1472) * 100,
+        },
     ]
 
     total_before = sum(opt["before"] for opt in optimizations)
@@ -48,7 +48,9 @@ def test_code_reduction():
 
     print("📈 文件优化结果:")
     for opt in optimizations:
-        print(f"  {opt['file']}: {opt['before']}行 → {opt['after']}行 (减少 {opt['reduction_percent']:.1f}%)")
+        print(
+            f"  {opt['file']}: {opt['before']}行 → {opt['after']}行 (减少 {opt['reduction_percent']:.1f}%)"
+        )
 
     print(f"\n📊 总体优化效果:")
     print(f"  总代码量: {total_before}行 → {total_after}行")
@@ -58,8 +60,9 @@ def test_code_reduction():
         "files": optimizations,
         "total_before": total_before,
         "total_after": total_after,
-        "overall_reduction": overall_reduction
+        "overall_reduction": overall_reduction,
     }
+
 
 def test_import_performance():
     """测试导入性能"""
@@ -67,14 +70,15 @@ def test_import_performance():
     print("=" * 50)
 
     import sys
-    sys.path.append('/Users/flw/non-standard-automation-pm')
+
+    sys.path.append("/Users/flw/non-standard-automation-pm")
 
     test_modules = [
         ("app.schemas.sales.leads", "LeadCreate"),
         ("app.schemas.sales.opportunities", "OpportunityCreate"),
         ("app.schemas.sales.quotes", "QuoteCreate"),
         ("app.schemas.sales.contracts", "ContractCreate"),
-        ("app.services.purchase.purchase_service", "PurchaseService")
+        ("app.services.purchase.purchase_service", "PurchaseService"),
     ]
 
     import_times = []
@@ -100,6 +104,7 @@ def test_import_performance():
 
     return import_times
 
+
 def test_memory_usage():
     """测试内存使用"""
     print("\n💾 内存使用测试")
@@ -107,6 +112,7 @@ def test_memory_usage():
 
     try:
         import psutil
+
         process = psutil.Process()
 
         # 测试前内存
@@ -114,7 +120,8 @@ def test_memory_usage():
 
         # 导入优化后的模块
         import sys
-        sys.path.append('/Users/flw/non-standard-automation-pm')
+
+        sys.path.append("/Users/flw/non-standard-automation-pm")
 
         from app.schemas.sales.contracts import ContractCreate
         from app.schemas.sales.leads import LeadCreate
@@ -134,12 +141,13 @@ def test_memory_usage():
         return {
             "memory_before": memory_before,
             "memory_after": memory_after,
-            "memory_increase": memory_increase
+            "memory_increase": memory_increase,
         }
 
     except ImportError:
         print("  ⚠️ psutil 未安装，跳过内存测试")
         return None
+
 
 def main():
     """主测试函数"""
@@ -161,20 +169,20 @@ def main():
         "code_reduction": code_results,
         "import_performance": {
             "times": import_results,
-            "average": sum(import_results) / len(import_results) if import_results else 0
+            "average": sum(import_results) / len(import_results) if import_results else 0,
         },
         "memory_usage": memory_results,
         "summary": {
             "files_optimized": len(code_results["files"]),
             "total_code_reduction": code_results["overall_reduction"],
             "avg_import_time": sum(import_results) / len(import_results) if import_results else 0,
-            "memory_efficient": memory_results["memory_increase"] < 50 if memory_results else True
-        }
+            "memory_efficient": memory_results["memory_increase"] < 50 if memory_results else True,
+        },
     }
 
     # 保存报告
     report_file = f"round2_optimization_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(report_file, 'w', encoding='utf-8') as f:
+    with open(report_file, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     print(f"\n📋 详细报告已保存到: {report_file}")
@@ -186,12 +194,13 @@ def main():
     print(f"📉 总体代码减少: {report['summary']['total_code_reduction']:.1f}%")
     print(f"⚡ 平均导入时间: {report['summary']['avg_import_time']:.4f}s")
 
-    if report['summary']['memory_efficient']:
+    if report["summary"]["memory_efficient"]:
         print("💾 内存使用: 高效")
     else:
         print("💾 内存使用: 需要优化")
 
     print("\n🎉 第二轮优化测试完成！")
+
 
 if __name__ == "__main__":
     main()

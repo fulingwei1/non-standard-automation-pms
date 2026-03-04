@@ -8,8 +8,8 @@ MilestoneService 综合单元测试
 - complete_milestone: 完成里程碑
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,8 +30,8 @@ class TestMilestoneServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.milestone_service import MilestoneService
         from app.models.project import ProjectMilestone
+        from app.services.milestone_service import MilestoneService
 
         mock_db = MagicMock()
 
@@ -62,7 +62,8 @@ class TestGetByProject:
 
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_milestone1, mock_milestone2
+            mock_milestone1,
+            mock_milestone2,
         ]
         mock_db.query.return_value = mock_query
 
@@ -89,8 +90,8 @@ class TestGetByProject:
 
     def test_orders_by_planned_date(self):
         """测试按计划日期排序"""
-        from app.services.milestone_service import MilestoneService
         from app.models.project import ProjectMilestone
+        from app.services.milestone_service import MilestoneService
 
         mock_db = MagicMock()
         service = MilestoneService(mock_db)
@@ -111,8 +112,8 @@ class TestCompleteMilestone:
 
     def test_completes_milestone_with_actual_date(self):
         """测试使用指定日期完成里程碑"""
-        from app.services.milestone_service import MilestoneService
         from app.models.project import ProjectMilestone
+        from app.services.milestone_service import MilestoneService
 
         mock_db = MagicMock()
         service = MilestoneService(mock_db)
@@ -121,19 +122,18 @@ class TestCompleteMilestone:
         mock_milestone.id = 1
         mock_milestone.actual_date = None
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 # 模拟数据库查询返回更新后的里程碑
                 updated_milestone = MagicMock()
                 updated_milestone.id = 1
                 updated_milestone.status = "COMPLETED"
-                mock_db.query.return_value.filter.return_value.first.return_value = updated_milestone
+                mock_db.query.return_value.filter.return_value.first.return_value = (
+                    updated_milestone
+                )
 
                 actual_date = date(2024, 3, 15)
-                result = service.complete_milestone(
-                    milestone_id=1,
-                    actual_date=actual_date
-                )
+                result = service.complete_milestone(milestone_id=1, actual_date=actual_date)
 
                 mock_update.assert_called_once()
                 update_data = mock_update.call_args[0][1]
@@ -151,12 +151,14 @@ class TestCompleteMilestone:
         mock_milestone.id = 1
         mock_milestone.actual_date = None
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 updated_milestone = MagicMock()
                 updated_milestone.id = 1
                 updated_milestone.status = "COMPLETED"
-                mock_db.query.return_value.filter.return_value.first.return_value = updated_milestone
+                mock_db.query.return_value.filter.return_value.first.return_value = (
+                    updated_milestone
+                )
 
                 result = service.complete_milestone(milestone_id=1)
 
@@ -177,10 +179,12 @@ class TestCompleteMilestone:
         mock_milestone.id = 1
         mock_milestone.actual_date = existing_date
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 updated_milestone = MagicMock()
-                mock_db.query.return_value.filter.return_value.first.return_value = updated_milestone
+                mock_db.query.return_value.filter.return_value.first.return_value = (
+                    updated_milestone
+                )
 
                 result = service.complete_milestone(milestone_id=1)
 
@@ -202,9 +206,11 @@ class TestCompleteMilestone:
         updated_milestone.id = 1
         updated_milestone.status = "COMPLETED"
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update'):
-                mock_db.query.return_value.filter.return_value.first.return_value = updated_milestone
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update"):
+                mock_db.query.return_value.filter.return_value.first.return_value = (
+                    updated_milestone
+                )
 
                 result = service.complete_milestone(milestone_id=1)
 

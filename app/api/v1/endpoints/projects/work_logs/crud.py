@@ -13,13 +13,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.models.work_log import WorkLog, WorkLogMention
 from app.schemas.common import ResponseModel
 from app.services.project_statistics_service import WorkLogStatisticsService
 from app.utils.permission_helpers import check_project_access_or_raise
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -101,8 +101,8 @@ def get_project_work_log_summary(
     统计最近N天内该项目被提及的日志数量和参与人数
     """
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = WorkLogStatisticsService(db)
     summary = service.get_summary(project_id, days=days)
-    
+
     return ResponseModel(data=summary)

@@ -27,7 +27,6 @@ from app.services.alert_rule_engine import (
     LevelDeterminer,
 )
 
-
 # ============================================================================
 # AlertRuleEngineBase 测试
 # ============================================================================
@@ -461,9 +460,7 @@ class TestLevelDeterminer:
         rule = MagicMock()
         rule.alert_level = AlertLevelEnum.INFO.value
 
-        level = LevelDeterminer.determine_alert_level(
-        rule, {"value": 100}, {"extra": "data"}
-        )
+        level = LevelDeterminer.determine_alert_level(rule, {"value": 100}, {"extra": "data"})
         assert level == AlertLevelEnum.INFO.value
 
 
@@ -492,7 +489,7 @@ class TestAlertCreator:
         assert result is None
 
         result = creator.should_create_alert(
-        rule, {"target_type": "PROJECT"}, AlertLevelEnum.WARNING.value
+            rule, {"target_type": "PROJECT"}, AlertLevelEnum.WARNING.value
         )
         assert result is None
 
@@ -502,21 +499,19 @@ class TestAlertCreator:
 
         # 创建规则（需包含必填字段 condition_type）
         rule = AlertRule(
-        rule_code="TEST-001",
-        rule_name="测试规则",
-        rule_type="THRESHOLD",
-        target_type="PROJECT",
-        condition_type="THRESHOLD",  # 必填字段
-        is_enabled=True,
-        alert_level=AlertLevelEnum.WARNING.value,
+            rule_code="TEST-001",
+            rule_name="测试规则",
+            rule_type="THRESHOLD",
+            target_type="PROJECT",
+            condition_type="THRESHOLD",  # 必填字段
+            is_enabled=True,
+            alert_level=AlertLevelEnum.WARNING.value,
         )
         db_session.add(rule)
         db_session.flush()
 
         target_data = {"target_type": "PROJECT", "target_id": 999999}
-        result = creator.should_create_alert(
-        rule, target_data, AlertLevelEnum.WARNING.value
-        )
+        result = creator.should_create_alert(rule, target_data, AlertLevelEnum.WARNING.value)
         assert result is None
 
     def test_should_create_alert_existing_alert(self, db_session: Session):
@@ -534,20 +529,16 @@ class TestAlertCreator:
 
         # 测试当没有 target_type 或 target_id 时返回 None
         result = creator.should_create_alert(
-        rule, {"target_type": "PROJECT"}, AlertLevelEnum.WARNING.value
+            rule, {"target_type": "PROJECT"}, AlertLevelEnum.WARNING.value
         )
         assert result is None
 
-        result = creator.should_create_alert(
-        rule, {"target_id": 123}, AlertLevelEnum.WARNING.value
-        )
+        result = creator.should_create_alert(rule, {"target_id": 123}, AlertLevelEnum.WARNING.value)
         assert result is None
 
         # 测试完整的 target 数据时查询能正常执行
         target_data = {"target_type": "PROJECT", "target_id": 999999}
-        result = creator.should_create_alert(
-        rule, target_data, AlertLevelEnum.WARNING.value
-        )
+        result = creator.should_create_alert(rule, target_data, AlertLevelEnum.WARNING.value)
         # 不存在的记录应该返回 None
         assert result is None
 
@@ -641,14 +632,14 @@ class TestAlertRuleEngine:
 
         # 验证级别优先级排序
         assert base.level_priority(AlertLevelEnum.INFO.value) < base.level_priority(
-        AlertLevelEnum.WARNING.value
+            AlertLevelEnum.WARNING.value
         )
-        assert base.level_priority(
-        AlertLevelEnum.WARNING.value
-        ) < base.level_priority(AlertLevelEnum.CRITICAL.value)
-        assert base.level_priority(
-        AlertLevelEnum.CRITICAL.value
-        ) < base.level_priority(AlertLevelEnum.URGENT.value)
+        assert base.level_priority(AlertLevelEnum.WARNING.value) < base.level_priority(
+            AlertLevelEnum.CRITICAL.value
+        )
+        assert base.level_priority(AlertLevelEnum.CRITICAL.value) < base.level_priority(
+            AlertLevelEnum.URGENT.value
+        )
 
 
 @pytest.mark.unit

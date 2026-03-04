@@ -25,7 +25,7 @@ class DeptReportMixin:
         start_date: date,
         end_date: date,
         sections_config: Dict,
-        metrics_config: Dict
+        metrics_config: Dict,
     ) -> Dict[str, Any]:
         """生成部门周报"""
         department = db.query(Department).filter(Department.id == department_id).first()
@@ -33,18 +33,18 @@ class DeptReportMixin:
             return {"error": "部门不存在"}
 
         # 部门人员
-        users = db.query(User).filter(
-            User.department_id == department_id,
-            User.is_active
-        ).all()
+        users = db.query(User).filter(User.department_id == department_id, User.is_active).all()
 
         user_ids = [u.id for u in users]
 
         # 工时统计
-        timesheets = db.query(Timesheet).filter(
-            Timesheet.user_id.in_(user_ids),
-            Timesheet.work_date.between(start_date, end_date)
-        ).all()
+        timesheets = (
+            db.query(Timesheet)
+            .filter(
+                Timesheet.user_id.in_(user_ids), Timesheet.work_date.between(start_date, end_date)
+            )
+            .all()
+        )
 
         total_hours = sum(float(t.hours or 0) for t in timesheets)
 
@@ -60,42 +60,42 @@ class DeptReportMixin:
             project_stats[pid]["count"] += 1
 
         project_list = []
-        for pid, stats in sorted(project_stats.items(), key=lambda x: x[1]["hours"], reverse=True)[:10]:
+        for pid, stats in sorted(project_stats.items(), key=lambda x: x[1]["hours"], reverse=True)[
+            :10
+        ]:
             proj = db.query(Project).filter(Project.id == pid).first()
-            project_list.append({
-                "project_id": pid,
-                "project_name": proj.project_name if proj else "未知项目",
-                "hours": round(stats["hours"], 2),
-                "timesheet_count": stats["count"]
-            })
+            project_list.append(
+                {
+                    "project_id": pid,
+                    "project_name": proj.project_name if proj else "未知项目",
+                    "hours": round(stats["hours"], 2),
+                    "timesheet_count": stats["count"],
+                }
+            )
 
         return {
             "summary": {
                 "department_name": department.name,
                 "member_count": len(users),
                 "period_start": start_date.isoformat(),
-                "period_end": end_date.isoformat()
+                "period_end": end_date.isoformat(),
             },
             "sections": {
-                "projects": {
-                    "title": "项目工时分布",
-                    "type": "table",
-                    "data": project_list
-                },
+                "projects": {"title": "项目工时分布", "type": "table", "data": project_list},
                 "timesheet": {
                     "title": "工时汇总",
                     "type": "summary",
                     "data": {
                         "total_hours": round(total_hours, 2),
-                        "avg_hours_per_user": round(total_hours / len(users), 2) if users else 0
-                    }
-                }
+                        "avg_hours_per_user": round(total_hours / len(users), 2) if users else 0,
+                    },
+                },
             },
             "metrics": {
                 "total_hours": round(total_hours, 2),
                 "active_projects": len(project_stats),
-                "active_members": len(users)
-            }
+                "active_members": len(users),
+            },
         }
 
     @staticmethod
@@ -105,7 +105,7 @@ class DeptReportMixin:
         start_date: date,
         end_date: date,
         sections_config: Dict,
-        metrics_config: Dict
+        metrics_config: Dict,
     ) -> Dict[str, Any]:
         """生成部门月报"""
         # 复用周报逻辑

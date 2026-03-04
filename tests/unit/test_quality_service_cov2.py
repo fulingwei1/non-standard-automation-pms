@@ -2,15 +2,17 @@
 """
 quality_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 
 # ─── 1. 纯逻辑：_calculate_moving_average ───────────────────────────────────
 def test_calculate_moving_average_normal():
     from app.services.quality_service import QualityService
+
     data = [1.0, 2.0, 3.0, 4.0, 5.0]
     result = QualityService._calculate_moving_average(data, window=3)
     assert result == round((3.0 + 4.0 + 5.0) / 3, 2)
@@ -18,6 +20,7 @@ def test_calculate_moving_average_normal():
 
 def test_calculate_moving_average_insufficient_data():
     from app.services.quality_service import QualityService
+
     data = [1.0, 2.0]
     result = QualityService._calculate_moving_average(data, window=3)
     assert result is None
@@ -25,6 +28,7 @@ def test_calculate_moving_average_insufficient_data():
 
 def test_calculate_moving_average_exact_window():
     from app.services.quality_service import QualityService
+
     data = [10.0, 20.0, 30.0]
     result = QualityService._calculate_moving_average(data, window=3)
     assert result == 20.0
@@ -137,9 +141,16 @@ def test_complete_rework_order_success():
     mock_db.query.return_value.filter.return_value.first.return_value = mock_rw
 
     result = QualityService.complete_rework_order(
-        mock_db, 1,
-        {"completed_qty": 10, "qualified_qty": 9, "scrap_qty": 1,
-         "actual_hours": 2, "rework_cost": 500, "completion_note": "done"}
+        mock_db,
+        1,
+        {
+            "completed_qty": 10,
+            "qualified_qty": 9,
+            "scrap_qty": 1,
+            "actual_hours": 2,
+            "rework_cost": 500,
+            "completion_note": "done",
+        },
     )
     assert mock_rw.status == "COMPLETED"
     assert mock_rw.completed_qty == 10

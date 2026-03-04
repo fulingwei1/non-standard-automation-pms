@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/adapters/analysis.py"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.report_framework.adapters.analysis import (
-        WorkloadAnalysisAdapter,
         CostAnalysisAdapter,
+        WorkloadAnalysisAdapter,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -44,7 +45,13 @@ def test_cost_adapter_get_report_code():
 def test_workload_generate_data_with_dates():
     adapter, _ = _make_workload_adapter()
     mock_result = {
-        "summary": {"scope": "全公司", "total_users": 0, "period_start": "2025-01-01", "period_end": "2025-01-31", "active_users": 0},
+        "summary": {
+            "scope": "全公司",
+            "total_users": 0,
+            "period_start": "2025-01-01",
+            "period_end": "2025-01-31",
+            "active_users": 0,
+        },
         "load_distribution": {},
         "workload_details": [],
         "charts": [],
@@ -58,10 +65,12 @@ def test_workload_generate_data_date_objects():
     adapter, _ = _make_workload_adapter()
     mock_result = {"summary": {}, "load_distribution": {}, "workload_details": [], "charts": []}
     with patch(f"{_GEN}.generate_workload_analysis", return_value=mock_result):
-        result = adapter.generate_data({
-            "start_date": date(2025, 2, 1),
-            "end_date": date(2025, 2, 28),
-        })
+        result = adapter.generate_data(
+            {
+                "start_date": date(2025, 2, 1),
+                "end_date": date(2025, 2, 28),
+            }
+        )
     assert result["report_type"] == "WORKLOAD_ANALYSIS"
 
 

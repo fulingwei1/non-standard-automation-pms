@@ -32,13 +32,13 @@ class EcnIntegrationService:
     def sync_to_bom(self, ecn_id: int) -> Dict[str, Any]:
         """
         将ECN变更同步到BOM
-        
+
         Args:
             ecn_id: ECN ID
-            
+
         Returns:
             同步结果字典，包含更新数量
-            
+
         Raises:
             ValueError: 当ECN状态不允许同步时
         """
@@ -47,10 +47,11 @@ class EcnIntegrationService:
         if ecn.status not in ["APPROVED", "EXECUTING"]:
             raise ValueError("只能同步已审批或执行中的ECN")
 
-        affected_materials = self.db.query(EcnAffectedMaterial).filter(
-            EcnAffectedMaterial.ecn_id == ecn_id,
-            EcnAffectedMaterial.status == "PENDING"
-        ).all()
+        affected_materials = (
+            self.db.query(EcnAffectedMaterial)
+            .filter(EcnAffectedMaterial.ecn_id == ecn_id, EcnAffectedMaterial.status == "PENDING")
+            .all()
+        )
 
         updated_count = 0
         for am in affected_materials:
@@ -79,13 +80,13 @@ class EcnIntegrationService:
     def sync_to_project(self, ecn_id: int) -> Dict[str, Any]:
         """
         将ECN变更同步到项目
-        
+
         Args:
             ecn_id: ECN ID
-            
+
         Returns:
             同步结果字典，包含成本和工期影响
-            
+
         Raises:
             ValueError: 当ECN未关联项目时
         """
@@ -105,34 +106,40 @@ class EcnIntegrationService:
         # 更新项目工期（累加ECN的工期影响）
         if ecn.schedule_impact_days:
             if project.planned_end_date:
-                project.planned_end_date = project.planned_end_date + timedelta(days=ecn.schedule_impact_days)
+                project.planned_end_date = project.planned_end_date + timedelta(
+                    days=ecn.schedule_impact_days
+                )
 
         self.db.add(project)
         self.db.commit()
 
         return {
             "cost_impact": float(ecn.cost_impact or 0),
-            "schedule_impact_days": ecn.schedule_impact_days or 0
+            "schedule_impact_days": ecn.schedule_impact_days or 0,
         }
 
     def sync_to_purchase(self, ecn_id: int, current_user_id: int) -> Dict[str, Any]:
         """
         将ECN变更同步到采购订单
-        
+
         Args:
             ecn_id: ECN ID
             current_user_id: 当前用户ID
-            
+
         Returns:
             同步结果字典，包含更新数量
         """
         get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
 
-        affected_orders = self.db.query(EcnAffectedOrder).filter(
-            EcnAffectedOrder.ecn_id == ecn_id,
-            EcnAffectedOrder.order_type == "PURCHASE",
-            EcnAffectedOrder.status == "PENDING"
-        ).all()
+        affected_orders = (
+            self.db.query(EcnAffectedOrder)
+            .filter(
+                EcnAffectedOrder.ecn_id == ecn_id,
+                EcnAffectedOrder.order_type == "PURCHASE",
+                EcnAffectedOrder.status == "PENDING",
+            )
+            .all()
+        )
 
         updated_count = 0
         for ao in affected_orders:
@@ -159,10 +166,10 @@ class EcnIntegrationService:
     def batch_sync_to_bom(self, ecn_ids: List[int]) -> Dict[str, Any]:
         """
         批量同步ECN变更到BOM
-        
+
         Args:
             ecn_ids: ECN ID列表
-            
+
         Returns:
             批量同步结果，包含总数、成功数、失败数和详细结果
         """
@@ -179,22 +186,26 @@ class EcnIntegrationService:
                     continue
 
                 if ecn.status not in ["APPROVED", "EXECUTING"]:
-                    results.append({
-                        "ecn_id": ecn_id,
-                        "status": "failed",
-                        "message": "只能同步已审批或执行中的ECN"
-                    })
+                    results.append(
+                        {
+                            "ecn_id": ecn_id,
+                            "status": "failed",
+                            "message": "只能同步已审批或执行中的ECN",
+                        }
+                    )
                     fail_count += 1
                     continue
 
                 # 调用单个同步逻辑
                 sync_result = self.sync_to_bom(ecn_id)
-                results.append({
-                    "ecn_id": ecn_id,
-                    "ecn_no": ecn.ecn_no,
-                    "status": "success",
-                    "updated_count": sync_result["updated_count"]
-                })
+                results.append(
+                    {
+                        "ecn_id": ecn_id,
+                        "ecn_no": ecn.ecn_no,
+                        "status": "success",
+                        "updated_count": sync_result["updated_count"],
+                    }
+                )
                 success_count += 1
             except Exception as e:
                 self.db.rollback()
@@ -205,16 +216,16 @@ class EcnIntegrationService:
             "total": len(ecn_ids),
             "success_count": success_count,
             "fail_count": fail_count,
-            "results": results
+            "results": results,
         }
 
     def batch_sync_to_project(self, ecn_ids: List[int]) -> Dict[str, Any]:
         """
         批量同步ECN变更到项目
-        
+
         Args:
             ecn_ids: ECN ID列表
-            
+
         Returns:
             批量同步结果，包含总数、成功数、失败数和详细结果
         """
@@ -231,7 +242,9 @@ class EcnIntegrationService:
                     continue
 
                 if not ecn.project_id:
-                    results.append({"ecn_id": ecn_id, "status": "failed", "message": "ECN未关联项目"})
+                    results.append(
+                        {"ecn_id": ecn_id, "status": "failed", "message": "ECN未关联项目"}
+                    )
                     fail_count += 1
                     continue
 
@@ -243,14 +256,16 @@ class EcnIntegrationService:
 
                 # 调用单个同步逻辑
                 sync_result = self.sync_to_project(ecn_id)
-                results.append({
-                    "ecn_id": ecn_id,
-                    "ecn_no": ecn.ecn_no,
-                    "project_id": ecn.project_id,
-                    "status": "success",
-                    "cost_impact": sync_result["cost_impact"],
-                    "schedule_impact_days": sync_result["schedule_impact_days"]
-                })
+                results.append(
+                    {
+                        "ecn_id": ecn_id,
+                        "ecn_no": ecn.ecn_no,
+                        "project_id": ecn.project_id,
+                        "status": "success",
+                        "cost_impact": sync_result["cost_impact"],
+                        "schedule_impact_days": sync_result["schedule_impact_days"],
+                    }
+                )
                 success_count += 1
             except Exception as e:
                 self.db.rollback()
@@ -261,17 +276,17 @@ class EcnIntegrationService:
             "total": len(ecn_ids),
             "success_count": success_count,
             "fail_count": fail_count,
-            "results": results
+            "results": results,
         }
 
     def batch_sync_to_purchase(self, ecn_ids: List[int], current_user_id: int) -> Dict[str, Any]:
         """
         批量同步ECN变更到采购
-        
+
         Args:
             ecn_ids: ECN ID列表
             current_user_id: 当前用户ID
-            
+
         Returns:
             批量同步结果，包含总数、成功数、失败数和详细结果
         """
@@ -289,12 +304,14 @@ class EcnIntegrationService:
 
                 # 调用单个同步逻辑
                 sync_result = self.sync_to_purchase(ecn_id, current_user_id)
-                results.append({
-                    "ecn_id": ecn_id,
-                    "ecn_no": ecn.ecn_no,
-                    "status": "success",
-                    "updated_count": sync_result["updated_count"]
-                })
+                results.append(
+                    {
+                        "ecn_id": ecn_id,
+                        "ecn_no": ecn.ecn_no,
+                        "status": "success",
+                        "updated_count": sync_result["updated_count"],
+                    }
+                )
                 success_count += 1
             except Exception as e:
                 self.db.rollback()
@@ -305,24 +322,20 @@ class EcnIntegrationService:
             "total": len(ecn_ids),
             "success_count": success_count,
             "fail_count": fail_count,
-            "results": results
+            "results": results,
         }
 
-    def batch_create_tasks(
-        self, 
-        ecn_id: int, 
-        tasks: List[EcnTaskCreate]
-    ) -> Dict[str, Any]:
+    def batch_create_tasks(self, ecn_id: int, tasks: List[EcnTaskCreate]) -> Dict[str, Any]:
         """
         批量创建ECN执行任务
-        
+
         Args:
             ecn_id: ECN ID
             tasks: 任务创建数据列表
-            
+
         Returns:
             创建结果，包含ECN ID、创建数量和任务ID列表
-            
+
         Raises:
             ValueError: 当ECN不在执行阶段时
         """
@@ -332,9 +345,12 @@ class EcnIntegrationService:
             raise ValueError("ECN当前不在执行阶段")
 
         # 获取最大任务序号
-        max_order = self.db.query(EcnTask).filter(
-            EcnTask.ecn_id == ecn_id
-        ).order_by(desc(EcnTask.task_no)).first()
+        max_order = (
+            self.db.query(EcnTask)
+            .filter(EcnTask.ecn_id == ecn_id)
+            .order_by(desc(EcnTask.task_no))
+            .first()
+        )
         start_no = (max_order.task_no + 1) if max_order else 1
 
         created_tasks = []
@@ -350,7 +366,7 @@ class EcnIntegrationService:
                 planned_start=task_in.planned_start,
                 planned_end=task_in.planned_end,
                 status="PENDING",
-                progress_pct=0
+                progress_pct=0,
             )
 
             # 如果没有指定负责人，自动分配
@@ -388,5 +404,5 @@ class EcnIntegrationService:
         return {
             "ecn_id": ecn_id,
             "created_count": len(created_tasks),
-            "task_ids": [task.id for task in created_tasks]
+            "task_ids": [task.id for task in created_tasks],
         }

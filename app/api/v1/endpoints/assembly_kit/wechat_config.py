@@ -28,22 +28,19 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/assembly-kit/wechat-config",
-    tags=["wechat_config"]
-)
+router = APIRouter(prefix="/assembly-kit/wechat-config", tags=["wechat_config"])
 
 # 共 2 个路由
 
 # ==================== 企业微信配置 ====================
 
+
 @router.get("/wechat/config", response_model=ResponseModel)
 async def get_wechat_config(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read"))
+    current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
     """获取企业微信配置（仅显示是否已配置，不返回敏感信息）"""
     from app.core.config import settings
@@ -53,24 +50,18 @@ async def get_wechat_config(
         "corp_id_configured": bool(settings.WECHAT_CORP_ID),
         "agent_id_configured": bool(settings.WECHAT_AGENT_ID),
         "secret_configured": bool(settings.WECHAT_SECRET),
-        "fully_configured": all([
-            settings.WECHAT_CORP_ID,
-            settings.WECHAT_AGENT_ID,
-            settings.WECHAT_SECRET
-        ])
+        "fully_configured": all(
+            [settings.WECHAT_CORP_ID, settings.WECHAT_AGENT_ID, settings.WECHAT_SECRET]
+        ),
     }
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=config
-    )
+    return ResponseModel(code=200, message="success", data=config)
 
 
 @router.post("/wechat/test", response_model=ResponseModel)
 async def test_wechat_connection(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read"))
+    current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
     """测试企业微信连接"""
     from app.core.config import settings
@@ -84,14 +75,9 @@ async def test_wechat_connection(
         token = client.get_access_token()
 
         return ResponseModel(
-            code=200,
-            message="企业微信连接成功",
-            data={"access_token_obtained": bool(token)}
+            code=200, message="企业微信连接成功", data={"access_token_obtained": bool(token)}
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"配置不完整: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"连接失败: {str(e)}")
-
-
-

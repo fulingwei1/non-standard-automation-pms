@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """KPI值更新单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.strategy.kpi_service.value import update_kpi_value
 
 

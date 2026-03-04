@@ -19,18 +19,14 @@ from app.services.import_export_engine import ImportExportEngine
 router = APIRouter()
 
 
-@router.post(
-    "/upload", response_model=ImportUploadResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/upload", response_model=ImportUploadResponse, status_code=status.HTTP_201_CREATED)
 def upload_and_import_data(
     *,
     db: Session = Depends(deps.get_db),
     file: UploadFile = File(...),
     template_type: str = Query(..., description="模板类型"),
     update_existing: bool = Query(False, description="是否更新已存在的数据"),
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     上传并导入数据（执行导入）

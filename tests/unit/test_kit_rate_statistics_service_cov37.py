@@ -3,22 +3,23 @@
 第三十七批覆盖率测试 - 齐套率统计服务
 tests/unit/test_kit_rate_statistics_service_cov37.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.kit_rate_statistics_service")
 
 from app.services.kit_rate_statistics_service import (
+    calculate_daily_kit_statistics,
     calculate_date_range,
     calculate_project_kit_statistics,
-    calculate_workshop_kit_statistics,
-    calculate_daily_kit_statistics,
     calculate_summary_statistics,
+    calculate_workshop_kit_statistics,
 )
 
-
 # ── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_project(pid=1, name="项目A", code="P001"):
     p = MagicMock()
@@ -40,9 +41,7 @@ def _make_db_with_kit(kit_data=None):
             "in_transit_items": 1,
             "kit_status": "partial",
         }
-    with patch(
-        "app.services.kit_rate_statistics_service.KitRateService"
-    ) as MockKRS:
+    with patch("app.services.kit_rate_statistics_service.KitRateService") as MockKRS:
         instance = MockKRS.return_value
         instance.list_bom_items_for_project.return_value = []
         instance.calculate_kit_rate.return_value = kit_data
@@ -50,6 +49,7 @@ def _make_db_with_kit(kit_data=None):
 
 
 # ── tests ─────────────────────────────────────────────────────────────────────
+
 
 class TestCalculateDateRange:
     def test_returns_tuple_of_dates(self):
@@ -77,8 +77,12 @@ class TestCalculateProjectKitStatistics:
         project = _make_project()
         db = MagicMock()
         kit_data = {
-            "kit_rate": 0.9, "total_items": 5, "fulfilled_items": 4,
-            "shortage_items": 1, "in_transit_items": 0, "kit_status": "partial",
+            "kit_rate": 0.9,
+            "total_items": 5,
+            "fulfilled_items": 4,
+            "shortage_items": 1,
+            "in_transit_items": 0,
+            "kit_status": "partial",
         }
         with patch("app.services.kit_rate_statistics_service.KitRateService") as MockKRS:
             inst = MockKRS.return_value
@@ -129,7 +133,9 @@ class TestCalculateDailyKitStatistics:
         db = MagicMock()
         project = _make_project()
         kit_data = {
-            "kit_rate": 0.75, "total_items": 4, "fulfilled_items": 3,
+            "kit_rate": 0.75,
+            "total_items": 4,
+            "fulfilled_items": 3,
         }
         with patch("app.services.kit_rate_statistics_service.KitRateService") as MockKRS:
             inst = MockKRS.return_value
@@ -146,7 +152,5 @@ class TestCalculateDailyKitStatistics:
 
     def test_no_projects_returns_zero_kit_rate(self):
         db = MagicMock()
-        result = calculate_daily_kit_statistics(
-            db, date(2025, 6, 1), date(2025, 6, 1), []
-        )
+        result = calculate_daily_kit_statistics(db, date(2025, 6, 1), date(2025, 6, 1), [])
         assert result[0]["kit_rate"] == 0.0

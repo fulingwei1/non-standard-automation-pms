@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十批：TimesheetSyncService 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.timesheet_sync_service import TimesheetSyncService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -88,8 +90,11 @@ def test_sync_to_finance_success(service, db):
     db.query.side_effect = side_effect
 
     with patch("app.services.timesheet_sync_service.save_obj"):
-        with patch.object(service, "_create_financial_cost_from_timesheet",
-                          return_value={"success": True, "message": "同步成功"}):
+        with patch.object(
+            service,
+            "_create_financial_cost_from_timesheet",
+            return_value={"success": True, "message": "同步成功"},
+        ):
             result = service.sync_to_finance(timesheet_id=1)
             assert result["success"] is True
 

@@ -42,6 +42,7 @@ class TestGetUserHourlyRate:
 
         # Setup query chain
         call_count = [0]
+
         def query_side_effect(model):
             query_mock = MagicMock()
             call_count[0] += 1
@@ -50,7 +51,9 @@ class TestGetUserHourlyRate:
                 query_mock.filter.return_value.first.return_value = mock_user
             else:
                 # User config query
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_user_config
+                query_mock.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_user_config
+                )
             return query_mock
 
         mock_db.query.side_effect = query_side_effect
@@ -76,6 +79,7 @@ class TestGetUserHourlyRate:
 
         # Setup query chain
         call_count = [0]
+
         def query_side_effect(model):
             query_mock = MagicMock()
             call_count[0] += 1
@@ -90,7 +94,9 @@ class TestGetUserHourlyRate:
                 query_mock.filter.return_value.all.return_value = [mock_user_role]
             elif call_count[0] == 4:
                 # Role config query
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_role_config
+                query_mock.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_role_config
+                )
             else:
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
             return query_mock
@@ -118,6 +124,7 @@ class TestGetUserHourlyRate:
 
         # Setup complex query chain
         call_count = [0]
+
         def query_side_effect(model):
             query_mock = MagicMock()
             call_count[0] += 1
@@ -135,7 +142,9 @@ class TestGetUserHourlyRate:
                 query_mock.filter.return_value.first.return_value = mock_dept
             elif call_count[0] == 5:
                 # Dept config query
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_dept_config
+                query_mock.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_dept_config
+                )
             else:
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
             return query_mock
@@ -160,6 +169,7 @@ class TestGetUserHourlyRate:
 
         # All configs return None except default
         call_count = [0]
+
         def query_side_effect(model):
             query_mock = MagicMock()
             call_count[0] += 1
@@ -173,7 +183,9 @@ class TestGetUserHourlyRate:
                 query_mock.filter.return_value.all.return_value = []
             elif call_count[0] == 4:
                 # Default config
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_default_config
+                query_mock.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_default_config
+                )
             else:
                 query_mock.filter.return_value.order_by.return_value.first.return_value = None
             return query_mock
@@ -196,7 +208,9 @@ class TestGetUserHourlyRate:
         mock_config.hourly_rate = Decimal("130")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_config
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_config
+        )
 
         work_date = date.today() - timedelta(days=30)
         result = HourlyRateService.get_user_hourly_rate(mock_db, 1, work_date)
@@ -219,7 +233,9 @@ class TestGetUsersHourlyRates:
         mock_config.hourly_rate = Decimal("100")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_config
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_config
+        )
 
         result = HourlyRateService.get_users_hourly_rates(mock_db, [1, 2, 3])
 
@@ -246,7 +262,9 @@ class TestGetUsersHourlyRates:
         mock_user = MagicMock()
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         work_date = date(2026, 1, 15)
         result = HourlyRateService.get_users_hourly_rates(mock_db, [1], work_date)
@@ -323,12 +341,12 @@ class TestGetHourlyRateHistory:
         from app.services.hourly_rate_service import HourlyRateService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         result = HourlyRateService.get_hourly_rate_history(
-            mock_db,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 12, 31)
+            mock_db, start_date=date(2026, 1, 1), end_date=date(2026, 12, 31)
         )
 
         assert result == []

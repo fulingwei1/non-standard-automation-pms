@@ -27,7 +27,7 @@ def get_project_budget(db: Session, project_id: int, project: Project) -> float:
         .filter(
             ProjectBudget.project_id == project_id,
             ProjectBudget.is_active,
-            ProjectBudget.status == "APPROVED"
+            ProjectBudget.status == "APPROVED",
         )
         .order_by(ProjectBudget.version.desc())
         .first()
@@ -57,24 +57,25 @@ def get_or_create_alert_rule(db: Session) -> AlertRule:
     Returns:
         AlertRule: 预警规则对象
     """
-    alert_rule = db.query(AlertRule).filter(
-        AlertRule.rule_code == 'COST_OVERRUN',
-        AlertRule.is_enabled
-    ).first()
+    alert_rule = (
+        db.query(AlertRule)
+        .filter(AlertRule.rule_code == "COST_OVERRUN", AlertRule.is_enabled)
+        .first()
+    )
 
     if not alert_rule:
         alert_rule = AlertRule(
-            rule_code='COST_OVERRUN',
-            rule_name='成本超支预警',
+            rule_code="COST_OVERRUN",
+            rule_name="成本超支预警",
             rule_type=AlertRuleTypeEnum.COST_OVERRUN.value,
-            target_type='PROJECT',
-            condition_type='THRESHOLD',
-            condition_operator='GT',
-            threshold_value='5',
+            target_type="PROJECT",
+            condition_type="THRESHOLD",
+            condition_operator="GT",
+            threshold_value="5",
             alert_level=AlertLevelEnum.WARNING.value,
             is_enabled=True,
             is_system=True,
-            description='当项目成本超支超过5%时触发预警'
+            description="当项目成本超支超过5%时触发预警",
         )
         db.add(alert_rule)
         db.flush()
@@ -88,7 +89,7 @@ def determine_alert_level(
     project_name: str,
     project_code: str,
     budget_amount: float,
-    actual_cost: float
+    actual_cost: float,
 ) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
     判断预警级别
@@ -101,44 +102,41 @@ def determine_alert_level(
         if overrun_ratio >= 20:
             return (
                 AlertLevelEnum.URGENT.value,
-                f'项目成本严重超支：{project_name}',
-                f'项目 {project_code} 成本严重超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）'
+                f"项目成本严重超支：{project_name}",
+                f"项目 {project_code} 成本严重超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）",
             )
         elif overrun_ratio >= 10:
             return (
                 AlertLevelEnum.CRITICAL.value,
-                f'项目成本超支：{project_name}',
-                f'项目 {project_code} 成本超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）'
+                f"项目成本超支：{project_name}",
+                f"项目 {project_code} 成本超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）",
             )
         elif overrun_ratio >= 5:
             return (
                 AlertLevelEnum.WARNING.value,
-                f'项目成本超支：{project_name}',
-                f'项目 {project_code} 成本超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）'
+                f"项目成本超支：{project_name}",
+                f"项目 {project_code} 成本超支 {overrun_ratio:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，超支：{actual_cost - budget_amount:,.2f}）",
             )
     elif execution_rate >= 90:
         # 接近预算
         return (
             AlertLevelEnum.WARNING.value,
-            f'项目成本接近预算：{project_name}',
-            f'项目 {project_code} 成本执行率 {execution_rate:.2f}%，接近预算（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，剩余：{budget_amount - actual_cost:,.2f}）'
+            f"项目成本接近预算：{project_name}",
+            f"项目 {project_code} 成本执行率 {execution_rate:.2f}%，接近预算（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}，剩余：{budget_amount - actual_cost:,.2f}）",
         )
     elif execution_rate >= 80:
         # 注意
         return (
             AlertLevelEnum.INFO.value,
-            f'项目成本执行率较高：{project_name}',
-            f'项目 {project_code} 成本执行率 {execution_rate:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}）'
+            f"项目成本执行率较高：{project_name}",
+            f"项目 {project_code} 成本执行率 {execution_rate:.2f}%（预算：{budget_amount:,.2f}，实际：{actual_cost:,.2f}）",
         )
 
     return None, None, None
 
 
 def find_existing_alert(
-    db: Session,
-    project_id: int,
-    alert_rule: AlertRule,
-    alert_level: str
+    db: Session, project_id: int, alert_rule: AlertRule, alert_level: str
 ) -> Optional[AlertRecord]:
     """
     查找现有的预警记录
@@ -146,13 +144,17 @@ def find_existing_alert(
     Returns:
         Optional[AlertRecord]: 现有预警记录
     """
-    return db.query(AlertRecord).filter(
-        AlertRecord.target_type == 'PROJECT',
-        AlertRecord.target_id == project_id,
-        AlertRecord.rule_id == alert_rule.id,
-        AlertRecord.alert_level == alert_level,
-        AlertRecord.status == AlertStatusEnum.PENDING.value
-    ).first()
+    return (
+        db.query(AlertRecord)
+        .filter(
+            AlertRecord.target_type == "PROJECT",
+            AlertRecord.target_id == project_id,
+            AlertRecord.rule_id == alert_rule.id,
+            AlertRecord.alert_level == alert_level,
+            AlertRecord.status == AlertStatusEnum.PENDING.value,
+        )
+        .first()
+    )
 
 
 def generate_alert_no(db: Session) -> str:
@@ -192,7 +194,7 @@ def create_alert_record(
     budget_amount: float,
     actual_cost: float,
     trigger_source: Optional[str],
-    source_id: Optional[int]
+    source_id: Optional[int],
 ) -> AlertRecord:
     """
     创建预警记录
@@ -205,7 +207,7 @@ def create_alert_record(
     alert = AlertRecord(
         alert_no=alert_no,
         rule_id=alert_rule.id,
-        target_type='PROJECT',
+        target_type="PROJECT",
         target_id=project_id,
         target_no=project.project_code,
         target_name=project.project_name,
@@ -215,8 +217,8 @@ def create_alert_record(
         alert_content=alert_content,
         status=AlertStatusEnum.PENDING.value,
         triggered_at=datetime.now(),
-        source_module=trigger_source or 'COST',
-        source_id=source_id
+        source_module=trigger_source or "COST",
+        source_id=source_id,
     )
 
     db.add(alert)

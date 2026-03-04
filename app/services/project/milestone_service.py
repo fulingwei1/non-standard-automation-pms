@@ -18,8 +18,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.crud import BaseCRUDService, SortOrder
-from app.common.query_filters import apply_like_filter
 from app.common.crud.exceptions import raise_already_exists, raise_not_found
+from app.common.query_filters import apply_like_filter
 from app.models.enums import InvoiceStatusEnum
 from app.models.project import ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice
@@ -96,7 +96,9 @@ class ProjectMilestoneService(
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
-    def _ensure_unique_code(self, milestone_code: Optional[str], current_id: Optional[int] = None) -> None:
+    def _ensure_unique_code(
+        self, milestone_code: Optional[str], current_id: Optional[int] = None
+    ) -> None:
         """Ensure milestone_code is unique within the project."""
         if not milestone_code:
             return
@@ -156,12 +158,13 @@ class ProjectMilestoneService(
             from app.services.progress_integration_service import ProgressIntegrationService
 
             integration_service = ProgressIntegrationService(self.db)
-            can_complete, missing_items = integration_service.check_milestone_completion_requirements(milestone)
+            can_complete, missing_items = (
+                integration_service.check_milestone_completion_requirements(milestone)
+            )
 
             if not can_complete:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"里程碑不满足完成条件：{', '.join(missing_items)}"
+                    status_code=400, detail=f"里程碑不满足完成条件：{', '.join(missing_items)}"
                 )
         except HTTPException:
             raise

@@ -36,12 +36,12 @@ async def get_oee_analysis(
 ):
     """
     设备OEE分析
-    
+
     OEE (Overall Equipment Effectiveness) = 可用率 × 性能率 × 合格率
     - 可用率 = 运行时间 / 计划生产时间
     - 性能率 = (理想周期时间 × 实际产量) / 运行时间
     - 合格率 = 合格数量 / 实际产量
-    
+
     国际标准:
     - 世界级 OEE: ≥ 85%
     - 良好 OEE: 60% - 85%
@@ -49,7 +49,7 @@ async def get_oee_analysis(
     """
     # 构建查询条件
     filters = []
-    
+
     if equipment_id:
         filters.append(EquipmentOEERecord.equipment_id == equipment_id)
     if workshop_id:
@@ -66,17 +66,21 @@ async def get_oee_analysis(
         filters.append(EquipmentOEERecord.oee >= min_oee)
     if max_oee is not None:
         filters.append(EquipmentOEERecord.oee <= max_oee)
-    
+
     # 默认查询最近30天
     if not start_date and not end_date:
         filters.append(EquipmentOEERecord.record_date >= date.today() - timedelta(days=30))
-    
+
     # 基础查询
-    query = db.query(EquipmentOEERecord).filter(and_(*filters)) if filters else db.query(EquipmentOEERecord)
-    
+    query = (
+        db.query(EquipmentOEERecord).filter(and_(*filters))
+        if filters
+        else db.query(EquipmentOEERecord)
+    )
+
     # 总数查询
     total = query.count()
-    
+
     # 根据分组方式聚合数据
     if group_by == "equipment":
         # 按设备分组
@@ -85,25 +89,27 @@ async def get_oee_analysis(
                 EquipmentOEERecord.equipment_id,
                 Equipment.equipment_code,
                 Equipment.equipment_name,
-                func.count(EquipmentOEERecord.id).label('record_count'),
-                func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                func.avg(EquipmentOEERecord.availability).label('avg_availability'),
-                func.avg(EquipmentOEERecord.performance).label('avg_performance'),
-                func.avg(EquipmentOEERecord.quality).label('avg_quality'),
-                func.min(EquipmentOEERecord.oee).label('min_oee'),
-                func.max(EquipmentOEERecord.oee).label('max_oee'),
-                func.sum(EquipmentOEERecord.actual_output).label('total_output'),
-                func.sum(EquipmentOEERecord.qualified_qty).label('total_qualified'),
-                func.sum(EquipmentOEERecord.defect_qty).label('total_defects'),
+                func.count(EquipmentOEERecord.id).label("record_count"),
+                func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                func.avg(EquipmentOEERecord.availability).label("avg_availability"),
+                func.avg(EquipmentOEERecord.performance).label("avg_performance"),
+                func.avg(EquipmentOEERecord.quality).label("avg_quality"),
+                func.min(EquipmentOEERecord.oee).label("min_oee"),
+                func.max(EquipmentOEERecord.oee).label("max_oee"),
+                func.sum(EquipmentOEERecord.actual_output).label("total_output"),
+                func.sum(EquipmentOEERecord.qualified_qty).label("total_qualified"),
+                func.sum(EquipmentOEERecord.defect_qty).label("total_defects"),
             )
             .join(Equipment, EquipmentOEERecord.equipment_id == Equipment.id)
             .filter(and_(*filters) if filters else True)
-            .group_by(EquipmentOEERecord.equipment_id, Equipment.equipment_code, Equipment.equipment_name)
+            .group_by(
+                EquipmentOEERecord.equipment_id, Equipment.equipment_code, Equipment.equipment_name
+            )
             .offset((page - 1) * page_size)
             .limit(page_size)
             .all()
         )
-        
+
         items = [
             {
                 "equipment_id": row.equipment_id,
@@ -123,19 +129,19 @@ async def get_oee_analysis(
             }
             for row in grouped_data
         ]
-        
+
     elif group_by == "workshop":
         # 按车间分组
         grouped_data = (
             db.query(
                 EquipmentOEERecord.workshop_id,
                 Workshop.workshop_name,
-                func.count(EquipmentOEERecord.id).label('record_count'),
-                func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                func.avg(EquipmentOEERecord.availability).label('avg_availability'),
-                func.avg(EquipmentOEERecord.performance).label('avg_performance'),
-                func.avg(EquipmentOEERecord.quality).label('avg_quality'),
-                func.sum(EquipmentOEERecord.actual_output).label('total_output'),
+                func.count(EquipmentOEERecord.id).label("record_count"),
+                func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                func.avg(EquipmentOEERecord.availability).label("avg_availability"),
+                func.avg(EquipmentOEERecord.performance).label("avg_performance"),
+                func.avg(EquipmentOEERecord.quality).label("avg_quality"),
+                func.sum(EquipmentOEERecord.actual_output).label("total_output"),
             )
             .join(Workshop, EquipmentOEERecord.workshop_id == Workshop.id)
             .filter(and_(*filters) if filters else True)
@@ -144,7 +150,7 @@ async def get_oee_analysis(
             .limit(page_size)
             .all()
         )
-        
+
         items = [
             {
                 "workshop_id": row.workshop_id,
@@ -159,18 +165,18 @@ async def get_oee_analysis(
             }
             for row in grouped_data
         ]
-        
+
     elif group_by == "date":
         # 按日期分组
         grouped_data = (
             db.query(
                 EquipmentOEERecord.record_date,
-                func.count(EquipmentOEERecord.id).label('record_count'),
-                func.avg(EquipmentOEERecord.oee).label('avg_oee'),
-                func.avg(EquipmentOEERecord.availability).label('avg_availability'),
-                func.avg(EquipmentOEERecord.performance).label('avg_performance'),
-                func.avg(EquipmentOEERecord.quality).label('avg_quality'),
-                func.sum(EquipmentOEERecord.actual_output).label('total_output'),
+                func.count(EquipmentOEERecord.id).label("record_count"),
+                func.avg(EquipmentOEERecord.oee).label("avg_oee"),
+                func.avg(EquipmentOEERecord.availability).label("avg_availability"),
+                func.avg(EquipmentOEERecord.performance).label("avg_performance"),
+                func.avg(EquipmentOEERecord.quality).label("avg_quality"),
+                func.sum(EquipmentOEERecord.actual_output).label("total_output"),
             )
             .filter(and_(*filters) if filters else True)
             .group_by(EquipmentOEERecord.record_date)
@@ -179,7 +185,7 @@ async def get_oee_analysis(
             .limit(page_size)
             .all()
         )
-        
+
         items = [
             {
                 "record_date": row.record_date.isoformat() if row.record_date else None,
@@ -193,16 +199,15 @@ async def get_oee_analysis(
             }
             for row in grouped_data
         ]
-        
+
     else:  # 明细查询
         records = (
-            query
-            .order_by(EquipmentOEERecord.record_date.desc(), EquipmentOEERecord.id.desc())
+            query.order_by(EquipmentOEERecord.record_date.desc(), EquipmentOEERecord.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
             .all()
         )
-        
+
         items = [
             {
                 "id": record.id,
@@ -225,7 +230,7 @@ async def get_oee_analysis(
             }
             for record in records
         ]
-    
+
     return {
         "code": 200,
         "message": "查询成功",

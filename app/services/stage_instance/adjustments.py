@@ -46,32 +46,38 @@ class AdjustmentsMixin:
         Returns:
             ProjectNodeInstance: 创建的节点实例
         """
-        stage = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.id == stage_instance_id
-        ).first()
+        stage = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.id == stage_instance_id)
+            .first()
+        )
 
         if not stage:
             raise ValueError(f"阶段实例 {stage_instance_id} 不存在")
 
         # 确定序号
         if insert_after_node_id:
-            after_node = self.db.query(ProjectNodeInstance).filter(
-                ProjectNodeInstance.id == insert_after_node_id
-            ).first()
+            after_node = (
+                self.db.query(ProjectNodeInstance)
+                .filter(ProjectNodeInstance.id == insert_after_node_id)
+                .first()
+            )
             sequence = after_node.sequence + 1 if after_node else 0
 
             # 后移其他节点
             self.db.query(ProjectNodeInstance).filter(
                 and_(
                     ProjectNodeInstance.stage_instance_id == stage_instance_id,
-                    ProjectNodeInstance.sequence >= sequence
+                    ProjectNodeInstance.sequence >= sequence,
                 )
             ).update({"sequence": ProjectNodeInstance.sequence + 1})
         else:
             # 添加到末尾
-            max_seq = self.db.query(ProjectNodeInstance).filter(
-                ProjectNodeInstance.stage_instance_id == stage_instance_id
-            ).count()
+            max_seq = (
+                self.db.query(ProjectNodeInstance)
+                .filter(ProjectNodeInstance.stage_instance_id == stage_instance_id)
+                .count()
+            )
             sequence = max_seq
 
         node = ProjectNodeInstance(
@@ -100,9 +106,11 @@ class AdjustmentsMixin:
         planned_date: date,
     ) -> ProjectNodeInstance:
         """更新节点计划日期"""
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - inventory_management_service"""
-import pytest
-from unittest.mock import MagicMock, patch, call
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.inventory_management_service")
 
 from app.services.inventory_management_service import (
-    InventoryManagementService,
     InsufficientStockError,
+    InventoryManagementService,
 )
 
 

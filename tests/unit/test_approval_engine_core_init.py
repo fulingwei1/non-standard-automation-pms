@@ -5,8 +5,9 @@
 测试 ApprovalEngineCore 初始化
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.approval_engine.engine.core import ApprovalEngineCore
 

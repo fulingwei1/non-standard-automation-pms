@@ -7,6 +7,7 @@
 
 from datetime import date
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -30,10 +31,10 @@ def get_project_timesheet_summary(
 ) -> Any:
     """获取项目工时汇总（使用统一统计服务）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = TimesheetStatisticsService(db)
     summary = service.get_summary(project_id, start_date, end_date)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -51,10 +52,10 @@ def get_project_timesheet_statistics(
 ) -> Any:
     """获取项目工时统计分析（使用统一统计服务）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = TimesheetStatisticsService(db)
     statistics = service.get_statistics(project_id, start_date, end_date)
-    
+
     return ResponseModel(
         code=200,
         message="success",

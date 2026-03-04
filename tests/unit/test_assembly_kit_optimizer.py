@@ -27,7 +27,9 @@ class TestOptimizeEstimatedReadyDate:
         readiness = MagicMock(id=1, estimated_ready_date=date(2026, 3, 1))
         db.query.return_value.filter.return_value.all.return_value = [shortage]
         # No PO items, no substitutes
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.first.return_value = None
         result = AssemblyKitOptimizer.optimize_estimated_ready_date(db, readiness)
         assert result == date(2026, 3, 1)
@@ -48,7 +50,9 @@ class TestOptimizeByPurchaseOrder:
 
     def test_no_po_items(self, db):
         shortage = MagicMock(material_id=1)
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         result = AssemblyKitOptimizer._optimize_by_purchase_order(db, shortage)
         assert result is None
 
@@ -57,7 +61,9 @@ class TestOptimizeByPurchaseOrder:
         future_date = date.today() + timedelta(days=10)
         po_item = MagicMock()
         po_item.order.promised_date = future_date
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = [po_item]
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            po_item
+        ]
         result = AssemblyKitOptimizer._optimize_by_purchase_order(db, shortage)
         assert result == future_date - timedelta(days=3)
 
@@ -114,12 +120,15 @@ class TestSuggestPriorityAdjustment:
 
     def test_urgent_shortage(self, db):
         shortage = MagicMock(
-            material_id=1, purchase_order_id=1, material_code='M001',
-            material_name='Test', required_date=date.today() + timedelta(days=2)
+            material_id=1,
+            purchase_order_id=1,
+            material_code="M001",
+            material_name="Test",
+            required_date=date.today() + timedelta(days=2),
         )
-        po = MagicMock(order_no='PO001')
+        po = MagicMock(order_no="PO001")
         db.query.return_value.filter.return_value.first.return_value = po
         result = AssemblyKitOptimizer._suggest_priority_adjustment(db, shortage)
         assert result is not None
-        assert result['type'] == 'ADJUST_PRIORITY'
-        assert result['priority'] == 'HIGH'
+        assert result["type"] == "ADJUST_PRIORITY"
+        assert result["priority"] == "HIGH"

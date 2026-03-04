@@ -5,8 +5,9 @@ approval_engine/engine/notify.py 单元测试
 测试审批通知服务的各个方法
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.approval_engine.notify import ApprovalNotifyService
 
@@ -78,9 +79,7 @@ class TestNotifyApproved:
 
         extra_context = {"custom_field": "value"}
 
-        service.notify_approved(
-            mock_instance, mock_node, mock_task, extra_context=extra_context
-        )
+        service.notify_approved(mock_instance, mock_node, mock_task, extra_context=extra_context)
 
         assert mock_db.add.call_count >= 1
 

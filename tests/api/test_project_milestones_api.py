@@ -29,10 +29,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -46,8 +43,7 @@ class TestProjectMilestonesAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -67,10 +63,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -86,7 +79,7 @@ class TestProjectMilestonesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -103,10 +96,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -122,7 +112,7 @@ class TestProjectMilestonesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             params={"keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -135,10 +125,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -154,7 +141,7 @@ class TestProjectMilestonesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             params={"status": "PENDING"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -167,10 +154,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -192,7 +176,7 @@ class TestProjectMilestonesAPI:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -213,10 +197,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -239,7 +220,7 @@ class TestProjectMilestonesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -250,7 +231,7 @@ class TestProjectMilestonesAPI:
         # 获取详情
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/{milestone_id}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -266,10 +247,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -282,8 +260,7 @@ class TestProjectMilestonesAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -296,10 +273,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -322,7 +296,7 @@ class TestProjectMilestonesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -338,7 +312,7 @@ class TestProjectMilestonesAPI:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/{milestone_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -356,10 +330,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -382,7 +353,7 @@ class TestProjectMilestonesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -393,7 +364,7 @@ class TestProjectMilestonesAPI:
         # 删除里程碑
         response = client.delete(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/{milestone_id}",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -409,10 +380,7 @@ class TestProjectMilestonesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -435,7 +403,7 @@ class TestProjectMilestonesAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -446,7 +414,7 @@ class TestProjectMilestonesAPI:
         # 完成里程碑
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/{milestone_id}/complete",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -470,10 +438,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -496,7 +461,7 @@ class TestProjectMilestonesAdvanced:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             json=milestone_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -514,7 +479,7 @@ class TestProjectMilestonesAdvanced:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/{milestone_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -532,10 +497,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -549,8 +511,7 @@ class TestProjectMilestonesAdvanced:
 
         # 获取时间线视图
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/timeline",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/timeline", headers=headers
         )
 
         if response.status_code == 404:
@@ -568,10 +529,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -589,7 +547,7 @@ class TestProjectMilestonesAdvanced:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
                 params={"type": milestone_type},
-                headers=headers
+                headers=headers,
             )
 
             assert response.status_code == 200, f"Failed for type {milestone_type}: {response.text}"
@@ -602,10 +560,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -621,7 +576,7 @@ class TestProjectMilestonesAdvanced:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/",
             params={"overdue": True},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 422:
@@ -637,10 +592,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -662,7 +614,7 @@ class TestProjectMilestonesAdvanced:
                 "status": "PENDING",
                 "planned_date_before": end_date,
             },
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 422:
@@ -678,10 +630,7 @@ class TestProjectMilestonesAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -695,8 +644,7 @@ class TestProjectMilestonesAdvanced:
 
         # 获取汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/milestones/summary", headers=headers
         )
 
         if response.status_code == 404:

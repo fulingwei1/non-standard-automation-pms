@@ -7,23 +7,25 @@
 """
 
 import json
-import pytest
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 # 尝试导入模块
 try:
+    from app.services.shortage.shortage_reports_service import ShortageReportsService
     from app.services.shortage_report_service import (
+        build_daily_report_data,
         calculate_alert_statistics,
-        calculate_report_statistics,
-        calculate_kit_statistics,
         calculate_arrival_statistics,
+        calculate_kit_statistics,
+        calculate_report_statistics,
         calculate_response_time_statistics,
         calculate_stoppage_statistics,
-        build_daily_report_data,
     )
-    from app.services.shortage.shortage_reports_service import ShortageReportsService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -34,6 +36,7 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="模块导入失败")
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_db():
@@ -66,6 +69,7 @@ def service(mock_db):
 # ShortageReportsService 类测试
 # ============================================================================
 
+
 class TestShortageReportsServiceInit:
     """测试服务初始化"""
 
@@ -85,7 +89,7 @@ class TestGetShortageReports:
 
     def test_get_reports_default_pagination(self, service, mock_db):
         """测试默认分页参数"""
-        with patch.object(service, 'get_shortage_reports', wraps=service.get_shortage_reports):
+        with patch.object(service, "get_shortage_reports", wraps=service.get_shortage_reports):
             mock_query = MagicMock()
             mock_db.query.return_value = mock_query
             mock_query.options.return_value = mock_query
@@ -108,7 +112,7 @@ class TestGetShortageReports:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
-        
+
         # 构造真实的报告对象
         mock_reports = [self._create_mock_report(i) for i in range(5)]
         mock_query.all.return_value = mock_reports
@@ -243,7 +247,7 @@ class TestCreateShortageReport:
 
         mock_report_class.assert_called_once()
         call_kwargs = mock_report_class.call_args[1]
-        assert call_kwargs['reporter_id'] == mock_user.id
+        assert call_kwargs["reporter_id"] == mock_user.id
 
 
 class TestGetShortageReport:
@@ -291,7 +295,7 @@ class TestConfirmShortageReport:
         mock_report.id = 1
         mock_report.status = "pending"
 
-        with patch.object(service, 'get_shortage_report', return_value=mock_report):
+        with patch.object(service, "get_shortage_report", return_value=mock_report):
             result = service.confirm_shortage_report(1, mock_user)
 
             assert result is not None
@@ -302,7 +306,7 @@ class TestConfirmShortageReport:
 
     def test_confirm_report_not_found(self, service, mock_db, mock_user):
         """测试确认不存在的报告"""
-        with patch.object(service, 'get_shortage_report', return_value=None):
+        with patch.object(service, "get_shortage_report", return_value=None):
             result = service.confirm_shortage_report(999, mock_user)
 
             assert result is None
@@ -318,12 +322,9 @@ class TestHandleShortageReport:
         mock_report.id = 1
         mock_report.status = "confirmed"
 
-        handle_data = {
-            "handling_method": "紧急采购",
-            "handling_note": "已联系供应商加急"
-        }
+        handle_data = {"handling_method": "紧急采购", "handling_note": "已联系供应商加急"}
 
-        with patch.object(service, 'get_shortage_report', return_value=mock_report):
+        with patch.object(service, "get_shortage_report", return_value=mock_report):
             result = service.handle_shortage_report(1, handle_data, mock_user)
 
             assert result is not None
@@ -337,7 +338,7 @@ class TestHandleShortageReport:
         """测试处理不存在的报告"""
         handle_data = {"handling_method": "test"}
 
-        with patch.object(service, 'get_shortage_report', return_value=None):
+        with patch.object(service, "get_shortage_report", return_value=None):
             result = service.handle_shortage_report(999, handle_data, mock_user)
 
             assert result is None
@@ -348,7 +349,7 @@ class TestHandleShortageReport:
         mock_report = MagicMock()
         handle_data = {}
 
-        with patch.object(service, 'get_shortage_report', return_value=mock_report):
+        with patch.object(service, "get_shortage_report", return_value=mock_report):
             result = service.handle_shortage_report(1, handle_data, mock_user)
 
             assert result.handling_method is None
@@ -367,10 +368,10 @@ class TestResolveShortageReport:
         resolve_data = {
             "resolution_method": "物料已到货",
             "resolution_note": "供应商按时交付",
-            "actual_arrival_date": date(2026, 2, 25)
+            "actual_arrival_date": date(2026, 2, 25),
         }
 
-        with patch.object(service, 'get_shortage_report', return_value=mock_report):
+        with patch.object(service, "get_shortage_report", return_value=mock_report):
             result = service.resolve_shortage_report(1, resolve_data, mock_user)
 
             assert result is not None
@@ -385,7 +386,7 @@ class TestResolveShortageReport:
         """测试解决不存在的报告"""
         resolve_data = {"resolution_method": "test"}
 
-        with patch.object(service, 'get_shortage_report', return_value=None):
+        with patch.object(service, "get_shortage_report", return_value=None):
             result = service.resolve_shortage_report(999, resolve_data, mock_user)
 
             assert result is None
@@ -395,6 +396,7 @@ class TestResolveShortageReport:
 # ============================================================================
 # 统计函数测试
 # ============================================================================
+
 
 class TestCalculateAlertStatistics:
     """测试预警统计"""
@@ -408,13 +410,14 @@ class TestCalculateAlertStatistics:
 
         result = calculate_alert_statistics(mock_db, target_date)
 
-        assert result['new_alerts'] == 0
-        assert result['resolved_alerts'] == 0
-        assert result['pending_alerts'] == 0
-        assert result['overdue_alerts'] == 0
+        assert result["new_alerts"] == 0
+        assert result["resolved_alerts"] == 0
+        assert result["pending_alerts"] == 0
+        assert result["overdue_alerts"] == 0
 
     def test_alert_statistics_with_new_alerts(self, mock_db, target_date):
         """测试新增预警统计"""
+
         def count_side_effect(*args, **kwargs):
             # 根据filter条件返回不同的count
             return 5
@@ -426,9 +429,9 @@ class TestCalculateAlertStatistics:
 
         result = calculate_alert_statistics(mock_db, target_date)
 
-        assert result['new_alerts'] == 5
-        assert result['resolved_alerts'] == 3
-        assert result['pending_alerts'] == 2
+        assert result["new_alerts"] == 5
+        assert result["resolved_alerts"] == 3
+        assert result["pending_alerts"] == 2
 
     def test_alert_statistics_level_counts(self, mock_db, target_date):
         """测试预警级别统计"""
@@ -439,8 +442,8 @@ class TestCalculateAlertStatistics:
 
         result = calculate_alert_statistics(mock_db, target_date)
 
-        assert 'level_counts' in result
-        assert isinstance(result['level_counts'], dict)
+        assert "level_counts" in result
+        assert isinstance(result["level_counts"], dict)
 
 
 class TestCalculateReportStatistics:
@@ -455,8 +458,8 @@ class TestCalculateReportStatistics:
 
         result = calculate_report_statistics(mock_db, target_date)
 
-        assert result['new_reports'] == 0
-        assert result['resolved_reports'] == 0
+        assert result["new_reports"] == 0
+        assert result["resolved_reports"] == 0
 
     def test_report_statistics_with_reports(self, mock_db, target_date):
         """测试有上报记录"""
@@ -467,8 +470,8 @@ class TestCalculateReportStatistics:
 
         result = calculate_report_statistics(mock_db, target_date)
 
-        assert result['new_reports'] == 15
-        assert result['resolved_reports'] == 10
+        assert result["new_reports"] == 15
+        assert result["resolved_reports"] == 10
 
 
 class TestCalculateKitStatistics:
@@ -483,9 +486,9 @@ class TestCalculateKitStatistics:
 
         result = calculate_kit_statistics(mock_db, target_date)
 
-        assert result['total_work_orders'] == 0
-        assert result['kit_complete_count'] == 0
-        assert result['kit_rate'] == 0.0
+        assert result["total_work_orders"] == 0
+        assert result["kit_complete_count"] == 0
+        assert result["kit_rate"] == 0.0
 
     def test_kit_statistics_all_complete(self, mock_db, target_date):
         """测试全部齐套"""
@@ -502,9 +505,9 @@ class TestCalculateKitStatistics:
 
         result = calculate_kit_statistics(mock_db, target_date)
 
-        assert result['total_work_orders'] == 3
-        assert result['kit_complete_count'] == 3
-        assert result['kit_rate'] == 100.0
+        assert result["total_work_orders"] == 3
+        assert result["kit_complete_count"] == 3
+        assert result["kit_rate"] == 100.0
 
     def test_kit_statistics_partial_complete(self, mock_db, target_date):
         """测试部分齐套"""
@@ -521,9 +524,9 @@ class TestCalculateKitStatistics:
 
         result = calculate_kit_statistics(mock_db, target_date)
 
-        assert result['total_work_orders'] == 3
-        assert result['kit_complete_count'] == 1
-        assert result['kit_rate'] == 80.0  # (100 + 80 + 60) / 3
+        assert result["total_work_orders"] == 3
+        assert result["kit_complete_count"] == 1
+        assert result["kit_rate"] == 80.0  # (100 + 80 + 60) / 3
 
     @staticmethod
     def _create_kit_check(status, rate):
@@ -546,10 +549,10 @@ class TestCalculateArrivalStatistics:
 
         result = calculate_arrival_statistics(mock_db, target_date)
 
-        assert result['expected_arrivals'] == 0
-        assert result['actual_arrivals'] == 0
-        assert result['delayed_arrivals'] == 0
-        assert result['on_time_rate'] == 0.0
+        assert result["expected_arrivals"] == 0
+        assert result["actual_arrivals"] == 0
+        assert result["delayed_arrivals"] == 0
+        assert result["on_time_rate"] == 0.0
 
     def test_arrival_statistics_all_on_time(self, mock_db, target_date):
         """测试全部按时到货"""
@@ -560,10 +563,10 @@ class TestCalculateArrivalStatistics:
 
         result = calculate_arrival_statistics(mock_db, target_date)
 
-        assert result['expected_arrivals'] == 10
-        assert result['actual_arrivals'] == 10
-        assert result['delayed_arrivals'] == 0
-        assert result['on_time_rate'] == 100.0
+        assert result["expected_arrivals"] == 10
+        assert result["actual_arrivals"] == 10
+        assert result["delayed_arrivals"] == 0
+        assert result["on_time_rate"] == 100.0
 
     def test_arrival_statistics_with_delays(self, mock_db, target_date):
         """测试有延迟到货"""
@@ -574,11 +577,11 @@ class TestCalculateArrivalStatistics:
 
         result = calculate_arrival_statistics(mock_db, target_date)
 
-        assert result['expected_arrivals'] == 20
-        assert result['actual_arrivals'] == 18
-        assert result['delayed_arrivals'] == 5
+        assert result["expected_arrivals"] == 20
+        assert result["actual_arrivals"] == 18
+        assert result["delayed_arrivals"] == 5
         # on_time_rate = ((18 - 5) / 18) * 100 = 72.22
-        assert 72.0 <= result['on_time_rate'] <= 73.0
+        assert 72.0 <= result["on_time_rate"] <= 73.0
 
 
 class TestCalculateResponseTimeStatistics:
@@ -593,8 +596,8 @@ class TestCalculateResponseTimeStatistics:
 
         result = calculate_response_time_statistics(mock_db, target_date)
 
-        assert result['avg_response_minutes'] == 0
-        assert result['avg_resolve_hours'] == 0.0
+        assert result["avg_response_minutes"] == 0
+        assert result["avg_resolve_hours"] == 0.0
 
     def test_response_time_with_alerts(self, mock_db, target_date):
         """测试有预警记录"""
@@ -616,9 +619,9 @@ class TestCalculateResponseTimeStatistics:
         result = calculate_response_time_statistics(mock_db, target_date)
 
         # avg_response = (30 + 60) / 2 = 45 minutes
-        assert result['avg_response_minutes'] == 45
+        assert result["avg_response_minutes"] == 45
         # avg_resolve = (2 + 4) / 2 = 3.0 hours
-        assert result['avg_resolve_hours'] == 3.0
+        assert result["avg_resolve_hours"] == 3.0
 
     @staticmethod
     def _create_alert(created_at, handle_start_at):
@@ -649,15 +652,15 @@ class TestCalculateStoppageStatistics:
 
         result = calculate_stoppage_statistics(mock_db, target_date)
 
-        assert result['stoppage_count'] == 0
-        assert result['stoppage_hours'] == 0
+        assert result["stoppage_count"] == 0
+        assert result["stoppage_hours"] == 0
 
     def test_stoppage_statistics_with_stoppages(self, mock_db, target_date):
         """测试有停工记录"""
         mock_alerts = [
             self._create_alert_with_stoppage(2),  # 2天停工
             self._create_alert_with_stoppage(1),  # 1天停工
-            self._create_alert_no_stoppage(),     # 非停工
+            self._create_alert_no_stoppage(),  # 非停工
         ]
 
         mock_query = MagicMock()
@@ -667,17 +670,14 @@ class TestCalculateStoppageStatistics:
 
         result = calculate_stoppage_statistics(mock_db, target_date)
 
-        assert result['stoppage_count'] == 2
+        assert result["stoppage_count"] == 2
         # (2 + 1) * 24 = 72 hours
-        assert result['stoppage_hours'] == 72.0
+        assert result["stoppage_hours"] == 72.0
 
     def test_stoppage_statistics_json_string_data(self, mock_db, target_date):
         """测试JSON字符串格式的alert_data"""
         mock_alert = MagicMock()
-        mock_alert.alert_data = json.dumps({
-            'impact_type': 'stop',
-            'estimated_delay_days': 3
-        })
+        mock_alert.alert_data = json.dumps({"impact_type": "stop", "estimated_delay_days": 3})
 
         mock_query = MagicMock()
         mock_db.query.return_value = mock_query
@@ -686,27 +686,21 @@ class TestCalculateStoppageStatistics:
 
         result = calculate_stoppage_statistics(mock_db, target_date)
 
-        assert result['stoppage_count'] == 1
-        assert result['stoppage_hours'] == 72.0  # 3 * 24
+        assert result["stoppage_count"] == 1
+        assert result["stoppage_hours"] == 72.0  # 3 * 24
 
     @staticmethod
     def _create_alert_with_stoppage(delay_days):
         """创建带停工的预警对象"""
         alert = MagicMock()
-        alert.alert_data = {
-            'impact_type': 'stop',
-            'estimated_delay_days': delay_days
-        }
+        alert.alert_data = {"impact_type": "stop", "estimated_delay_days": delay_days}
         return alert
 
     @staticmethod
     def _create_alert_no_stoppage():
         """创建非停工预警对象"""
         alert = MagicMock()
-        alert.alert_data = {
-            'impact_type': 'delay',
-            'estimated_delay_days': 0
-        }
+        alert.alert_data = {"impact_type": "delay", "estimated_delay_days": 0}
         return alert
 
 
@@ -720,25 +714,32 @@ class TestBuildDailyReportData:
     @patch("app.services.shortage.shortage_reports_service.calculate_report_statistics")
     @patch("app.services.shortage.shortage_reports_service.calculate_alert_statistics")
     def test_build_daily_report_combines_all_stats(
-        self, mock_alert, mock_report, mock_kit, mock_arrival, 
-        mock_response, mock_stoppage, mock_db, target_date
+        self,
+        mock_alert,
+        mock_report,
+        mock_kit,
+        mock_arrival,
+        mock_response,
+        mock_stoppage,
+        mock_db,
+        target_date,
     ):
         """测试构建日报整合所有统计数据"""
-        mock_alert.return_value = {'new_alerts': 5}
-        mock_report.return_value = {'new_reports': 3}
-        mock_kit.return_value = {'total_work_orders': 10}
-        mock_arrival.return_value = {'expected_arrivals': 8}
-        mock_response.return_value = {'avg_response_minutes': 30}
-        mock_stoppage.return_value = {'stoppage_count': 1}
+        mock_alert.return_value = {"new_alerts": 5}
+        mock_report.return_value = {"new_reports": 3}
+        mock_kit.return_value = {"total_work_orders": 10}
+        mock_arrival.return_value = {"expected_arrivals": 8}
+        mock_response.return_value = {"avg_response_minutes": 30}
+        mock_stoppage.return_value = {"stoppage_count": 1}
 
         result = build_daily_report_data(mock_db, target_date)
 
-        assert 'new_alerts' in result
-        assert 'new_reports' in result
-        assert 'total_work_orders' in result
-        assert 'expected_arrivals' in result
-        assert 'avg_response_minutes' in result
-        assert 'stoppage_count' in result
+        assert "new_alerts" in result
+        assert "new_reports" in result
+        assert "total_work_orders" in result
+        assert "expected_arrivals" in result
+        assert "avg_response_minutes" in result
+        assert "stoppage_count" in result
 
     @patch("app.services.shortage.shortage_reports_service.calculate_stoppage_statistics")
     @patch("app.services.shortage.shortage_reports_service.calculate_response_time_statistics")
@@ -747,8 +748,15 @@ class TestBuildDailyReportData:
     @patch("app.services.shortage.shortage_reports_service.calculate_report_statistics")
     @patch("app.services.shortage.shortage_reports_service.calculate_alert_statistics")
     def test_build_daily_report_calls_all_functions(
-        self, mock_alert, mock_report, mock_kit, mock_arrival, 
-        mock_response, mock_stoppage, mock_db, target_date
+        self,
+        mock_alert,
+        mock_report,
+        mock_kit,
+        mock_arrival,
+        mock_response,
+        mock_stoppage,
+        mock_db,
+        target_date,
     ):
         """测试构建日报调用所有统计函数"""
         mock_alert.return_value = {}
@@ -772,6 +780,7 @@ class TestBuildDailyReportData:
 # 边界条件和异常测试
 # ============================================================================
 
+
 class TestEdgeCases:
     """边界条件测试"""
 
@@ -790,8 +799,8 @@ class TestEdgeCases:
         result = calculate_kit_statistics(mock_db, target_date)
 
         # 应该处理None值
-        assert result['total_work_orders'] == 2
-        assert result['kit_rate'] == 40.0  # (0 + 80) / 2
+        assert result["total_work_orders"] == 2
+        assert result["kit_rate"] == 40.0  # (0 + 80) / 2
 
     def test_arrival_on_time_rate_division_by_zero(self, mock_db, target_date):
         """测试到货率除零情况"""
@@ -803,7 +812,7 @@ class TestEdgeCases:
         result = calculate_arrival_statistics(mock_db, target_date)
 
         # 应该返回0而不是抛出异常
-        assert result['on_time_rate'] == 0.0
+        assert result["on_time_rate"] == 0.0
 
     def test_stoppage_with_invalid_json(self, mock_db, target_date):
         """测试无效JSON格式的alert_data"""
@@ -818,8 +827,8 @@ class TestEdgeCases:
         # 不应该抛出异常
         result = calculate_stoppage_statistics(mock_db, target_date)
 
-        assert result['stoppage_count'] == 0
-        assert result['stoppage_hours'] == 0
+        assert result["stoppage_count"] == 0
+        assert result["stoppage_hours"] == 0
 
     def test_response_time_with_none_timestamps(self, mock_db, target_date):
         """测试时间戳为None的情况"""
@@ -836,4 +845,4 @@ class TestEdgeCases:
         # 不应该抛出异常
         result = calculate_response_time_statistics(mock_db, target_date)
 
-        assert result['avg_response_minutes'] == 0
+        assert result["avg_response_minutes"] == 0

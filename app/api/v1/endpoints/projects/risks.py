@@ -5,31 +5,27 @@
 """
 
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.security import require_permission
 from app.models.user import User
+from app.schemas.common import ResponseModel
 from app.schemas.project_risk import (
     ProjectRiskCreate,
-    ProjectRiskUpdate,
     ProjectRiskResponse,
+    ProjectRiskUpdate,
 )
-from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.project_risk import ProjectRiskService
 
 router = APIRouter()
 
 
 def create_audit_log(
-    db: Session,
-    user: User,
-    action: str,
-    resource_type: str,
-    resource_id: int,
-    details: dict
+    db: Session, user: User, action: str, resource_type: str, resource_id: int, details: dict
 ):
     """创建审计日志 (DISABLED - AuditLog model does not exist)"""
     # FIXME: AuditLog model does not exist, temporarily disabled
@@ -45,7 +41,7 @@ def create_risk(
 ):
     """
     创建项目风险
-    
+
     需要权限：risk:create
     """
     service = ProjectRiskService(db)
@@ -62,7 +58,7 @@ def create_risk(
         target_closure_date=risk_data.target_closure_date,
         current_user=current_user,
     )
-    
+
     # 创建审计日志
     create_audit_log(
         db,
@@ -75,13 +71,11 @@ def create_risk(
             "risk_name": risk.risk_name,
             "risk_type": risk.risk_type,
             "risk_score": risk.risk_score,
-        }
+        },
     )
-    
+
     return ResponseModel(
-        code=200,
-        message="风险创建成功",
-        data=ProjectRiskResponse.from_orm(risk).dict()
+        code=200, message="风险创建成功", data=ProjectRiskResponse.from_orm(risk).dict()
     )
 
 
@@ -99,7 +93,7 @@ def get_risks(
 ):
     """
     获取项目风险列表
-    
+
     需要权限：risk:read
     """
     service = ProjectRiskService(db)
@@ -113,10 +107,10 @@ def get_risks(
         offset=pagination.offset,
         limit=pagination.limit,
     )
-    
+
     # 转换为响应格式
     items = [ProjectRiskResponse.from_orm(risk).dict() for risk in risks]
-    
+
     return ResponseModel(
         code=200,
         message="获取风险列表成功",
@@ -125,7 +119,7 @@ def get_risks(
             "items": items,
             "page": pagination.offset // pagination.limit + 1,
             "page_size": pagination.limit,
-        }
+        },
     )
 
 
@@ -138,16 +132,14 @@ def get_risk(
 ):
     """
     获取风险详情
-    
+
     需要权限：risk:read
     """
     service = ProjectRiskService(db)
     risk = service.get_risk_by_id(project_id, risk_id)
-    
+
     return ResponseModel(
-        code=200,
-        message="获取风险详情成功",
-        data=ProjectRiskResponse.from_orm(risk).dict()
+        code=200, message="获取风险详情成功", data=ProjectRiskResponse.from_orm(risk).dict()
     )
 
 
@@ -161,11 +153,11 @@ def update_risk(
 ):
     """
     更新风险信息
-    
+
     需要权限：risk:update
     """
     service = ProjectRiskService(db)
-    
+
     # 获取更新前的状态
     old_risk = service.get_risk_by_id(project_id, risk_id)
     old_data = {
@@ -173,7 +165,7 @@ def update_risk(
         "risk_level": old_risk.risk_level,
         "status": old_risk.status,
     }
-    
+
     # 更新风险
     update_data = risk_data.dict(exclude_unset=True)
     risk = service.update_risk(
@@ -182,7 +174,7 @@ def update_risk(
         update_data=update_data,
         current_user=current_user,
     )
-    
+
     # 创建审计日志
     create_audit_log(
         db,
@@ -199,13 +191,11 @@ def update_risk(
                 "status": risk.status,
             },
             "updated_fields": list(update_data.keys()),
-        }
+        },
     )
-    
+
     return ResponseModel(
-        code=200,
-        message="风险更新成功",
-        data=ProjectRiskResponse.from_orm(risk).dict()
+        code=200, message="风险更新成功", data=ProjectRiskResponse.from_orm(risk).dict()
     )
 
 
@@ -218,27 +208,16 @@ def delete_risk(
 ):
     """
     删除风险
-    
+
     需要权限：risk:delete
     """
     service = ProjectRiskService(db)
     risk_info = service.delete_risk(project_id, risk_id)
-    
+
     # 创建审计日志
-    create_audit_log(
-        db,
-        current_user,
-        "DELETE",
-        "project_risk",
-        risk_info["risk_code"],
-        risk_info
-    )
-    
-    return ResponseModel(
-        code=200,
-        message="风险删除成功",
-        data=None
-    )
+    create_audit_log(db, current_user, "DELETE", "project_risk", risk_info["risk_code"], risk_info)
+
+    return ResponseModel(code=200, message="风险删除成功", data=None)
 
 
 @router.get("/{project_id}/risk-matrix", response_model=ResponseModel)
@@ -249,19 +228,15 @@ def get_risk_matrix(
 ):
     """
     获取风险矩阵（概率×影响）
-    
+
     需要权限：risk:read
-    
+
     返回5x5矩阵，每个单元格包含该概率和影响组合的风险数量和列表
     """
     service = ProjectRiskService(db)
     data = service.get_risk_matrix(project_id)
-    
-    return ResponseModel(
-        code=200,
-        message="获取风险矩阵成功",
-        data=data
-    )
+
+    return ResponseModel(code=200, message="获取风险矩阵成功", data=data)
 
 
 @router.get("/{project_id}/risk-summary", response_model=ResponseModel)
@@ -272,16 +247,12 @@ def get_risk_summary(
 ):
     """
     获取风险汇总统计
-    
+
     需要权限：risk:read
-    
+
     包含：总数、按类型统计、按等级统计、按状态统计等
     """
     service = ProjectRiskService(db)
     summary = service.get_risk_summary(project_id)
-    
-    return ResponseModel(
-        code=200,
-        message="获取风险汇总统计成功",
-        data=summary
-    )
+
+    return ResponseModel(code=200, message="获取风险汇总统计成功", data=summary)

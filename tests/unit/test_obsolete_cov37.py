@@ -3,19 +3,20 @@
 第三十七批覆盖率测试 - ECN BOM呆滞料检查
 tests/unit/test_obsolete_cov37.py
 """
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.ecn_bom_analysis_service.obsolete")
 
 from app.services.ecn_bom_analysis_service.obsolete import (
-    check_obsolete_material_risk,
     calculate_obsolete_risk_level,
+    check_obsolete_material_risk,
 )
 
-
 # ── calculate_obsolete_risk_level ─────────────────────────────────────────────
+
 
 class TestCalculateObsoleteRiskLevel:
     def test_critical_above_100k(self):
@@ -36,6 +37,7 @@ class TestCalculateObsoleteRiskLevel:
 
 
 # ── check_obsolete_material_risk ──────────────────────────────────────────────
+
 
 def _make_service(ecn=True, affected_materials=None, material=None, po_items=None):
     service = MagicMock()

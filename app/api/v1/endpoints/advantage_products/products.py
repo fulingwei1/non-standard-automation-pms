@@ -31,7 +31,7 @@ def get_products(
     search: Optional[str] = Query(None, description="搜索产品名称或编码"),
     include_inactive: bool = Query(False, description="是否包含已禁用的产品"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:read"))
+    current_user: User = Depends(security.require_permission("advantage_product:read")),
 ):
     """获取优势产品列表"""
     query = db.query(AdvantageProduct)
@@ -42,7 +42,9 @@ def get_products(
     if category_id:
         query = query.filter(AdvantageProduct.category_id == category_id)
 
-    query = apply_keyword_filter(query, AdvantageProduct, search, ["product_name", "product_code"], use_ilike=False)
+    query = apply_keyword_filter(
+        query, AdvantageProduct, search, ["product_name", "product_code"], use_ilike=False
+    )
 
     products = query.order_by(AdvantageProduct.product_code).all()
 
@@ -51,18 +53,20 @@ def get_products(
 
     result = []
     for p in products:
-        result.append(AdvantageProductResponse(
-            id=p.id,
-            product_code=p.product_code,
-            product_name=p.product_name,
-            category_id=p.category_id,
-            series_code=p.series_code,
-            description=p.description,
-            is_active=p.is_active,
-            category_name=categories.get(p.category_id),
-            created_at=p.created_at,
-            updated_at=p.updated_at
-        ))
+        result.append(
+            AdvantageProductResponse(
+                id=p.id,
+                product_code=p.product_code,
+                product_name=p.product_name,
+                category_id=p.category_id,
+                series_code=p.series_code,
+                description=p.description,
+                is_active=p.is_active,
+                category_name=categories.get(p.category_id),
+                created_at=p.created_at,
+                updated_at=p.updated_at,
+            )
+        )
 
     return result
 
@@ -71,7 +75,7 @@ def get_products(
 def get_products_grouped(
     include_inactive: bool = Query(False, description="是否包含已禁用的"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:read"))
+    current_user: User = Depends(security.require_permission("advantage_product:read")),
 ):
     """获取按类别分组的产品列表"""
     # 获取所有类别
@@ -83,9 +87,7 @@ def get_products_grouped(
     result = []
     for cat in categories:
         # 获取该类别下的产品
-        prod_query = db.query(AdvantageProduct).filter(
-            AdvantageProduct.category_id == cat.id
-        )
+        prod_query = db.query(AdvantageProduct).filter(AdvantageProduct.category_id == cat.id)
         if not include_inactive:
             prod_query = prod_query.filter(AdvantageProduct.is_active)
         products = prod_query.order_by(AdvantageProduct.product_code).all()
@@ -101,7 +103,7 @@ def get_products_grouped(
             is_active=cat.is_active,
             created_at=cat.created_at,
             updated_at=cat.updated_at,
-            product_count=product_count
+            product_count=product_count,
         )
 
         prod_responses = [
@@ -115,15 +117,12 @@ def get_products_grouped(
                 is_active=p.is_active,
                 category_name=cat.name,
                 created_at=p.created_at,
-                updated_at=p.updated_at
+                updated_at=p.updated_at,
             )
             for p in products
         ]
 
-        result.append(AdvantageProductGrouped(
-            category=cat_response,
-            products=prod_responses
-        ))
+        result.append(AdvantageProductGrouped(category=cat_response, products=prod_responses))
 
     return result
 
@@ -132,7 +131,7 @@ def get_products_grouped(
 def get_products_simple(
     category_id: Optional[int] = Query(None, description="按类别筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:read"))
+    current_user: User = Depends(security.require_permission("advantage_product:read")),
 ):
     """获取产品简略列表（用于下拉选择）"""
     query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active)
@@ -151,7 +150,7 @@ def get_products_simple(
             product_code=p.product_code,
             product_name=p.product_name,
             category_id=p.category_id,
-            category_name=categories.get(p.category_id)
+            category_name=categories.get(p.category_id),
         )
         for p in products
     ]
@@ -161,29 +160,30 @@ def get_products_simple(
 def create_product(
     product_in: AdvantageProductCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:create"))
+    current_user: User = Depends(security.require_permission("advantage_product:create")),
 ):
     """创建优势产品"""
     # 检查产品编码是否已存在
-    existing = db.query(AdvantageProduct).filter(
-        AdvantageProduct.product_code == product_in.product_code
-    ).first()
+    existing = (
+        db.query(AdvantageProduct)
+        .filter(AdvantageProduct.product_code == product_in.product_code)
+        .first()
+    )
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"产品编码 '{product_in.product_code}' 已存在"
+            detail=f"产品编码 '{product_in.product_code}' 已存在",
         )
 
     # 检查类别是否存在
     if product_in.category_id:
-        category = db.query(AdvantageProductCategory).filter(
-            AdvantageProductCategory.id == product_in.category_id
-        ).first()
+        category = (
+            db.query(AdvantageProductCategory)
+            .filter(AdvantageProductCategory.id == product_in.category_id)
+            .first()
+        )
         if not category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="指定的类别不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="指定的类别不存在")
 
     product = AdvantageProduct(**product_in.model_dump())
     db.add(product)
@@ -192,9 +192,11 @@ def create_product(
 
     category_name = None
     if product.category_id:
-        cat = db.query(AdvantageProductCategory).filter(
-            AdvantageProductCategory.id == product.category_id
-        ).first()
+        cat = (
+            db.query(AdvantageProductCategory)
+            .filter(AdvantageProductCategory.id == product.category_id)
+            .first()
+        )
         category_name = cat.name if cat else None
 
     return AdvantageProductResponse(
@@ -207,7 +209,7 @@ def create_product(
         is_active=product.is_active,
         category_name=category_name,
         created_at=product.created_at,
-        updated_at=product.updated_at
+        updated_at=product.updated_at,
     )
 
 
@@ -216,30 +218,24 @@ def update_product(
     product_id: int,
     product_in: AdvantageProductUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:update"))
+    current_user: User = Depends(security.require_permission("advantage_product:update")),
 ):
     """更新优势产品"""
-    product = db.query(AdvantageProduct).filter(
-        AdvantageProduct.id == product_id
-    ).first()
+    product = db.query(AdvantageProduct).filter(AdvantageProduct.id == product_id).first()
     if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="产品不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="产品不存在")
 
     update_data = product_in.model_dump(exclude_unset=True)
 
     # 检查类别是否存在
     if "category_id" in update_data and update_data["category_id"]:
-        category = db.query(AdvantageProductCategory).filter(
-            AdvantageProductCategory.id == update_data["category_id"]
-        ).first()
+        category = (
+            db.query(AdvantageProductCategory)
+            .filter(AdvantageProductCategory.id == update_data["category_id"])
+            .first()
+        )
         if not category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="指定的类别不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="指定的类别不存在")
 
     for field, value in update_data.items():
         setattr(product, field, value)
@@ -249,9 +245,11 @@ def update_product(
 
     category_name = None
     if product.category_id:
-        cat = db.query(AdvantageProductCategory).filter(
-            AdvantageProductCategory.id == product.category_id
-        ).first()
+        cat = (
+            db.query(AdvantageProductCategory)
+            .filter(AdvantageProductCategory.id == product.category_id)
+            .first()
+        )
         category_name = cat.name if cat else None
 
     return AdvantageProductResponse(
@@ -264,7 +262,7 @@ def update_product(
         is_active=product.is_active,
         category_name=category_name,
         created_at=product.created_at,
-        updated_at=product.updated_at
+        updated_at=product.updated_at,
     )
 
 
@@ -272,17 +270,12 @@ def update_product(
 def delete_product(
     product_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:delete"))
+    current_user: User = Depends(security.require_permission("advantage_product:delete")),
 ):
     """删除优势产品（软删除）"""
-    product = db.query(AdvantageProduct).filter(
-        AdvantageProduct.id == product_id
-    ).first()
+    product = db.query(AdvantageProduct).filter(AdvantageProduct.id == product_id).first()
     if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="产品不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="产品不存在")
 
     product.is_active = False
     db.commit()

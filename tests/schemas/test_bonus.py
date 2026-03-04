@@ -1,31 +1,32 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/bonus.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.bonus import (
-    BonusRuleBase,
-    BonusRuleCreate,
-    BonusRuleUpdate,
-    BonusRuleResponse,
+    BonusAllocationSheetConfirm,
+    BonusCalculationApprove,
     BonusCalculationBase,
     BonusCalculationCreate,
-    BonusCalculationApprove,
+    BonusCalculationQuery,
     BonusDistributionBase,
     BonusDistributionCreate,
     BonusDistributionPay,
-    TeamBonusAllocationBase,
-    TeamBonusAllocationCreate,
-    BonusCalculationQuery,
     BonusDistributionQuery,
-    MyBonusResponse,
+    BonusRuleBase,
+    BonusRuleCreate,
+    BonusRuleResponse,
+    BonusRuleUpdate,
     BonusStatisticsResponse,
     CalculatePerformanceBonusRequest,
     CalculateProjectBonusRequest,
     CalculateSalesBonusRequest,
-    BonusAllocationSheetConfirm,
+    MyBonusResponse,
+    TeamBonusAllocationBase,
+    TeamBonusAllocationCreate,
 )
 
 
@@ -42,8 +43,11 @@ class TestBonusRuleBase:
 
     def test_full(self):
         r = BonusRuleBase(
-            rule_code="BR001", rule_name="项目奖金", bonus_type="PROJECT",
-            base_amount=Decimal("5000"), coefficient=Decimal("1.2"),
+            rule_code="BR001",
+            rule_name="项目奖金",
+            bonus_type="PROJECT",
+            base_amount=Decimal("5000"),
+            coefficient=Decimal("1.2"),
             trigger_condition={"min_score": 80},
             apply_to_roles=["PM", "ENGINEER"],
             effective_start_date=date(2024, 1, 1),
@@ -70,7 +74,9 @@ class TestBonusRuleUpdate:
 class TestBonusCalculationBase:
     def test_valid(self):
         c = BonusCalculationBase(
-            rule_id=1, user_id=1, calculated_amount=Decimal("5000"),
+            rule_id=1,
+            user_id=1,
+            calculated_amount=Decimal("5000"),
         )
         assert c.project_id is None
 
@@ -96,7 +102,8 @@ class TestBonusCalculationApprove:
 class TestBonusDistributionBase:
     def test_valid(self):
         d = BonusDistributionBase(
-            calculation_id=1, user_id=1,
+            calculation_id=1,
+            user_id=1,
             distributed_amount=Decimal("5000"),
             distribution_date=date(2024, 6, 30),
         )
@@ -120,7 +127,8 @@ class TestBonusDistributionPay:
 class TestTeamBonusAllocationBase:
     def test_valid(self):
         t = TeamBonusAllocationBase(
-            project_id=1, total_bonus_amount=Decimal("50000"),
+            project_id=1,
+            total_bonus_amount=Decimal("50000"),
             allocation_method="EQUAL",
             allocation_detail=[{"user_id": 1, "amount": 25000}],
         )
@@ -139,8 +147,10 @@ class TestBonusCalculationQuery:
 
     def test_with_filters(self):
         q = BonusCalculationQuery(
-            rule_id=1, status="APPROVED",
-            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31),
+            rule_id=1,
+            status="APPROVED",
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 12, 31),
         )
         assert q.status == "APPROVED"
 
@@ -201,6 +211,8 @@ class TestBonusAllocationSheetConfirm:
 
     def test_confirmed(self):
         c = BonusAllocationSheetConfirm(
-            finance_confirmed=True, hr_confirmed=True, manager_confirmed=True,
+            finance_confirmed=True,
+            hr_confirmed=True,
+            manager_confirmed=True,
         )
         assert c.finance_confirmed is True

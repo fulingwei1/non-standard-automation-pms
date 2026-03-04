@@ -29,7 +29,6 @@ from app.schemas.alert import (
 from app.schemas.common import PaginatedResponse
 from app.utils.db_helpers import save_obj
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -49,12 +48,10 @@ class ExceptionEventsService:
         event_type: Optional[str] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        project_id: Optional[int] = None
+        project_id: Optional[int] = None,
     ) -> PaginatedResponse:
         """获取异常事件列表"""
-        query = self.db.query(ExceptionEvent).options(
-            joinedload(ExceptionEvent.project)
-        )
+        query = self.db.query(ExceptionEvent).options(joinedload(ExceptionEvent.project))
 
         # 搜索条件
         query = apply_keyword_filter(
@@ -97,21 +94,24 @@ class ExceptionEventsService:
             page=pagination.page,
             page_size=pagination.page_size,
             pages=pagination.pages_for_total(total),
-            items=[ExceptionEventResponse.model_validate(item) for item in items]
+            items=[ExceptionEventResponse.model_validate(item) for item in items],
         )
 
     def get_exception_event(self, event_id: int) -> Optional[ExceptionEvent]:
         """获取单个异常事件"""
-        return self.db.query(ExceptionEvent).options(
-            joinedload(ExceptionEvent.project),
-            joinedload(ExceptionEvent.actions),
-            joinedload(ExceptionEvent.escalations)
-        ).filter(ExceptionEvent.id == event_id).first()
+        return (
+            self.db.query(ExceptionEvent)
+            .options(
+                joinedload(ExceptionEvent.project),
+                joinedload(ExceptionEvent.actions),
+                joinedload(ExceptionEvent.escalations),
+            )
+            .filter(ExceptionEvent.id == event_id)
+            .first()
+        )
 
     def create_exception_event(
-        self,
-        event_data: ExceptionEventCreate,
-        current_user: User
+        self, event_data: ExceptionEventCreate, current_user: User
     ) -> ExceptionEvent:
         """创建异常事件"""
         exception_event = ExceptionEvent(
@@ -125,7 +125,7 @@ class ExceptionEventsService:
             impact_assessment=event_data.impact_assessment,
             immediate_actions=event_data.immediate_actions,
             reported_by=current_user.id,
-            status="pending"
+            status="pending",
         )
 
         save_obj(self.db, exception_event)
@@ -139,10 +139,7 @@ class ExceptionEventsService:
         return exception_event
 
     def update_exception_event(
-        self,
-        event_id: int,
-        event_data: ExceptionEventUpdate,
-        current_user: User
+        self, event_id: int, event_data: ExceptionEventUpdate, current_user: User
     ) -> Optional[ExceptionEvent]:
         """更新异常事件"""
         exception_event = self.get_exception_event(event_id)
@@ -152,7 +149,7 @@ class ExceptionEventsService:
         # 更新字段
         update_data = event_data.dict(exclude_unset=True)
         for field, value in update_data.items():
-            if field not in ['id', 'reported_by', 'created_at']:
+            if field not in ["id", "reported_by", "created_at"]:
                 setattr(exception_event, field, value)
 
         exception_event.updated_by = current_user.id
@@ -164,10 +161,7 @@ class ExceptionEventsService:
         return exception_event
 
     def resolve_exception_event(
-        self,
-        event_id: int,
-        resolve_data: ExceptionEventResolve,
-        current_user: User
+        self, event_id: int, resolve_data: ExceptionEventResolve, current_user: User
     ) -> Optional[ExceptionEvent]:
         """解决异常事件"""
         exception_event = self.get_exception_event(event_id)
@@ -175,10 +169,7 @@ class ExceptionEventsService:
             return None
 
         if exception_event.status == "resolved":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="异常事件已经解决"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="异常事件已经解决")
 
         exception_event.status = "resolved"
         exception_event.resolved_by = current_user.id
@@ -198,10 +189,7 @@ class ExceptionEventsService:
         return exception_event
 
     def verify_exception_event(
-        self,
-        event_id: int,
-        verify_data: ExceptionEventVerify,
-        current_user: User
+        self, event_id: int, verify_data: ExceptionEventVerify, current_user: User
     ) -> Optional[ExceptionEvent]:
         """验证异常事件解决方案"""
         exception_event = self.get_exception_event(event_id)
@@ -210,8 +198,7 @@ class ExceptionEventsService:
 
         if exception_event.status != "resolved":
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="只能验证已解决的异常事件"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="只能验证已解决的异常事件"
             )
 
         exception_event.status = "verified" if verify_data.is_verified else "reopened"
@@ -227,10 +214,7 @@ class ExceptionEventsService:
         return exception_event
 
     def add_exception_action(
-        self,
-        event_id: int,
-        action_data: dict,
-        current_user: User
+        self, event_id: int, action_data: dict, current_user: User
     ) -> ExceptionAction:
         """添加异常事件处理动作"""
         exception_action = ExceptionAction(
@@ -239,7 +223,7 @@ class ExceptionEventsService:
             action_content=action_data.get("description", ""),
             old_status=action_data.get("old_status"),
             new_status=action_data.get("new_status"),
-            created_by=current_user.id
+            created_by=current_user.id,
         )
 
         save_obj(self.db, exception_action)
@@ -247,10 +231,7 @@ class ExceptionEventsService:
         return exception_action
 
     def escalate_exception_event(
-        self,
-        event_id: int,
-        escalation_data: dict,
-        current_user: User
+        self, event_id: int, escalation_data: dict, current_user: User
     ) -> ExceptionEvent:
         """升级异常事件"""
         exception_event = self.get_exception_event(event_id)
@@ -262,7 +243,7 @@ class ExceptionEventsService:
             escalation_level=escalation_data["escalation_level"],
             escalated_to=escalation_data["escalated_to"],
             escalation_reason=escalation_data["escalation_reason"],
-            escalated_by=current_user.id
+            escalated_by=current_user.id,
         )
 
         self.db.add(escalation)
@@ -281,18 +262,11 @@ class ExceptionEventsService:
 
         return exception_event
 
-    def create_exception_from_issue(
-        self,
-        issue_id: int,
-        current_user: User
-    ) -> ExceptionEvent:
+    def create_exception_from_issue(self, issue_id: int, current_user: User) -> ExceptionEvent:
         """从问题创建异常事件"""
         issue = self.db.query(Issue).filter(Issue.id == issue_id).first()
         if not issue:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="问题不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="问题不存在")
 
         exception_event = ExceptionEvent(
             event_title=f"【异常】{issue.title}",
@@ -303,7 +277,7 @@ class ExceptionEventsService:
             occurred_at=datetime.now(timezone.utc),
             reported_by=current_user.id,
             source_issue_id=issue.id,
-            status="pending"
+            status="pending",
         )
 
         save_obj(self.db, exception_event)
@@ -323,35 +297,50 @@ class ExceptionEventsService:
 
             # 策略1: 项目经理
             if exception_event.project_id and exception_event.project:
-                pm_id = getattr(exception_event.project, 'pm_id', None)
+                pm_id = getattr(exception_event.project, "pm_id", None)
                 if pm_id:
                     exception_event.responsible_user_id = pm_id
                     exception_event.status = "ASSIGNED"
                     self.db.commit()
                     self.db.refresh(exception_event)
                     assigned = True
-                    logger.info("异常事件已自动分配给项目经理 (event_id=%s, pm_id=%s)",
-                                exception_event.id, pm_id)
+                    logger.info(
+                        "异常事件已自动分配给项目经理 (event_id=%s, pm_id=%s)",
+                        exception_event.id,
+                        pm_id,
+                    )
 
             # 策略2: 按部门查找负责人
             if not assigned and exception_event.responsible_dept:
-                dept_user = self.db.query(User).filter(
-                    User.department == exception_event.responsible_dept,
-                    User.is_active == True,
-                    User.position.in_(["部门经理", "主管", "负责人", "manager"])
-                ).first()
+                dept_user = (
+                    self.db.query(User)
+                    .filter(
+                        User.department == exception_event.responsible_dept,
+                        User.is_active == True,
+                        User.position.in_(["部门经理", "主管", "负责人", "manager"]),
+                    )
+                    .first()
+                )
                 if dept_user:
                     exception_event.responsible_user_id = dept_user.id
                     exception_event.status = "ASSIGNED"
                     self.db.commit()
                     self.db.refresh(exception_event)
                     assigned = True
-                    logger.info("异常事件已自动分配给部门负责人 (event_id=%s, user_id=%s, dept=%s)",
-                                exception_event.id, dept_user.id, exception_event.responsible_dept)
+                    logger.info(
+                        "异常事件已自动分配给部门负责人 (event_id=%s, user_id=%s, dept=%s)",
+                        exception_event.id,
+                        dept_user.id,
+                        exception_event.responsible_dept,
+                    )
 
             if not assigned:
-                logger.warning("异常事件未能自动分配处理人 (event_id=%s, type=%s, severity=%s)",
-                               exception_event.id, exception_event.event_type, exception_event.severity)
+                logger.warning(
+                    "异常事件未能自动分配处理人 (event_id=%s, type=%s, severity=%s)",
+                    exception_event.id,
+                    exception_event.event_type,
+                    exception_event.severity,
+                )
 
         except Exception as e:
             logger.error("自动分配处理人失败 (event_id=%s): %s", exception_event.id, str(e))
@@ -362,15 +351,15 @@ class ExceptionEventsService:
             "critical": "critical",
             "high": "high",
             "medium": "medium",
-            "low": "low"
+            "low": "low",
         }
         return severity_mapping.get(issue.severity, "medium")
 
     def _send_exception_notification(self, exception_event: ExceptionEvent, action: str):
         """发送异常事件通知"""
         try:
-            from app.services.unified_notification_service import get_notification_service
             from app.services.channel_handlers.base import NotificationRequest
+            from app.services.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 
@@ -382,7 +371,9 @@ class ExceptionEventsService:
             }
             action_label = action_labels.get(action, action)
 
-            title = f"异常事件{action_label}: {exception_event.event_title or exception_event.title}"
+            title = (
+                f"异常事件{action_label}: {exception_event.event_title or exception_event.title}"
+            )
             content = (
                 f"异常编号: {getattr(exception_event, 'event_no', 'N/A')}\n"
                 f"类型: {exception_event.event_type}\n"
@@ -393,11 +384,11 @@ class ExceptionEventsService:
 
             # 通知责任人
             recipient_ids = set()
-            if getattr(exception_event, 'responsible_user_id', None):
+            if getattr(exception_event, "responsible_user_id", None):
                 recipient_ids.add(exception_event.responsible_user_id)
-            if getattr(exception_event, 'reported_by', None):
+            if getattr(exception_event, "reported_by", None):
                 recipient_ids.add(exception_event.reported_by)
-            if getattr(exception_event, 'created_by', None):
+            if getattr(exception_event, "created_by", None):
                 recipient_ids.add(exception_event.created_by)
 
             for recipient_id in recipient_ids:
@@ -409,22 +400,34 @@ class ExceptionEventsService:
                 request.category = "alert"
                 request.title = title
                 request.content = content
-                request.priority = "HIGH" if exception_event.severity in ("critical", "high") else "NORMAL"
+                request.priority = (
+                    "HIGH" if exception_event.severity in ("critical", "high") else "NORMAL"
+                )
                 request.source_type = "exception_event"
                 request.source_id = exception_event.id
                 notification_service.send_notification(request)
 
-            logger.info("异常事件通知已发送 (event_id=%s, action=%s, recipients=%s)",
-                        exception_event.id, action, recipient_ids)
+            logger.info(
+                "异常事件通知已发送 (event_id=%s, action=%s, recipients=%s)",
+                exception_event.id,
+                action,
+                recipient_ids,
+            )
         except Exception as e:
-            logger.error("发送异常事件通知失败 (event_id=%s, action=%s): %s",
-                         exception_event.id, action, str(e))
+            logger.error(
+                "发送异常事件通知失败 (event_id=%s, action=%s): %s",
+                exception_event.id,
+                action,
+                str(e),
+            )
 
-    def _send_escalation_notification(self, exception_event: ExceptionEvent, escalation: ExceptionEscalation):
+    def _send_escalation_notification(
+        self, exception_event: ExceptionEvent, escalation: ExceptionEscalation
+    ):
         """发送升级通知"""
         try:
-            from app.services.unified_notification_service import get_notification_service
             from app.services.channel_handlers.base import NotificationRequest
+            from app.services.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 
@@ -451,8 +454,12 @@ class ExceptionEventsService:
                 request.force_send = True  # 升级通知强制发送
                 notification_service.send_notification(request)
 
-            logger.info("升级通知已发送 (event_id=%s, escalation_id=%s, escalated_to=%s)",
-                        exception_event.id, escalation.id, escalation.escalated_to)
+            logger.info(
+                "升级通知已发送 (event_id=%s, escalation_id=%s, escalated_to=%s)",
+                exception_event.id,
+                escalation.id,
+                escalation.escalated_to,
+            )
         except Exception as e:
             logger.error("发送升级通知失败 (event_id=%s): %s", exception_event.id, str(e))
 

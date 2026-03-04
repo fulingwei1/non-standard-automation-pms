@@ -3,12 +3,13 @@
 工时成本服务单元测试
 覆盖批量计算、月度统计、项目不存在等核心路径
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.labor_cost_service import LaborCostService, LaborCostExpenseService
+import pytest
+
+from app.services.labor_cost_service import LaborCostExpenseService, LaborCostService
 
 
 class TestCalculateProjectLaborCostNoProject:
@@ -31,16 +32,20 @@ class TestCalculateProjectLaborCostNoTimesheets:
         db.query.return_value.filter.return_value.first.return_value = MagicMock()
 
         # 函数内部 lazy import，需要 patch 工具函数所在的模块
-        with patch(
-            "app.services.labor_cost.utils.query_approved_timesheets",
-            return_value=[],
-        ), patch(
-            "app.services.labor_cost_service.query_approved_timesheets",
-            create=True,
-            return_value=[],
+        with (
+            patch(
+                "app.services.labor_cost.utils.query_approved_timesheets",
+                return_value=[],
+            ),
+            patch(
+                "app.services.labor_cost_service.query_approved_timesheets",
+                create=True,
+                return_value=[],
+            ),
         ):
             # 直接模拟内部import的函数
             import app.services.labor_cost.utils as utils_mod
+
             orig = getattr(utils_mod, "query_approved_timesheets", None)
             utils_mod.query_approved_timesheets = MagicMock(return_value=[])
             try:
@@ -71,12 +76,15 @@ class TestCalculateProjectLaborCostWithTimesheets:
         mock_total_cost = Decimal("1200")
 
         import app.services.labor_cost.utils as utils_mod
+
         utils_mod.query_approved_timesheets = MagicMock(return_value=mock_timesheets)
         utils_mod.group_timesheets_by_user = MagicMock(return_value=mock_user_costs)
         utils_mod.process_user_costs = MagicMock(return_value=(mock_created_costs, mock_total_cost))
         utils_mod.delete_existing_costs = MagicMock()
         try:
-            result = LaborCostService.calculate_project_labor_cost(db, project_id=1, recalculate=True)
+            result = LaborCostService.calculate_project_labor_cost(
+                db, project_id=1, recalculate=True
+            )
         finally:
             # 不需要恢复，下个测试会重新import
             pass
@@ -101,7 +109,10 @@ class TestCalculateAllProjectsLaborCost:
 
     def test_counts_success_and_failure(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,), (2,)]
+        db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+            (1,),
+            (2,),
+        ]
 
         call_count = {"n": 0}
 
@@ -123,10 +134,17 @@ class TestCalculateMonthlyLaborCost:
 
     def test_delegates_to_all_projects(self):
         db = MagicMock()
-        with patch("app.services.labor_cost_service.get_month_range_by_ym",
-                   return_value=(date(2025, 1, 1), date(2025, 1, 31))) as mock_range, \
-             patch.object(LaborCostService, "calculate_all_projects_labor_cost",
-                          return_value={"success": True}) as mock_all:
+        with (
+            patch(
+                "app.services.labor_cost_service.get_month_range_by_ym",
+                return_value=(date(2025, 1, 1), date(2025, 1, 31)),
+            ) as mock_range,
+            patch.object(
+                LaborCostService,
+                "calculate_all_projects_labor_cost",
+                return_value={"success": True},
+            ) as mock_all,
+        ):
             result = LaborCostService.calculate_monthly_labor_cost(db, year=2025, month=1)
 
         mock_range.assert_called_once_with(2025, 1)

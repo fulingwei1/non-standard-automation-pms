@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for delivery_validation_service.py"""
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 from app.services.delivery_validation_service import DeliveryValidationService
 
@@ -38,22 +38,22 @@ class TestEstimateProjectCycle:
     def test_simple_project(self):
         db = MagicMock()
         result = DeliveryValidationService.estimate_project_cycle(db, complexity_level="SIMPLE")
-        assert result['estimated_total_days'] == 45
-        assert len(result['stage_details']) == 8
+        assert result["estimated_total_days"] == 45
+        assert len(result["stage_details"]) == 8
 
     def test_complex_with_amount(self):
         db = MagicMock()
         result = DeliveryValidationService.estimate_project_cycle(
             db, contract_amount=6000000, complexity_level="COMPLEX"
         )
-        assert result['estimated_total_days'] > 105  # 105 * 1.2
+        assert result["estimated_total_days"] > 105  # 105 * 1.2
 
     def test_with_project_type(self):
         db = MagicMock()
         result = DeliveryValidationService.estimate_project_cycle(
             db, project_type="线体类", complexity_level="MEDIUM"
         )
-        assert result['estimated_total_days'] > 75  # 75 * 1.3
+        assert result["estimated_total_days"] > 75  # 75 * 1.3
 
 
 class TestValidateDeliveryDate:
@@ -65,14 +65,14 @@ class TestValidateDeliveryDate:
         version = MagicMock(lead_time_days=0, total_price=100000)
         items = []
         result = DeliveryValidationService.validate_delivery_date(self.db, quote, version, items)
-        assert result['status'] == 'ERROR'
+        assert result["status"] == "ERROR"
 
     def test_valid_lead_time(self):
         quote = MagicMock(opportunity=None)
         version = MagicMock(lead_time_days=90, total_price=100000)
         items = []
         result = DeliveryValidationService.validate_delivery_date(self.db, quote, version, items)
-        assert result['quoted_lead_time'] == 90
+        assert result["quoted_lead_time"] == 90
 
 
 class TestGetSuggestions:

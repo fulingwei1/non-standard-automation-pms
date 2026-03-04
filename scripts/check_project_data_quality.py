@@ -44,20 +44,14 @@ def check_project_data_quality(project_code: str = "PJ250114"):
         print("\n" + "-" * 60)
         print("1. 文档数据检查")
         print("-" * 60)
-        documents = (
-            db.query(ProjectDocument)
-            .filter(ProjectDocument.project_id == project.id)
-            .all()
-        )
+        documents = db.query(ProjectDocument).filter(ProjectDocument.project_id == project.id).all()
 
         print(f"   总文档数: {len(documents)}")
 
         # 检查重复的文档名称
         doc_names = [doc.doc_name for doc in documents]
         doc_name_counts = Counter(doc_names)
-        duplicates = {
-            name: count for name, count in doc_name_counts.items() if count > 1
-        }
+        duplicates = {name: count for name, count in doc_name_counts.items() if count > 1}
 
         if duplicates:
             print(f"   ⚠️  发现重复的文档名称:")
@@ -70,8 +64,7 @@ def check_project_data_quality(project_code: str = "PJ250114"):
         fake_paths = [
             doc
             for doc in documents
-            if doc.file_path.startswith("/documents/")
-            or doc.file_path.startswith("/docs/")
+            if doc.file_path.startswith("/documents/") or doc.file_path.startswith("/docs/")
         ]
         print(f"   ⚠️  测试数据文档: {len(fake_paths)} 个（文件路径不存在）")
 
@@ -90,9 +83,7 @@ def check_project_data_quality(project_code: str = "PJ250114"):
             cost_keys.append(key)
 
         cost_key_counts = Counter(cost_keys)
-        duplicate_costs = {
-            key: count for key, count in cost_key_counts.items() if count > 1
-        }
+        duplicate_costs = {key: count for key, count in cost_key_counts.items() if count > 1}
 
         if duplicate_costs:
             print(f"   ⚠️  发现重复的成本记录:")
@@ -115,9 +106,7 @@ def check_project_data_quality(project_code: str = "PJ250114"):
         print("3. 里程碑数据检查")
         print("-" * 60)
         milestones = (
-            db.query(ProjectMilestone)
-            .filter(ProjectMilestone.project_id == project.id)
-            .all()
+            db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project.id).all()
         )
 
         print(f"   总里程碑数: {len(milestones)}")
@@ -140,18 +129,14 @@ def check_project_data_quality(project_code: str = "PJ250114"):
         print("\n" + "-" * 60)
         print("4. 阶段数据检查")
         print("-" * 60)
-        stages = (
-            db.query(ProjectStage).filter(ProjectStage.project_id == project.id).all()
-        )
+        stages = db.query(ProjectStage).filter(ProjectStage.project_id == project.id).all()
 
         print(f"   总阶段数: {len(stages)}")
 
         # 检查重复的阶段代码
         stage_codes = [s.stage_code for s in stages]
         stage_code_counts = Counter(stage_codes)
-        duplicate_stages = {
-            code: count for code, count in stage_code_counts.items() if count > 1
-        }
+        duplicate_stages = {code: count for code, count in stage_code_counts.items() if count > 1}
 
         if duplicate_stages:
             print(f"   ⚠️  发现重复的阶段代码:")
@@ -171,9 +156,7 @@ def check_project_data_quality(project_code: str = "PJ250114"):
         # 检查重复的任务名称
         task_names = [t.task_name for t in tasks if t.task_name]
         task_name_counts = Counter(task_names)
-        duplicate_tasks = {
-            name: count for name, count in task_name_counts.items() if count > 1
-        }
+        duplicate_tasks = {name: count for name, count in task_name_counts.items() if count > 1}
 
         if duplicate_tasks:
             print(f"   ⚠️  发现重复的任务名称:")

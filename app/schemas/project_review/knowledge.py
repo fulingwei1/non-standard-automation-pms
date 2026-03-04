@@ -1,13 +1,16 @@
 """
 知识库同步Schema
 """
+
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class KnowledgeSyncRequest(BaseModel):
     """知识库同步请求"""
+
     review_id: int = Field(..., description="复盘报告ID")
     auto_publish: bool = Field(default=True, description="是否自动发布")
     include_lessons: bool = Field(default=True, description="是否包含经验教训")
@@ -15,6 +18,7 @@ class KnowledgeSyncRequest(BaseModel):
 
 class KnowledgeSyncResponse(BaseModel):
     """知识库同步响应"""
+
     success: bool
     review_id: int
     knowledge_case_id: int
@@ -28,6 +32,7 @@ class KnowledgeSyncResponse(BaseModel):
 
 class KnowledgeImpactResponse(BaseModel):
     """知识库影响响应"""
+
     success: bool
     review_id: int
     synced: bool

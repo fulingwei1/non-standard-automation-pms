@@ -17,23 +17,24 @@ sys.modules.setdefault("redis", redis_mock)
 sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import os
+
 os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
+import uuid
+
 import pytest
 from fastapi import HTTPException
-
-import uuid
 
 _P0001 = f"P0001-{uuid.uuid4().hex[:8]}"
 _P0002 = f"P0002-{uuid.uuid4().hex[:8]}"
 
 
-
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _make_db():
     db = MagicMock()
@@ -80,6 +81,7 @@ def _make_project(project_id=1):
 # Tests: create_project
 # ──────────────────────────────────────────────
 
+
 class TestCreateProject:
 
     @patch("app.utils.project_utils.init_project_stages")
@@ -93,9 +95,7 @@ class TestCreateProject:
 
         db.query.return_value.filter.return_value.first.return_value = None
         customer_mock = MagicMock(
-            customer_name="比亚迪",
-            contact_person="李四",
-            contact_phone="13800000000"
+            customer_name="比亚迪", contact_person="李四", contact_phone="13800000000"
         )
         pm_mock = MagicMock(real_name="张三", username="zhangsan")
         db.query.return_value.get.side_effect = [customer_mock, pm_mock]
@@ -174,6 +174,7 @@ class TestCreateProject:
 # Tests: update_project
 # ──────────────────────────────────────────────
 
+
 class TestUpdateProject:
 
     def test_update_project_success(self):
@@ -184,8 +185,12 @@ class TestUpdateProject:
         current_user = _make_user()
         project = _make_project()
 
-        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=project), \
-             patch("app.services.cache_service.CacheService", MagicMock()):
+        with (
+            patch(
+                "app.utils.permission_helpers.check_project_access_or_raise", return_value=project
+            ),
+            patch("app.services.cache_service.CacheService", MagicMock()),
+        ):
             project_in = MagicMock()
             project_in.model_dump.return_value = {"project_name": "更新后的名称"}
 
@@ -208,13 +213,15 @@ class TestUpdateProject:
 
         with patch(
             "app.utils.permission_helpers.check_project_access_or_raise",
-            side_effect=HTTPException(status_code=404, detail="项目不存在")
+            side_effect=HTTPException(status_code=404, detail="项目不存在"),
         ):
             project_in = MagicMock()
             project_in.model_dump.return_value = {}
 
             with pytest.raises(HTTPException) as exc_info:
-                update_project(db=db, project_id=999, project_in=project_in, current_user=current_user)
+                update_project(
+                    db=db, project_id=999, project_in=project_in, current_user=current_user
+                )
 
         assert exc_info.value.status_code == 404
 
@@ -228,18 +235,22 @@ class TestUpdateProject:
         project.customer_id = 2
 
         customer_mock = MagicMock(
-            customer_name="新客户",
-            contact_person="王五",
-            contact_phone="13900000000"
+            customer_name="新客户", contact_person="王五", contact_phone="13900000000"
         )
         db.query.return_value.get.return_value = customer_mock
 
-        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=project), \
-             patch("app.services.cache_service.CacheService", MagicMock()):
+        with (
+            patch(
+                "app.utils.permission_helpers.check_project_access_or_raise", return_value=project
+            ),
+            patch("app.services.cache_service.CacheService", MagicMock()),
+        ):
             project_in = MagicMock()
             project_in.model_dump.return_value = {"customer_id": 2}
 
-            result = update_project(db=db, project_id=1, project_in=project_in, current_user=current_user)
+            result = update_project(
+                db=db, project_id=1, project_in=project_in, current_user=current_user
+            )
 
         assert db.commit.called
 
@@ -247,6 +258,7 @@ class TestUpdateProject:
 # ──────────────────────────────────────────────
 # Tests: delete_project
 # ──────────────────────────────────────────────
+
 
 class TestDeleteProject:
 
@@ -258,8 +270,12 @@ class TestDeleteProject:
         current_user = _make_user()
         project = _make_project()
 
-        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=project), \
-             patch("app.services.cache_service.CacheService", MagicMock()):
+        with (
+            patch(
+                "app.utils.permission_helpers.check_project_access_or_raise", return_value=project
+            ),
+            patch("app.services.cache_service.CacheService", MagicMock()),
+        ):
             result = delete_project(db=db, project_id=1, current_user=current_user)
 
         assert project.is_active is False
@@ -275,7 +291,7 @@ class TestDeleteProject:
 
         with patch(
             "app.utils.permission_helpers.check_project_access_or_raise",
-            side_effect=HTTPException(status_code=403, detail="您没有权限删除该项目")
+            side_effect=HTTPException(status_code=403, detail="您没有权限删除该项目"),
         ):
             with pytest.raises(HTTPException) as exc_info:
                 delete_project(db=db, project_id=1, current_user=current_user)
@@ -291,8 +307,12 @@ class TestDeleteProject:
         project = _make_project()
         project.is_active = True
 
-        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=project), \
-             patch("app.services.cache_service.CacheService", MagicMock()):
+        with (
+            patch(
+                "app.utils.permission_helpers.check_project_access_or_raise", return_value=project
+            ),
+            patch("app.services.cache_service.CacheService", MagicMock()),
+        ):
             delete_project(db=db, project_id=1, current_user=current_user)
 
         assert project.is_active is False
@@ -301,6 +321,7 @@ class TestDeleteProject:
 # ──────────────────────────────────────────────
 # Tests: read_project
 # ──────────────────────────────────────────────
+
 
 class TestReadProject:
 
@@ -334,9 +355,11 @@ class TestReadProject:
         db.query.return_value.options.return_value.filter.return_value.all.return_value = []
         db.query.return_value.options.return_value.filter.return_value.first.return_value = project
 
-        with patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=None), \
-             patch("app.api.v1.endpoints.projects.project_crud.ProjectResponse") as MockPR, \
-             patch("app.api.v1.endpoints.projects.project_crud.ProjectDetailResponse") as MockPD:
+        with (
+            patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=None),
+            patch("app.api.v1.endpoints.projects.project_crud.ProjectResponse") as MockPR,
+            patch("app.api.v1.endpoints.projects.project_crud.ProjectDetailResponse") as MockPD,
+        ):
             mock_pr = MagicMock()
             mock_pr.model_dump.return_value = {"id": 1}
             MockPR.model_validate.return_value = mock_pr

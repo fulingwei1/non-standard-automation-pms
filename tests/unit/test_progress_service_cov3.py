@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - progress_service"""
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.progress_service")
 
 from app.services.progress_service import (
-    progress_error_to_http,
-    apply_task_progress_update,
-    update_task_progress,
+    ProgressAutoService,
     aggregate_task_progress,
+    apply_task_progress_update,
     create_progress_log_entry,
     get_project_progress_summary,
-    ProgressAutoService,
+    progress_error_to_http,
+    update_task_progress,
 )
 
 
@@ -102,11 +103,11 @@ class TestUpdateTaskProgress:
         task = make_task(assignee_id=10)
         db.query.return_value.filter.return_value.first.return_value = task
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress", return_value={}):
-            result_task, agg = update_task_progress(
-                db, 1, 60, 10, run_aggregation=True
-            )
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress", return_value={}),
+        ):
+            result_task, agg = update_task_progress(db, 1, 60, 10, run_aggregation=True)
         assert result_task is task
 
     def test_creates_progress_log(self):
@@ -114,11 +115,16 @@ class TestUpdateTaskProgress:
         task = make_task(assignee_id=10)
         db.query.return_value.filter.return_value.first.return_value = task
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress", return_value={}), \
-             patch("app.services.progress_service.create_progress_log_entry") as mock_log:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress", return_value={}),
+            patch("app.services.progress_service.create_progress_log_entry") as mock_log,
+        ):
             update_task_progress(
-                db, 1, 60, 10,
+                db,
+                1,
+                60,
+                10,
                 progress_note="正在进行",
                 create_progress_log=True,
                 run_aggregation=False,
@@ -162,6 +168,7 @@ class TestProgressAutoService:
         svc = ProgressAutoService(db)
 
         from app.schemas.progress import TaskForecastItem
+
         forecast_item = MagicMock(spec=TaskForecastItem)
         forecast_item.task_id = 1
         forecast_item.delay_days = 10
@@ -173,9 +180,7 @@ class TestProgressAutoService:
         task.status = "IN_PROGRESS"
         db.query.return_value.filter.return_value.all.return_value = [task]
 
-        result = svc.apply_forecast_to_tasks(
-            1, [forecast_item], auto_block=True, delay_threshold=3
-        )
+        result = svc.apply_forecast_to_tasks(1, [forecast_item], auto_block=True, delay_threshold=3)
         assert result["blocked"] == 1
 
     def test_apply_forecast_no_block_when_disabled(self):
@@ -183,6 +188,7 @@ class TestProgressAutoService:
         svc = ProgressAutoService(db)
 
         from app.schemas.progress import TaskForecastItem
+
         forecast_item = MagicMock(spec=TaskForecastItem)
         forecast_item.task_id = 1
         forecast_item.delay_days = 10

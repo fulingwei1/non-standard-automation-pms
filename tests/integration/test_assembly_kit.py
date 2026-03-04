@@ -54,6 +54,7 @@ def _create_test_project(db_session: Session, **overrides) -> Project:
     db_session.flush()
     return project
 
+
 # 测试数据准备
 @pytest.fixture
 def sample_project_data():
@@ -66,7 +67,7 @@ def sample_project_data():
         "contract_amount": 500000,
         "planned_start_date": date.today() + timedelta(days=7),
         "planned_end_date": date.today() + timedelta(days=60),
-        "customer_id": 1
+        "customer_id": 1,
     }
 
 
@@ -82,16 +83,16 @@ def sample_bom_data():
                 "material_code": f"MAT001-{uuid.uuid4().hex[:8]}",
                 "material_name": "测试物料1",
                 "quantity": 10,
-                "required_date": date.today() + timedelta(days=14)
+                "required_date": date.today() + timedelta(days=14),
             },
             {
                 "material_id": 2,
                 "material_code": f"MAT002-{uuid.uuid4().hex[:8]}",
                 "material_name": "测试物料2",
                 "quantity": 5,
-                "required_date": date.today() + timedelta(days=21)
-            }
-        ]
+                "required_date": date.today() + timedelta(days=21),
+            },
+        ],
     }
 
 
@@ -140,7 +141,7 @@ class TestAssemblyAttrRecommender:
         # 测试关键词匹配
         rec = AssemblyAttrRecommender._match_from_keywords(material)
         assert rec is not None
-        assert rec.stage_code in ['FRAME', 'MECH', 'ELECTRIC', 'WIRING', 'DEBUG', 'COSMETIC']
+        assert rec.stage_code in ["FRAME", "MECH", "ELECTRIC", "WIRING", "DEBUG", "COSMETIC"]
         assert rec.confidence == 70.0
 
     def test_supplier_inference(self, db_session: Session):
@@ -152,7 +153,7 @@ class TestAssemblyAttrRecommender:
             supplier = Supplier(
                 supplier_code=_unique_code("SUP"),
                 supplier_name="测试供应商",
-                supplier_type="MACHINING"
+                supplier_type="MACHINING",
             )
             db_session.add(supplier)
             db_session.flush()
@@ -161,7 +162,7 @@ class TestAssemblyAttrRecommender:
                 material_code=_unique_code("MAT"),
                 material_name="机加件",
                 # category_id is optional - don't set to avoid FK constraint
-                default_supplier_id=supplier.id
+                default_supplier_id=supplier.id,
             )
             db_session.add(material)
             db_session.flush()
@@ -171,7 +172,7 @@ class TestAssemblyAttrRecommender:
 
         rec = AssemblyAttrRecommender._infer_from_supplier(db_session, material)
         assert rec is not None
-        assert rec.stage_code == 'MECH'
+        assert rec.stage_code == "MECH"
         assert rec.confidence == 60.0
 
 
@@ -208,10 +209,10 @@ class TestSchedulingSuggestionService:
         )
 
         assert score_result is not None
-        assert 'total_score' in score_result
-        assert 'factors' in score_result
-        assert score_result['total_score'] > 0
-        assert len(score_result['factors']) == 5  # 5个评分因子
+        assert "total_score" in score_result
+        assert "factors" in score_result
+        assert score_result["total_score"] > 0
+        assert len(score_result["factors"]) == 5  # 5个评分因子
 
     def test_deadline_pressure_calculation(self):
         """测试交期压力分计算"""
@@ -223,7 +224,7 @@ class TestSchedulingSuggestionService:
         project_urgent = Project(
             project_code=f"PJ_URGENT-{uuid.uuid4().hex[:8]}",
             project_name="紧急项目",
-            planned_end_date=date.today() + timedelta(days=5)
+            planned_end_date=date.today() + timedelta(days=5),
         )
         score = SchedulingSuggestionService._calculate_deadline_pressure(project_urgent)
         assert score == 25.0
@@ -232,7 +233,7 @@ class TestSchedulingSuggestionService:
         project_normal = Project(
             project_code=f"PJ_NORMAL-{uuid.uuid4().hex[:8]}",
             project_name="正常项目",
-            planned_end_date=date.today() + timedelta(days=20)
+            planned_end_date=date.today() + timedelta(days=20),
         )
         score = SchedulingSuggestionService._calculate_deadline_pressure(project_normal)
         assert score == 15.0
@@ -246,10 +247,7 @@ class TestResourceAllocationService:
         from app.models.production import Workshop, Workstation
         from app.services.resource_allocation_service import ResourceAllocationService
 
-        workshop = Workshop(
-            workshop_code=_unique_code("WS"),
-            workshop_name="测试车间"
-        )
+        workshop = Workshop(workshop_code=_unique_code("WS"), workshop_name="测试车间")
         db_session.add(workshop)
         db_session.flush()
 
@@ -258,16 +256,13 @@ class TestResourceAllocationService:
             workstation_name="测试工位",
             workshop_id=workshop.id,
             status="IDLE",
-            is_active=True
+            is_active=True,
         )
         db_session.add(workstation)
         db_session.flush()
 
         is_available, reason = ResourceAllocationService.check_workstation_availability(
-            db_session,
-            workstation.id,
-            date.today(),
-            date.today() + timedelta(days=7)
+            db_session, workstation.id, date.today(), date.today() + timedelta(days=7)
         )
 
         assert is_available is True
@@ -278,10 +273,7 @@ class TestResourceAllocationService:
         from app.models.production import Worker, Workshop
         from app.services.resource_allocation_service import ResourceAllocationService
 
-        workshop = Workshop(
-            workshop_code=_unique_code("WS"),
-            workshop_name="测试车间"
-        )
+        workshop = Workshop(workshop_code=_unique_code("WS"), workshop_name="测试车间")
         db_session.add(workshop)
         db_session.flush()
 
@@ -290,7 +282,7 @@ class TestResourceAllocationService:
             worker_name="测试工人",
             workshop_id=workshop.id,
             status="ACTIVE",
-            is_active=True
+            is_active=True,
         )
         db_session.add(worker)
         db_session.flush()
@@ -300,7 +292,7 @@ class TestResourceAllocationService:
             worker.id,
             date.today(),
             date.today() + timedelta(days=7),
-            required_hours=8.0
+            required_hours=8.0,
         )
 
         assert is_available is True or is_available is False  # 取决于是否有其他分配
@@ -326,9 +318,7 @@ class TestAssemblyKitOptimizer:
         db_session.add(readiness)
         db_session.flush()
 
-        optimized_date = AssemblyKitOptimizer.optimize_estimated_ready_date(
-            db_session, readiness
-        )
+        optimized_date = AssemblyKitOptimizer.optimize_estimated_ready_date(db_session, readiness)
 
         # 优化日期应该存在（可能等于原日期或更早）
         assert optimized_date is None or optimized_date <= readiness.estimated_ready_date
@@ -348,9 +338,7 @@ class TestAssemblyKitOptimizer:
         db_session.add(readiness)
         db_session.flush()
 
-        suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(
-            db_session, readiness
-        )
+        suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db_session, readiness)
 
         assert isinstance(suggestions, list)
         # 如果没有阻塞物料，建议列表应该为空

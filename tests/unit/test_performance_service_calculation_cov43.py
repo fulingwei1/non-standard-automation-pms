@@ -8,12 +8,12 @@ pytest.importorskip("app.services.performance_service.calculation")
 
 from unittest.mock import MagicMock, patch
 
+from app.models.performance import EvaluatorTypeEnum
 from app.services.performance_service.calculation import (
     calculate_final_score,
     calculate_quarterly_score,
     get_score_level,
 )
-from app.models.performance import EvaluatorTypeEnum
 
 
 def make_db():
@@ -21,15 +21,18 @@ def make_db():
 
 
 # ── 1. get_score_level 各档次 ─────────────────────────────────────────────────
-@pytest.mark.parametrize("score, expected_level", [
-    (96, "A+"),
-    (92, "A"),
-    (87, "B+"),
-    (82, "B"),
-    (77, "C+"),
-    (71, "C"),
-    (65, "D"),
-])
+@pytest.mark.parametrize(
+    "score, expected_level",
+    [
+        (96, "A+"),
+        (92, "A"),
+        (87, "B+"),
+        (82, "B"),
+        (77, "C+"),
+        (71, "C"),
+        (65, "D"),
+    ],
+)
 def test_get_score_level(score, expected_level):
     assert get_score_level(score) == expected_level
 

@@ -12,6 +12,7 @@ try:
         get_read_records,
         query_content_by_type,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -71,14 +72,20 @@ class TestQueryContentByType:
     def test_uses_max_count_from_config(self):
         config = {"NEWS": {"enabled": True, "max_count": 3}}
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [1, 2, 3]
+        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            1,
+            2,
+            3,
+        ]
         result = query_content_by_type(mock_query, "NEWS", config)
         assert len(result) == 3
 
     def test_default_max_count_when_no_config(self):
         config = {}
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = query_content_by_type(mock_query, "NEWS", config)
         assert result == []
 

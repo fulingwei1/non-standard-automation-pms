@@ -32,7 +32,9 @@ def _ensure_tables(db: Session):
 
     try:
         # 创建验收记录表
-        db.execute(text("""
+        db.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS acceptance_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL COMMENT '项目 ID',
@@ -53,10 +55,14 @@ def _ensure_tables(db: Session):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """
+            )
+        )
 
         # 创建验收检查清单表
-        db.execute(text("""
+        db.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS acceptance_checklist (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 acceptance_id INTEGER NOT NULL COMMENT '验收 ID',
@@ -71,10 +77,14 @@ def _ensure_tables(db: Session):
                 checked_at TIMESTAMP COMMENT '检查时间',
                 FOREIGN KEY (acceptance_id) REFERENCES acceptance_records(id)
             )
-        """))
+        """
+            )
+        )
 
         # 创建验收问题表
-        db.execute(text("""
+        db.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS acceptance_issues (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 acceptance_id INTEGER NOT NULL COMMENT '验收 ID',
@@ -90,14 +100,32 @@ def _ensure_tables(db: Session):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (acceptance_id) REFERENCES acceptance_records(id)
             )
-        """))
+        """
+            )
+        )
 
         # 创建索引
-        db.execute(text("CREATE INDEX IF NOT EXISTS idx_acceptance_project ON acceptance_records(project_id)"))
-        db.execute(text("CREATE INDEX IF NOT EXISTS idx_acceptance_status ON acceptance_records(status)"))
-        db.execute(text("CREATE INDEX IF NOT EXISTS idx_checklist_acceptance ON acceptance_checklist(acceptance_id)"))
-        db.execute(text("CREATE INDEX IF NOT EXISTS idx_issues_acceptance ON acceptance_issues(acceptance_id)"))
-        db.execute(text("CREATE INDEX IF NOT EXISTS idx_issues_status ON acceptance_issues(status)"))
+        db.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_acceptance_project ON acceptance_records(project_id)"
+            )
+        )
+        db.execute(
+            text("CREATE INDEX IF NOT EXISTS idx_acceptance_status ON acceptance_records(status)")
+        )
+        db.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_checklist_acceptance ON acceptance_checklist(acceptance_id)"
+            )
+        )
+        db.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_issues_acceptance ON acceptance_issues(acceptance_id)"
+            )
+        )
+        db.execute(
+            text("CREATE INDEX IF NOT EXISTS idx_issues_status ON acceptance_issues(status)")
+        )
 
         db.commit()
         _tables_created = True
@@ -144,7 +172,8 @@ def list_acceptance_records(
 
     # 获取数据
     offset = (page - 1) * page_size
-    sql = text(f"""
+    sql = text(
+        f"""
         SELECT 
             ar.id, ar.project_id, ar.acceptance_type, ar.acceptance_code,
             ar.title, ar.status, ar.scheduled_date, ar.actual_date,
@@ -157,7 +186,8 @@ def list_acceptance_records(
         WHERE {where_clause}
         ORDER BY ar.created_at DESC
         LIMIT :limit OFFSET :offset
-    """)
+    """
+    )
 
     params["limit"] = page_size
     params["offset"] = offset
@@ -165,28 +195,30 @@ def list_acceptance_records(
 
     items = []
     for r in rows:
-        items.append({
-            "id": r.id,
-            "project_id": r.project_id,
-            "project_name": r.project_name,
-            "project_code": r.project_code,
-            "acceptance_type": r.acceptance_type,
-            "acceptance_code": r.acceptance_code,
-            "title": r.title,
-            "status": r.status,
-            "scheduled_date": str(r.scheduled_date) if r.scheduled_date else None,
-            "actual_date": str(r.actual_date) if r.actual_date else None,
-            "location": r.location,
-            "customer_representative": r.customer_representative,
-            "our_representative": r.our_representative,
-            "overall_result": r.overall_result,
-            "notes": r.notes,
-            "sign_date": str(r.sign_date) if r.sign_date else None,
-            "sign_by": r.sign_by,
-            "created_by": r.created_by,
-            "created_at": str(r.created_at) if r.created_at else None,
-            "updated_at": str(r.updated_at) if r.updated_at else None,
-        })
+        items.append(
+            {
+                "id": r.id,
+                "project_id": r.project_id,
+                "project_name": r.project_name,
+                "project_code": r.project_code,
+                "acceptance_type": r.acceptance_type,
+                "acceptance_code": r.acceptance_code,
+                "title": r.title,
+                "status": r.status,
+                "scheduled_date": str(r.scheduled_date) if r.scheduled_date else None,
+                "actual_date": str(r.actual_date) if r.actual_date else None,
+                "location": r.location,
+                "customer_representative": r.customer_representative,
+                "our_representative": r.our_representative,
+                "overall_result": r.overall_result,
+                "notes": r.notes,
+                "sign_date": str(r.sign_date) if r.sign_date else None,
+                "sign_by": r.sign_by,
+                "created_by": r.created_by,
+                "created_at": str(r.created_at) if r.created_at else None,
+                "updated_at": str(r.updated_at) if r.updated_at else None,
+            }
+        )
 
     return {
         "total": total,
@@ -207,7 +239,8 @@ def get_acceptance_record(
     _ensure_tables(db)
 
     # 获取主记录
-    sql = text("""
+    sql = text(
+        """
         SELECT 
             ar.id, ar.project_id, ar.acceptance_type, ar.acceptance_code,
             ar.title, ar.status, ar.scheduled_date, ar.actual_date,
@@ -218,21 +251,24 @@ def get_acceptance_record(
         FROM acceptance_records ar
         LEFT JOIN projects p ON ar.project_id = p.id
         WHERE ar.id = :id
-    """)
+    """
+    )
     row = db.execute(sql, {"id": id}).fetchone()
 
     if not row:
         return {"error": "验收记录不存在"}
 
     # 获取检查清单
-    checklist_sql = text("""
+    checklist_sql = text(
+        """
         SELECT id, acceptance_id, item_no, category, check_item, expected_result,
                actual_result, status, remarks, checked_by, 
                strftime('%Y-%m-%d %H:%M:%S', checked_at) as checked_at
         FROM acceptance_checklist
         WHERE acceptance_id = :acceptance_id
         ORDER BY item_no
-    """)
+    """
+    )
     checklist_rows = db.execute(checklist_sql, {"acceptance_id": id}).fetchall()
     checklist = [
         {
@@ -252,7 +288,8 @@ def get_acceptance_record(
     ]
 
     # 获取问题列表
-    issues_sql = text("""
+    issues_sql = text(
+        """
         SELECT id, acceptance_id, issue_no, severity, description, root_cause,
                solution, status, responsible, 
                strftime('%Y-%m-%d', due_date) as due_date,
@@ -263,7 +300,8 @@ def get_acceptance_record(
         ORDER BY 
             CASE severity WHEN 'critical' THEN 1 WHEN 'major' THEN 2 WHEN 'minor' THEN 3 END,
             issue_no
-    """)
+    """
+    )
     issues_rows = db.execute(issues_sql, {"acceptance_id": id}).fetchall()
     issues = [
         {
@@ -351,14 +389,21 @@ def create_acceptance_record(
     project_code = project.project_code if project else "PRJ"
 
     # 生成编号：PRJ-FAT-001
-    count_sql = text("""
+    count_sql = text(
+        """
         SELECT COUNT(*) as cnt FROM acceptance_records 
         WHERE project_id = :project_id AND acceptance_type = :acceptance_type
-    """)
-    count = db.execute(count_sql, {"project_id": project_id, "acceptance_type": acceptance_type}).fetchone().cnt
+    """
+    )
+    count = (
+        db.execute(count_sql, {"project_id": project_id, "acceptance_type": acceptance_type})
+        .fetchone()
+        .cnt
+    )
     acceptance_code = f"{project_code}-{acceptance_type}-{str(count + 1).zfill(3)}"
 
-    insert_sql = text("""
+    insert_sql = text(
+        """
         INSERT INTO acceptance_records (
             project_id, acceptance_type, acceptance_code, title, status,
             scheduled_date, location, customer_representative, our_representative,
@@ -368,21 +413,25 @@ def create_acceptance_record(
             :scheduled_date, :location, :customer_representative, :our_representative,
             :notes, :created_by, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         )
-    """)
+    """
+    )
 
-    db.execute(insert_sql, {
-        "project_id": project_id,
-        "acceptance_type": acceptance_type,
-        "acceptance_code": acceptance_code,
-        "title": data.get("title"),
-        "status": data.get("status", "draft"),
-        "scheduled_date": data.get("scheduled_date"),
-        "location": data.get("location"),
-        "customer_representative": data.get("customer_representative"),
-        "our_representative": data.get("our_representative"),
-        "notes": data.get("notes"),
-        "created_by": current_user.id,
-    })
+    db.execute(
+        insert_sql,
+        {
+            "project_id": project_id,
+            "acceptance_type": acceptance_type,
+            "acceptance_code": acceptance_code,
+            "title": data.get("title"),
+            "status": data.get("status", "draft"),
+            "scheduled_date": data.get("scheduled_date"),
+            "location": data.get("location"),
+            "customer_representative": data.get("customer_representative"),
+            "our_representative": data.get("our_representative"),
+            "notes": data.get("notes"),
+            "created_by": current_user.id,
+        },
+    )
 
     db.commit()
 
@@ -414,9 +463,17 @@ def update_acceptance_record(
     params = {"id": id}
 
     allowed_fields = [
-        "title", "status", "scheduled_date", "actual_date", "location",
-        "customer_representative", "our_representative", "overall_result",
-        "notes", "sign_date", "sign_by"
+        "title",
+        "status",
+        "scheduled_date",
+        "actual_date",
+        "location",
+        "customer_representative",
+        "our_representative",
+        "overall_result",
+        "notes",
+        "sign_date",
+        "sign_by",
     ]
 
     for field in allowed_fields:
@@ -429,11 +486,13 @@ def update_acceptance_record(
 
     update_fields.append("updated_at = CURRENT_TIMESTAMP")
 
-    update_sql = text(f"""
+    update_sql = text(
+        f"""
         UPDATE acceptance_records 
         SET {", ".join(update_fields)}
         WHERE id = :id
-    """)
+    """
+    )
 
     db.execute(update_sql, params)
     db.commit()
@@ -464,38 +523,49 @@ def add_checklist_items(
     inserted_count = 0
     for item in items:
         # 检查是否已存在（根据 item_no）
-        existing_sql = text("""
+        existing_sql = text(
+            """
             SELECT id FROM acceptance_checklist 
             WHERE acceptance_id = :acceptance_id AND item_no = :item_no
-        """)
-        existing = db.execute(existing_sql, {
-            "acceptance_id": id,
-            "item_no": item.get("item_no"),
-        }).fetchone()
+        """
+        )
+        existing = db.execute(
+            existing_sql,
+            {
+                "acceptance_id": id,
+                "item_no": item.get("item_no"),
+            },
+        ).fetchone()
 
         if existing:
             # 更新现有项
-            update_sql = text("""
+            update_sql = text(
+                """
                 UPDATE acceptance_checklist 
                 SET category = :category, check_item = :check_item,
                     expected_result = :expected_result, actual_result = :actual_result,
                     status = :status, remarks = :remarks,
                     checked_by = :checked_by, checked_at = CURRENT_TIMESTAMP
                 WHERE id = :id
-            """)
-            db.execute(update_sql, {
-                "id": existing.id,
-                "category": item.get("category"),
-                "check_item": item.get("check_item"),
-                "expected_result": item.get("expected_result"),
-                "actual_result": item.get("actual_result"),
-                "status": item.get("status", "pending"),
-                "remarks": item.get("remarks"),
-                "checked_by": current_user.real_name or current_user.username,
-            })
+            """
+            )
+            db.execute(
+                update_sql,
+                {
+                    "id": existing.id,
+                    "category": item.get("category"),
+                    "check_item": item.get("check_item"),
+                    "expected_result": item.get("expected_result"),
+                    "actual_result": item.get("actual_result"),
+                    "status": item.get("status", "pending"),
+                    "remarks": item.get("remarks"),
+                    "checked_by": current_user.real_name or current_user.username,
+                },
+            )
         else:
             # 插入新项
-            insert_sql = text("""
+            insert_sql = text(
+                """
                 INSERT INTO acceptance_checklist (
                     acceptance_id, item_no, category, check_item, expected_result,
                     actual_result, status, remarks, checked_by, checked_at
@@ -503,18 +573,22 @@ def add_checklist_items(
                     :acceptance_id, :item_no, :category, :check_item, :expected_result,
                     :actual_result, :status, :remarks, :checked_by, CURRENT_TIMESTAMP
                 )
-            """)
-            db.execute(insert_sql, {
-                "acceptance_id": id,
-                "item_no": item.get("item_no"),
-                "category": item.get("category"),
-                "check_item": item.get("check_item"),
-                "expected_result": item.get("expected_result"),
-                "actual_result": item.get("actual_result"),
-                "status": item.get("status", "pending"),
-                "remarks": item.get("remarks"),
-                "checked_by": current_user.real_name or current_user.username,
-            })
+            """
+            )
+            db.execute(
+                insert_sql,
+                {
+                    "acceptance_id": id,
+                    "item_no": item.get("item_no"),
+                    "category": item.get("category"),
+                    "check_item": item.get("check_item"),
+                    "expected_result": item.get("expected_result"),
+                    "actual_result": item.get("actual_result"),
+                    "status": item.get("status", "pending"),
+                    "remarks": item.get("remarks"),
+                    "checked_by": current_user.real_name or current_user.username,
+                },
+            )
             inserted_count += 1
 
     db.commit()
@@ -540,7 +614,8 @@ def sign_off_acceptance(
         return {"error": "验收记录不存在"}
 
     # 更新签收信息
-    update_sql = text("""
+    update_sql = text(
+        """
         UPDATE acceptance_records 
         SET status = 'signed', 
             sign_date = :sign_date,
@@ -549,15 +624,19 @@ def sign_off_acceptance(
             actual_date = :actual_date,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = :id
-    """)
+    """
+    )
 
-    db.execute(update_sql, {
-        "id": id,
-        "sign_date": data.get("sign_date", datetime.now().strftime("%Y-%m-%d")),
-        "sign_by": data.get("sign_by", current_user.real_name or current_user.username),
-        "overall_result": data.get("overall_result", "pass"),
-        "actual_date": data.get("actual_date", datetime.now().strftime("%Y-%m-%d")),
-    })
+    db.execute(
+        update_sql,
+        {
+            "id": id,
+            "sign_date": data.get("sign_date", datetime.now().strftime("%Y-%m-%d")),
+            "sign_by": data.get("sign_by", current_user.real_name or current_user.username),
+            "overall_result": data.get("overall_result", "pass"),
+            "actual_date": data.get("actual_date", datetime.now().strftime("%Y-%m-%d")),
+        },
+    )
 
     db.commit()
 

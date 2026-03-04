@@ -15,12 +15,7 @@ class CandidateManager:
     """候选人管理器"""
 
     @classmethod
-    def accept_candidate(
-        cls,
-        db: Session,
-        matching_log_id: int,
-        acceptor_id: int
-    ) -> bool:
+    def accept_candidate(cls, db: Session, matching_log_id: int, acceptor_id: int) -> bool:
         """采纳候选人"""
         log = db.query(HrAIMatchingLog).filter(HrAIMatchingLog.id == matching_log_id).first()
         if not log:
@@ -31,25 +26,22 @@ class CandidateManager:
         log.acceptor_id = acceptor_id
 
         # 更新需求的已填充人数
-        staffing_need = db.query(MesProjectStaffingNeed).filter(
-            MesProjectStaffingNeed.id == log.staffing_need_id
-        ).first()
+        staffing_need = (
+            db.query(MesProjectStaffingNeed)
+            .filter(MesProjectStaffingNeed.id == log.staffing_need_id)
+            .first()
+        )
 
         if staffing_need:
             staffing_need.filled_count = (staffing_need.filled_count or 0) + 1
             if staffing_need.filled_count >= staffing_need.headcount:
-                staffing_need.status = 'FILLED'
+                staffing_need.status = "FILLED"
 
         db.commit()
         return True
 
     @classmethod
-    def reject_candidate(
-        cls,
-        db: Session,
-        matching_log_id: int,
-        reject_reason: str
-    ) -> bool:
+    def reject_candidate(cls, db: Session, matching_log_id: int, reject_reason: str) -> bool:
         """拒绝候选人"""
         log = db.query(HrAIMatchingLog).filter(HrAIMatchingLog.id == matching_log_id).first()
         if not log:
@@ -67,7 +59,7 @@ class CandidateManager:
         project_id: Optional[int] = None,
         staffing_need_id: Optional[int] = None,
         employee_id: Optional[int] = None,
-        limit: int = 50
+        limit: int = 50,
     ) -> List[HrAIMatchingLog]:
         """获取匹配历史"""
         query = db.query(HrAIMatchingLog)

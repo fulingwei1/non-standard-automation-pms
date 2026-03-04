@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for sales/quotes_service.py"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestQuotesService:
     def _make_service(self):
         from app.services.sales.quotes_service import QuotesService
+
         db = MagicMock()
         return QuotesService(db), db
 

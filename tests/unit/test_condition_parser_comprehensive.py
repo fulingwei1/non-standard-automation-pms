@@ -15,10 +15,10 @@ ConditionEvaluator 综合单元测试
 - _parse_value: 解析值字符串
 """
 
-from unittest.mock import MagicMock, patch
+import json
 from datetime import date, datetime
 from decimal import Decimal
-import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -76,12 +76,9 @@ class TestEvaluate:
 
         evaluator = ConditionEvaluator()
 
-        condition = json.dumps({
-            "operator": "AND",
-            "items": [
-                {"field": "value", "op": ">", "value": 10}
-            ]
-        })
+        condition = json.dumps(
+            {"operator": "AND", "items": [{"field": "value", "op": ">", "value": 10}]}
+        )
 
         result = evaluator.evaluate(condition, {"value": 20})
 
@@ -211,8 +208,8 @@ class TestEvaluateSimpleConditions:
             "operator": "AND",
             "items": [
                 {"field": "a", "op": ">", "value": 5},
-                {"field": "b", "op": "<", "value": 10}
-            ]
+                {"field": "b", "op": "<", "value": 10},
+            ],
         }
 
         result = evaluator._evaluate_simple_conditions(conditions, {"a": 10, "b": 5})
@@ -229,8 +226,8 @@ class TestEvaluateSimpleConditions:
             "operator": "OR",
             "items": [
                 {"field": "a", "op": ">", "value": 100},
-                {"field": "b", "op": "<", "value": 10}
-            ]
+                {"field": "b", "op": "<", "value": 10},
+            ],
         }
 
         result = evaluator._evaluate_simple_conditions(conditions, {"a": 50, "b": 5})
@@ -247,8 +244,8 @@ class TestEvaluateSimpleConditions:
             "operator": "AND",
             "items": [
                 {"field": "a", "op": ">", "value": 5},
-                {"field": "b", "op": ">", "value": 100}
-            ]
+                {"field": "b", "op": ">", "value": 100},
+            ],
         }
 
         result = evaluator._evaluate_simple_conditions(conditions, {"a": 10, "b": 5})
@@ -486,8 +483,7 @@ class TestEvaluateSqlLike:
         evaluator = ConditionEvaluator()
 
         result = evaluator._evaluate_sql_like(
-            "amount > 100 AND status == 'ACTIVE'",
-            {"amount": 150, "status": "ACTIVE"}
+            "amount > 100 AND status == 'ACTIVE'", {"amount": 150, "status": "ACTIVE"}
         )
 
         assert result is True

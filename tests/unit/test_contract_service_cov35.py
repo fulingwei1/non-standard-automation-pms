@@ -7,7 +7,9 @@ import pytest
 try:
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
+
     from app.services.sales.contract_service import ContractService, ProjectPaymentPlan
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -80,8 +82,10 @@ class TestContractService:
 
         db = self._make_db(contract, customer)
         # mock Project 的 id
-        with patch("app.services.sales.contract_service.Project") as MockProject, \
-             patch("app.services.sales.contract_service.ProjectService") as MockPS:
+        with (
+            patch("app.services.sales.contract_service.Project") as MockProject,
+            patch("app.services.sales.contract_service.ProjectService") as MockPS,
+        ):
             mock_proj_instance = MagicMock()
             mock_proj_instance.id = 100
             mock_proj_instance.amount = 100000
@@ -110,10 +114,12 @@ class TestContractService:
         customer.id = 20
 
         db = self._make_db(contract, customer)
-        with patch("app.services.sales.contract_service.Project") as MockProject, \
-             patch("app.services.sales.contract_service.ProjectMilestone") as MockMilestone, \
-             patch("app.services.sales.contract_service.ProjectPaymentPlan") as MockPPP, \
-             patch("app.services.sales.contract_service.ProjectService") as MockPS:
+        with (
+            patch("app.services.sales.contract_service.Project") as MockProject,
+            patch("app.services.sales.contract_service.ProjectMilestone") as MockMilestone,
+            patch("app.services.sales.contract_service.ProjectPaymentPlan") as MockPPP,
+            patch("app.services.sales.contract_service.ProjectService") as MockPS,
+        ):
             mock_proj = MagicMock()
             mock_proj.id = 200
             mock_proj.amount = 200000

@@ -1,34 +1,35 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/progress.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.progress import (
-    WbsTemplateCreate,
-    WbsTemplateUpdate,
-    WbsTemplateResponse,
-    WbsTemplateTaskCreate,
-    WbsTemplateTaskUpdate,
-    TaskCreate,
-    TaskUpdate,
-    TaskProgressUpdate,
-    TaskResponse,
+    BaselineCreate,
+    BatchTaskAssigneeUpdate,
+    BatchTaskProgressUpdate,
+    DelayReasonItem,
+    DelayReasonsResponse,
+    GanttDataResponse,
+    GanttTaskItem,
     InitWbsRequest,
+    ProgressBoardColumn,
     ProgressReportCreate,
     ProgressReportUpdate,
     ProgressSummaryResponse,
-    GanttTaskItem,
-    GanttDataResponse,
-    TaskDependencyCreate,
     TaskAssigneeUpdate,
-    BatchTaskProgressUpdate,
-    BatchTaskAssigneeUpdate,
-    BaselineCreate,
-    DelayReasonItem,
-    DelayReasonsResponse,
-    ProgressBoardColumn,
+    TaskCreate,
+    TaskDependencyCreate,
+    TaskProgressUpdate,
+    TaskResponse,
+    TaskUpdate,
+    WbsTemplateCreate,
+    WbsTemplateResponse,
+    WbsTemplateTaskCreate,
+    WbsTemplateTaskUpdate,
+    WbsTemplateUpdate,
 )
 
 
@@ -136,7 +137,8 @@ class TestInitWbsRequest:
 class TestProgressReportCreate:
     def test_valid(self):
         r = ProgressReportCreate(
-            report_type="daily", report_date=date(2024, 6, 1),
+            report_type="daily",
+            report_date=date(2024, 6, 1),
             content="今日完成机械设计评审",
         )
         assert r.issues is None
@@ -149,10 +151,13 @@ class TestProgressReportCreate:
 class TestProgressSummaryResponse:
     def test_valid(self):
         s = ProgressSummaryResponse(
-            project_id=1, project_name="P1",
+            project_id=1,
+            project_name="P1",
             overall_progress=50.0,
-            task_count=20, completed_count=10,
-            in_progress_count=8, blocked_count=2,
+            task_count=20,
+            completed_count=10,
+            in_progress_count=8,
+            blocked_count=2,
             overdue_count=1,
         )
         assert s.stage_progress == {}
@@ -165,9 +170,12 @@ class TestProgressSummaryResponse:
 class TestGanttTaskItem:
     def test_valid(self):
         g = GanttTaskItem(
-            id=1, name="任务1",
-            start=date(2024, 1, 1), end=date(2024, 2, 1),
-            progress=50, status="IN_PROGRESS",
+            id=1,
+            name="任务1",
+            start=date(2024, 1, 1),
+            end=date(2024, 2, 1),
+            progress=50,
+            status="IN_PROGRESS",
         )
         assert g.dependencies == []
 

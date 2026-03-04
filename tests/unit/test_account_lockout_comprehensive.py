@@ -2,7 +2,7 @@
 """AccountLockoutService 综合测试"""
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -264,7 +264,9 @@ class TestGetLoginHistory:
         attempt.failure_reason = None
         attempt.locked = False
         attempt.created_at = datetime(2024, 1, 1)
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [attempt]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            attempt
+        ]
         result = AccountLockoutService.get_login_history("user1", db=mock_db)
         assert len(result) == 1
         assert result[0]["username"] == "user1"

@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.pdf_export_service import PDFExportService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

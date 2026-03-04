@@ -12,10 +12,12 @@ def make_adapter():
     user = MagicMock()
     user.id = 1
     from app.services.dashboard_adapters.strategy import StrategyDashboardAdapter
+
     return StrategyDashboardAdapter(db, user), db
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_module_id():
     adapter, _ = make_adapter()

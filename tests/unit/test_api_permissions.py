@@ -18,7 +18,7 @@ class TestPermissionAPI:
     def test_permissions(self, db: Session, test_user: User) -> list:
         """创建测试权限"""
         permissions = []
-        
+
         # 系统级权限
         perm1 = ApiPermission(
             tenant_id=None,  # 系统级
@@ -30,7 +30,7 @@ class TestPermissionAPI:
             is_active=True,
             is_system=True,
         )
-        
+
         # 租户级权限
         perm2 = ApiPermission(
             tenant_id=test_user.tenant_id,
@@ -42,7 +42,7 @@ class TestPermissionAPI:
             is_active=True,
             is_system=False,
         )
-        
+
         perm3 = ApiPermission(
             tenant_id=test_user.tenant_id,
             perm_code="project:delete",
@@ -53,10 +53,10 @@ class TestPermissionAPI:
             is_active=True,
             is_system=False,
         )
-        
+
         db.add_all([perm1, perm2, perm3])
         db.commit()
-        
+
         permissions = [perm1, perm2, perm3]
         return permissions
 
@@ -74,11 +74,11 @@ class TestPermissionAPI:
         )
         db.add(role)
         db.commit()
-        
+
         # 分配权限
         for perm in test_permissions:
             db.add(RoleApiPermission(role_id=role.id, permission_id=perm.id))
-        
+
         db.commit()
         return role
 
@@ -91,7 +91,7 @@ class TestPermissionAPI:
     ):
         """测试获取权限列表 - 成功"""
         response = client.get("/api/v1/permissions/", headers=auth_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
@@ -103,14 +103,12 @@ class TestPermissionAPI:
         self, client: TestClient, auth_headers: dict, test_permissions: list
     ):
         """测试权限列表 - 按模块筛选"""
-        response = client.get(
-            "/api/v1/permissions/?module=project", headers=auth_headers
-        )
-        
+        response = client.get("/api/v1/permissions/?module=project", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         items = data["data"]["items"]
-        
+
         # 所有返回的权限模块都应该是 project
         for item in items:
             if item["module"]:
@@ -120,14 +118,12 @@ class TestPermissionAPI:
         self, client: TestClient, auth_headers: dict, test_permissions: list
     ):
         """测试权限列表 - 关键词搜索"""
-        response = client.get(
-            "/api/v1/permissions/?keyword=创建", headers=auth_headers
-        )
-        
+        response = client.get("/api/v1/permissions/?keyword=创建", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         items = data["data"]["items"]
-        
+
         # 至少应该找到包含"创建"的权限
         assert any("创建" in item["permission_name"] for item in items)
 
@@ -135,10 +131,8 @@ class TestPermissionAPI:
         self, client: TestClient, auth_headers: dict, test_permissions: list
     ):
         """测试权限列表 - 分页"""
-        response = client.get(
-            "/api/v1/permissions/?page=1&page_size=2", headers=auth_headers
-        )
-        
+        response = client.get("/api/v1/permissions/?page=1&page_size=2", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["page"] == 1
@@ -159,19 +153,15 @@ class TestPermissionAPI:
     ):
         """测试获取权限详情 - 成功"""
         perm = test_permissions[0]
-        response = client.get(
-            f"/api/v1/permissions/{perm.id}", headers=auth_headers
-        )
-        
+        response = client.get(f"/api/v1/permissions/{perm.id}", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
         assert data["data"]["id"] == perm.id
         assert data["data"]["permission_code"] == perm.perm_code
 
-    def test_get_permission_not_found(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_get_permission_not_found(self, client: TestClient, auth_headers: dict):
         """测试获取权限详情 - 不存在"""
         response = client.get("/api/v1/permissions/999999", headers=auth_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -180,9 +170,7 @@ class TestPermissionAPI:
     # 测试用例 3: 创建权限
     # ============================================================
 
-    def test_create_permission_success(
-        self, client: TestClient, auth_headers: dict, db: Session
-    ):
+    def test_create_permission_success(self, client: TestClient, auth_headers: dict, db: Session):
         """测试创建权限 - 成功"""
         response = client.post(
             "/api/v1/permissions/",
@@ -195,16 +183,14 @@ class TestPermissionAPI:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["code"] == 201
         assert data["data"]["permission_code"] == "test:execute"
-        
+
         # 验证数据库
-        perm = db.query(ApiPermission).filter(
-            ApiPermission.perm_code == "test:execute"
-        ).first()
+        perm = db.query(ApiPermission).filter(ApiPermission.perm_code == "test:execute").first()
         assert perm is not None
         assert perm.perm_name == "执行测试"
 
@@ -222,7 +208,7 @@ class TestPermissionAPI:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "已存在" in response.json()["detail"]
 
@@ -246,7 +232,7 @@ class TestPermissionAPI:
     ):
         """测试更新权限 - 成功"""
         perm = test_permissions[1]  # 使用非系统权限
-        
+
         response = client.put(
             f"/api/v1/permissions/{perm.id}",
             params={
@@ -255,11 +241,11 @@ class TestPermissionAPI:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
-        
+
         # 验证数据库
         db.refresh(perm)
         assert perm.perm_name == "更新后的名称"
@@ -270,19 +256,17 @@ class TestPermissionAPI:
     ):
         """测试更新权限 - 系统权限受保护"""
         perm = test_permissions[0]  # 系统权限
-        
+
         response = client.put(
             f"/api/v1/permissions/{perm.id}",
             params={"perm_name": "尝试修改"},
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "系统预置权限" in response.json()["detail"]
 
-    def test_update_permission_not_found(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_update_permission_not_found(self, client: TestClient, auth_headers: dict):
         """测试更新权限 - 不存在"""
         response = client.put(
             "/api/v1/permissions/999999",
@@ -310,17 +294,13 @@ class TestPermissionAPI:
         )
         db.add(temp_perm)
         db.commit()
-        
-        response = client.delete(
-            f"/api/v1/permissions/{temp_perm.id}", headers=auth_headers
-        )
-        
+
+        response = client.delete(f"/api/v1/permissions/{temp_perm.id}", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
-        
+
         # 验证已删除
-        deleted = db.query(ApiPermission).filter(
-            ApiPermission.id == temp_perm.id
-        ).first()
+        deleted = db.query(ApiPermission).filter(ApiPermission.id == temp_perm.id).first()
         assert deleted is None
 
     def test_delete_permission_system_protected(
@@ -328,11 +308,9 @@ class TestPermissionAPI:
     ):
         """测试删除权限 - 系统权限受保护"""
         perm = test_permissions[0]  # 系统权限
-        
-        response = client.delete(
-            f"/api/v1/permissions/{perm.id}", headers=auth_headers
-        )
-        
+
+        response = client.delete(f"/api/v1/permissions/{perm.id}", headers=auth_headers)
+
         assert response.status_code == status.HTTP_404_NOT_FOUND  # 系统权限不属于租户
 
     def test_delete_permission_in_use(
@@ -345,11 +323,11 @@ class TestPermissionAPI:
             .filter(RoleApiPermission.role_id == test_role_with_permissions.id)
             .first()
         )
-        
+
         response = client.delete(
             f"/api/v1/permissions/{role_perm.permission_id}", headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "被" in response.json()["detail"]
         assert "使用" in response.json()["detail"]
@@ -366,7 +344,7 @@ class TestPermissionAPI:
             f"/api/v1/permissions/roles/{test_role_with_permissions.id}",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
@@ -374,13 +352,9 @@ class TestPermissionAPI:
         assert "permissions" in data["data"]
         assert len(data["data"]["permissions"]) >= 3
 
-    def test_get_role_permissions_not_found(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_get_role_permissions_not_found(self, client: TestClient, auth_headers: dict):
         """测试获取角色权限 - 角色不存在"""
-        response = client.get(
-            "/api/v1/permissions/roles/999999", headers=auth_headers
-        )
+        response = client.get("/api/v1/permissions/roles/999999", headers=auth_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # ============================================================
@@ -398,22 +372,24 @@ class TestPermissionAPI:
         """测试分配角色权限 - 成功"""
         # 选择2个权限
         perm_ids = [test_permissions[1].id, test_permissions[2].id]
-        
+
         response = client.post(
             f"/api/v1/permissions/roles/{test_role_with_permissions.id}",
             params={"permission_ids": perm_ids},
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
         assert data["data"]["assigned_count"] == 2
-        
+
         # 验证数据库
-        role_perms = db.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == test_role_with_permissions.id
-        ).all()
+        role_perms = (
+            db.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == test_role_with_permissions.id)
+            .all()
+        )
         assert len(role_perms) == 2
 
     def test_assign_role_permissions_empty(
@@ -429,13 +405,15 @@ class TestPermissionAPI:
             params={"permission_ids": []},
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
-        
+
         # 验证权限已清空
-        role_perms = db.query(RoleApiPermission).filter(
-            RoleApiPermission.role_id == test_role_with_permissions.id
-        ).all()
+        role_perms = (
+            db.query(RoleApiPermission)
+            .filter(RoleApiPermission.role_id == test_role_with_permissions.id)
+            .all()
+        )
         assert len(role_perms) == 0
 
     # ============================================================
@@ -454,11 +432,9 @@ class TestPermissionAPI:
         # 给用户分配角色
         db.add(UserRole(user_id=test_user.id, role_id=test_role_with_permissions.id))
         db.commit()
-        
-        response = client.get(
-            f"/api/v1/permissions/users/{test_user.id}", headers=auth_headers
-        )
-        
+
+        response = client.get(f"/api/v1/permissions/users/{test_user.id}", headers=auth_headers)
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
@@ -466,13 +442,9 @@ class TestPermissionAPI:
         assert "permissions" in data["data"]
         assert data["data"]["permission_count"] >= 1
 
-    def test_get_user_permissions_not_found(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_get_user_permissions_not_found(self, client: TestClient, auth_headers: dict):
         """测试获取用户权限 - 用户不存在"""
-        response = client.get(
-            "/api/v1/permissions/users/999999", headers=auth_headers
-        )
+        response = client.get("/api/v1/permissions/users/999999", headers=auth_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_check_user_permission_success(
@@ -488,13 +460,13 @@ class TestPermissionAPI:
         # 给用户分配角色
         db.add(UserRole(user_id=test_user.id, role_id=test_role_with_permissions.id))
         db.commit()
-        
+
         response = client.get(
             f"/api/v1/permissions/users/{test_user.id}/check",
             params={"permission_code": test_permissions[1].perm_code},
             headers=auth_headers,
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
@@ -509,7 +481,7 @@ class TestPermissionAPI:
     ):
         """测试获取模块列表 - 成功"""
         response = client.get("/api/v1/permissions/modules", headers=auth_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["code"] == 200
@@ -536,21 +508,19 @@ class TestPermissionAPI:
         )
         db.add(other_tenant_perm)
         db.commit()
-        
+
         # 获取权限列表
         response = client.get("/api/v1/permissions/", headers=auth_headers)
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        
+
         # 不应该包含其他租户的权限
         perm_codes = [item["permission_code"] for item in data["data"]["items"]]
         assert "other:read" not in perm_codes
-        
+
         # 尝试直接访问其他租户的权限详情
-        response = client.get(
-            f"/api/v1/permissions/{other_tenant_perm.id}", headers=auth_headers
-        )
+        response = client.get(f"/api/v1/permissions/{other_tenant_perm.id}", headers=auth_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 

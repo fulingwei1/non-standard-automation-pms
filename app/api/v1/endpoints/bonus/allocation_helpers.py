@@ -11,5 +11,5 @@ from datetime import datetime
 
 def generate_sheet_code() -> str:
     """生成分配明细表编号"""
-    today = datetime.now().strftime('%y%m%d')
+    today = datetime.now().strftime("%y%m%d")
     return f"BAS-{today}-{uuid.uuid4().hex[:6].upper()}"

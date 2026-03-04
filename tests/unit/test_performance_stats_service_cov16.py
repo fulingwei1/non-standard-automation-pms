@@ -2,12 +2,14 @@
 """
 第十六批：绩效统计服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_stats_service import PerformanceStatsService
+
     SKIP = False
 except Exception:
     SKIP = True

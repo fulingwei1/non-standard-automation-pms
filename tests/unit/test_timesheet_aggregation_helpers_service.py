@@ -57,12 +57,7 @@ class TestQueryTimesheets:
         """测试无工时记录"""
         from app.services.timesheet_aggregation_helpers import query_timesheets
 
-        result = query_timesheets(
-        db_session,
-        date(2025, 1, 1),
-        date(2025, 1, 31),
-        None, None, None
-        )
+        result = query_timesheets(db_session, date(2025, 1, 1), date(2025, 1, 31), None, None, None)
 
         assert result == []
 
@@ -71,12 +66,12 @@ class TestQueryTimesheets:
         from app.services.timesheet_aggregation_helpers import query_timesheets
 
         result = query_timesheets(
-        db_session,
-        date(2025, 1, 1),
-        date(2025, 1, 31),
-        user_id=1,
-        department_id=None,
-        project_id=None
+            db_session,
+            date(2025, 1, 1),
+            date(2025, 1, 31),
+            user_id=1,
+            department_id=None,
+            project_id=None,
         )
 
         assert isinstance(result, list)
@@ -91,9 +86,9 @@ class TestCalculateHoursSummary:
 
         result = calculate_hours_summary([])
 
-        assert result['total_hours'] == 0
-        assert result['normal_hours'] == 0
-        assert result['overtime_hours'] == 0
+        assert result["total_hours"] == 0
+        assert result["normal_hours"] == 0
+        assert result["overtime_hours"] == 0
 
     def test_with_timesheets(self):
         """测试有工时记录"""
@@ -101,17 +96,17 @@ class TestCalculateHoursSummary:
 
         ts1 = MagicMock()
         ts1.hours = 8
-        ts1.overtime_type = 'NORMAL'
+        ts1.overtime_type = "NORMAL"
 
         ts2 = MagicMock()
         ts2.hours = 4
-        ts2.overtime_type = 'OVERTIME'
+        ts2.overtime_type = "OVERTIME"
 
         result = calculate_hours_summary([ts1, ts2])
 
-        assert result['total_hours'] == 12
-        assert result['normal_hours'] == 8
-        assert result['overtime_hours'] == 4
+        assert result["total_hours"] == 12
+        assert result["normal_hours"] == 8
+        assert result["overtime_hours"] == 4
 
     def test_weekend_hours(self):
         """测试周末工时"""
@@ -119,11 +114,11 @@ class TestCalculateHoursSummary:
 
         ts = MagicMock()
         ts.hours = 8
-        ts.overtime_type = 'WEEKEND'
+        ts.overtime_type = "WEEKEND"
 
         result = calculate_hours_summary([ts])
 
-        assert result['weekend_hours'] == 8
+        assert result["weekend_hours"] == 8
 
     def test_holiday_hours(self):
         """测试节假日工时"""
@@ -131,11 +126,11 @@ class TestCalculateHoursSummary:
 
         ts = MagicMock()
         ts.hours = 8
-        ts.overtime_type = 'HOLIDAY'
+        ts.overtime_type = "HOLIDAY"
 
         result = calculate_hours_summary([ts])
 
-        assert result['holiday_hours'] == 8
+        assert result["holiday_hours"] == 8
 
 
 class TestBuildProjectBreakdown:
@@ -155,8 +150,8 @@ class TestBuildProjectBreakdown:
 
         ts = MagicMock()
         ts.project_id = 1
-        ts.project_code = 'PJ001'
-        ts.project_name = '测试项目'
+        ts.project_code = "PJ001"
+        ts.project_name = "测试项目"
         ts.hours = 8
 
         result = build_project_breakdown([ts])
@@ -169,21 +164,21 @@ class TestBuildProjectBreakdown:
 
         ts1 = MagicMock()
         ts1.project_id = 1
-        ts1.project_code = 'PJ001'
-        ts1.project_name = '测试项目'
+        ts1.project_code = "PJ001"
+        ts1.project_name = "测试项目"
         ts1.hours = 8
 
         ts2 = MagicMock()
         ts2.project_id = 1
-        ts2.project_code = 'PJ001'
-        ts2.project_name = '测试项目'
+        ts2.project_code = "PJ001"
+        ts2.project_name = "测试项目"
         ts2.hours = 4
 
         result = build_project_breakdown([ts1, ts2])
 
         assert len(result) == 1
         key = list(result.keys())[0]
-        assert result[key]['hours'] == 12
+        assert result[key]["hours"] == 12
 
 
 class TestBuildDailyBreakdown:
@@ -204,12 +199,12 @@ class TestBuildDailyBreakdown:
         ts = MagicMock()
         ts.work_date = date(2025, 1, 15)
         ts.hours = 8
-        ts.overtime_type = 'NORMAL'
+        ts.overtime_type = "NORMAL"
 
         result = build_daily_breakdown([ts])
 
-        assert '2025-01-15' in result
-        assert result['2025-01-15']['hours'] == 8
+        assert "2025-01-15" in result
+        assert result["2025-01-15"]["hours"] == 8
 
 
 class TestBuildTaskBreakdown:
@@ -229,13 +224,13 @@ class TestBuildTaskBreakdown:
 
         ts = MagicMock()
         ts.task_id = 1
-        ts.task_name = '开发任务'
+        ts.task_name = "开发任务"
         ts.hours = 8
 
         result = build_task_breakdown([ts])
 
-        assert 'task_1' in result
-        assert result['task_1']['hours'] == 8
+        assert "task_1" in result
+        assert result["task_1"]["hours"] == 8
 
 
 class TestGetOrCreateSummary:
@@ -246,24 +241,24 @@ class TestGetOrCreateSummary:
         from app.services.timesheet_aggregation_helpers import get_or_create_summary
 
         result = get_or_create_summary(
-        db_session,
-        summary_type='USER',
-        year=2025,
-        month=1,
-        user_id=1,
-        project_id=None,
-        department_id=None,
-        hours_summary={
-        'total_hours': 160,
-        'normal_hours': 160,
-        'overtime_hours': 0,
-        'weekend_hours': 0,
-        'holiday_hours': 0
-        },
-        project_breakdown={},
-        daily_breakdown={},
-        task_breakdown={},
-        entries_count=20
+            db_session,
+            summary_type="USER",
+            year=2025,
+            month=1,
+            user_id=1,
+            project_id=None,
+            department_id=None,
+            hours_summary={
+                "total_hours": 160,
+                "normal_hours": 160,
+                "overtime_hours": 0,
+                "weekend_hours": 0,
+                "holiday_hours": 0,
+            },
+            project_breakdown={},
+            daily_breakdown={},
+            task_breakdown={},
+            entries_count=20,
         )
 
         assert result is not None
@@ -276,6 +271,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

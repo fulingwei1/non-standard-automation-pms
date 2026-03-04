@@ -35,7 +35,7 @@ class TestOutsourcingVendors:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -52,7 +52,7 @@ class TestOutsourcingVendors:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10, "keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -68,7 +68,7 @@ class TestOutsourcingVendors:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10, "vendor_type": "MACHINING"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -93,9 +93,7 @@ class TestOutsourcingVendors:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/outsourcing-vendors",
-            json=vendor_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-vendors", json=vendor_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -118,7 +116,7 @@ class TestOutsourcingVendors:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -132,8 +130,7 @@ class TestOutsourcingVendors:
         vendor_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-vendors/{vendor_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-vendors/{vendor_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -147,8 +144,7 @@ class TestOutsourcingVendors:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-vendors/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-vendors/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -164,7 +160,7 @@ class TestOutsourcingVendors:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -185,7 +181,7 @@ class TestOutsourcingVendors:
         response = client.put(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors/{vendor_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -204,7 +200,7 @@ class TestOutsourcingVendors:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -220,7 +216,7 @@ class TestOutsourcingVendors:
         try:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/outsourcing-vendors/{vendor_id}/statement",
-                headers=headers
+                headers=headers,
             )
 
             if response.status_code == 500:
@@ -243,7 +239,7 @@ class TestOutsourcingOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -260,7 +256,7 @@ class TestOutsourcingOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10, "status": "PENDING"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -275,10 +271,7 @@ class TestOutsourcingOrders:
         headers = _auth_headers(admin_token)
 
         # 先获取项目和供应商
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -291,7 +284,7 @@ class TestOutsourcingOrders:
         vendors_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-vendors",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if vendors_response.status_code != 200:
@@ -315,13 +308,11 @@ class TestOutsourcingOrders:
                     "quantity": 10,
                     "unit_price": 100.00,
                 }
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders",
-            json=order_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders", json=order_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -344,7 +335,7 @@ class TestOutsourcingOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -358,8 +349,7 @@ class TestOutsourcingOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -377,7 +367,7 @@ class TestOutsourcingOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -391,8 +381,7 @@ class TestOutsourcingOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -410,7 +399,7 @@ class TestOutsourcingOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -424,8 +413,7 @@ class TestOutsourcingOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/progress-logs",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/progress-logs", headers=headers
         )
 
         assert response.status_code == 200
@@ -443,7 +431,7 @@ class TestOutsourcingOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -457,8 +445,7 @@ class TestOutsourcingOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/print",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order_id}/print", headers=headers
         )
 
         assert response.status_code == 200
@@ -476,7 +463,7 @@ class TestOutsourcingDeliveries:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-deliveries",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -495,7 +482,7 @@ class TestOutsourcingDeliveries:
         orders_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if orders_response.status_code != 200:
@@ -510,8 +497,7 @@ class TestOutsourcingDeliveries:
 
         # 获取订单明细
         items_response = client.get(
-            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order['id']}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-orders/{order['id']}/items", headers=headers
         )
 
         if items_response.status_code != 200 or not items_response.json():
@@ -527,13 +513,11 @@ class TestOutsourcingDeliveries:
                     "order_item_id": order_item["id"],
                     "quantity": 1,
                 }
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/outsourcing-deliveries",
-            json=delivery_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-deliveries", json=delivery_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -558,7 +542,7 @@ class TestOutsourcingInspections:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-inspections",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -577,7 +561,7 @@ class TestOutsourcingInspections:
         deliveries_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-deliveries",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if deliveries_response.status_code != 200:
@@ -601,7 +585,7 @@ class TestOutsourcingInspections:
         response = client.post(
             f"{settings.API_V1_PREFIX}/outsourcing-inspections",
             json=inspection_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -626,7 +610,7 @@ class TestOutsourcingPayments:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-payments",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -643,7 +627,7 @@ class TestOutsourcingPayments:
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-payments",
             params={"page": 1, "page_size": 10, "status": "PENDING"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -661,7 +645,7 @@ class TestOutsourcingPayments:
         orders_response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if orders_response.status_code != 200:
@@ -684,9 +668,7 @@ class TestOutsourcingPayments:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/outsourcing-payments",
-            json=payment_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/outsourcing-payments", json=payment_data, headers=headers
         )
 
         if response.status_code == 403:

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for approval_engine/notify/basic_notifications.py"""
-import pytest
-from unittest.mock import MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock
+
+import pytest
 
 
 class TestBasicNotificationsMixin:
     def _make_instance(self):
         from app.services.approval_engine.notify.basic_notifications import BasicNotificationsMixin
+
         obj = BasicNotificationsMixin()
         obj._send_notification = MagicMock()
         obj.db = MagicMock()
@@ -26,23 +28,23 @@ class TestBasicNotificationsMixin:
         obj.notify_pending(task)
         obj._send_notification.assert_called_once()
         notification = obj._send_notification.call_args[0][0]
-        assert notification['type'] == 'APPROVAL_PENDING'
-        assert notification['receiver_id'] == 1
+        assert notification["type"] == "APPROVAL_PENDING"
+        assert notification["receiver_id"] == 1
 
     def test_notify_approved(self):
         obj = self._make_instance()
         instance = MagicMock(title="Test", initiator_id=2, id=10, created_at=datetime(2025, 1, 1))
         obj.notify_approved(instance)
         notification = obj._send_notification.call_args[0][0]
-        assert notification['type'] == 'APPROVAL_APPROVED'
+        assert notification["type"] == "APPROVAL_APPROVED"
 
     def test_notify_rejected(self):
         obj = self._make_instance()
         instance = MagicMock(title="Test", initiator_id=3, id=10, created_at=datetime(2025, 1, 1))
         obj.notify_rejected(instance, rejector_name="Admin", reject_comment="Not OK")
         notification = obj._send_notification.call_args[0][0]
-        assert 'Admin' in notification['content']
-        assert 'Not OK' in notification['content']
+        assert "Admin" in notification["content"]
+        assert "Not OK" in notification["content"]
 
     def test_notify_cc(self):
         obj = self._make_instance()
@@ -54,4 +56,4 @@ class TestBasicNotificationsMixin:
         cc.cc_user_id = 5
         obj.notify_cc(cc)
         notification = obj._send_notification.call_args[0][0]
-        assert notification['receiver_id'] == 5
+        assert notification["receiver_id"] == 5

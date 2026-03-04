@@ -52,9 +52,7 @@ async def get_project_leads(
     for lead in leads:
         team_count = (
             db.query(ProjectMember)
-            .filter(
-                ProjectMember.lead_member_id == lead.id, ProjectMember.is_active
-            )
+            .filter(ProjectMember.lead_member_id == lead.id, ProjectMember.is_active)
             .count()
         )
 
@@ -66,9 +64,7 @@ async def get_project_leads(
             "role_code": lead.role_code,
             "role_type_id": lead.role_type_id,
             "role_type": (
-                ProjectRoleTypeResponse.model_validate(lead.role_type)
-                if lead.role_type
-                else None
+                ProjectRoleTypeResponse.model_validate(lead.role_type) if lead.role_type else None
             ),
             "is_lead": True,
             "allocation_pct": lead.allocation_pct,
@@ -96,9 +92,7 @@ async def create_project_lead(
     """为项目指定负责人"""
     get_or_404(db, Project, project_id, detail="项目不存在")
 
-    role_type = (
-        db.query(ProjectRoleType).filter(ProjectRoleType.id == data.role_type_id).first()
-    )
+    role_type = db.query(ProjectRoleType).filter(ProjectRoleType.id == data.role_type_id).first()
     if not role_type:
         raise HTTPException(status_code=404, detail="角色类型不存在")
 
@@ -144,9 +138,7 @@ async def create_project_lead(
         role_code=lead.role_code,
         role_type_id=lead.role_type_id,
         role_type=(
-            ProjectRoleTypeResponse.model_validate(lead.role_type)
-            if lead.role_type
-            else None
+            ProjectRoleTypeResponse.model_validate(lead.role_type) if lead.role_type else None
         ),
         is_lead=True,
         allocation_pct=lead.allocation_pct,
@@ -161,9 +153,7 @@ async def create_project_lead(
     )
 
 
-@router.put(
-    "/leads/{member_id}", response_model=ProjectLeadResponse, summary="更新项目负责人"
-)
+@router.put("/leads/{member_id}", response_model=ProjectLeadResponse, summary="更新项目负责人")
 async def update_project_lead(
     data: ProjectLeadUpdate,
     project_id: int = Path(..., description="项目ID"),
@@ -206,9 +196,7 @@ async def update_project_lead(
         role_code=lead.role_code,
         role_type_id=lead.role_type_id,
         role_type=(
-            ProjectRoleTypeResponse.model_validate(lead.role_type)
-            if lead.role_type
-            else None
+            ProjectRoleTypeResponse.model_validate(lead.role_type) if lead.role_type else None
         ),
         is_lead=True,
         allocation_pct=lead.allocation_pct,
@@ -223,9 +211,7 @@ async def update_project_lead(
     )
 
 
-@router.delete(
-    "/leads/{member_id}", response_model=MessageResponse, summary="移除项目负责人"
-)
+@router.delete("/leads/{member_id}", response_model=MessageResponse, summary="移除项目负责人")
 async def remove_project_lead(
     project_id: int = Path(..., description="项目ID"),
     member_id: int = Path(..., description="成员ID"),
@@ -253,9 +239,9 @@ async def remove_project_lead(
     )
 
     if team_count > 0:
-        db.query(ProjectMember).filter(
-            ProjectMember.lead_member_id == member_id
-        ).update({"lead_member_id": None})
+        db.query(ProjectMember).filter(ProjectMember.lead_member_id == member_id).update(
+            {"lead_member_id": None}
+        )
 
     lead.is_active = False
     db.commit()

@@ -2,16 +2,17 @@
 """
 Unit tests for app/services/ecn_knowledge_service/template.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ecn_knowledge_service.template import (
-        recommend_solutions,
-        create_solution_template,
-        apply_solution_template,
         _calculate_template_score,
         _generate_template_code,
+        apply_solution_template,
+        create_solution_template,
+        recommend_solutions,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -23,8 +24,7 @@ def _make_service():
     return service
 
 
-def _make_ecn(ecn_id=1, ecn_type="DESIGN", root_cause_category="HUMAN",
-              ecn_title="测试ECN"):
+def _make_ecn(ecn_id=1, ecn_type="DESIGN", root_cause_category="HUMAN", ecn_title="测试ECN"):
     ecn = MagicMock()
     ecn.id = ecn_id
     ecn.ecn_type = ecn_type
@@ -37,8 +37,7 @@ def _make_ecn(ecn_id=1, ecn_type="DESIGN", root_cause_category="HUMAN",
     return ecn
 
 
-def _make_template(ecn_type="DESIGN", root_cause_category="HUMAN",
-                   success_rate=90, usage_count=10):
+def _make_template(ecn_type="DESIGN", root_cause_category="HUMAN", success_rate=90, usage_count=10):
     t = MagicMock()
     t.id = 1
     t.template_code = "ECN-SOL-001"
@@ -58,6 +57,7 @@ def _make_template(ecn_type="DESIGN", root_cause_category="HUMAN",
 
 
 # ──────────────────────── recommend_solutions ────────────────────────
+
 
 def test_recommend_solutions_ecn_not_found():
     """ECN 不存在时抛出 ValueError"""
@@ -80,7 +80,9 @@ def test_recommend_solutions_no_templates(mock_kw):
     assert result == []
 
 
-@patch("app.services.ecn_knowledge_service.template._extract_keywords", return_value=["物料", "DESIGN"])
+@patch(
+    "app.services.ecn_knowledge_service.template._extract_keywords", return_value=["物料", "DESIGN"]
+)
 def test_recommend_solutions_returns_top_n(mock_kw):
     """返回数量不超过 top_n"""
     service = _make_service()
@@ -94,6 +96,7 @@ def test_recommend_solutions_returns_top_n(mock_kw):
 
 
 # ──────────────────────── create_solution_template ────────────────────────
+
 
 def test_create_solution_template_ecn_not_found():
     """ECN 不存在时抛出 ValueError"""
@@ -112,14 +115,15 @@ def test_create_solution_template_success(mock_save, mock_kw):
     ecn = _make_ecn()
     service.db.query.return_value.filter.return_value.first.return_value = ecn
 
-    result = create_solution_template(service, ecn_id=1,
-                                      template_data={"template_name": "测试模板"},
-                                      created_by=1)
+    result = create_solution_template(
+        service, ecn_id=1, template_data={"template_name": "测试模板"}, created_by=1
+    )
     mock_save.assert_called_once()
     assert result.template_code.startswith("ECN-SOL-")
 
 
 # ──────────────────────── apply_solution_template ────────────────────────
+
 
 def test_apply_solution_template_success():
     """正常应用模板到 ECN"""

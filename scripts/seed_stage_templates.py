@@ -17,14 +17,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy.orm import Session
 
 from app.models.base import SessionLocal
-from app.models.stage_template import NodeDefinition, StageDefinition, StageTemplate
 from app.models.enums import (
     CompletionMethodEnum,
     NodeTypeEnum,
     StageCategoryEnum,
     TemplateProjectTypeEnum,
 )
-
+from app.models.stage_template import NodeDefinition, StageDefinition, StageTemplate
 
 # ==================== 完整22阶段模板 ====================
 
@@ -44,9 +43,21 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 30,
             "is_milestone": False,
             "nodes": [
-                {"node_code": "S01.1", "node_name": "市场调研", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S01.2", "node_name": "客户拜访", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S01.3", "node_name": "需求收集", "node_type": NodeTypeEnum.DELIVERABLE.value},
+                {
+                    "node_code": "S01.1",
+                    "node_name": "市场调研",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S01.2",
+                    "node_name": "客户拜访",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S01.3",
+                    "node_name": "需求收集",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
             ],
         },
         {
@@ -56,8 +67,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.SALES.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S02.1", "node_name": "线索登记", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S02.2", "node_name": "初步评估", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S02.1",
+                    "node_name": "线索登记",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S02.2",
+                    "node_name": "初步评估",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -67,8 +86,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.SALES.value,
             "estimated_days": 30,
             "nodes": [
-                {"node_code": "S03.1", "node_name": "方案沟通", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S03.2", "node_name": "商务洽谈", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S03.1",
+                    "node_name": "方案沟通",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S03.2",
+                    "node_name": "商务洽谈",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -79,8 +106,16 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 7,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S04.1", "node_name": "需求文档编写", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S04.2", "node_name": "需求评审会议", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S04.1",
+                    "node_name": "需求文档编写",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S04.2",
+                    "node_name": "需求评审会议",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         # === 售前阶段 (5-8) ===
@@ -92,8 +127,16 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 3,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S05.1", "node_name": "初立项申请", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S05.2", "node_name": "初立项审批", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S05.1",
+                    "node_name": "初立项申请",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S05.2",
+                    "node_name": "初立项审批",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -103,9 +146,21 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.PRESALES.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S06.1", "node_name": "技术方案设计", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S06.2", "node_name": "方案内部评审", "node_type": NodeTypeEnum.APPROVAL.value},
-                {"node_code": "S06.3", "node_name": "客户方案讲解", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S06.1",
+                    "node_name": "技术方案设计",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S06.2",
+                    "node_name": "方案内部评审",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
+                {
+                    "node_code": "S06.3",
+                    "node_name": "客户方案讲解",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -115,9 +170,21 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.PRESALES.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S07.1", "node_name": "成本核算", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S07.2", "node_name": "报价审批", "node_type": NodeTypeEnum.APPROVAL.value},
-                {"node_code": "S07.3", "node_name": "投标文件编制", "node_type": NodeTypeEnum.DELIVERABLE.value},
+                {
+                    "node_code": "S07.1",
+                    "node_name": "成本核算",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S07.2",
+                    "node_name": "报价审批",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
+                {
+                    "node_code": "S07.3",
+                    "node_name": "投标文件编制",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
             ],
         },
         {
@@ -128,9 +195,21 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 7,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S08.1", "node_name": "合同条款确认", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S08.2", "node_name": "合同审批", "node_type": NodeTypeEnum.APPROVAL.value},
-                {"node_code": "S08.3", "node_name": "合同签署", "node_type": NodeTypeEnum.DELIVERABLE.value},
+                {
+                    "node_code": "S08.1",
+                    "node_name": "合同条款确认",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S08.2",
+                    "node_name": "合同审批",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
+                {
+                    "node_code": "S08.3",
+                    "node_name": "合同签署",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
             ],
         },
         # === 执行阶段 (9-20) ===
@@ -142,8 +221,16 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 3,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S09.1", "node_name": "项目启动会", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S09.2", "node_name": "立项审批", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S09.1",
+                    "node_name": "项目启动会",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S09.2",
+                    "node_name": "立项审批",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -153,8 +240,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S10.1", "node_name": "总体方案设计", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S10.2", "node_name": "方案评审", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S10.1",
+                    "node_name": "总体方案设计",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S10.2",
+                    "node_name": "方案评审",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -164,10 +259,26 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 21,
             "nodes": [
-                {"node_code": "S11.1", "node_name": "机械详细设计", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S11.2", "node_name": "电气详细设计", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S11.3", "node_name": "软件详细设计", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S11.4", "node_name": "设计评审", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S11.1",
+                    "node_name": "机械详细设计",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S11.2",
+                    "node_name": "电气详细设计",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S11.3",
+                    "node_name": "软件详细设计",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S11.4",
+                    "node_name": "设计评审",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -177,10 +288,26 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 30,
             "nodes": [
-                {"node_code": "S12.1", "node_name": "BOM发布", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S12.2", "node_name": "采购下单", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S12.3", "node_name": "外协下单", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S12.4", "node_name": "物料到货检验", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S12.1",
+                    "node_name": "BOM发布",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S12.2",
+                    "node_name": "采购下单",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S12.3",
+                    "node_name": "外协下单",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S12.4",
+                    "node_name": "物料到货检验",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -190,8 +317,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 21,
             "nodes": [
-                {"node_code": "S13.1", "node_name": "结构件装配", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S13.2", "node_name": "机械调试", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S13.1",
+                    "node_name": "结构件装配",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S13.2",
+                    "node_name": "机械调试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -201,8 +336,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S14.1", "node_name": "布线安装", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S14.2", "node_name": "电气调试", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S14.1",
+                    "node_name": "布线安装",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S14.2",
+                    "node_name": "电气调试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -213,9 +356,21 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 30,
             "is_parallel": True,
             "nodes": [
-                {"node_code": "S15.1", "node_name": "程序编写", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S15.2", "node_name": "单元测试", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S15.3", "node_name": "代码评审", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S15.1",
+                    "node_name": "程序编写",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S15.2",
+                    "node_name": "单元测试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S15.3",
+                    "node_name": "代码评审",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -225,8 +380,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S16.1", "node_name": "机电联调", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S16.2", "node_name": "功能验证", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S16.1",
+                    "node_name": "机电联调",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S16.2",
+                    "node_name": "功能验证",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -237,9 +400,21 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 7,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S17.1", "node_name": "内部测试", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S17.2", "node_name": "问题整改", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S17.3", "node_name": "内部验收签字", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S17.1",
+                    "node_name": "内部测试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S17.2",
+                    "node_name": "问题整改",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S17.3",
+                    "node_name": "内部验收签字",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -249,9 +424,21 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 7,
             "nodes": [
-                {"node_code": "S18.1", "node_name": "包装清点", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S18.2", "node_name": "物流安排", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S18.3", "node_name": "发货确认", "node_type": NodeTypeEnum.DELIVERABLE.value},
+                {
+                    "node_code": "S18.1",
+                    "node_name": "包装清点",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S18.2",
+                    "node_name": "物流安排",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S18.3",
+                    "node_name": "发货确认",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
             ],
         },
         {
@@ -261,9 +448,21 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.EXECUTION.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S19.1", "node_name": "设备就位", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S19.2", "node_name": "安装调试", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S19.3", "node_name": "人员培训", "node_type": NodeTypeEnum.TASK.value},
+                {
+                    "node_code": "S19.1",
+                    "node_name": "设备就位",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S19.2",
+                    "node_name": "安装调试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S19.3",
+                    "node_name": "人员培训",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
             ],
         },
         {
@@ -274,9 +473,21 @@ FULL_LIFECYCLE_22 = {
             "estimated_days": 7,
             "is_milestone": True,
             "nodes": [
-                {"node_code": "S20.1", "node_name": "验收测试", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S20.2", "node_name": "问题整改", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S20.3", "node_name": "验收签字", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S20.1",
+                    "node_name": "验收测试",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S20.2",
+                    "node_name": "问题整改",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S20.3",
+                    "node_name": "验收签字",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         # === 收尾阶段 (21-22) ===
@@ -287,9 +498,21 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.CLOSURE.value,
             "estimated_days": 14,
             "nodes": [
-                {"node_code": "S21.1", "node_name": "项目总结", "node_type": NodeTypeEnum.DELIVERABLE.value},
-                {"node_code": "S21.2", "node_name": "经验沉淀", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S21.3", "node_name": "项目结项审批", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S21.1",
+                    "node_name": "项目总结",
+                    "node_type": NodeTypeEnum.DELIVERABLE.value,
+                },
+                {
+                    "node_code": "S21.2",
+                    "node_name": "经验沉淀",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S21.3",
+                    "node_name": "项目结项审批",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
         {
@@ -299,8 +522,16 @@ FULL_LIFECYCLE_22 = {
             "category": StageCategoryEnum.CLOSURE.value,
             "estimated_days": 365,
             "nodes": [
-                {"node_code": "S22.1", "node_name": "质保期服务", "node_type": NodeTypeEnum.TASK.value},
-                {"node_code": "S22.2", "node_name": "质保期结束确认", "node_type": NodeTypeEnum.APPROVAL.value},
+                {
+                    "node_code": "S22.1",
+                    "node_name": "质保期服务",
+                    "node_type": NodeTypeEnum.TASK.value,
+                },
+                {
+                    "node_code": "S22.2",
+                    "node_name": "质保期结束确认",
+                    "node_type": NodeTypeEnum.APPROVAL.value,
+                },
             ],
         },
     ],
@@ -316,15 +547,72 @@ STANDARD_9 = {
     "project_type": TemplateProjectTypeEnum.CUSTOM.value,
     "is_default": True,
     "stages": [
-        {"stage_code": "S1", "stage_name": "需求进入", "sequence": 1, "category": StageCategoryEnum.PRESALES.value, "estimated_days": 7},
-        {"stage_code": "S2", "stage_name": "方案设计", "sequence": 2, "category": StageCategoryEnum.PRESALES.value, "estimated_days": 14, "is_milestone": True},
-        {"stage_code": "S3", "stage_name": "采购备料", "sequence": 3, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 21},
-        {"stage_code": "S4", "stage_name": "加工制造", "sequence": 4, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 30},
-        {"stage_code": "S5", "stage_name": "装配调试", "sequence": 5, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 21},
-        {"stage_code": "S6", "stage_name": "出厂验收", "sequence": 6, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 7, "is_milestone": True},
-        {"stage_code": "S7", "stage_name": "包装发运", "sequence": 7, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 7},
-        {"stage_code": "S8", "stage_name": "现场安装", "sequence": 8, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 14},
-        {"stage_code": "S9", "stage_name": "质保结项", "sequence": 9, "category": StageCategoryEnum.CLOSURE.value, "estimated_days": 365, "is_milestone": True},
+        {
+            "stage_code": "S1",
+            "stage_name": "需求进入",
+            "sequence": 1,
+            "category": StageCategoryEnum.PRESALES.value,
+            "estimated_days": 7,
+        },
+        {
+            "stage_code": "S2",
+            "stage_name": "方案设计",
+            "sequence": 2,
+            "category": StageCategoryEnum.PRESALES.value,
+            "estimated_days": 14,
+            "is_milestone": True,
+        },
+        {
+            "stage_code": "S3",
+            "stage_name": "采购备料",
+            "sequence": 3,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 21,
+        },
+        {
+            "stage_code": "S4",
+            "stage_name": "加工制造",
+            "sequence": 4,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 30,
+        },
+        {
+            "stage_code": "S5",
+            "stage_name": "装配调试",
+            "sequence": 5,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 21,
+        },
+        {
+            "stage_code": "S6",
+            "stage_name": "出厂验收",
+            "sequence": 6,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 7,
+            "is_milestone": True,
+        },
+        {
+            "stage_code": "S7",
+            "stage_name": "包装发运",
+            "sequence": 7,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 7,
+        },
+        {
+            "stage_code": "S8",
+            "stage_name": "现场安装",
+            "sequence": 8,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 14,
+        },
+        {
+            "stage_code": "S9",
+            "stage_name": "质保结项",
+            "sequence": 9,
+            "category": StageCategoryEnum.CLOSURE.value,
+            "estimated_days": 365,
+            "is_milestone": True,
+        },
     ],
 }
 
@@ -338,11 +626,43 @@ QUICK_5 = {
     "project_type": TemplateProjectTypeEnum.REPEAT.value,
     "is_default": True,
     "stages": [
-        {"stage_code": "Q1", "stage_name": "订单确认", "sequence": 1, "category": StageCategoryEnum.PRESALES.value, "estimated_days": 3, "is_milestone": True},
-        {"stage_code": "Q2", "stage_name": "生产制造", "sequence": 2, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 21},
-        {"stage_code": "Q3", "stage_name": "测试验收", "sequence": 3, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 7, "is_milestone": True},
-        {"stage_code": "Q4", "stage_name": "发货交付", "sequence": 4, "category": StageCategoryEnum.EXECUTION.value, "estimated_days": 7},
-        {"stage_code": "Q5", "stage_name": "售后质保", "sequence": 5, "category": StageCategoryEnum.CLOSURE.value, "estimated_days": 180},
+        {
+            "stage_code": "Q1",
+            "stage_name": "订单确认",
+            "sequence": 1,
+            "category": StageCategoryEnum.PRESALES.value,
+            "estimated_days": 3,
+            "is_milestone": True,
+        },
+        {
+            "stage_code": "Q2",
+            "stage_name": "生产制造",
+            "sequence": 2,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 21,
+        },
+        {
+            "stage_code": "Q3",
+            "stage_name": "测试验收",
+            "sequence": 3,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 7,
+            "is_milestone": True,
+        },
+        {
+            "stage_code": "Q4",
+            "stage_name": "发货交付",
+            "sequence": 4,
+            "category": StageCategoryEnum.EXECUTION.value,
+            "estimated_days": 7,
+        },
+        {
+            "stage_code": "Q5",
+            "stage_name": "售后质保",
+            "sequence": 5,
+            "category": StageCategoryEnum.CLOSURE.value,
+            "estimated_days": 180,
+        },
     ],
 }
 
@@ -350,9 +670,11 @@ QUICK_5 = {
 def create_template(db: Session, template_data: dict) -> StageTemplate:
     """创建单个模板及其阶段和节点"""
     # 检查是否已存在
-    existing = db.query(StageTemplate).filter(
-        StageTemplate.template_code == template_data["template_code"]
-    ).first()
+    existing = (
+        db.query(StageTemplate)
+        .filter(StageTemplate.template_code == template_data["template_code"])
+        .first()
+    )
 
     if existing:
         print(f"  模板 {template_data['template_code']} 已存在，跳过")
@@ -395,7 +717,9 @@ def create_template(db: Session, template_data: dict) -> StageTemplate:
                 node_name=node_data["node_name"],
                 node_type=node_data.get("node_type", NodeTypeEnum.TASK.value),
                 sequence=i + 1,
-                completion_method=node_data.get("completion_method", CompletionMethodEnum.MANUAL.value),
+                completion_method=node_data.get(
+                    "completion_method", CompletionMethodEnum.MANUAL.value
+                ),
                 is_required=node_data.get("is_required", True),
             )
             db.add(node)

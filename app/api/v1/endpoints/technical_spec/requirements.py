@@ -50,13 +50,22 @@ def list_requirements(
         query = query.filter(TechnicalSpecRequirement.material_code == material_code)
 
     # 应用关键词过滤（物料名称/规格/物料编码）
-    query = apply_keyword_filter(query, TechnicalSpecRequirement, keyword, ["material_name", "specification", "material_code"])
+    query = apply_keyword_filter(
+        query,
+        TechnicalSpecRequirement,
+        keyword,
+        ["material_name", "specification", "material_code"],
+    )
 
     # 总数
     total = query.count()
 
     # 分页
-    requirements = apply_pagination(query.order_by(desc(TechnicalSpecRequirement.created_at)), pagination.offset, pagination.limit).all()
+    requirements = apply_pagination(
+        query.order_by(desc(TechnicalSpecRequirement.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 构建响应
     items = []
@@ -85,7 +94,7 @@ def list_requirements(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -96,9 +105,11 @@ def get_requirement(
     current_user: User = Depends(security.require_permission("technical_spec:read")),
 ) -> Any:
     """获取技术规格要求详情"""
-    requirement = db.query(TechnicalSpecRequirement).filter(
-        TechnicalSpecRequirement.id == requirement_id
-    ).first()
+    requirement = (
+        db.query(TechnicalSpecRequirement)
+        .filter(TechnicalSpecRequirement.id == requirement_id)
+        .first()
+    )
 
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
@@ -122,7 +133,11 @@ def get_requirement(
     )
 
 
-@router.post("/requirements", response_model=TechnicalSpecRequirementResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/requirements",
+    response_model=TechnicalSpecRequirementResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_requirement(
     requirement_in: TechnicalSpecRequirementCreate,
     db: Session = Depends(deps.get_db),
@@ -147,7 +162,7 @@ def create_requirement(
         brand=requirement_in.brand,
         model=requirement_in.model,
         requirement_level=requirement_in.requirement_level,
-        remark=requirement_in.remark
+        remark=requirement_in.remark,
     )
 
     db.commit()
@@ -180,9 +195,11 @@ def update_requirement(
     current_user: User = Depends(security.require_permission("technical_spec:update")),
 ) -> Any:
     """更新技术规格要求"""
-    requirement = db.query(TechnicalSpecRequirement).filter(
-        TechnicalSpecRequirement.id == requirement_id
-    ).first()
+    requirement = (
+        db.query(TechnicalSpecRequirement)
+        .filter(TechnicalSpecRequirement.id == requirement_id)
+        .first()
+    )
 
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
@@ -191,11 +208,11 @@ def update_requirement(
     update_data = requirement_in.dict(exclude_unset=True)
 
     # 如果更新了规格，重新提取关键参数
-    if 'specification' in update_data:
+    if "specification" in update_data:
         extractor = SpecExtractor()
-        key_parameters = extractor.extract_key_parameters(update_data['specification'])
+        key_parameters = extractor.extract_key_parameters(update_data["specification"])
         if key_parameters:
-            update_data['key_parameters'] = key_parameters
+            update_data["key_parameters"] = key_parameters
 
     for field, value in update_data.items():
         setattr(requirement, field, value)
@@ -229,9 +246,11 @@ def delete_requirement(
     current_user: User = Depends(security.require_permission("technical_spec:delete")),
 ) -> Any:
     """删除技术规格要求"""
-    requirement = db.query(TechnicalSpecRequirement).filter(
-        TechnicalSpecRequirement.id == requirement_id
-    ).first()
+    requirement = (
+        db.query(TechnicalSpecRequirement)
+        .filter(TechnicalSpecRequirement.id == requirement_id)
+        .first()
+    )
 
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")

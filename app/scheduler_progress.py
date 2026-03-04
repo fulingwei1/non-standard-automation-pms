@@ -32,10 +32,16 @@ def run_progress_auto_processing_job():
             from app.models.project import Project
 
             # 查询所有进行中的项目
-            in_progress_projects = db.query(Project).filter(
-                Project.status.in_(["ST05", "ST06", "ST07", "ST08"]),  # 装配调试、出厂验收、包装发运、现场安装
-                Project.is_active
-            ).all()
+            in_progress_projects = (
+                db.query(Project)
+                .filter(
+                    Project.status.in_(
+                        ["ST05", "ST06", "ST07", "ST08"]
+                    ),  # 装配调试、出厂验收、包装发运、现场安装
+                    Project.is_active,
+                )
+                .all()
+            )
 
             logger.info(f"找到 {len(in_progress_projects)} 个进行中的项目")
 
@@ -47,7 +53,7 @@ def run_progress_auto_processing_job():
                 "delay_threshold": 7,  # 7天阈值
                 "auto_fix_timing": False,  # 默认不自动修复时序
                 "auto_fix_missing": True,  # 自动移除缺失依赖
-                "send_notifications": True  # 发送通知
+                "send_notifications": True,  # 发送通知
             }
 
             success_count = 0
@@ -57,15 +63,12 @@ def run_progress_auto_processing_job():
             for project in in_progress_projects:
                 try:
                     result = service.run_auto_processing(
-                        project_id=project.id,
-                        options=default_options
+                        project_id=project.id, options=default_options
                     )
 
                     if result.get("success"):
                         success_count += 1
-                        logger.info(
-                            f"项目 {project.project_name} (ID:{project.id}) 自动处理成功"
-                        )
+                        logger.info(f"项目 {project.project_name} (ID:{project.id}) 自动处理成功")
                     else:
                         failed_count += 1
                         logger.error(
@@ -73,24 +76,28 @@ def run_progress_auto_processing_job():
                             f"{result.get('error', '未知错误')}"
                         )
 
-                    results.append({
-                        "project_id": project.id,
-                        "project_name": project.project_name,
-                        "success": result.get("success", False)
-                    })
+                    results.append(
+                        {
+                            "project_id": project.id,
+                            "project_name": project.project_name,
+                            "success": result.get("success", False),
+                        }
+                    )
 
                 except Exception as e:
                     failed_count += 1
                     logger.error(
                         f"项目 {project.project_name} (ID:{project.id}) 处理异常: {str(e)}",
-                        exc_info=True
+                        exc_info=True,
                     )
-                    results.append({
-                        "project_id": project.id,
-                        "project_name": project.project_name,
-                        "success": False,
-                        "error": str(e)
-                    })
+                    results.append(
+                        {
+                            "project_id": project.id,
+                            "project_name": project.project_name,
+                            "success": False,
+                            "error": str(e),
+                        }
+                    )
 
             logger.info(
                 f"进度预测与依赖巡检自动处理任务完成: "
@@ -115,7 +122,7 @@ def start_scheduler():
             trigger=CronTrigger(hour=2, minute=0),
             id="progress_auto_processing_daily",
             name="进度预测与依赖巡检自动处理（每天凌晨2点）",
-            replace_existing=True
+            replace_existing=True,
         )
 
         # 启动调度器

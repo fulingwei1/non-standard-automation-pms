@@ -3,17 +3,30 @@
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock
+
 import pytest
 
 from app.services.payment_statistics_service import (
-    build_invoice_query, calculate_monthly_statistics,
-    calculate_customer_statistics, calculate_status_statistics,
-    calculate_overdue_amount, build_monthly_list, build_customer_list
+    build_customer_list,
+    build_invoice_query,
+    build_monthly_list,
+    calculate_customer_statistics,
+    calculate_monthly_statistics,
+    calculate_overdue_amount,
+    calculate_status_statistics,
 )
 
 
-def make_invoice(issue_date=None, total_amount=None, amount=None, paid_amount=None,
-                 payment_status="PENDING", due_date=None, contract=None, status="ISSUED"):
+def make_invoice(
+    issue_date=None,
+    total_amount=None,
+    amount=None,
+    paid_amount=None,
+    payment_status="PENDING",
+    due_date=None,
+    contract=None,
+    status="ISSUED",
+):
     inv = MagicMock()
     inv.issue_date = issue_date
     inv.total_amount = total_amount
@@ -32,7 +45,9 @@ class TestCalculateMonthlyStatistics:
         assert result == {}
 
     def test_single_invoice(self):
-        inv = make_invoice(issue_date=date(2024, 1, 15), total_amount=Decimal("10000"), paid_amount=Decimal("5000"))
+        inv = make_invoice(
+            issue_date=date(2024, 1, 15), total_amount=Decimal("10000"), paid_amount=Decimal("5000")
+        )
         result = calculate_monthly_statistics([inv])
         assert "2024-01" in result
         assert result["2024-01"]["invoiced"] == Decimal("10000")
@@ -40,8 +55,12 @@ class TestCalculateMonthlyStatistics:
         assert result["2024-01"]["count"] == 1
 
     def test_multiple_months(self):
-        inv1 = make_invoice(issue_date=date(2024, 1, 1), total_amount=Decimal("1000"), paid_amount=Decimal("500"))
-        inv2 = make_invoice(issue_date=date(2024, 2, 1), total_amount=Decimal("2000"), paid_amount=Decimal("1000"))
+        inv1 = make_invoice(
+            issue_date=date(2024, 1, 1), total_amount=Decimal("1000"), paid_amount=Decimal("500")
+        )
+        inv2 = make_invoice(
+            issue_date=date(2024, 2, 1), total_amount=Decimal("2000"), paid_amount=Decimal("1000")
+        )
         result = calculate_monthly_statistics([inv1, inv2])
         assert len(result) == 2
 
@@ -51,12 +70,19 @@ class TestCalculateMonthlyStatistics:
         assert result == {}
 
     def test_fallback_to_amount(self):
-        inv = make_invoice(issue_date=date(2024, 3, 1), total_amount=None, amount=Decimal("800"), paid_amount=Decimal("0"))
+        inv = make_invoice(
+            issue_date=date(2024, 3, 1),
+            total_amount=None,
+            amount=Decimal("800"),
+            paid_amount=Decimal("0"),
+        )
         result = calculate_monthly_statistics([inv])
         assert result["2024-03"]["invoiced"] == Decimal("800")
 
     def test_none_paid_amount(self):
-        inv = make_invoice(issue_date=date(2024, 1, 1), total_amount=Decimal("5000"), paid_amount=None)
+        inv = make_invoice(
+            issue_date=date(2024, 1, 1), total_amount=Decimal("5000"), paid_amount=None
+        )
         result = calculate_monthly_statistics([inv])
         assert result["2024-01"]["paid"] == Decimal("0")
 
@@ -71,7 +97,9 @@ class TestCalculateCustomerStatistics:
         contract = MagicMock()
         contract.customer_id = 1
         contract.customer = customer
-        inv = make_invoice(total_amount=Decimal("10000"), paid_amount=Decimal("3000"), contract=contract)
+        inv = make_invoice(
+            total_amount=Decimal("10000"), paid_amount=Decimal("3000"), contract=contract
+        )
         result = calculate_customer_statistics([inv])
         assert 1 in result
         assert result[1]["customer_name"] == "客户A"
@@ -88,8 +116,12 @@ class TestCalculateCustomerStatistics:
         contract = MagicMock()
         contract.customer_id = 2
         contract.customer = customer
-        inv1 = make_invoice(total_amount=Decimal("1000"), paid_amount=Decimal("500"), contract=contract)
-        inv2 = make_invoice(total_amount=Decimal("2000"), paid_amount=Decimal("1000"), contract=contract)
+        inv1 = make_invoice(
+            total_amount=Decimal("1000"), paid_amount=Decimal("500"), contract=contract
+        )
+        inv2 = make_invoice(
+            total_amount=Decimal("2000"), paid_amount=Decimal("1000"), contract=contract
+        )
         result = calculate_customer_statistics([inv1, inv2])
         assert result[2]["count"] == 2
         assert result[2]["invoiced"] == Decimal("3000")
@@ -129,20 +161,32 @@ class TestCalculateOverdueAmount:
         assert calculate_overdue_amount([], date(2024, 6, 1)) == Decimal("0")
 
     def test_overdue_invoice(self):
-        inv = make_invoice(total_amount=Decimal("10000"), paid_amount=Decimal("3000"),
-                          due_date=date(2024, 1, 1), payment_status="PENDING")
+        inv = make_invoice(
+            total_amount=Decimal("10000"),
+            paid_amount=Decimal("3000"),
+            due_date=date(2024, 1, 1),
+            payment_status="PENDING",
+        )
         result = calculate_overdue_amount([inv], date(2024, 6, 1))
         assert result == Decimal("7000")
 
     def test_not_overdue(self):
-        inv = make_invoice(total_amount=Decimal("10000"), paid_amount=Decimal("0"),
-                          due_date=date(2025, 1, 1), payment_status="PENDING")
+        inv = make_invoice(
+            total_amount=Decimal("10000"),
+            paid_amount=Decimal("0"),
+            due_date=date(2025, 1, 1),
+            payment_status="PENDING",
+        )
         result = calculate_overdue_amount([inv], date(2024, 6, 1))
         assert result == Decimal("0")
 
     def test_paid_not_overdue(self):
-        inv = make_invoice(total_amount=Decimal("5000"), paid_amount=Decimal("5000"),
-                          due_date=date(2024, 1, 1), payment_status="PAID")
+        inv = make_invoice(
+            total_amount=Decimal("5000"),
+            paid_amount=Decimal("5000"),
+            due_date=date(2024, 1, 1),
+            payment_status="PAID",
+        )
         result = calculate_overdue_amount([inv], date(2024, 6, 1))
         assert result == Decimal("0")
 
@@ -181,14 +225,37 @@ class TestBuildCustomerList:
 
     def test_sorted_by_unpaid_desc(self):
         stats = {
-            1: {"customer_id": 1, "customer_name": "A", "invoiced": Decimal("100"), "paid": Decimal("50"), "unpaid": Decimal("50"), "count": 1},
-            2: {"customer_id": 2, "customer_name": "B", "invoiced": Decimal("200"), "paid": Decimal("10"), "unpaid": Decimal("190"), "count": 1},
+            1: {
+                "customer_id": 1,
+                "customer_name": "A",
+                "invoiced": Decimal("100"),
+                "paid": Decimal("50"),
+                "unpaid": Decimal("50"),
+                "count": 1,
+            },
+            2: {
+                "customer_id": 2,
+                "customer_name": "B",
+                "invoiced": Decimal("200"),
+                "paid": Decimal("10"),
+                "unpaid": Decimal("190"),
+                "count": 1,
+            },
         }
         result = build_customer_list(stats)
         assert result[0]["customer_name"] == "B"
 
     def test_limit(self):
-        stats = {i: {"customer_id": i, "customer_name": f"C{i}", "invoiced": Decimal("100"),
-                      "paid": Decimal("50"), "unpaid": Decimal("50"), "count": 1} for i in range(20)}
+        stats = {
+            i: {
+                "customer_id": i,
+                "customer_name": f"C{i}",
+                "invoiced": Decimal("100"),
+                "paid": Decimal("50"),
+                "unpaid": Decimal("50"),
+                "count": 1,
+            }
+            for i in range(20)
+        }
         result = build_customer_list(stats, limit=5)
         assert len(result) == 5

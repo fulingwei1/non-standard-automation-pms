@@ -17,31 +17,34 @@ def db():
 class TestCalculatePriorityScore:
     def test_p1_priority(self, db):
         project = MagicMock(
-            priority='P1', planned_end_date=date.today() + timedelta(days=5),
-            customer_id=1, contract_amount=Decimal("600000")
+            priority="P1",
+            planned_end_date=date.today() + timedelta(days=5),
+            customer_id=1,
+            contract_amount=Decimal("600000"),
         )
         readiness = MagicMock(blocking_kit_rate=Decimal("80"))
-        customer = MagicMock(credit_level='A')
+        customer = MagicMock(credit_level="A")
         db.query.return_value.filter.return_value.first.return_value = customer
         result = SchedulingSuggestionService.calculate_priority_score(db, project, readiness)
-        assert result['total_score'] > 0
-        assert 'factors' in result
+        assert result["total_score"] > 0
+        assert "factors" in result
 
     def test_no_readiness(self, db):
         project = MagicMock(
-            priority='P3', planned_end_date=None,
-            customer_id=None, contract_amount=Decimal("50000")
+            priority="P3", planned_end_date=None, customer_id=None, contract_amount=Decimal("50000")
         )
         result = SchedulingSuggestionService.calculate_priority_score(db, project)
-        assert result['factors']['kit_rate']['score'] == 0
+        assert result["factors"]["kit_rate"]["score"] == 0
 
     def test_high_priority_map(self, db):
         project = MagicMock(
-            priority='HIGH', planned_end_date=date.today() + timedelta(days=100),
-            customer_id=None, contract_amount=Decimal("0")
+            priority="HIGH",
+            planned_end_date=date.today() + timedelta(days=100),
+            customer_id=None,
+            contract_amount=Decimal("0"),
         )
         result = SchedulingSuggestionService.calculate_priority_score(db, project)
-        assert result['factors']['priority']['value'] == 'P1'
+        assert result["factors"]["priority"]["value"] == "P1"
 
 
 class TestDeadlinePressure:
@@ -63,12 +66,12 @@ class TestDeadlinePressure:
 class TestDeadlineDescription:
     def test_no_deadline(self):
         project = MagicMock(planned_end_date=None)
-        assert SchedulingSuggestionService._get_deadline_description(project) == '无交期'
+        assert SchedulingSuggestionService._get_deadline_description(project) == "无交期"
 
     def test_overdue(self):
         project = MagicMock(planned_end_date=date.today() - timedelta(days=5))
         desc = SchedulingSuggestionService._get_deadline_description(project)
-        assert '逾期' in desc
+        assert "逾期" in desc
 
 
 class TestCustomerImportance:
@@ -78,7 +81,7 @@ class TestCustomerImportance:
 
     def test_a_level_customer(self, db):
         project = MagicMock(customer_id=1, contract_amount=Decimal("0"))
-        customer = MagicMock(credit_level='A')
+        customer = MagicMock(credit_level="A")
         db.query.return_value.filter.return_value.first.return_value = customer
         assert SchedulingSuggestionService._calculate_customer_importance(db, project) == 15.0
 
@@ -95,10 +98,10 @@ class TestContractAmountScore:
 
 class TestGetNextStage:
     def test_frame(self):
-        assert SchedulingSuggestionService._get_next_stage('FRAME') == 'MECH'
+        assert SchedulingSuggestionService._get_next_stage("FRAME") == "MECH"
 
     def test_cosmetic_is_last(self):
-        assert SchedulingSuggestionService._get_next_stage('COSMETIC') is None
+        assert SchedulingSuggestionService._get_next_stage("COSMETIC") is None
 
 
 class TestGenerateSchedulingSuggestions:

@@ -29,8 +29,8 @@ class TestBomServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.bom_service import BomService
         from app.models.material import BomHeader
+        from app.services.bom_service import BomService
 
         mock_db = MagicMock()
 
@@ -61,7 +61,7 @@ class TestToResponse:
         mock_bom.created_at = None
         mock_bom.updated_at = None
 
-        with patch('app.schemas.material.BomResponse.model_validate') as mock_validate:
+        with patch("app.schemas.material.BomResponse.model_validate") as mock_validate:
             mock_response = MagicMock()
             mock_validate.return_value = mock_response
 
@@ -88,13 +88,13 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_boms(page=1, page_size=20)
 
-            assert result['items'] == mock_result.items
-            assert result['total'] == 2
-            assert result['page'] == 1
-            assert result['page_size'] == 20
+            assert result["items"] == mock_result.items
+            assert result["total"] == 2
+            assert result["page"] == 1
+            assert result["page_size"] == 20
 
     def test_filters_by_project_id(self):
         """测试按项目ID过滤"""
@@ -109,13 +109,13 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms(project_id=10)
 
             # 验证调用了list方法
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('project_id') == 10
+            assert call_args.filters.get("project_id") == 10
 
     def test_filters_by_machine_id(self):
         """测试按机台ID过滤"""
@@ -130,12 +130,12 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms(machine_id=5)
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('machine_id') == 5
+            assert call_args.filters.get("machine_id") == 5
 
     def test_filters_by_is_latest(self):
         """测试按是否最新版本过滤"""
@@ -150,12 +150,12 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms(is_latest=True)
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('is_latest') is True
+            assert call_args.filters.get("is_latest") is True
 
     def test_filters_with_multiple_params(self):
         """测试多参数过滤"""
@@ -170,22 +170,18 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 10
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms(
-                page=2,
-                page_size=10,
-                project_id=100,
-                machine_id=50,
-                is_latest=False
+                page=2, page_size=10, project_id=100, machine_id=50, is_latest=False
             )
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
             assert call_args.page == 2
             assert call_args.page_size == 10
-            assert call_args.filters.get('project_id') == 100
-            assert call_args.filters.get('machine_id') == 50
-            assert call_args.filters.get('is_latest') is False
+            assert call_args.filters.get("project_id") == 100
+            assert call_args.filters.get("machine_id") == 50
+            assert call_args.filters.get("is_latest") is False
 
     def test_calculates_pages(self):
         """测试计算总页数"""
@@ -200,11 +196,11 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_boms()
 
             # (55 + 20 - 1) // 20 = 3
-            assert result['pages'] == 3
+            assert result["pages"] == 3
 
     def test_handles_zero_total(self):
         """测试处理零条记录"""
@@ -219,11 +215,11 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_boms()
 
-            assert result['pages'] == 0
-            assert result['total'] == 0
+            assert result["pages"] == 0
+            assert result["total"] == 0
 
     def test_default_sort_order(self):
         """测试默认排序"""
@@ -238,7 +234,7 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms()
 
             call_args = mock_list.call_args[0][0]
@@ -258,7 +254,7 @@ class TestListBoms:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_boms()
 
             call_args = mock_list.call_args[0][0]
@@ -282,7 +278,7 @@ class TestQueryParams:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             service.list_boms(page=3, page_size=50)
 
             call_args = mock_list.call_args[0][0]
@@ -302,10 +298,10 @@ class TestQueryParams:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             service.list_boms(project_id=None, machine_id=None, is_latest=None)
 
             call_args = mock_list.call_args[0][0]
-            assert 'project_id' not in call_args.filters
-            assert 'machine_id' not in call_args.filters
-            assert 'is_latest' not in call_args.filters
+            assert "project_id" not in call_args.filters
+            assert "machine_id" not in call_args.filters
+            assert "is_latest" not in call_args.filters

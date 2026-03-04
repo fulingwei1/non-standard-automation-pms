@@ -49,21 +49,25 @@ class ProgressIntegrationService:
         alert_data = {}
         if alert.alert_data:
             try:
-                alert_data = json.loads(alert.alert_data) if isinstance(alert.alert_data, str) else alert.alert_data
+                alert_data = (
+                    json.loads(alert.alert_data)
+                    if isinstance(alert.alert_data, str)
+                    else alert.alert_data
+                )
             except (json.JSONDecodeError, TypeError):
                 alert_data = {}
 
-        impact_type = alert_data.get('impact_type', 'none')
-        estimated_delay_days = alert_data.get('estimated_delay_days', 0)
+        impact_type = alert_data.get("impact_type", "none")
+        estimated_delay_days = alert_data.get("estimated_delay_days", 0)
 
         # 查找可能受影响的任务（装配、调试相关任务）
-        affected_stages = ['S5', 'S6']  # 装配调试、出厂验收阶段
-        affected_keywords = ['装配', '调试', '组装', '安装', '联调']
+        affected_stages = ["S5", "S6"]  # 装配调试、出厂验收阶段
+        affected_keywords = ["装配", "调试", "组装", "安装", "联调"]
 
         # 查找项目中的相关任务
         tasks_query = self.db.query(Task).filter(
             Task.project_id == alert.project_id,
-            Task.status.in_(['TODO', 'IN_PROGRESS']),
+            Task.status.in_(["TODO", "IN_PROGRESS"]),
         )
         keyword_conditions = []
         for kw in affected_keywords:
@@ -78,20 +82,15 @@ class ProgressIntegrationService:
             )
             keyword_conditions.append(Task.id.in_(keyword_query))
 
-        tasks_query = tasks_query.filter(
-            or_(
-                Task.stage.in_(affected_stages),
-                *keyword_conditions
-            )
-        )
+        tasks_query = tasks_query.filter(or_(Task.stage.in_(affected_stages), *keyword_conditions))
         tasks = tasks_query.all()
 
         # 如果缺料预警级别较高（CRITICAL/URGENT）或影响类型为stop/delivery，阻塞任务
-        high_levels = ['level3', 'level4', 'CRITICAL', 'URGENT']
-        if alert.alert_level in high_levels or impact_type in ['stop', 'delivery']:
+        high_levels = ["level3", "level4", "CRITICAL", "URGENT"]
+        if alert.alert_level in high_levels or impact_type in ["stop", "delivery"]:
             for task in tasks:
-                if task.status != 'BLOCKED':
-                    task.status = 'BLOCKED'
+                if task.status != "BLOCKED":
+                    task.status = "BLOCKED"
                     task.block_reason = f"缺料预警：{alert.target_name}（{alert.alert_no}），预计延迟{estimated_delay_days}天"
                     self.db.add(task)
                     blocked_tasks.append(task)
@@ -124,12 +123,12 @@ class ProgressIntegrationService:
             return unblocked_tasks
 
         alert_no = alert.alert_no or f"ALERT-{alert.id}"
-        target_no = alert.target_no or ''
+        target_no = alert.target_no or ""
 
         # 查找因该缺料预警而阻塞的任务
         tasks_query = self.db.query(Task).filter(
             Task.project_id == alert.project_id,
-            Task.status == 'BLOCKED',
+            Task.status == "BLOCKED",
         )
         reason_conditions = []
         if alert_no:
@@ -158,17 +157,21 @@ class ProgressIntegrationService:
 
         for task in tasks:
             # 检查是否还有其他阻塞原因（使用统一的 AlertRecord 表）
-            other_alerts = self.db.query(AlertRecord).filter(
-                AlertRecord.target_type == 'SHORTAGE',
-                AlertRecord.project_id == alert.project_id,
-                AlertRecord.status.in_(['PENDING', 'PROCESSING', 'pending', 'handling']),
-                AlertRecord.alert_level.in_(['level3', 'level4', 'CRITICAL', 'URGENT']),
-                AlertRecord.id != alert.id
-            ).count()
+            other_alerts = (
+                self.db.query(AlertRecord)
+                .filter(
+                    AlertRecord.target_type == "SHORTAGE",
+                    AlertRecord.project_id == alert.project_id,
+                    AlertRecord.status.in_(["PENDING", "PROCESSING", "pending", "handling"]),
+                    AlertRecord.alert_level.in_(["level3", "level4", "CRITICAL", "URGENT"]),
+                    AlertRecord.id != alert.id,
+                )
+                .count()
+            )
 
             if other_alerts == 0:
                 # 没有其他严重缺料预警，解除阻塞
-                task.status = 'IN_PROGRESS'
+                task.status = "IN_PROGRESS"
                 task.block_reason = None
                 self.db.add(task)
                 unblocked_tasks.append(task)
@@ -189,11 +192,7 @@ class ProgressIntegrationService:
         Returns:
             Dict: 调整结果
         """
-        result = {
-            'adjusted_tasks': [],
-            'created_tasks': [],
-            'affected_milestones': []
-        }
+        result = {"adjusted_tasks": [], "created_tasks": [], "affected_milestones": []}
 
         if not ecn.project_id:
             return result
@@ -202,8 +201,7 @@ class ProgressIntegrationService:
         if ecn.schedule_impact_days and ecn.schedule_impact_days > threshold_days:
             # 查找项目中的相关任务（根据ECN关联的机台或阶段）
             query = self.db.query(Task).filter(
-                Task.project_id == ecn.project_id,
-                Task.status.in_(['TODO', 'IN_PROGRESS'])
+                Task.project_id == ecn.project_id, Task.status.in_(["TODO", "IN_PROGRESS"])
             )
 
             if ecn.machine_id:
@@ -224,38 +222,49 @@ class ProgressIntegrationService:
                             pass
 
                     self.db.add(task)
-                    result['adjusted_tasks'].append({
-                        'task_id': task.id,
-                        'task_name': task.task_name,
-                        'old_plan_end': task.plan_end - timedelta(days=ecn.schedule_impact_days),
-                        'new_plan_end': new_plan_end
-                    })
+                    result["adjusted_tasks"].append(
+                        {
+                            "task_id": task.id,
+                            "task_name": task.task_name,
+                            "old_plan_end": task.plan_end
+                            - timedelta(days=ecn.schedule_impact_days),
+                            "new_plan_end": new_plan_end,
+                        }
+                    )
 
             # 调整相关里程碑
-            milestones = self.db.query(ProjectMilestone).filter(
-                ProjectMilestone.project_id == ecn.project_id,
-                ProjectMilestone.status.in_(['PENDING', 'IN_PROGRESS'])
-            ).all()
+            milestones = (
+                self.db.query(ProjectMilestone)
+                .filter(
+                    ProjectMilestone.project_id == ecn.project_id,
+                    ProjectMilestone.status.in_(["PENDING", "IN_PROGRESS"]),
+                )
+                .all()
+            )
 
             for milestone in milestones:
                 if milestone.planned_date:
-                    new_planned_date = milestone.planned_date + timedelta(days=ecn.schedule_impact_days)
+                    new_planned_date = milestone.planned_date + timedelta(
+                        days=ecn.schedule_impact_days
+                    )
                     milestone.planned_date = new_planned_date
                     self.db.add(milestone)
-                    result['affected_milestones'].append({
-                        'milestone_id': milestone.id,
-                        'milestone_name': milestone.milestone_name,
-                        'old_planned_date': milestone.planned_date - timedelta(days=ecn.schedule_impact_days),
-                        'new_planned_date': new_planned_date
-                    })
+                    result["affected_milestones"].append(
+                        {
+                            "milestone_id": milestone.id,
+                            "milestone_name": milestone.milestone_name,
+                            "old_planned_date": milestone.planned_date
+                            - timedelta(days=ecn.schedule_impact_days),
+                            "new_planned_date": new_planned_date,
+                        }
+                    )
 
         # 如果ECN有执行任务，创建或更新进度任务
         if ecn.tasks:
             for ecn_task in ecn.tasks:
                 # 查找是否已有对应的进度任务
                 existing_query = self.db.query(Task).filter(
-                    Task.project_id == ecn.project_id,
-                    Task.stage == 'S4'  # 变更通常在S4阶段
+                    Task.project_id == ecn.project_id, Task.stage == "S4"  # 变更通常在S4阶段
                 )
                 if ecn_task.task_name:
                     name_query = apply_keyword_filter(
@@ -276,8 +285,8 @@ class ProgressIntegrationService:
                     existing_task.plan_start = ecn_task.planned_start
                     existing_task.plan_end = ecn_task.planned_end
                     existing_task.owner_id = ecn_task.assignee_id
-                    if ecn_task.status == 'COMPLETED':
-                        existing_task.status = 'DONE'
+                    if ecn_task.status == "COMPLETED":
+                        existing_task.status = "DONE"
                         existing_task.progress_percent = 100
                     self.db.add(existing_task)
                 else:
@@ -286,19 +295,18 @@ class ProgressIntegrationService:
                         project_id=ecn.project_id,
                         machine_id=ecn.machine_id,
                         task_name=f"ECN执行：{ecn_task.task_name}",
-                        stage='S4',
-                        status='TODO',
+                        stage="S4",
+                        status="TODO",
                         owner_id=ecn_task.assignee_id,
                         plan_start=ecn_task.planned_start,
                         plan_end=ecn_task.planned_end,
-                        weight=Decimal('1.0')
+                        weight=Decimal("1.0"),
                     )
                     self.db.add(new_task)
                     self.db.flush()
-                    result['created_tasks'].append({
-                        'task_id': new_task.id,
-                        'task_name': new_task.task_name
-                    })
+                    result["created_tasks"].append(
+                        {"task_id": new_task.id, "task_name": new_task.task_name}
+                    )
 
         self.db.commit()
         return result
@@ -306,8 +314,7 @@ class ProgressIntegrationService:
     # ==================== 验收联动 ====================
 
     def check_milestone_completion_requirements(
-        self,
-        milestone: ProjectMilestone
+        self, milestone: ProjectMilestone
     ) -> tuple[bool, List[str]]:
         """
         检查里程碑完成条件（交付物、验收）
@@ -323,45 +330,51 @@ class ProgressIntegrationService:
         # 检查交付物要求
         # 里程碑的deliverables字段存储JSON格式的交付物列表
         # 如果里程碑类型为DELIVERY，需要检查交付物是否已审批
-        if milestone.milestone_type == 'DELIVERY' and milestone.deliverables:
+        if milestone.milestone_type == "DELIVERY" and milestone.deliverables:
             import json
+
             try:
-                deliverable_list = json.loads(milestone.deliverables) if isinstance(milestone.deliverables, str) else milestone.deliverables
+                deliverable_list = (
+                    json.loads(milestone.deliverables)
+                    if isinstance(milestone.deliverables, str)
+                    else milestone.deliverables
+                )
                 if isinstance(deliverable_list, list) and len(deliverable_list) > 0:
                     # 检查交付物是否都已审批（这里简化处理，实际需要根据交付物模型检查）
                     # 假设交付物JSON格式：{"name": "xxx", "status": "APPROVED"}
                     all_approved = all(
-                        item.get('status') == 'APPROVED' if isinstance(item, dict) else True
+                        item.get("status") == "APPROVED" if isinstance(item, dict) else True
                         for item in deliverable_list
                     )
                     if not all_approved:
-                        missing_items.append('交付物未全部审批')
+                        missing_items.append("交付物未全部审批")
             except (json.JSONDecodeError, TypeError, KeyError):
                 # JSON解析失败，跳过检查
                 pass
 
         # 检查验收要求
-        if hasattr(milestone, 'acceptance_required') and milestone.acceptance_required:
+        if hasattr(milestone, "acceptance_required") and milestone.acceptance_required:
             # 查找关联的验收单
-            acceptance_orders = self.db.query(AcceptanceOrder).filter(
-                AcceptanceOrder.project_id == milestone.project_id,
-                or_(
-                    AcceptanceOrder.milestone_id == milestone.id,
-                    AcceptanceOrder.acceptance_type.in_(['FAT', 'SAT', 'FINAL'])
+            acceptance_orders = (
+                self.db.query(AcceptanceOrder)
+                .filter(
+                    AcceptanceOrder.project_id == milestone.project_id,
+                    or_(
+                        AcceptanceOrder.milestone_id == milestone.id,
+                        AcceptanceOrder.acceptance_type.in_(["FAT", "SAT", "FINAL"]),
+                    ),
                 )
-            ).all()
+                .all()
+            )
 
             # 检查是否有通过的验收单
-            passed_orders = [o for o in acceptance_orders if o.overall_result == 'PASSED']
+            passed_orders = [o for o in acceptance_orders if o.overall_result == "PASSED"]
             if not passed_orders:
-                missing_items.append('验收未通过')
+                missing_items.append("验收未通过")
 
         return len(missing_items) == 0, missing_items
 
-    def handle_acceptance_failed(
-        self,
-        acceptance_order: AcceptanceOrder
-    ) -> List[ProjectMilestone]:
+    def handle_acceptance_failed(self, acceptance_order: AcceptanceOrder) -> List[ProjectMilestone]:
         """
         处理验收失败，自动生成问题清单并阻塞相关里程碑
 
@@ -373,26 +386,30 @@ class ProgressIntegrationService:
         """
         blocked_milestones = []
 
-        if acceptance_order.overall_result != 'FAILED':
+        if acceptance_order.overall_result != "FAILED":
             return blocked_milestones
 
         # 查找关联的里程碑
-        milestones = self.db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == acceptance_order.project_id,
-            ProjectMilestone.status.in_(['PENDING', 'IN_PROGRESS'])
-        ).all()
+        milestones = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == acceptance_order.project_id,
+                ProjectMilestone.status.in_(["PENDING", "IN_PROGRESS"]),
+            )
+            .all()
+        )
 
         # 根据验收类型确定关联的里程碑
-        if acceptance_order.acceptance_type == 'FAT':
+        if acceptance_order.acceptance_type == "FAT":
             # FAT关联S6阶段的里程碑
-            milestones = [m for m in milestones if m.stage_code == 'S6']
-        elif acceptance_order.acceptance_type in ['SAT', 'FINAL']:
+            milestones = [m for m in milestones if m.stage_code == "S6"]
+        elif acceptance_order.acceptance_type in ["SAT", "FINAL"]:
             # SAT/终验收关联S8/S9阶段的里程碑
-            milestones = [m for m in milestones if m.stage_code in ['S8', 'S9']]
+            milestones = [m for m in milestones if m.stage_code in ["S8", "S9"]]
 
         # 阻塞里程碑并生成问题清单
         for milestone in milestones:
-            milestone.status = 'BLOCKED'
+            milestone.status = "BLOCKED"
             self.db.add(milestone)
             blocked_milestones.append(milestone)
 
@@ -400,7 +417,7 @@ class ProgressIntegrationService:
             issue = Issue(
                 issue_no=f"ISSUE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 project_id=acceptance_order.project_id,
-                category='ACCEPTANCE',
+                category="ACCEPTANCE",
                 issue_type=IssueTypeEnum.BLOCKER.value,
                 severity=SeverityEnum.MAJOR.value,
                 title=f"验收失败：{acceptance_order.order_no}",
@@ -409,17 +426,14 @@ class ProgressIntegrationService:
                 is_blocking=True,
                 acceptance_order_id=acceptance_order.id,
                 report_date=datetime.now(),
-                reporter_id=acceptance_order.created_by or 1
+                reporter_id=acceptance_order.created_by or 1,
             )
             self.db.add(issue)
 
         self.db.commit()
         return blocked_milestones
 
-    def handle_acceptance_passed(
-        self,
-        acceptance_order: AcceptanceOrder
-    ) -> List[ProjectMilestone]:
+    def handle_acceptance_passed(self, acceptance_order: AcceptanceOrder) -> List[ProjectMilestone]:
         """
         处理验收通过，自动解除相关里程碑阻塞
 
@@ -431,34 +445,44 @@ class ProgressIntegrationService:
         """
         unblocked_milestones = []
 
-        if acceptance_order.overall_result != 'PASSED':
+        if acceptance_order.overall_result != "PASSED":
             return unblocked_milestones
 
         # 查找因该验收失败而阻塞的里程碑
-        milestones = self.db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == acceptance_order.project_id,
-            ProjectMilestone.status == 'BLOCKED'
-        ).all()
+        milestones = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == acceptance_order.project_id,
+                ProjectMilestone.status == "BLOCKED",
+            )
+            .all()
+        )
 
         # 根据验收类型确定关联的里程碑
-        if acceptance_order.acceptance_type == 'FAT':
-            milestones = [m for m in milestones if getattr(m, 'stage_code', None) == 'S6']
-        elif acceptance_order.acceptance_type in ['SAT', 'FINAL']:
-            milestones = [m for m in milestones if getattr(m, 'stage_code', None) in ['S8', 'S9']]
+        if acceptance_order.acceptance_type == "FAT":
+            milestones = [m for m in milestones if getattr(m, "stage_code", None) == "S6"]
+        elif acceptance_order.acceptance_type in ["SAT", "FINAL"]:
+            milestones = [m for m in milestones if getattr(m, "stage_code", None) in ["S8", "S9"]]
 
         # 检查是否还有其他阻塞原因
         for milestone in milestones:
             # 检查是否还有未解决的阻塞问题
-            blocking_issues = self.db.query(Issue).filter(
-                Issue.project_id == acceptance_order.project_id,
-                Issue.is_blocking,
-                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
-                Issue.acceptance_order_id != acceptance_order.id
-            ).count()
+            blocking_issues = (
+                self.db.query(Issue)
+                .filter(
+                    Issue.project_id == acceptance_order.project_id,
+                    Issue.is_blocking,
+                    Issue.status.in_(
+                        [IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]
+                    ),
+                    Issue.acceptance_order_id != acceptance_order.id,
+                )
+                .count()
+            )
 
             if blocking_issues == 0:
                 # 没有其他阻塞问题，解除阻塞
-                milestone.status = 'IN_PROGRESS'
+                milestone.status = "IN_PROGRESS"
                 self.db.add(milestone)
                 unblocked_milestones.append(milestone)
 

@@ -66,10 +66,14 @@ def test_analyze_passes_user_projects():
 def test_use_ai_flag_reflects_env():
     with patch.dict("os.environ", {"ALIBABA_API_KEY": "test-key"}):
         import importlib
+
         import app.services.work_log_ai.core as m
+
         importlib.reload(m)
         assert m.USE_AI is True
     # 还原
     import importlib
+
     import app.services.work_log_ai.core as m2
+
     importlib.reload(m2)

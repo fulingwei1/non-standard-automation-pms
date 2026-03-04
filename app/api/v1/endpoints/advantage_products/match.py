@@ -24,28 +24,27 @@ router = APIRouter()
 def check_product_match(
     request: ProductMatchCheckRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:read"))
+    current_user: User = Depends(security.require_permission("advantage_product:read")),
 ):
     """检查产品名称是否匹配优势产品"""
     product_name = request.product_name.strip()
 
     if not product_name:
-        return ProductMatchCheckResponse(
-            match_type="UNKNOWN",
-            matched_product=None,
-            suggestions=[]
-        )
+        return ProductMatchCheckResponse(match_type="UNKNOWN", matched_product=None, suggestions=[])
 
     # 精确匹配
-    exact_match = db.query(AdvantageProduct).filter(
-        AdvantageProduct.is_active,
-        AdvantageProduct.product_name == product_name
-    ).first()
+    exact_match = (
+        db.query(AdvantageProduct)
+        .filter(AdvantageProduct.is_active, AdvantageProduct.product_name == product_name)
+        .first()
+    )
 
     if exact_match:
-        cat = db.query(AdvantageProductCategory).filter(
-            AdvantageProductCategory.id == exact_match.category_id
-        ).first()
+        cat = (
+            db.query(AdvantageProductCategory)
+            .filter(AdvantageProductCategory.id == exact_match.category_id)
+            .first()
+        )
         return ProductMatchCheckResponse(
             match_type="ADVANTAGE",
             matched_product=AdvantageProductSimple(
@@ -53,14 +52,20 @@ def check_product_match(
                 product_code=exact_match.product_code,
                 product_name=exact_match.product_name,
                 category_id=exact_match.category_id,
-                category_name=cat.name if cat else None
+                category_name=cat.name if cat else None,
             ),
-            suggestions=[]
+            suggestions=[],
         )
 
     # 模糊匹配 - 查找相似产品
     base_query = db.query(AdvantageProduct).filter(AdvantageProduct.is_active)
-    base_query = apply_keyword_filter(base_query, AdvantageProduct, product_name, ["product_name", "product_code"], use_ilike=False)
+    base_query = apply_keyword_filter(
+        base_query,
+        AdvantageProduct,
+        product_name,
+        ["product_name", "product_code"],
+        use_ilike=False,
+    )
     similar_products = base_query.limit(5).all()
 
     categories = {c.id: c.name for c in db.query(AdvantageProductCategory).all()}
@@ -71,7 +76,7 @@ def check_product_match(
             product_code=p.product_code,
             product_name=p.product_name,
             category_id=p.category_id,
-            category_name=categories.get(p.category_id)
+            category_name=categories.get(p.category_id),
         )
         for p in similar_products
     ]
@@ -80,12 +85,8 @@ def check_product_match(
         return ProductMatchCheckResponse(
             match_type="ADVANTAGE",  # 有相似产品，可能是优势产品
             matched_product=None,
-            suggestions=suggestions
+            suggestions=suggestions,
         )
 
     # 没有匹配，视为新产品
-    return ProductMatchCheckResponse(
-        match_type="NEW",
-        matched_product=None,
-        suggestions=[]
-    )
+    return ProductMatchCheckResponse(match_type="NEW", matched_product=None, suggestions=[])

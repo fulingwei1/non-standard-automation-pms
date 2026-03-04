@@ -5,9 +5,10 @@ NumberGenerator 类：纯逻辑（无需 db）
 其他函数：mock db.query
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.utils.number_generator import (
     NumberGenerator,
@@ -20,10 +21,10 @@ from app.utils.number_generator import (
     generate_sequential_no,
 )
 
-
 # =============================================================================
 # NumberGenerator 类 - 纯逻辑，不需要 DB
 # =============================================================================
+
 
 class TestNumberGeneratorClass:
 
@@ -78,6 +79,7 @@ class TestNumberGeneratorClass:
 # generate_sequential_no - mock db
 # =============================================================================
 
+
 def make_mock_db(first_result=None):
     """构造支持链式调用的 mock db"""
     db = MagicMock()
@@ -92,11 +94,13 @@ def make_mock_db(first_result=None):
 
 class MockModel:
     """Mock SQLAlchemy model - columns must support .desc() for order_by"""
+
     __tablename__ = "test_table"
 
     class _Col:
         def desc(self):
             return self
+
         def asc(self):
             return self
 
@@ -112,8 +116,9 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "ECN",
-                                        separator="-", seq_length=3)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "ECN", separator="-", seq_length=3
+        )
         assert result == "ECN-260217-001"
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -123,8 +128,9 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "PJ",
-                                        separator="", use_date=True, seq_length=3)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "PJ", separator="", use_date=True, seq_length=3
+        )
         assert result == "PJ260217001"
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -136,8 +142,9 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=mock_record)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "ECN",
-                                        separator="-", seq_length=3)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "ECN", separator="-", seq_length=3
+        )
         assert result == "ECN-260217-006"
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -146,8 +153,9 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "TEST",
-                                        use_date=False, separator="-", seq_length=3)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "TEST", use_date=False, separator="-", seq_length=3
+        )
         assert result == "TEST-001"
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -157,8 +165,9 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "X",
-                                        separator="-", seq_length=5)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "X", separator="-", seq_length=5
+        )
         seq_part = result.split("-")[-1]
         assert len(seq_part) == 5
         assert seq_part == "00001"
@@ -169,14 +178,16 @@ class TestGenerateSequentialNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_sequential_no(db, MockModel, "sequential_no", "ID",
-                                        use_date=False, separator="", seq_length=4)
+        result = generate_sequential_no(
+            db, MockModel, "sequential_no", "ID", use_date=False, separator="", seq_length=4
+        )
         assert result == "ID0001"
 
 
 # =============================================================================
 # generate_monthly_no
 # =============================================================================
+
 
 class TestGenerateMonthlyNo:
 
@@ -187,8 +198,9 @@ class TestGenerateMonthlyNo:
         db, q = make_mock_db(first_result=None)
         mock_filter.return_value = q
 
-        result = generate_monthly_no(db, MockModel, "sequential_no", "L",
-                                     separator="-", seq_length=3)
+        result = generate_monthly_no(
+            db, MockModel, "sequential_no", "L", separator="-", seq_length=3
+        )
         assert result == "L2602-001"
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -200,14 +212,16 @@ class TestGenerateMonthlyNo:
         db, q = make_mock_db(first_result=mock_record)
         mock_filter.return_value = q
 
-        result = generate_monthly_no(db, MockModel, "sequential_no", "L",
-                                     separator="-", seq_length=3)
+        result = generate_monthly_no(
+            db, MockModel, "sequential_no", "L", separator="-", seq_length=3
+        )
         assert result == "L2602-011"
 
 
 # =============================================================================
 # generate_employee_code
 # =============================================================================
+
 
 class TestGenerateEmployeeCode:
 
@@ -251,6 +265,7 @@ class TestGenerateEmployeeCode:
 # generate_customer_code
 # =============================================================================
 
+
 class TestGenerateCustomerCode:
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -283,6 +298,7 @@ class TestGenerateCustomerCode:
 # =============================================================================
 # generate_material_code
 # =============================================================================
+
 
 class TestGenerateMaterialCode:
 
@@ -325,6 +341,7 @@ class TestGenerateMaterialCode:
 # generate_machine_code
 # =============================================================================
 
+
 class TestGenerateMachineCode:
 
     @patch("app.utils.number_generator.apply_like_filter")
@@ -358,6 +375,7 @@ class TestGenerateMachineCode:
 # =============================================================================
 # generate_calculation_code
 # =============================================================================
+
 
 class TestGenerateCalculationCode:
 

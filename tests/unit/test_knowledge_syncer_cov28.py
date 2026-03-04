@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - knowledge_syncer 单元测试（项目知识库同步服务）"""
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_review_ai.knowledge_syncer")
 
 from app.services.project_review_ai.knowledge_syncer import ProjectKnowledgeSyncer
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_review(
     review_id=1,
@@ -54,13 +55,12 @@ def _make_review(
 
 # ─── _calculate_quality_score ────────────────────────────────
 
+
 class TestCalculateQualityScore:
 
     def setup_method(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(db)
 
     def test_base_score_without_any_data(self):
@@ -145,13 +145,12 @@ class TestCalculateQualityScore:
 
 # ─── _extract_tags ───────────────────────────────────────────
 
+
 class TestExtractTags:
 
     def setup_method(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(db)
 
     def _make_project(self, industry=None, project_type=None):
@@ -214,17 +213,17 @@ class TestExtractTags:
 
 # ─── _parse_summary_response ─────────────────────────────────
 
+
 class TestParseSummaryResponse:
 
     def setup_method(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(db)
 
     def test_parses_valid_json(self):
         import json
+
         payload = {"summary": "摘要内容", "technical_highlights": "技术亮点"}
         ai_response = {"content": json.dumps(payload)}
         result = self.syncer._parse_summary_response(ai_response)
@@ -232,6 +231,7 @@ class TestParseSummaryResponse:
 
     def test_parses_json_wrapped_in_markdown(self):
         import json
+
         payload = {"summary": "摘要", "technical_highlights": "亮点"}
         content = f"```json\n{json.dumps(payload)}\n```"
         ai_response = {"content": content}
@@ -252,13 +252,12 @@ class TestParseSummaryResponse:
 
 # ─── get_sync_status ─────────────────────────────────────────
 
+
 class TestGetSyncStatus:
 
     def setup_method(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(db)
             self.syncer.db = MagicMock()
 

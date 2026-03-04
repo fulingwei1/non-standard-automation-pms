@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """DataSyncService 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestDataSyncService:
 
     def _make_service(self):
         from app.services.data_sync_service import DataSyncService
+
         db = MagicMock()
         return DataSyncService(db), db
 
@@ -34,16 +36,14 @@ class TestDataSyncService:
         """合同金额变更时应同步到项目"""
         svc, db = self._make_service()
         contract = MagicMock(
-            id=1, project_id=10,
+            id=1,
+            project_id=10,
             contract_amount=Decimal("500000"),
             signed_date=None,
-            quote_version=None
+            quote_version=None,
         )
         project = MagicMock(
-            id=10,
-            contract_amount=Decimal("400000"),
-            contract_date=None,
-            planned_end_date=None
+            id=10, contract_amount=Decimal("400000"), contract_date=None, planned_end_date=None
         )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = svc.sync_contract_to_project(1)
@@ -56,17 +56,15 @@ class TestDataSyncService:
         svc, db = self._make_service()
         amount = Decimal("500000")
         contract = MagicMock(
-            id=1, project_id=10,
+            id=1,
+            project_id=10,
             contract_amount=amount,
             signed_date=None,
             quote_version=None,
-            delivery_deadline=None
+            delivery_deadline=None,
         )
         project = MagicMock(
-            id=10,
-            contract_amount=amount,
-            contract_date=None,
-            planned_end_date=None
+            id=10, contract_amount=amount, contract_date=None, planned_end_date=None
         )
         db.query.return_value.filter.return_value.first.side_effect = [contract, project]
         result = svc.sync_contract_to_project(1)
@@ -133,7 +131,9 @@ class TestDataSyncService:
 
     def test_sync_customer_no_projects(self):
         svc, db = self._make_service()
-        customer = MagicMock(id=1, customer_name="客户A", contact_person="张三", contact_phone="138")
+        customer = MagicMock(
+            id=1, customer_name="客户A", contact_person="张三", contact_phone="138"
+        )
         db.query.return_value.filter.return_value.first.return_value = customer
         db.query.return_value.filter.return_value.all.return_value = []
         result = svc.sync_customer_to_projects(1)
@@ -143,8 +143,12 @@ class TestDataSyncService:
     def test_sync_customer_updates_project_name(self):
         """客户名称变更时项目中的 customer_name 应更新"""
         svc, db = self._make_service()
-        customer = MagicMock(id=1, customer_name="新客户名", contact_person=None, contact_phone=None)
-        project = MagicMock(id=100, customer_name="旧客户名", customer_contact=None, customer_phone=None)
+        customer = MagicMock(
+            id=1, customer_name="新客户名", contact_person=None, contact_phone=None
+        )
+        project = MagicMock(
+            id=100, customer_name="旧客户名", customer_contact=None, customer_phone=None
+        )
         db.query.return_value.filter.return_value.first.return_value = customer
         db.query.return_value.filter.return_value.all.return_value = [project]
         result = svc.sync_customer_to_projects(1)

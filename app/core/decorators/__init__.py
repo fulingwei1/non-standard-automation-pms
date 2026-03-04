@@ -12,7 +12,7 @@ from .tenant_isolation import (
 )
 
 __all__ = [
-    'require_tenant_isolation',
-    'allow_cross_tenant',
-    'tenant_resource_check',
+    "require_tenant_isolation",
+    "allow_cross_tenant",
+    "tenant_resource_check",
 ]

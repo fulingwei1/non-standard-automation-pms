@@ -2,9 +2,10 @@
 """
 第十九批 - 审批流程通知模块单元测试
 """
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.notify.flow_notifications")
 
@@ -44,7 +45,7 @@ def test_notify_withdrawn_sends_to_all_users():
     instance = make_instance()
     svc.notify_withdrawn(instance, affected_user_ids=[1, 2, 3])
     assert len(svc._sent) == 3
-    receivers = [n['receiver_id'] for n in svc._sent]
+    receivers = [n["receiver_id"] for n in svc._sent]
     assert receivers == [1, 2, 3]
 
 
@@ -54,9 +55,9 @@ def test_notify_withdrawn_notification_type():
     instance = make_instance(title="合同审批")
     svc.notify_withdrawn(instance, affected_user_ids=[5])
     n = svc._sent[0]
-    assert n['type'] == 'APPROVAL_WITHDRAWN'
-    assert '合同审批' in n['title']
-    assert n['instance_id'] == instance.id
+    assert n["type"] == "APPROVAL_WITHDRAWN"
+    assert "合同审批" in n["title"]
+    assert n["instance_id"] == instance.id
 
 
 def test_notify_withdrawn_empty_users():
@@ -75,10 +76,10 @@ def test_notify_transferred_basic():
     svc.notify_transferred(task, from_user_id=3)
     assert len(svc._sent) == 1
     n = svc._sent[0]
-    assert n['type'] == 'APPROVAL_TRANSFERRED'
-    assert n['receiver_id'] == 7
-    assert n['task_id'] == 42
-    assert n['instance_id'] == instance.id
+    assert n["type"] == "APPROVAL_TRANSFERRED"
+    assert n["receiver_id"] == 7
+    assert n["task_id"] == 42
+    assert n["instance_id"] == instance.id
 
 
 def test_notify_transferred_with_from_user_name():
@@ -88,7 +89,7 @@ def test_notify_transferred_with_from_user_name():
     task = make_task(assignee_id=9, instance=instance)
     svc.notify_transferred(task, from_user_id=1, from_user_name="张三")
     n = svc._sent[0]
-    assert '张三' in n['content']
+    assert "张三" in n["content"]
 
 
 def test_notify_delegated_basic():
@@ -99,8 +100,8 @@ def test_notify_delegated_basic():
     svc.notify_delegated(task)
     assert len(svc._sent) == 1
     n = svc._sent[0]
-    assert n['type'] == 'APPROVAL_DELEGATED'
-    assert n['receiver_id'] == 15
+    assert n["type"] == "APPROVAL_DELEGATED"
+    assert n["receiver_id"] == 15
 
 
 def test_notify_delegated_with_original_user():
@@ -110,7 +111,7 @@ def test_notify_delegated_with_original_user():
     task = make_task(instance=instance)
     svc.notify_delegated(task, original_user_name="李四")
     n = svc._sent[0]
-    assert '李四' in n['content']
+    assert "李四" in n["content"]
 
 
 def test_notify_add_approver_after():
@@ -120,10 +121,10 @@ def test_notify_add_approver_after():
     task = make_task(assignee_id=20, instance=instance)
     svc.notify_add_approver(task, added_by_name="王五", position="AFTER")
     n = svc._sent[0]
-    assert n['type'] == 'APPROVAL_ADD_APPROVER'
-    assert '后加签' in n['content']
-    assert '王五' in n['content']
-    assert n['receiver_id'] == 20
+    assert n["type"] == "APPROVAL_ADD_APPROVER"
+    assert "后加签" in n["content"]
+    assert "王五" in n["content"]
+    assert n["receiver_id"] == 20
 
 
 def test_notify_add_approver_before():
@@ -133,4 +134,4 @@ def test_notify_add_approver_before():
     task = make_task(instance=instance)
     svc.notify_add_approver(task, position="BEFORE")
     n = svc._sent[0]
-    assert '前加签' in n['content']
+    assert "前加签" in n["content"]

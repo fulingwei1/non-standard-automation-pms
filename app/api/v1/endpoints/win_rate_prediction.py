@@ -4,8 +4,9 @@
 多因素评估：商务关系 + 技术方案 + 价格竞争力 + 其他因素
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 综合赢单率预测模型 ==========
 
+
 @router.get("/win-rate/comprehensive-model", summary="综合赢单率预测模型")
 def get_comprehensive_win_rate_model(
     db: Session = Depends(deps.get_db),
@@ -25,22 +27,21 @@ def get_comprehensive_win_rate_model(
 ) -> Any:
     """
     综合赢单率预测模型
-    
+
     4 大核心因素：
     1. 商务关系成熟度 (35%) - 决策链/互动/关系深度/支持度
     2. 技术方案匹配度 (30%) - 需求覆盖/技术优势/案例背书
     3. 价格竞争力 (25%) - 价格水平/性价比/付款方式
     4. 其他因素 (10%) - 品牌/交付能力/售后服务
-    
+
     计算公式：
     综合赢单率 = 商务关系×35% + 技术方案×30% + 价格竞争力×25% + 其他×10%
     """
-    
+
     model = {
         "model_name": "综合赢单率预测模型 v1.0",
         "version": "1.0",
         "created_date": date.today().isoformat(),
-        
         "formula": {
             "description": "加权平均计算",
             "calculation": "商务关系×35% + 技术方案×30% + 价格竞争力×25% + 其他×10%",
@@ -51,7 +52,6 @@ def get_comprehensive_win_rate_model(
                 "other_factors": {"weight": 0.10, "description": "其他因素"},
             },
         },
-        
         # ========== 因素 1: 商务关系成熟度 (35%) ==========
         "business_relationship": {
             "weight": 35,
@@ -78,7 +78,6 @@ def get_comprehensive_win_rate_model(
                 "contribution_to_win_rate": 78 * 0.35,  # 27.3%
             },
         },
-        
         # ========== 因素 2: 技术方案匹配度 (30%) ==========
         "technical_solution": {
             "weight": 30,
@@ -143,16 +142,15 @@ def get_comprehensive_win_rate_model(
                 "opportunity": "FCT 测试线项目",
                 "scores": {
                     "requirement_coverage": 90,  # 覆盖 92%
-                    "technical_advantage": 75,   # 适度领先
-                    "case_references": 75,       # 1 个标杆案例
-                    "customization": 70,         # 部分定制
-                    "team_recognition": 80,      # 认可
+                    "technical_advantage": 75,  # 适度领先
+                    "case_references": 75,  # 1 个标杆案例
+                    "customization": 70,  # 部分定制
+                    "team_recognition": 80,  # 认可
                 },
                 "weighted_score": 81,
                 "contribution_to_win_rate": 81 * 0.30,  # 24.3%
             },
         },
-        
         # ========== 因素 3: 价格竞争力 (25%) ==========
         "price_competitiveness": {
             "weight": 25,
@@ -207,16 +205,15 @@ def get_comprehensive_win_rate_model(
             "scoring_example": {
                 "opportunity": "FCT 测试线项目",
                 "scores": {
-                    "price_level": 50,      # 市场平均
+                    "price_level": 50,  # 市场平均
                     "cost_performance": 75,  # 性价比好
-                    "payment_terms": 75,     # 灵活
-                    "tco": 75,               # 适度优势
+                    "payment_terms": 75,  # 灵活
+                    "tco": 75,  # 适度优势
                 },
                 "weighted_score": 66,
                 "contribution_to_win_rate": 66 * 0.25,  # 16.5%
             },
         },
-        
         # ========== 因素 4: 其他因素 (10%) ==========
         "other_factors": {
             "weight": 10,
@@ -255,7 +252,6 @@ def get_comprehensive_win_rate_model(
                 "contribution_to_win_rate": 72 * 0.10,  # 7.2%
             },
         },
-        
         # ========== 综合计算示例 ==========
         "comprehensive_example": {
             "opportunity": "宁德时代 FCT 测试线项目",
@@ -269,7 +265,6 @@ def get_comprehensive_win_rate_model(
             "confidence_level": 85,
             "recommendation": "重点跟进，赢单率 75%，建议加强价格谈判",
         },
-        
         # ========== 赢单率分级 ==========
         "win_rate_levels": {
             "very_high": {"range": "≥80%", "action": "锁定赢单，防止意外"},
@@ -279,11 +274,12 @@ def get_comprehensive_win_rate_model(
             "very_low": {"range": "<20%", "action": "考虑放弃或战略投入"},
         },
     }
-    
+
     return model
 
 
 # ========== 2. 商机赢单率评估 ==========
+
 
 @router.get("/win-rate/opportunity/{opportunity_id}/assess", summary="商机赢单率评估")
 def assess_opportunity_win_rate(
@@ -293,14 +289,14 @@ def assess_opportunity_win_rate(
 ) -> Any:
     """
     评估特定商机的赢单率
-    
+
     返回：
     - 4 大因素得分
     - 综合赢单率
     - 短板分析
     - 改进建议
     """
-    
+
     assessment = {
         "opportunity_id": opportunity_id,
         "opportunity_name": "宁德时代 FCT 测试线项目",
@@ -308,7 +304,6 @@ def assess_opportunity_win_rate(
         "estimated_amount": 3500000,
         "expected_close_date": "2026-03-31",
         "assessment_date": date.today().isoformat(),
-        
         # ========== 4 大因素详细评估 ==========
         "factors_assessment": {
             "business_relationship": {
@@ -387,7 +382,6 @@ def assess_opportunity_win_rate(
                 ],
             },
         },
-        
         # ========== 综合计算 ==========
         "comprehensive_calculation": {
             "business_relationship": {"score": 78, "weight": 0.35, "contribution": 27.3},
@@ -397,7 +391,6 @@ def assess_opportunity_win_rate(
             "total_win_rate": 75.3,
             "rounded_win_rate": 75,
         },
-        
         # ========== 赢单率分级 ==========
         "win_rate_classification": {
             "level": "high",
@@ -405,7 +398,6 @@ def assess_opportunity_win_rate(
             "description": "重点跟进，巩固优势",
             "confidence": 85,
         },
-        
         # ========== 雷达图数据 ==========
         "radar_data": [
             {"factor": "商务关系", "score": 78, "max": 100, "percentage": 78},
@@ -413,7 +405,6 @@ def assess_opportunity_win_rate(
             {"factor": "价格竞争力", "score": 66, "max": 100, "percentage": 66},
             {"factor": "其他因素", "score": 72, "max": 100, "percentage": 72},
         ],
-        
         # ========== 短板分析 ==========
         "weakness_analysis": {
             "primary_weakness": {
@@ -437,7 +428,6 @@ def assess_opportunity_win_rate(
                 ],
             },
         },
-        
         # ========== 改进建议（按优先级） ==========
         "improvement_recommendations": [
             {
@@ -504,7 +494,6 @@ def assess_opportunity_win_rate(
                 ],
             },
         ],
-        
         # ========== 预计结果 ==========
         "projected_outcome": {
             "current_win_rate": 75,
@@ -515,7 +504,6 @@ def assess_opportunity_win_rate(
             "if_improved_revenue": 3500000 * 0.81,  # 283.5 万
             "revenue_upside": 210000,  # 21 万
         },
-        
         # ========== 风险预警 ==========
         "risk_alerts": [
             {
@@ -541,11 +529,12 @@ def assess_opportunity_win_rate(
             },
         ],
     }
-    
+
     return assessment
 
 
 # ========== 3. 多商机对比 ==========
+
 
 @router.get("/win-rate/portfolio-comparison", summary="多商机赢单率对比")
 def get_portfolio_win_rate_comparison(
@@ -555,16 +544,15 @@ def get_portfolio_win_rate_comparison(
 ) -> Any:
     """
     对比多个商机的赢单率
-    
+
     帮助领导了解整体 pipeline 健康度
     """
-    
+
     comparison = {
         "assessment_date": date.today().isoformat(),
         "total_opportunities": 28,
         "total_pipeline_value": 125000000,
         "weighted_pipeline_value": 68500000,  # 金额×赢单率
-        
         # 赢单率分布
         "win_rate_distribution": {
             "very_high_80plus": {"count": 3, "value": 12000000, "percentage": 10.7},
@@ -573,7 +561,6 @@ def get_portfolio_win_rate_comparison(
             "low_20_39": {"count": 5, "value": 23000000, "percentage": 17.9},
             "very_low_below_20": {"count": 2, "value": 10000000, "percentage": 7.1},
         },
-        
         # 重点商机列表
         "key_opportunities": [
             {
@@ -641,7 +628,6 @@ def get_portfolio_win_rate_comparison(
                 "close_date": "2026-04-05",
             },
         ],
-        
         # 需要关注的商机
         "needs_attention": [
             {
@@ -665,7 +651,6 @@ def get_portfolio_win_rate_comparison(
                 "recommended_action": "重新评估需求，调整方案",
             },
         ],
-        
         # 团队对比
         "team_comparison": [
             {
@@ -690,7 +675,6 @@ def get_portfolio_win_rate_comparison(
                 "weighted_value": 13750000,
             },
         ],
-        
         # 改进建议
         "strategic_recommendations": [
             {
@@ -716,5 +700,5 @@ def get_portfolio_win_rate_comparison(
             },
         ],
     }
-    
+
     return comparison

@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 O1组 API层单元测试 - timesheet/records.py
@@ -13,8 +14,8 @@ O1组 API层单元测试 - timesheet/records.py
   - delete_timesheet
 """
 import sys
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 redis_mock = MagicMock()
@@ -22,6 +23,7 @@ sys.modules.setdefault("redis", redis_mock)
 sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import os
+
 os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
@@ -29,10 +31,10 @@ os.environ.setdefault("ENABLE_SCHEDULER", "false")
 import pytest
 from fastapi import HTTPException
 
-
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _make_db():
     db = MagicMock()
@@ -85,6 +87,7 @@ def _make_pagination():
 # Tests: list_timesheets
 # ──────────────────────────────────────────────
 
+
 class TestListTimesheets:
 
     def test_list_timesheets_empty(self):
@@ -101,8 +104,13 @@ class TestListTimesheets:
         mock_query.filter.return_value = mock_query
         db.query.return_value = mock_query
 
-        with patch("app.core.permissions.timesheet.apply_timesheet_access_filter", return_value=mock_query), \
-             patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag:
+        with (
+            patch(
+                "app.core.permissions.timesheet.apply_timesheet_access_filter",
+                return_value=mock_query,
+            ),
+            patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag,
+        ):
             mock_pag.return_value.all.return_value = []
 
             result = list_timesheets(
@@ -144,8 +152,13 @@ class TestListTimesheets:
         }.get(model, mock_query)
 
         # Simplify: all returns from db.query call the mock_query
-        with patch("app.core.permissions.timesheet.apply_timesheet_access_filter", return_value=mock_query), \
-             patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag:
+        with (
+            patch(
+                "app.core.permissions.timesheet.apply_timesheet_access_filter",
+                return_value=mock_query,
+            ),
+            patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag,
+        ):
             mock_pag.return_value.all.return_value = [ts]
             # user and project queries
             mock_query.filter.return_value.first.side_effect = [user_mock, project_mock]
@@ -177,8 +190,13 @@ class TestListTimesheets:
         mock_query.filter.return_value = mock_query
         db.query.return_value = mock_query
 
-        with patch("app.core.permissions.timesheet.apply_timesheet_access_filter", return_value=mock_query), \
-             patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag:
+        with (
+            patch(
+                "app.core.permissions.timesheet.apply_timesheet_access_filter",
+                return_value=mock_query,
+            ),
+            patch("app.api.v1.endpoints.timesheet.records.apply_pagination") as mock_pag,
+        ):
             mock_pag.return_value.all.return_value = []
 
             result = list_timesheets(
@@ -198,6 +216,7 @@ class TestListTimesheets:
 # ──────────────────────────────────────────────
 # Tests: create_timesheet
 # ──────────────────────────────────────────────
+
 
 class TestCreateTimesheet:
 
@@ -266,18 +285,22 @@ class TestCreateTimesheet:
         ts_in.description = "编写测试代码"
         ts_in.task_id = None
 
-        project_mock = MagicMock(project_code=f"P0001-{uuid.uuid4().hex[:8]}", project_name="比亚迪项目")
+        project_mock = MagicMock(
+            project_code=f"P0001-{uuid.uuid4().hex[:8]}", project_name="比亚迪项目"
+        )
         user_mock = MagicMock(real_name="管理员", username="admin", department_id=1)
         department_mock = MagicMock(id=1, name="技术部")
         ts_instance = _make_timesheet()
 
-        with patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=project_mock), \
-             patch("app.api.v1.endpoints.timesheet.records.save_obj"), \
-             patch("app.api.v1.endpoints.timesheet.records.get_timesheet_detail") as mock_detail:
+        with (
+            patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=project_mock),
+            patch("app.api.v1.endpoints.timesheet.records.save_obj"),
+            patch("app.api.v1.endpoints.timesheet.records.get_timesheet_detail") as mock_detail,
+        ):
             # no duplicate, then user, dept, project queries
             db.query.return_value.filter.return_value.first.side_effect = [
-                None,          # duplicate check
-                user_mock,     # user lookup
+                None,  # duplicate check
+                user_mock,  # user lookup
                 department_mock,  # dept lookup
                 project_mock,  # project code/name lookup
             ]
@@ -293,6 +316,7 @@ class TestCreateTimesheet:
 # ──────────────────────────────────────────────
 # Tests: get_timesheet_detail
 # ──────────────────────────────────────────────
+
 
 class TestGetTimesheetDetail:
 
@@ -350,6 +374,7 @@ class TestGetTimesheetDetail:
 # Tests: update_timesheet
 # ──────────────────────────────────────────────
 
+
 class TestUpdateTimesheet:
 
     def test_update_timesheet_success(self):
@@ -369,13 +394,17 @@ class TestUpdateTimesheet:
         user_mock = MagicMock(real_name="管理员", username="admin")
         project_mock = MagicMock(project_name="比亚迪项目")
 
-        with patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts), \
-             patch("app.api.v1.endpoints.timesheet.records.save_obj"), \
-             patch("app.api.v1.endpoints.timesheet.records.get_timesheet_detail") as mock_detail:
+        with (
+            patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts),
+            patch("app.api.v1.endpoints.timesheet.records.save_obj"),
+            patch("app.api.v1.endpoints.timesheet.records.get_timesheet_detail") as mock_detail,
+        ):
             db.query.return_value.filter.return_value.first.side_effect = [user_mock, project_mock]
             mock_detail.return_value = MagicMock(id=1)
 
-            result = update_timesheet(db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user)  # noqa: E501
+            result = update_timesheet(
+                db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user
+            )  # noqa: E501
 
         mock_detail.assert_called_once()
 
@@ -395,7 +424,9 @@ class TestUpdateTimesheet:
 
         with patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts):
             with pytest.raises(HTTPException) as exc_info:
-                update_timesheet(db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user)  # noqa: E501
+                update_timesheet(
+                    db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user
+                )  # noqa: E501
 
         assert exc_info.value.status_code == 403
 
@@ -415,7 +446,9 @@ class TestUpdateTimesheet:
 
         with patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts):
             with pytest.raises(HTTPException) as exc_info:
-                update_timesheet(db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user)  # noqa: E501
+                update_timesheet(
+                    db=db, timesheet_id=1, timesheet_in=ts_in, current_user=current_user
+                )  # noqa: E501
 
         assert exc_info.value.status_code == 400
 
@@ -423,6 +456,7 @@ class TestUpdateTimesheet:
 # ──────────────────────────────────────────────
 # Tests: delete_timesheet
 # ──────────────────────────────────────────────
+
 
 class TestDeleteTimesheet:
 
@@ -434,8 +468,10 @@ class TestDeleteTimesheet:
         current_user = _make_user(user_id=1)
         ts = _make_timesheet(user_id=1, status="DRAFT")
 
-        with patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts), \
-             patch("app.api.v1.endpoints.timesheet.records.delete_obj") as mock_delete:
+        with (
+            patch("app.api.v1.endpoints.timesheet.records.get_or_404", return_value=ts),
+            patch("app.api.v1.endpoints.timesheet.records.delete_obj") as mock_delete,
+        ):
             result = delete_timesheet(db=db, timesheet_id=1, current_user=current_user)
 
         mock_delete.assert_called_once()

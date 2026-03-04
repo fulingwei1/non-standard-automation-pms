@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """ITR流程效率分析服务单元测试 - 第三十四批"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.itr_analytics_service")
 
@@ -14,8 +15,7 @@ except ImportError:
     analyze_resolution_time = None
 
 
-def make_ticket(ticket_id, ticket_no, problem_type, urgency,
-                reported_offset_h, resolved_offset_h):
+def make_ticket(ticket_id, ticket_no, problem_type, urgency, reported_offset_h, resolved_offset_h):
     """创建 mock 工单"""
     now = datetime.now()
     ticket = MagicMock()
@@ -43,8 +43,9 @@ class TestAnalyzeResolutionTime:
 
     def test_single_ticket_stats(self):
         db = MagicMock()
-        ticket = make_ticket(1, "T001", "hardware", "HIGH",
-                             reported_offset_h=24, resolved_offset_h=0)
+        ticket = make_ticket(
+            1, "T001", "hardware", "HIGH", reported_offset_h=24, resolved_offset_h=0
+        )
 
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q

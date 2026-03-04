@@ -13,12 +13,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.sales import QuoteTemplate, QuoteTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
 from app.schemas.sales import (
     CpqPricePreviewRequest,
     CpqPricePreviewResponse,
@@ -30,6 +30,7 @@ from app.schemas.sales import (
     QuoteTemplateVersionResponse,
 )
 from app.services.cpq_pricing_service import CpqPricingService
+from app.utils.db_helpers import save_obj
 
 from .common import (
     _build_template_history,
@@ -38,7 +39,6 @@ from .common import (
     _get_previous_version,
     _serialize_quote_template,
 )
-from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -73,7 +73,7 @@ def list_quote_templates(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -223,7 +223,10 @@ def create_quote_template_version(
     )
 
 
-@router.post("/quote-templates/{template_id}/versions/{version_id}/publish", response_model=QuoteTemplateResponse)
+@router.post(
+    "/quote-templates/{template_id}/versions/{version_id}/publish",
+    response_model=QuoteTemplateResponse,
+)
 def publish_quote_template_version(
     *,
     db: Session = Depends(deps.get_db),

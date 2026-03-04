@@ -4,8 +4,9 @@
 分析对不同竞品的赢单率，指导竞争策略
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 竞争对手总览 ==========
 
+
 @router.get("/competitor/overview", summary="竞争对手总览")
 def get_competitor_overview(
     db: Session = Depends(deps.get_db),
@@ -25,18 +27,17 @@ def get_competitor_overview(
 ) -> Any:
     """
     竞争对手整体分析
-    
+
     返回：
     - 主要竞争对手列表
     - 对各竞品的赢单率
     - 竞争优势/劣势分析
     """
-    
+
     overview = {
         "analysis_date": date.today().isoformat(),
         "total_opportunities_analyzed": 156,
         "time_range": "2024-01-01 ~ 2026-03-01",
-        
         # 主要竞争对手
         "main_competitors": [
             {
@@ -76,7 +77,6 @@ def get_competitor_overview(
                 "market_position": "中端市场细分领域",
             },
         ],
-        
         # 对各竞品的赢单率对比
         "win_rate_by_competitor": [
             {
@@ -120,7 +120,6 @@ def get_competitor_overview(
                 "analysis": "对竞品 D 赢单率较低，需加强性价比和电子行业案例",
             },
         ],
-        
         # 赢单率排名
         "win_rate_ranking": {
             "highest": {
@@ -134,7 +133,6 @@ def get_competitor_overview(
                 "reason": "性价比和电子行业案例不足",
             },
         },
-        
         # 竞争优势分析
         "competitive_advantages": [
             {
@@ -179,11 +177,12 @@ def get_competitor_overview(
             },
         ],
     }
-    
+
     return overview
 
 
 # ========== 2. 竞品对比详情 ==========
+
 
 @router.get("/competitor/{competitor_id}/analysis", summary="竞品对比详情")
 def get_competitor_detailed_analysis(
@@ -193,14 +192,14 @@ def get_competitor_detailed_analysis(
 ) -> Any:
     """
     与特定竞品的详细对比分析
-    
+
     返回：
     - 历史交锋记录
     - 赢单/输单原因分析
     - 价格对比
     - 竞争优势/劣势
     """
-    
+
     # 示例：竞品 A 分析
     analysis = {
         "competitor": {
@@ -212,7 +211,6 @@ def get_competitor_detailed_analysis(
             "employees": 5000,
             "revenue": "5 亿欧元",
         },
-        
         # 交锋统计
         "head_to_head_stats": {
             "total_opportunities": 45,
@@ -223,7 +221,6 @@ def get_competitor_detailed_analysis(
             "avg_lost_amount": 4500000,
             "time_range": "2024-01-01 ~ 2026-03-01",
         },
-        
         # 按行业分析
         "by_industry": [
             {
@@ -251,7 +248,6 @@ def get_competitor_detailed_analysis(
                 "analysis": "储能行业双方都在拓展，势均力敌",
             },
         ],
-        
         # 按金额区间分析
         "by_amount_range": [
             {
@@ -279,7 +275,6 @@ def get_competitor_detailed_analysis(
                 "analysis": "大金额项目品牌劣势明显",
             },
         ],
-        
         # 赢单原因分析
         "win_reasons": [
             {
@@ -313,7 +308,6 @@ def get_competitor_detailed_analysis(
                 "description": "客户关系成熟度高",
             },
         ],
-        
         # 输单原因分析
         "loss_reasons": [
             {
@@ -341,7 +335,6 @@ def get_competitor_detailed_analysis(
                 "description": "特殊需求无法满足",
             },
         ],
-        
         # 价格对比
         "price_comparison": {
             "our_avg_price": 3200000,
@@ -369,7 +362,6 @@ def get_competitor_detailed_analysis(
                 },
             ],
         },
-        
         # 历史交锋记录
         "recent_opportunities": [
             {
@@ -400,7 +392,6 @@ def get_competitor_detailed_analysis(
                 "key_factor": "品牌知名度不足",
             },
         ],
-        
         # 竞争策略建议
         "strategy_recommendations": [
             {
@@ -423,11 +414,12 @@ def get_competitor_detailed_analysis(
             },
         ],
     }
-    
+
     return analysis
 
 
 # ========== 3. 竞争策略建议 ==========
+
 
 @router.get("/competitor/strategy-recommendations", summary="竞争策略建议")
 def get_competitor_strategy_recommendations(
@@ -437,16 +429,15 @@ def get_competitor_strategy_recommendations(
 ) -> Any:
     """
     基于竞争分析的策略建议
-    
+
     返回：
     - 针对不同竞品的应对策略
     - 销售话术建议
     - 定价策略建议
     """
-    
+
     recommendations = {
         "generated_date": date.today().isoformat(),
-        
         # 针对不同竞品的策略
         "strategies_by_competitor": [
             {
@@ -518,7 +509,6 @@ def get_competitor_strategy_recommendations(
                 "pricing_strategy": "与竞品 D 持平或略低 5%",
             },
         ],
-        
         # 按行业策略
         "strategies_by_industry": [
             {
@@ -555,7 +545,6 @@ def get_competitor_strategy_recommendations(
                 ],
             },
         ],
-        
         # 定价策略建议
         "pricing_recommendations": {
             "vs_premium_competitor": {
@@ -575,5 +564,5 @@ def get_competitor_strategy_recommendations(
             },
         },
     }
-    
+
     return recommendations

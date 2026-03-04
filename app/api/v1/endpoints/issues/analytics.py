@@ -27,7 +27,7 @@ def get_issue_board(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题看板数据（按状态分组）"""
-    query = db.query(Issue).filter(Issue.status != 'DELETED')
+    query = db.query(Issue).filter(Issue.status != "DELETED")
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
@@ -50,17 +50,19 @@ def get_issue_board(
         if status not in board:
             status = "OPEN"
 
-        board[status].append({
-            "id": issue.id,
-            "issue_no": issue.issue_no,
-            "title": issue.title,
-            "severity": issue.severity,
-            "priority": issue.priority,
-            "assignee_name": issue.assignee_name,
-            "due_date": issue.due_date.isoformat() if issue.due_date else None,
-            "is_blocking": issue.is_blocking,
-            "project_name": issue.project.project_name if issue.project else None,
-        })
+        board[status].append(
+            {
+                "id": issue.id,
+                "issue_no": issue.issue_no,
+                "title": issue.title,
+                "severity": issue.severity,
+                "priority": issue.priority,
+                "assignee_name": issue.assignee_name,
+                "due_date": issue.due_date.isoformat() if issue.due_date else None,
+                "is_blocking": issue.is_blocking,
+                "project_name": issue.project.project_name if issue.project else None,
+            }
+        )
 
     return {
         "columns": [
@@ -92,9 +94,9 @@ def get_issue_trend(
 
     query = db.query(Issue).filter(
         Issue.report_date >= datetime.combine(start_date, datetime.min.time()),
-        Issue.report_date <= datetime.combine(end_date, datetime.max.time())
+        Issue.report_date <= datetime.combine(end_date, datetime.max.time()),
     )
-    query = query.filter(Issue.status != 'DELETED')
+    query = query.filter(Issue.status != "DELETED")
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
@@ -185,12 +187,14 @@ def get_issue_trend(
         if key in trend_data:
             result.append(trend_data[key])
         else:
-            result.append({
-                "date": key,
-                "created": 0,
-                "resolved": 0,
-                "closed": 0,
-            })
+            result.append(
+                {
+                    "date": key,
+                    "created": 0,
+                    "resolved": 0,
+                    "closed": 0,
+                }
+            )
 
         if group_by == "week":
             current_date += timedelta(days=7)

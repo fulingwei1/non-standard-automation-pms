@@ -14,12 +14,12 @@ from app.core import security
 from app.models.user import User
 from app.schemas.task_center import TaskProgressUpdate, TaskUnifiedResponse
 from app.services.task_progress_service import (
- progress_error_to_http,
-  update_task_progress as update_task_progress_service,
+    progress_error_to_http,
 )
+from app.services.task_progress_service import update_task_progress as update_task_progress_service
 
-from .detail import get_task_detail
 from .batch_helpers import log_task_operation
+from .detail import get_task_detail
 
 router = APIRouter(
     prefix="",
@@ -27,7 +27,9 @@ router = APIRouter(
 )
 
 
-@router.put("/tasks/{task_id}/progress", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/tasks/{task_id}/progress", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK
+)
 def update_task_progress(
     *,
     db: Session = Depends(deps.get_db),
@@ -68,5 +70,3 @@ def update_task_progress(
     )
 
     return get_task_detail(db=db, task_id=task_id, current_user=current_user)
-
-

@@ -11,9 +11,9 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_like_filter
+from app.core import security
 from app.models.alert import (
     ExceptionEvent,
 )
@@ -25,7 +25,10 @@ router = APIRouter(tags=["notifications"])
 # ==================== 路由定义 ====================
 # 共 4 个路由
 
-@router.get("/alert-notifications", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/alert-notifications", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_alert_notifications(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -39,26 +42,27 @@ def read_alert_notifications(
 
     service = AlertNotificationService(db)
     result = service.get_user_notifications(
-        user_id=current_user.id,
-        is_read=is_read,
-        limit=pagination.limit,
-        offset=pagination.offset
+        user_id=current_user.id, is_read=is_read, limit=pagination.limit, offset=pagination.offset
     )
 
-    if not result.get('success'):
-        raise HTTPException(status_code=500, detail=result.get('message', '获取通知列表失败'))
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("message", "获取通知列表失败"))
 
-    total = result.get('total', 0)
+    total = result.get("total", 0)
     return PaginatedResponse(
-        items=result.get('items', []),
+        items=result.get("items", []),
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.put("/alert-notifications/{notification_id}/read", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/alert-notifications/{notification_id}/read",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def mark_notification_read(
     notification_id: int,
     db: Session = Depends(deps.get_db),
@@ -78,7 +82,9 @@ def mark_notification_read(
     return ResponseModel(code=200, message="已标记为已读")
 
 
-@router.get("/alert-notifications/unread-count", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get(
+    "/alert-notifications/unread-count", response_model=dict, status_code=status.HTTP_200_OK
+)
 def get_unread_notification_count(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
@@ -91,13 +97,12 @@ def get_unread_notification_count(
     service = AlertNotificationService(db)
     count = service.get_unread_count(current_user.id)
 
-    return {
-        "unread_count": count,
-        "user_id": current_user.id
-    }
+    return {"unread_count": count, "user_id": current_user.id}
 
 
-@router.post("/alert-notifications/batch-read", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/alert-notifications/batch-read", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def batch_mark_notifications_read(
     notification_ids: List[int] = Body(..., description="通知ID列表"),
     db: Session = Depends(deps.get_db),
@@ -111,17 +116,16 @@ def batch_mark_notifications_read(
     service = AlertNotificationService(db)
     result = service.batch_mark_read(notification_ids, current_user.id)
 
-    if not result.get('success'):
-        raise HTTPException(status_code=500, detail=result.get('message', '批量标记失败'))
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("message", "批量标记失败"))
 
     return ResponseModel(
-        code=200,
-        message=f"成功标记 {result.get('success_count', 0)} 条通知为已读",
-        data=result
+        code=200, message=f"成功标记 {result.get('success_count', 0)} 条通知为已读", data=result
     )
 
 
 # ==================== 异常事件管理 ====================
+
 
 def generate_exception_no(db: Session) -> str:
     """生成异常事件编号：EXC-yymmdd-xxx"""

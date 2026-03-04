@@ -14,12 +14,12 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.state_machine.milestone import MilestoneStateMachine
 from app.core.state_machine.exceptions import (
     InvalidStateTransitionError,
     PermissionDeniedError,
     StateMachineValidationError,
 )
+from app.core.state_machine.milestone import MilestoneStateMachine
 from app.models.project import ProjectMilestone
 from app.models.user import User
 from app.schemas.project import MilestoneResponse

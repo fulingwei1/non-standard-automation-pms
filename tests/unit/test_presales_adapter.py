@@ -105,7 +105,7 @@ class TestPresalesDashboardAdapterGetStats(unittest.TestCase):
         # Mock 项目查询
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.all.return_value = projects
-        
+
         # Mock 工时查询 - 每个项目10小时
         mock_worklog_query = MagicMock()
         mock_worklog_query.filter.return_value.scalar.return_value = 10
@@ -415,9 +415,7 @@ class TestPresalesDashboardAdapterGetWidgets(unittest.TestCase):
 
         # 找到当前月的数据
         current_month_key = now.strftime("%Y-%m")
-        current_month_data = next(
-            m for m in trend_widget.data if m["month"] == current_month_key
-        )
+        current_month_data = next(m for m in trend_widget.data if m["month"] == current_month_key)
 
         self.assertEqual(current_month_data["total"], 3)
         self.assertEqual(current_month_data["won"], 2)
@@ -636,9 +634,7 @@ class TestPresalesDashboardAdapterGetDetailedData(unittest.TestCase):
 
         # 找到当前月份的数据
         current_month_key = now.strftime("%Y-%m")
-        current_month_data = next(
-            m for m in monthly_stats if m["month"] == current_month_key
-        )
+        current_month_data = next(m for m in monthly_stats if m["month"] == current_month_key)
 
         self.assertEqual(current_month_data["total"], 3)
         self.assertEqual(current_month_data["won"], 2)

@@ -17,9 +17,9 @@ import logging
 
 from app.core.state_machine import StateMachine
 from app.core.state_machine.decorators import (
-    transition,
-    before_transition,
     after_transition,
+    before_transition,
+    transition,
 )
 
 logger = logging.getLogger(__name__)
@@ -211,7 +211,9 @@ class EcnStateMachine(StateMachine):
                 if not check_permission(current_user, "ecn:cancel_implemented", self.db):
                     # 也检查是否为超级管理员
                     if not getattr(current_user, "is_superuser", False):
-                        raise PermissionError("取消已实施的ECN需要特殊权限（ecn:cancel_implemented）")
+                        raise PermissionError(
+                            "取消已实施的ECN需要特殊权限（ecn:cancel_implemented）"
+                        )
             except ImportError:
                 pass
 

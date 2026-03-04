@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十三批：cost_match_suggestion_service 单元测试"""
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cost_match_suggestion_service")
 
 from app.services.cost_match_suggestion_service import (
-    check_cost_anomalies,
-    find_matching_cost,
     build_cost_suggestion,
-    check_overall_anomalies,
     calculate_summary,
+    check_cost_anomalies,
+    check_overall_anomalies,
+    find_matching_cost,
     process_cost_match_suggestions,
 )
 
@@ -25,9 +26,17 @@ def _mock_item(item_id=1, item_name="螺丝", cost=0.0, qty=10):
     return item
 
 
-def _mock_cost_record(unit_cost=100.0, material_name="螺丝", material_type="标准件",
-                      specification="M8", unit="个", lead_time_days=7,
-                      match_priority=1, purchase_date=None, usage_count=1):
+def _mock_cost_record(
+    unit_cost=100.0,
+    material_name="螺丝",
+    material_type="标准件",
+    specification="M8",
+    unit="个",
+    lead_time_days=7,
+    match_priority=1,
+    purchase_date=None,
+    usage_count=1,
+):
     r = MagicMock()
     r.unit_cost = unit_cost
     r.material_name = material_name
@@ -58,7 +67,9 @@ class TestCheckCostAnomalies:
         db = MagicMock()
         item = _mock_item(item_name="钢管")
         cost_query = MagicMock()
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             mock_filter.return_value.all.return_value = []
             result = check_cost_anomalies(db, item, cost_query, 50.0)
         assert result == []
@@ -67,7 +78,9 @@ class TestCheckCostAnomalies:
         db = MagicMock()
         item = _mock_item(item_name="钢管")
         hist = [_mock_cost_record(unit_cost=100.0)]
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             mock_filter.return_value.all.return_value = hist
             result = check_cost_anomalies(db, item, MagicMock(), 200.0)  # > 100*1.5
         assert len(result) == 1
@@ -77,7 +90,9 @@ class TestCheckCostAnomalies:
         db = MagicMock()
         item = _mock_item(item_name="钢管")
         hist = [_mock_cost_record(unit_cost=100.0)]
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             mock_filter.return_value.all.return_value = hist
             result = check_cost_anomalies(db, item, MagicMock(), 30.0)  # < 100*0.5
         assert len(result) == 1
@@ -87,7 +102,9 @@ class TestCheckCostAnomalies:
         db = MagicMock()
         item = _mock_item(item_name="钢管")
         hist = [_mock_cost_record(unit_cost=100.0)]
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             mock_filter.return_value.all.return_value = hist
             result = check_cost_anomalies(db, item, MagicMock(), 140.0)  # 40% deviation
         assert len(result) == 1
@@ -117,7 +134,9 @@ class TestFindMatchingCost:
         matched = _mock_cost_record()
         cost_query = MagicMock()
         cost_query.filter.return_value.order_by.return_value.first.return_value = None
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             q = MagicMock()
             q.order_by.return_value.limit.return_value.all.return_value = [matched]
             mock_filter.return_value = q
@@ -129,7 +148,9 @@ class TestFindMatchingCost:
         item = _mock_item(item_name="ab")  # keywords too short
         cost_query = MagicMock()
         cost_query.filter.return_value.order_by.return_value.first.return_value = None
-        with patch("app.services.cost_match_suggestion_service.apply_keyword_filter") as mock_filter:
+        with patch(
+            "app.services.cost_match_suggestion_service.apply_keyword_filter"
+        ) as mock_filter:
             q = MagicMock()
             q.order_by.return_value.limit.return_value.all.return_value = []
             mock_filter.return_value = q
@@ -164,18 +185,31 @@ class TestProcessCostMatchSuggestions:
         db = MagicMock()
         item = _mock_item(cost=100.0, qty=5)
         cost_query = MagicMock()
-        with patch("app.services.cost_match_suggestion_service.check_cost_anomalies", return_value=[]):
-            with patch("app.services.cost_match_suggestion_service.build_cost_suggestion") as mock_build:
+        with patch(
+            "app.services.cost_match_suggestion_service.check_cost_anomalies", return_value=[]
+        ):
+            with patch(
+                "app.services.cost_match_suggestion_service.build_cost_suggestion"
+            ) as mock_build:
                 mock_build.return_value = MagicMock()
-                suggestions, matched, unmatched, warnings, total = process_cost_match_suggestions(db, [item], cost_query)
+                suggestions, matched, unmatched, warnings, total = process_cost_match_suggestions(
+                    db, [item], cost_query
+                )
         assert matched == 0
 
     def test_items_without_cost_try_matching(self):
         db = MagicMock()
         item = _mock_item(cost=0.0, qty=5)
         cost_query = MagicMock()
-        with patch("app.services.cost_match_suggestion_service.find_matching_cost", return_value=(None, None, None)):
-            with patch("app.services.cost_match_suggestion_service.build_cost_suggestion") as mock_build:
+        with patch(
+            "app.services.cost_match_suggestion_service.find_matching_cost",
+            return_value=(None, None, None),
+        ):
+            with patch(
+                "app.services.cost_match_suggestion_service.build_cost_suggestion"
+            ) as mock_build:
                 mock_build.return_value = MagicMock()
-                suggestions, matched, unmatched, warnings, total = process_cost_match_suggestions(db, [item], cost_query)
+                suggestions, matched, unmatched, warnings, total = process_cost_match_suggestions(
+                    db, [item], cost_query
+                )
         assert unmatched == 1

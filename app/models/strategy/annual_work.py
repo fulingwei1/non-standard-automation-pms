@@ -50,7 +50,11 @@ class AnnualKeyWork(Base, TimestampMixin):
     owner_user_id = Column(Integer, ForeignKey("users.id"), comment="责任人")
 
     # 状态与进度
-    status = Column(String(20), default="NOT_STARTED", comment="状态：NOT_STARTED/IN_PROGRESS/COMPLETED/DELAYED/CANCELLED")
+    status = Column(
+        String(20),
+        default="NOT_STARTED",
+        comment="状态：NOT_STARTED/IN_PROGRESS/COMPLETED/DELAYED/CANCELLED",
+    )
     progress_percent = Column(Integer, default=0, comment="完成进度（%）")
 
     # 优先级
@@ -71,7 +75,9 @@ class AnnualKeyWork(Base, TimestampMixin):
     csf = relationship("CSF", back_populates="annual_key_works")
     owner_dept = relationship("Department", foreign_keys=[owner_dept_id])
     owner = relationship("User", foreign_keys=[owner_user_id])
-    project_links = relationship("AnnualKeyWorkProjectLink", back_populates="annual_work", lazy="dynamic")
+    project_links = relationship(
+        "AnnualKeyWorkProjectLink", back_populates="annual_work", lazy="dynamic"
+    )
 
     __table_args__ = (
         Index("idx_annual_key_works_csf", "csf_id"),
@@ -93,7 +99,9 @@ class AnnualKeyWorkProjectLink(Base, TimestampMixin):
     __tablename__ = "annual_key_work_project_links"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    annual_work_id = Column(Integer, ForeignKey("annual_key_works.id"), nullable=False, comment="重点工作ID")
+    annual_work_id = Column(
+        Integer, ForeignKey("annual_key_works.id"), nullable=False, comment="重点工作ID"
+    )
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     # 关联类型

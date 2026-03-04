@@ -70,12 +70,8 @@ def get_timeline_view(
                         node_type=node.node_type,
                         status=node.status,
                         progress=node.progress or 0,
-                        planned_date=(
-                            node.planned_date.isoformat() if node.planned_date else None
-                        ),
-                        actual_date=(
-                            node.actual_date.isoformat() if node.actual_date else None
-                        ),
+                        planned_date=(node.planned_date.isoformat() if node.planned_date else None),
+                        actual_date=(node.actual_date.isoformat() if node.actual_date else None),
                         assignee_name=assignee_name,
                         dependency_ids=dependency_ids,
                     )
@@ -95,19 +91,13 @@ def get_timeline_view(
                 is_parallel=stage.is_parallel or False,
                 progress=stage.progress or 0,
                 planned_start_date=(
-                    stage.planned_start_date.isoformat()
-                    if stage.planned_start_date
-                    else None
+                    stage.planned_start_date.isoformat() if stage.planned_start_date else None
                 ),
                 planned_end_date=(
-                    stage.planned_end_date.isoformat()
-                    if stage.planned_end_date
-                    else None
+                    stage.planned_end_date.isoformat() if stage.planned_end_date else None
                 ),
                 actual_start_date=(
-                    stage.actual_start_date.isoformat()
-                    if stage.actual_start_date
-                    else None
+                    stage.actual_start_date.isoformat() if stage.actual_start_date else None
                 ),
                 actual_end_date=(
                     stage.actual_end_date.isoformat() if stage.actual_end_date else None

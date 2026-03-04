@@ -16,13 +16,13 @@ from ...alert import (
     ProjectHealthSnapshot,
 )
 
-# 问题管理
-from ...issue import (
-    Issue,
-    IssueFollowUpRecord,
-    IssueStatisticsSnapshot,
-    IssueTemplate,
-    SolutionTemplate,
+# 奖金管理
+from ...bonus import (
+    BonusAllocationSheet,
+    BonusCalculation,
+    BonusDistribution,
+    BonusRule,
+    TeamBonusAllocation,
 )
 
 # 商务支持
@@ -47,14 +47,21 @@ from ...business_support import (
 from ...culture_wall import CultureWallContent, CultureWallReadRecord, PersonalGoal
 from ...culture_wall_config import CultureWallConfig
 
-# 财务管理 - 融资模块已废弃删除
-
 # 安装派工
 from ...installation_dispatch import (
     InstallationDispatchOrder,
     InstallationDispatchPriorityEnum,
     InstallationDispatchStatusEnum,
     InstallationDispatchTaskTypeEnum,
+)
+
+# 问题管理
+from ...issue import (
+    Issue,
+    IssueFollowUpRecord,
+    IssueStatisticsSnapshot,
+    IssueTemplate,
+    SolutionTemplate,
 )
 
 # 管理节奏
@@ -72,25 +79,6 @@ from ...management_rhythm import (
 from ...notification import (
     Notification,
     NotificationSettings,
-)
-
-# 陷阱管理
-from ...pitfall import (
-    Pitfall,
-    PitfallLearningProgress,
-    PitfallRecommendation,
-)
-
-# PMO项目管理
-from ...pmo import (
-    PmoChangeRequest,
-    PmoMeeting,
-    PmoProjectClosure,
-    PmoProjectCost,
-    PmoProjectInitiation,
-    PmoProjectPhase,
-    PmoProjectRisk,
-    PmoResourceAllocation,
 )
 
 # 权限系统V2
@@ -113,6 +101,25 @@ from ...pipeline_analysis import (
     PipelineHealthSnapshot,
 )
 
+# 陷阱管理
+from ...pitfall import (
+    Pitfall,
+    PitfallLearningProgress,
+    PitfallRecommendation,
+)
+
+# PMO项目管理
+from ...pmo import (
+    PmoChangeRequest,
+    PmoMeeting,
+    PmoProjectClosure,
+    PmoProjectCost,
+    PmoProjectInitiation,
+    PmoProjectPhase,
+    PmoProjectRisk,
+    PmoResourceAllocation,
+)
+
 # 售前支持
 from ...presale import (
     PresaleCustomerTechProfile,
@@ -128,6 +135,16 @@ from ...presale import (
 
 # 售前费用
 from ...presale_expense import PresaleExpense
+
+# 研发项目
+from ...rd_project import (
+    RdCost,
+    RdCostAllocationRule,
+    RdCostType,
+    RdProject,
+    RdProjectCategory,
+    RdReportRecord,
+)
 
 # 报表中心
 from ...report_center import (
@@ -156,6 +173,28 @@ from ...service import (
 
 # SLA管理
 from ...sla import SLAMonitor, SLAPolicy, SLAStatusEnum
+
+# 标准成本库
+from ...standard_cost import (
+    StandardCost,
+    StandardCostHistory,
+)
+
+# 战略管理
+from ...strategy import (
+    CSF,
+    KPI,
+    AnnualKeyWork,
+    AnnualKeyWorkProjectLink,
+    DepartmentObjective,
+    KPIDataSource,
+    KPIHistory,
+    PersonalKPI,
+    Strategy,
+    StrategyCalendarEvent,
+    StrategyComparison,
+    StrategyReview,
+)
 
 # 任务中心
 from ...task_center import (
@@ -191,46 +230,29 @@ from ...timesheet import (
 # 工作日志
 from ...work_log import WorkLog, WorkLogConfig, WorkLogMention
 
-# 研发项目
-from ...rd_project import (
-    RdCost,
-    RdCostAllocationRule,
-    RdCostType,
-    RdProject,
-    RdProjectCategory,
-    RdReportRecord,
-)
+# 财务管理 - 融资模块已废弃删除
 
-# 奖金管理
-from ...bonus import (
-    BonusAllocationSheet,
-    BonusCalculation,
-    BonusDistribution,
-    BonusRule,
-    TeamBonusAllocation,
-)
 
-# 战略管理
-from ...strategy import (
-    AnnualKeyWork,
-    AnnualKeyWorkProjectLink,
-    CSF,
-    DepartmentObjective,
-    KPI,
-    KPIDataSource,
-    KPIHistory,
-    PersonalKPI,
-    Strategy,
-    StrategyCalendarEvent,
-    StrategyComparison,
-    StrategyReview,
-)
 
-# 标准成本库
-from ...standard_cost import (
-    StandardCost,
-    StandardCostHistory,
-)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 __all__ = [
     # Alert

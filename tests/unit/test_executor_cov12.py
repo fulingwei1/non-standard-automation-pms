@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：审批节点执行器单元测试"""
-import pytest
-from unittest.mock import MagicMock, call, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.executor import ApprovalNodeExecutor
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -83,7 +85,7 @@ class TestCreateTasksForNode:
         assert len(tasks) == 1
         task = tasks[0]
         # 验证 due_at 已设置
-        assert task.due_at is not None or hasattr(task, 'due_at')
+        assert task.due_at is not None or hasattr(task, "due_at")
 
     def test_tasks_have_correct_instance_id(self):
         executor, db = _make_executor()

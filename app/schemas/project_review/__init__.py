@@ -2,42 +2,31 @@
 项目复盘相关Schema
 """
 
+from .comparison import ComparisonRequest, ComparisonResponse, ImprovementResponse
+from .knowledge import KnowledgeImpactResponse, KnowledgeSyncRequest, KnowledgeSyncResponse
+from .lesson import (
+    LessonExtractRequest,
+    LessonExtractResponse,
+    ProjectLessonBase,
+    ProjectLessonCreate,
+    ProjectLessonResponse,
+    ProjectLessonUpdate,
+)
 from .review import (
     ProjectReviewBase,
     ProjectReviewCreate,
-    ProjectReviewUpdate,
-    ProjectReviewResponse,
     ProjectReviewListResponse,
+    ProjectReviewResponse,
+    ProjectReviewUpdate,
     ReviewGenerateRequest,
-    ReviewGenerateResponse
-)
-
-from .lesson import (
-    ProjectLessonBase,
-    ProjectLessonCreate,
-    ProjectLessonUpdate,
-    ProjectLessonResponse,
-    LessonExtractRequest,
-    LessonExtractResponse
-)
-
-from .comparison import (
-    ComparisonRequest,
-    ComparisonResponse,
-    ImprovementResponse
-)
-
-from .knowledge import (
-    KnowledgeSyncRequest,
-    KnowledgeSyncResponse,
-    KnowledgeImpactResponse
+    ReviewGenerateResponse,
 )
 
 # Best practice
 try:
     from ..project_review import (
         BestPracticeRecommendationRequest,
-        BestPracticeRecommendationResponse
+        BestPracticeRecommendationResponse,
     )
 except ImportError:
     BestPracticeRecommendationRequest = None
@@ -45,33 +34,29 @@ except ImportError:
 
 __all__ = [
     # Review
-    'ProjectReviewBase',
-    'ProjectReviewCreate',
-    'ProjectReviewUpdate',
-    'ProjectReviewResponse',
-    'ProjectReviewListResponse',
-    'ReviewGenerateRequest',
-    'ReviewGenerateResponse',
-    
+    "ProjectReviewBase",
+    "ProjectReviewCreate",
+    "ProjectReviewUpdate",
+    "ProjectReviewResponse",
+    "ProjectReviewListResponse",
+    "ReviewGenerateRequest",
+    "ReviewGenerateResponse",
     # Lesson
-    'ProjectLessonBase',
-    'ProjectLessonCreate',
-    'ProjectLessonUpdate',
-    'ProjectLessonResponse',
-    'LessonExtractRequest',
-    'LessonExtractResponse',
-    
+    "ProjectLessonBase",
+    "ProjectLessonCreate",
+    "ProjectLessonUpdate",
+    "ProjectLessonResponse",
+    "LessonExtractRequest",
+    "LessonExtractResponse",
     # Comparison
-    'ComparisonRequest',
-    'ComparisonResponse',
-    'ImprovementResponse',
-    
+    "ComparisonRequest",
+    "ComparisonResponse",
+    "ImprovementResponse",
     # Knowledge
-    'KnowledgeSyncRequest',
-    'KnowledgeSyncResponse',
-    'KnowledgeImpactResponse',
-    
+    "KnowledgeSyncRequest",
+    "KnowledgeSyncResponse",
+    "KnowledgeImpactResponse",
     # Best practice (optional)
-    'BestPracticeRecommendationRequest',
-    'BestPracticeRecommendationResponse',
+    "BestPracticeRecommendationRequest",
+    "BestPracticeRecommendationResponse",
 ]

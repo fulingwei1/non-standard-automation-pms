@@ -4,20 +4,21 @@ Tests coverage for:
 - app.services.alert_rule_engine (AlertRuleEngine class and components)
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, Mock, patch
 
-from app.models.alert import AlertRule, AlertRecord
+import pytest
+from sqlalchemy.orm import Session
+
+from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertLevelEnum
 from app.services.alert_rule_engine import (
+    AlertCreator,
     AlertRuleEngine,
     AlertRuleEngineBase,
+    AlertUpgrader,
     ConditionEvaluator,
     LevelDeterminer,
-    AlertCreator,
-    AlertUpgrader,
     RuleManager,
 )
 
@@ -35,37 +36,37 @@ class TestAlertRuleEngineInit:
         """Test that engine has evaluate_rule method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'evaluate_rule')
+        assert hasattr(engine, "evaluate_rule")
 
     def test_engine_has_check_condition(self):
         """Test that engine has check_condition method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'check_condition')
+        assert hasattr(engine, "check_condition")
 
     def test_engine_has_should_create_alert(self):
         """Test that engine has should_create_alert method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'should_create_alert')
+        assert hasattr(engine, "should_create_alert")
 
     def test_engine_has_create_alert(self):
         """Test that engine has create_alert method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'create_alert')
+        assert hasattr(engine, "create_alert")
 
     def test_engine_has_upgrade_alert(self):
         """Test that engine has upgrade_alert method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'upgrade_alert')
+        assert hasattr(engine, "upgrade_alert")
 
     def test_engine_has_level_priority(self):
         """Test that engine has level_priority method."""
         mock_db = MagicMock(spec=Session)
         engine = AlertRuleEngine(mock_db)
-        assert hasattr(engine, 'level_priority')
+        assert hasattr(engine, "level_priority")
 
 
 class TestEvaluateRule:
@@ -90,7 +91,7 @@ class TestEvaluateRule:
         mock_rule = MagicMock()
         mock_rule.is_enabled = True
 
-        with patch.object(engine, 'check_condition', return_value=False):
+        with patch.object(engine, "check_condition", return_value=False):
             result = engine.evaluate_rule(mock_rule, {"health": "H1"})
             assert result is None
 
@@ -103,10 +104,12 @@ class TestEvaluateRule:
         mock_rule.is_enabled = True
         mock_alert = MagicMock()
 
-        with patch.object(engine, 'check_condition', return_value=True), \
-             patch.object(LevelDeterminer, 'determine_alert_level', return_value='WARNING'), \
-             patch.object(engine, 'should_create_alert', return_value=None), \
-             patch.object(engine, 'create_alert', return_value=mock_alert):
+        with (
+            patch.object(engine, "check_condition", return_value=True),
+            patch.object(LevelDeterminer, "determine_alert_level", return_value="WARNING"),
+            patch.object(engine, "should_create_alert", return_value=None),
+            patch.object(engine, "create_alert", return_value=mock_alert),
+        ):
             result = engine.evaluate_rule(mock_rule, {"health": "H2"})
             assert result == mock_alert
 
@@ -118,14 +121,20 @@ class TestEvaluateRule:
         mock_rule = MagicMock()
         mock_rule.is_enabled = True
         existing_alert = MagicMock()
-        existing_alert.alert_level = 'WARNING'
+        existing_alert.alert_level = "WARNING"
         upgraded_alert = MagicMock()
 
-        with patch.object(engine, 'check_condition', return_value=True), \
-             patch.object(LevelDeterminer, 'determine_alert_level', return_value='CRITICAL'), \
-             patch.object(engine, 'should_create_alert', return_value=existing_alert), \
-             patch.object(engine, 'level_priority', side_effect=lambda x: {'WARNING': 1, 'CRITICAL': 3}.get(x, 0)), \
-             patch.object(engine, 'upgrade_alert', return_value=upgraded_alert):
+        with (
+            patch.object(engine, "check_condition", return_value=True),
+            patch.object(LevelDeterminer, "determine_alert_level", return_value="CRITICAL"),
+            patch.object(engine, "should_create_alert", return_value=existing_alert),
+            patch.object(
+                engine,
+                "level_priority",
+                side_effect=lambda x: {"WARNING": 1, "CRITICAL": 3}.get(x, 0),
+            ),
+            patch.object(engine, "upgrade_alert", return_value=upgraded_alert),
+        ):
             result = engine.evaluate_rule(mock_rule, {"health": "H3"})
             assert result == upgraded_alert
 
@@ -139,7 +148,7 @@ class TestConditionEvaluator:
 
     def test_condition_evaluator_has_check_condition(self):
         """Test that ConditionEvaluator has check_condition."""
-        assert hasattr(ConditionEvaluator, 'check_condition')
+        assert hasattr(ConditionEvaluator, "check_condition")
 
 
 class TestLevelDeterminer:
@@ -151,7 +160,7 @@ class TestLevelDeterminer:
 
     def test_determine_alert_level_exists(self):
         """Test that determine_alert_level method exists."""
-        assert hasattr(LevelDeterminer, 'determine_alert_level')
+        assert hasattr(LevelDeterminer, "determine_alert_level")
 
 
 class TestAlertCreatorComponent:
@@ -179,7 +188,7 @@ class TestRuleManagerComponent:
 
     def test_get_or_create_rule_exists(self):
         """Test that get_or_create_rule method exists."""
-        assert hasattr(RuleManager, 'get_or_create_rule')
+        assert hasattr(RuleManager, "get_or_create_rule")
 
 
 class TestAlertLevelEnum:

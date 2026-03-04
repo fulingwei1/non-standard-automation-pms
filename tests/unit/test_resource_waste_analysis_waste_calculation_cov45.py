@@ -3,10 +3,11 @@
 第四十五批覆盖：resource_waste_analysis/waste_calculation.py
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.resource_waste_analysis.waste_calculation")
 
@@ -52,38 +53,51 @@ class TestWasteCalculationMixin:
 
     def test_won_projects_counted_correctly(self, service, mock_db):
         from app.models.enums import LeadOutcomeEnum
+
         mock_pending = MagicMock()
         mock_pending.value = "PENDING"
         won_project = _make_project(outcome=LeadOutcomeEnum.WON.value)
 
-        with patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True), \
-             patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl:
+        with (
+            patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True),
+            patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl,
+        ):
             mock_wl.project_id = MagicMock()
             mock_wl.work_hours = MagicMock()
             mock_db.query.return_value.filter.return_value.all.return_value = [won_project]
-            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+                []
+            )
             result = service.calculate_waste_by_period(date(2024, 1, 1), date(2024, 1, 31))
         assert result["won_leads"] == 1
         assert result["lost_leads"] == 0
 
     def test_lost_projects_counted_correctly(self, service, mock_db):
         from app.models.enums import LeadOutcomeEnum
+
         mock_pending = MagicMock()
         mock_pending.value = "PENDING"
-        lost_project = _make_project(outcome=LeadOutcomeEnum.LOST.value, loss_reason="PRICE_TOO_HIGH")
+        lost_project = _make_project(
+            outcome=LeadOutcomeEnum.LOST.value, loss_reason="PRICE_TOO_HIGH"
+        )
 
-        with patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True), \
-             patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl:
+        with (
+            patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True),
+            patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl,
+        ):
             mock_wl.project_id = MagicMock()
             mock_wl.work_hours = MagicMock()
             mock_db.query.return_value.filter.return_value.all.return_value = [lost_project]
-            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+                []
+            )
             result = service.calculate_waste_by_period(date(2024, 1, 1), date(2024, 1, 31))
         assert result["lost_leads"] == 1
         assert "PRICE_TOO_HIGH" in result["loss_reasons"]
 
     def test_win_rate_with_mixed_projects(self, service, mock_db):
         from app.models.enums import LeadOutcomeEnum
+
         mock_pending = MagicMock()
         mock_pending.value = "PENDING"
         projects = [
@@ -92,14 +106,18 @@ class TestWasteCalculationMixin:
             _make_project(outcome=LeadOutcomeEnum.LOST.value),
         ]
 
-        with patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True), \
-             patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl:
+        with (
+            patch.object(LeadOutcomeEnum, "PENDING", mock_pending, create=True),
+            patch("app.services.resource_waste_analysis.waste_calculation.WorkLog") as mock_wl,
+        ):
             mock_wl.project_id = MagicMock()
             mock_wl.work_hours = MagicMock()
             mock_db.query.return_value.filter.return_value.all.return_value = projects
-            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+            mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = (
+                []
+            )
             result = service.calculate_waste_by_period(date(2024, 1, 1), date(2024, 1, 31))
-        assert abs(result["win_rate"] - round(2/3, 3)) < 0.001
+        assert abs(result["win_rate"] - round(2 / 3, 3)) < 0.001
 
     def test_wasted_cost_calculated_with_hourly_rate(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []

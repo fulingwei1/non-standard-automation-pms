@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - production_progress_service"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.production_progress_service")
 

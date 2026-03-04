@@ -2,10 +2,11 @@
 """
 Tests for app/services/unified_import/base.py
 """
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 
 try:
     from app.services.unified_import.base import ImportBase
@@ -26,6 +27,7 @@ def test_validate_file_valid_xls():
 def test_validate_file_invalid_raises():
     """非Excel文件应抛出 HTTPException"""
     from fastapi import HTTPException
+
     with pytest.raises(HTTPException) as exc_info:
         ImportBase.validate_file("test.csv")
     assert exc_info.value.status_code == 400
@@ -80,6 +82,7 @@ def test_parse_hours_too_large_returns_none():
 def test_parse_file_empty_raises():
     """空文件应抛出 HTTPException"""
     from fastapi import HTTPException
+
     with patch("app.services.unified_import.base.ImportExportEngine") as MockEngine:
         MockEngine.parse_excel.return_value = pd.DataFrame()
         with pytest.raises(HTTPException) as exc_info:

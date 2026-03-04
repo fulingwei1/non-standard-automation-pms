@@ -4,10 +4,11 @@ Unit tests for app/services/bonus/sales.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.bonus.sales import SalesBonusCalculator
@@ -20,7 +21,7 @@ def _make_calculator():
     return SalesBonusCalculator(db=db)
 
 
-def _make_rule(coefficient=Decimal('5'), base_amount=Decimal('1000')):
+def _make_rule(coefficient=Decimal("5"), base_amount=Decimal("1000")):
     rule = MagicMock()
     rule.coefficient = coefficient
     rule.base_amount = base_amount
@@ -29,7 +30,7 @@ def _make_rule(coefficient=Decimal('5'), base_amount=Decimal('1000')):
     return rule
 
 
-def _make_contract(amount=Decimal('100000'), owner_id=1, project_id=10):
+def _make_contract(amount=Decimal("100000"), owner_id=1, project_id=10):
     contract = MagicMock()
     contract.contract_amount = amount
     contract.owner_id = owner_id
@@ -42,15 +43,15 @@ def _make_contract(amount=Decimal('100000'), owner_id=1, project_id=10):
 def test_calculate_contract_based():
     """基于合同金额计算奖金"""
     calc = _make_calculator()
-    rule = _make_rule(coefficient=Decimal('5'))
-    contract = _make_contract(amount=Decimal('100000'))
+    rule = _make_rule(coefficient=Decimal("5"))
+    contract = _make_contract(amount=Decimal("100000"))
 
-    result = calc.calculate(contract, rule, based_on='CONTRACT')
+    result = calc.calculate(contract, rule, based_on="CONTRACT")
 
     assert result is not None
-    assert result.status == 'CALCULATED'
+    assert result.status == "CALCULATED"
     # 100000 * 5/100 = 5000
-    assert result.calculated_amount == Decimal('5000')
+    assert result.calculated_amount == Decimal("5000")
 
 
 def test_calculate_returns_none_when_no_owner():
@@ -59,26 +60,30 @@ def test_calculate_returns_none_when_no_owner():
     rule = _make_rule()
     contract = _make_contract(owner_id=None)
 
-    result = calc.calculate(contract, rule, based_on='CONTRACT')
+    result = calc.calculate(contract, rule, based_on="CONTRACT")
     assert result is None
 
 
 def test_calculate_payment_based_with_paid_invoices():
     """基于回款金额计算奖金"""
     calc = _make_calculator()
-    rule = _make_rule(coefficient=Decimal('3'))
+    rule = _make_rule(coefficient=Decimal("3"))
     contract = _make_contract()
 
-    invoice1 = MagicMock(paid_amount=Decimal('50000'), total_amount=Decimal('60000'), payment_status='PAID')
-    invoice2 = MagicMock(paid_amount=Decimal('30000'), total_amount=Decimal('40000'), payment_status='PAID')
+    invoice1 = MagicMock(
+        paid_amount=Decimal("50000"), total_amount=Decimal("60000"), payment_status="PAID"
+    )
+    invoice2 = MagicMock(
+        paid_amount=Decimal("30000"), total_amount=Decimal("40000"), payment_status="PAID"
+    )
 
     calc.db.query.return_value.filter.return_value.all.return_value = [invoice1, invoice2]
 
-    result = calc.calculate(contract, rule, based_on='PAYMENT')
+    result = calc.calculate(contract, rule, based_on="PAYMENT")
 
     assert result is not None
     # total_paid = 50000 + 30000 = 80000; 80000 * 3/100 = 2400
-    assert result.calculated_amount == Decimal('2400')
+    assert result.calculated_amount == Decimal("2400")
 
 
 def test_calculate_payment_based_no_invoices():
@@ -89,7 +94,7 @@ def test_calculate_payment_based_no_invoices():
 
     calc.db.query.return_value.filter.return_value.all.return_value = []
 
-    result = calc.calculate(contract, rule, based_on='PAYMENT')
+    result = calc.calculate(contract, rule, based_on="PAYMENT")
     assert result is None
 
 
@@ -99,7 +104,7 @@ def test_calculate_unknown_based_on():
     rule = _make_rule()
     contract = _make_contract()
 
-    result = calc.calculate(contract, rule, based_on='UNKNOWN')
+    result = calc.calculate(contract, rule, based_on="UNKNOWN")
     assert result is None
 
 
@@ -109,7 +114,7 @@ def test_calculate_contract_detail_content():
     rule = _make_rule()
     contract = _make_contract()
 
-    result = calc.calculate(contract, rule, based_on='CONTRACT')
+    result = calc.calculate(contract, rule, based_on="CONTRACT")
     assert result is not None
     assert result.calculation_detail["based_on"] == "CONTRACT"
     assert "contract_code" in result.calculation_detail

@@ -4,15 +4,14 @@ K2组集成测试 - 采购到入库闭环流程
 流程：BOM缺料检测 → 采购申请 → 申请审批 → 采购订单 → 到货收货 → 质检入库
 """
 
-import pytest
+import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-import uuid
+import pytest
 
 _MAT_PURCH_001 = f"MAT-PURCH-001-{uuid.uuid4().hex[:8]}"
 _PO_PURCH_001 = f"PO-PURCH-001-{uuid.uuid4().hex[:8]}"
-
 
 
 # ============================================================
@@ -23,18 +22,21 @@ def db():
     """为本模块提供独立的 SQLite 内存数据库"""
     import sys
     from unittest.mock import MagicMock
+
     if "redis" not in sys.modules:
         sys.modules["redis"] = MagicMock()
         sys.modules["redis.exceptions"] = MagicMock()
 
     import os
+
     os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
     os.environ.setdefault("REDIS_URL", "")
     os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
-    import app.models  # noqa: F401 - 注册所有 ORM 元数据
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+
+    import app.models  # noqa: F401 - 注册所有 ORM 元数据
     from app.models.base import Base
 
     engine = create_engine(
@@ -55,6 +57,7 @@ def db():
 def tenant(db):
     """创建测试租户（MaterialTransaction 必须关联租户）"""
     from app.models.tenant import Tenant
+
     t = Tenant(
         tenant_code=f"TENANT-PURCH-001-{uuid.uuid4().hex[:8]}",
         tenant_name="测试租户",
@@ -70,9 +73,9 @@ def tenant(db):
 @pytest.fixture(scope="module")
 def purchase_user(db):
     """创建采购员用户"""
-    from app.models.user import User
-    from app.models.organization import Employee
     from app.core.security import get_password_hash
+    from app.models.organization import Employee
+    from app.models.user import User
 
     emp = Employee(
         employee_code=f"EMP-PURCH-001-{uuid.uuid4().hex[:8]}",
@@ -102,6 +105,7 @@ def purchase_user(db):
 def purchase_customer(db):
     """创建关联客户"""
     from app.models.project import Customer
+
     c = Customer(
         customer_code=f"CUST-PURCH-001-{uuid.uuid4().hex[:8]}",
         customer_name="采购测试客户",
@@ -119,6 +123,7 @@ def purchase_customer(db):
 def purchase_project(db, purchase_customer, purchase_user):
     """创建关联项目"""
     from app.models.project import Project
+
     p = Project(
         project_code=f"PJ-PURCH-001-{uuid.uuid4().hex[:8]}",
         project_name="采购闭环测试项目",
@@ -139,6 +144,7 @@ def purchase_project(db, purchase_customer, purchase_user):
 def purchase_supplier(db, purchase_user):
     """创建供应商"""
     from app.models.vendor import Vendor
+
     v = Vendor(
         supplier_code=f"SUP-PURCH-001-{uuid.uuid4().hex[:8]}",
         supplier_name="精密零件供应商",
@@ -158,6 +164,7 @@ def purchase_supplier(db, purchase_user):
 def test_material(db, purchase_user):
     """创建测试物料，初始库存为0（模拟缺料）"""
     from app.models.material import Material
+
     m = Material(
         material_code=_MAT_PURCH_001,
         material_name="精密轴承 6205-2RS",
@@ -168,7 +175,7 @@ def test_material(db, purchase_user):
         source_type="PURCHASE",
         standard_price=Decimal("45.00"),
         safety_stock=Decimal("10"),
-        current_stock=Decimal("0"),   # 初始缺料
+        current_stock=Decimal("0"),  # 初始缺料
         lead_time_days=14,
         is_active=True,
         created_by=purchase_user.id,
@@ -186,8 +193,9 @@ class TestPurchaseInventoryIntegration:
     """采购到入库闭环集成测试"""
 
     # ─── 1. BOM 缺料检测 ─────────────────────────────────────
-    def test_bom_shortage_detected(self, db, purchase_project, purchase_user,
-                                   purchase_customer, test_material):
+    def test_bom_shortage_detected(
+        self, db, purchase_project, purchase_user, purchase_customer, test_material
+    ):
         """BOM 创建后检测到物料缺料"""
         from app.models.material import BomHeader, BomItem
 
@@ -230,18 +238,21 @@ class TestPurchaseInventoryIntegration:
         assert bom_item.material_code == _MAT_PURCH_001
 
     # ─── 2. 创建采购申请 ──────────────────────────────────────
-    def test_purchase_request_created_from_shortage(self, db, purchase_project,
-                                                     purchase_user, purchase_supplier,
-                                                     test_material):
+    def test_purchase_request_created_from_shortage(
+        self, db, purchase_project, purchase_user, purchase_supplier, test_material
+    ):
         """基于缺料创建采购申请"""
-        from app.models.purchase import PurchaseRequest, PurchaseRequestItem
         from app.models.material import BomItem
+        from app.models.purchase import PurchaseRequest, PurchaseRequestItem
 
-        bom_item = db.query(BomItem).filter(
-            BomItem.bom_id == db.query(BomItem).filter(
-                BomItem.material_code == _MAT_PURCH_001
-            ).first().bom_id
-        ).first()
+        bom_item = (
+            db.query(BomItem)
+            .filter(
+                BomItem.bom_id
+                == db.query(BomItem).filter(BomItem.material_code == _MAT_PURCH_001).first().bom_id
+            )
+            .first()
+        )
 
         # 创建采购申请
         request = PurchaseRequest(
@@ -282,9 +293,9 @@ class TestPurchaseInventoryIntegration:
         assert request.id is not None
         assert request.status == "DRAFT"
         assert request.source_type == "BOM"
-        items = db.query(PurchaseRequestItem).filter(
-            PurchaseRequestItem.request_id == request.id
-        ).all()
+        items = (
+            db.query(PurchaseRequestItem).filter(PurchaseRequestItem.request_id == request.id).all()
+        )
         assert len(items) == 1
         assert float(items[0].quantity) == 50.0
 
@@ -293,9 +304,9 @@ class TestPurchaseInventoryIntegration:
         """采购申请提交审批，状态变为 PENDING"""
         from app.models.purchase import PurchaseRequest
 
-        request = db.query(PurchaseRequest).filter(
-            PurchaseRequest.request_no == "PR-PURCH-001"
-        ).first()
+        request = (
+            db.query(PurchaseRequest).filter(PurchaseRequest.request_no == "PR-PURCH-001").first()
+        )
         assert request is not None
 
         request.status = "PENDING"
@@ -308,18 +319,15 @@ class TestPurchaseInventoryIntegration:
         assert request.submitted_at is not None
 
     # ─── 4. 审批通过，生成采购订单 ───────────────────────────
-    def test_purchase_order_created_from_approved_request(self, db, purchase_user,
-                                                           purchase_project,
-                                                           purchase_supplier,
-                                                           test_material):
+    def test_purchase_order_created_from_approved_request(
+        self, db, purchase_user, purchase_project, purchase_supplier, test_material
+    ):
         """采购申请审批通过后，创建采购订单"""
-        from app.models.purchase import (
-            PurchaseRequest, PurchaseOrder, PurchaseOrderItem
-        )
+        from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
 
-        request = db.query(PurchaseRequest).filter(
-            PurchaseRequest.request_no == "PR-PURCH-001"
-        ).first()
+        request = (
+            db.query(PurchaseRequest).filter(PurchaseRequest.request_no == "PR-PURCH-001").first()
+        )
 
         # 审批通过
         request.status = "APPROVED"
@@ -382,17 +390,14 @@ class TestPurchaseInventoryIntegration:
         assert request.auto_po_created is True
 
     # ─── 5. 供应商发货，创建收货单 ───────────────────────────
-    def test_goods_receipt_created_on_delivery(self, db, purchase_user,
-                                                purchase_supplier):
+    def test_goods_receipt_created_on_delivery(self, db, purchase_user, purchase_supplier):
         """供应商送货到厂，创建到货收货单"""
-        from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
+        from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
 
-        order = db.query(PurchaseOrder).filter(
-            PurchaseOrder.order_no == _PO_PURCH_001
-        ).first()
-        order_item = db.query(PurchaseOrderItem).filter(
-            PurchaseOrderItem.order_id == order.id
-        ).first()
+        order = db.query(PurchaseOrder).filter(PurchaseOrder.order_no == _PO_PURCH_001).first()
+        order_item = (
+            db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == order.id).first()
+        )
 
         receipt = GoodsReceipt(
             receipt_no="GR-PURCH-001",
@@ -416,20 +421,21 @@ class TestPurchaseInventoryIntegration:
         assert receipt.order_id == order.id
 
     # ─── 6. 质检通过，完成入库 ───────────────────────────────
-    def test_goods_receipt_inspection_and_warehousing(self, db, purchase_user,
-                                                       test_material):
+    def test_goods_receipt_inspection_and_warehousing(self, db, purchase_user, test_material):
         """收货质检通过，执行入库并更新库存"""
         from app.models.purchase import (
-            PurchaseOrder, PurchaseOrderItem,
-            GoodsReceipt, GoodsReceiptItem
+            GoodsReceipt,
+            GoodsReceiptItem,
+            PurchaseOrder,
+            PurchaseOrderItem,
         )
 
-        receipt = db.query(GoodsReceipt).filter(
-            GoodsReceipt.receipt_no == "GR-PURCH-001"
-        ).first()
-        order_item = db.query(PurchaseOrderItem).filter(
-            PurchaseOrderItem.order_id == receipt.order_id
-        ).first()
+        receipt = db.query(GoodsReceipt).filter(GoodsReceipt.receipt_no == "GR-PURCH-001").first()
+        order_item = (
+            db.query(PurchaseOrderItem)
+            .filter(PurchaseOrderItem.order_id == receipt.order_id)
+            .first()
+        )
 
         # 创建收货明细
         ri = GoodsReceiptItem(
@@ -440,8 +446,8 @@ class TestPurchaseInventoryIntegration:
             delivery_qty=Decimal("50"),
             received_qty=Decimal("50"),
             inspect_qty=Decimal("50"),
-            qualified_qty=Decimal("48"),   # 48件合格
-            rejected_qty=Decimal("2"),     # 2件不合格
+            qualified_qty=Decimal("48"),  # 48件合格
+            rejected_qty=Decimal("2"),  # 2件不合格
             inspect_result="PARTIAL_PASS",
             inspect_note="2件外观有轻微划痕，其余均合格",
             warehoused_qty=Decimal("48"),
@@ -471,14 +477,15 @@ class TestPurchaseInventoryIntegration:
         assert float(test_material.current_stock) == 48.0
 
     # ─── 7. 记录库存流水（入库事务） ─────────────────────────
-    def test_inventory_transaction_recorded(self, db, tenant, purchase_user,
-                                             test_material):
+    def test_inventory_transaction_recorded(self, db, tenant, purchase_user, test_material):
         """入库完成后，记录物料交易流水（PURCHASE_IN）"""
         from app.models.inventory_tracking import MaterialTransaction
 
-        receipt = db.query(
-            __import__("app.models.purchase", fromlist=["GoodsReceipt"]).GoodsReceipt
-        ).filter_by(receipt_no="GR-PURCH-001").first()
+        receipt = (
+            db.query(__import__("app.models.purchase", fromlist=["GoodsReceipt"]).GoodsReceipt)
+            .filter_by(receipt_no="GR-PURCH-001")
+            .first()
+        )
 
         txn = MaterialTransaction(
             tenant_id=tenant.id,
@@ -509,29 +516,30 @@ class TestPurchaseInventoryIntegration:
         assert float(txn.quantity) == 48.0
 
     # ─── 8. 全流程闭环验证 ───────────────────────────────────
-    def test_full_purchase_flow_end_to_end(self, db, test_material,
-                                            purchase_project, purchase_supplier):
+    def test_full_purchase_flow_end_to_end(
+        self, db, test_material, purchase_project, purchase_supplier
+    ):
         """验证采购到入库完整链路的数据一致性"""
-        from app.models.purchase import (
-            PurchaseRequest, PurchaseOrder,
-            GoodsReceipt, GoodsReceiptItem
-        )
         from app.models.inventory_tracking import MaterialTransaction
         from app.models.material import BomItem
+        from app.models.purchase import (
+            GoodsReceipt,
+            GoodsReceiptItem,
+            PurchaseOrder,
+            PurchaseRequest,
+        )
 
         # 查询各环节记录
-        request = db.query(PurchaseRequest).filter(
-            PurchaseRequest.request_no == "PR-PURCH-001"
-        ).first()
-        order = db.query(PurchaseOrder).filter(
-            PurchaseOrder.order_no == _PO_PURCH_001
-        ).first()
-        receipt = db.query(GoodsReceipt).filter(
-            GoodsReceipt.receipt_no == "GR-PURCH-001"
-        ).first()
-        txn = db.query(MaterialTransaction).filter(
-            MaterialTransaction.related_order_no == _PO_PURCH_001
-        ).first()
+        request = (
+            db.query(PurchaseRequest).filter(PurchaseRequest.request_no == "PR-PURCH-001").first()
+        )
+        order = db.query(PurchaseOrder).filter(PurchaseOrder.order_no == _PO_PURCH_001).first()
+        receipt = db.query(GoodsReceipt).filter(GoodsReceipt.receipt_no == "GR-PURCH-001").first()
+        txn = (
+            db.query(MaterialTransaction)
+            .filter(MaterialTransaction.related_order_no == _PO_PURCH_001)
+            .first()
+        )
 
         # 链路关联校验
         assert request.status == "APPROVED"
@@ -544,11 +552,9 @@ class TestPurchaseInventoryIntegration:
         assert float(test_material.current_stock) == 48.0
 
         # BOM 缺料数量已满足（需求50，到货48，仍缺2件）
-        bom_item = db.query(BomItem).filter(
-            BomItem.material_code == _MAT_PURCH_001
-        ).first()
+        bom_item = db.query(BomItem).filter(BomItem.material_code == _MAT_PURCH_001).first()
         remaining_shortage = float(bom_item.quantity) - float(test_material.current_stock)
-        assert remaining_shortage == 2.0   # 2件不合格，仍有少量缺口
+        assert remaining_shortage == 2.0  # 2件不合格，仍有少量缺口
 
         # 金额一致性
         assert float(order.total_amount) == float(request.total_amount)

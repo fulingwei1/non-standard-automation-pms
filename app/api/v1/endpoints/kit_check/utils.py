@@ -94,7 +94,7 @@ def calculate_work_order_kit_rate(
             .all()
         )
         for po_item in po_items:
-            in_transit_qty += (Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0))
+            in_transit_qty += Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0)
 
         # 总可用数量 = 可用数量 + 在途数量
         total_available = available_qty + in_transit_qty
@@ -106,28 +106,32 @@ def calculate_work_order_kit_rate(
             fulfilled_items += 1
         elif total_available > 0:
             in_transit_items += 1
-            shortage_details.append({
-                "material_id": material.id,
-                "material_code": material.material_code,
-                "material_name": material.material_name,
-                "required_qty": float(required_qty),
-                "available_qty": float(available_qty),
-                "in_transit_qty": float(in_transit_qty),
-                "shortage_qty": float(required_qty - total_available),
-                "status": "partial",
-            })
+            shortage_details.append(
+                {
+                    "material_id": material.id,
+                    "material_code": material.material_code,
+                    "material_name": material.material_name,
+                    "required_qty": float(required_qty),
+                    "available_qty": float(available_qty),
+                    "in_transit_qty": float(in_transit_qty),
+                    "shortage_qty": float(required_qty - total_available),
+                    "status": "partial",
+                }
+            )
         else:
             shortage_items += 1
-            shortage_details.append({
-                "material_id": material.id,
-                "material_code": material.material_code,
-                "material_name": material.material_name,
-                "required_qty": float(required_qty),
-                "available_qty": float(available_qty),
-                "in_transit_qty": float(in_transit_qty),
-                "shortage_qty": float(required_qty),
-                "status": "shortage",
-            })
+            shortage_details.append(
+                {
+                    "material_id": material.id,
+                    "material_code": material.material_code,
+                    "material_name": material.material_name,
+                    "required_qty": float(required_qty),
+                    "available_qty": float(available_qty),
+                    "in_transit_qty": float(in_transit_qty),
+                    "shortage_qty": float(required_qty),
+                    "status": "shortage",
+                }
+            )
 
     # 计算齐套率
     kit_rate = (fulfilled_items / total_items * 100) if total_items > 0 else 0.0

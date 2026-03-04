@@ -4,8 +4,9 @@
 提供内部协作、知识共享、技术支持请求
 """
 
-from typing import Any, Optional, List
-from fastapi import APIRouter, Depends, Query, Body
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -17,6 +18,7 @@ router = APIRouter()
 
 # ========== 1. 内部协作留言 ==========
 
+
 @router.get("/collaboration/messages", summary="协作留言列表")
 def get_collaboration_messages(
     customer_id: Optional[int] = Query(None, description="客户 ID"),
@@ -26,10 +28,10 @@ def get_collaboration_messages(
 ) -> Any:
     """
     客户/商机相关的内部协作留言
-    
+
     用于销售团队内部沟通，不展示给客户
     """
-    
+
     # 模拟协作留言数据
     messages = [
         {
@@ -75,7 +77,7 @@ def get_collaboration_messages(
             "is_internal": True,
         },
     ]
-    
+
     return {
         "total_count": len(messages),
         "messages": messages,
@@ -97,7 +99,7 @@ def create_collaboration_message(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """发送内部协作留言"""
-    
+
     return {
         "message": "留言已发送",
         "message_id": 123,
@@ -109,6 +111,7 @@ def create_collaboration_message(
 
 # ========== 2. 技术支持请求 ==========
 
+
 @router.get("/collaboration/support-requests", summary="技术支持请求列表")
 def get_support_requests(
     status: Optional[str] = Query("pending", description="状态：pending/processing/completed"),
@@ -118,7 +121,7 @@ def get_support_requests(
     """
     销售向技术团队发起的技术支持请求
     """
-    
+
     requests = [
         {
             "request_id": 1,
@@ -161,7 +164,7 @@ def get_support_requests(
             "updated_at": "2025-02-27 15:00:00",
         },
     ]
-    
+
     return {
         "total_count": len(requests),
         "pending_count": len([r for r in requests if r["status"] == "pending"]),
@@ -182,7 +185,7 @@ def create_support_request(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建技术支持请求"""
-    
+
     return {
         "message": "技术支持请求已创建",
         "request_id": 124,
@@ -194,6 +197,7 @@ def create_support_request(
 
 # ========== 3. 知识共享库 ==========
 
+
 @router.get("/collaboration/knowledge-base", summary="知识库列表")
 def get_knowledge_base(
     category: Optional[str] = Query(None, description="分类：case/competitor/product/skill"),
@@ -203,14 +207,14 @@ def get_knowledge_base(
 ) -> Any:
     """
     销售知识库
-    
+
     分类：
     - case: 成功案例
     - competitor: 竞品分析
     - product: 产品资料
     - skill: 销售技巧
     """
-    
+
     articles = [
         {
             "article_id": 1,
@@ -277,13 +281,17 @@ def get_knowledge_base(
             "updated_at": "2025-02-01",
         },
     ]
-    
+
     # 过滤
     if category:
         articles = [a for a in articles if a["category"] == category]
     if keyword:
-        articles = [a for a in articles if keyword.lower() in a["title"].lower() or keyword.lower() in a["summary"].lower()]
-    
+        articles = [
+            a
+            for a in articles
+            if keyword.lower() in a["title"].lower() or keyword.lower() in a["summary"].lower()
+        ]
+
     return {
         "total_count": len(articles),
         "categories": [
@@ -306,7 +314,7 @@ def create_knowledge_article(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """贡献知识文章到共享库"""
-    
+
     return {
         "message": "文章已提交",
         "article_id": 125,
@@ -317,6 +325,7 @@ def create_knowledge_article(
 
 # ========== 4. 销售经验分享 ==========
 
+
 @router.get("/collaboration/share-sessions", summary="经验分享会列表")
 def get_share_sessions(
     status: Optional[str] = Query("upcoming", description="状态：upcoming/completed"),
@@ -324,7 +333,7 @@ def get_share_sessions(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """销售经验分享会"""
-    
+
     sessions = [
         {
             "session_id": 1,
@@ -362,7 +371,7 @@ def get_share_sessions(
             "materials": ["竞品对比表.pdf", "应对话术.docx"],
         },
     ]
-    
+
     return {
         "total_count": len(sessions),
         "upcoming_count": len([s for s in sessions if s["status"] == "upcoming"]),
@@ -377,7 +386,7 @@ def register_share_session(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """报名参与经验分享会"""
-    
+
     return {
         "message": "报名成功",
         "session_id": session_id,
@@ -387,13 +396,14 @@ def register_share_session(
 
 # ========== 5. 协同数据统计 ==========
 
+
 @router.get("/collaboration/stats", summary="协同数据统计")
 def get_collaboration_stats(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """个人/团队协同数据统计"""
-    
+
     return {
         "personal_stats": {
             "user_id": current_user.id,

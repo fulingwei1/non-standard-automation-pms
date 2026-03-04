@@ -4,21 +4,22 @@
 tests/unit/test_json_renderer_cov37.py
 """
 import json
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 pytest.importorskip("app.services.report_framework.renderers.json_renderer")
 
+from app.services.report_framework.renderers.base import ReportResult
 from app.services.report_framework.renderers.json_renderer import (
     CustomJSONEncoder,
     JsonRenderer,
 )
-from app.services.report_framework.renderers.base import ReportResult
-
 
 # ── CustomJSONEncoder ─────────────────────────────────────────────────────────
+
 
 class TestCustomJSONEncoder:
     def test_encodes_datetime(self):
@@ -43,6 +44,7 @@ class TestCustomJSONEncoder:
 
 
 # ── JsonRenderer ──────────────────────────────────────────────────────────────
+
 
 class TestJsonRenderer:
     def setup_method(self):

@@ -13,8 +13,8 @@ notification_utils 模块综合单元测试
 - next_quiet_resume: 计算下次恢复时间
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime, time, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -135,7 +135,9 @@ class TestResolveRecipients:
 
         mock_user = MagicMock()
         mock_user.id = 1
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_user]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_user
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = resolve_recipients(mock_db, mock_alert)
@@ -154,7 +156,9 @@ class TestResolveRecipients:
 
         mock_user = MagicMock()
         mock_user.id = 2
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_user]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_user
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = resolve_recipients(mock_db, mock_alert)
@@ -177,7 +181,10 @@ class TestResolveRecipients:
         mock_user4 = MagicMock()
         mock_user4.id = 4
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_user3, mock_user4]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_user3,
+            mock_user4,
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = resolve_recipients(mock_db, mock_alert)
@@ -197,7 +204,9 @@ class TestResolveRecipients:
 
         mock_user = MagicMock()
         mock_user.id = 1
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_user]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_user
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = resolve_recipients(mock_db, mock_alert)

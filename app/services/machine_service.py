@@ -13,12 +13,8 @@ from sqlalchemy.orm import Session
 from app.models.project import Machine, Project
 from app.utils.db_helpers import save_obj
 
-
 # 阶段优先级映射（数值越小优先级越高，表示越靠前）
-STAGE_PRIORITY = {
-    "S1": 1, "S2": 2, "S3": 3, "S4": 4, "S5": 5,
-    "S6": 6, "S7": 7, "S8": 8, "S9": 9
-}
+STAGE_PRIORITY = {"S1": 1, "S2": 2, "S3": 3, "S4": 4, "S5": 5, "S6": 6, "S7": 7, "S8": 8, "S9": 9}
 
 # 健康度优先级映射（H3最严重 > H2警告 > H1正常 > H4完结）
 HEALTH_PRIORITY = {
@@ -57,9 +53,12 @@ class MachineService:
             raise ValueError(f"项目不存在: {project_id}")
 
         # 查询项目下最大的机台序号
-        max_no = self.db.query(func.max(Machine.machine_no)).filter(
-            Machine.project_id == project_id
-        ).scalar() or 0
+        max_no = (
+            self.db.query(func.max(Machine.machine_no))
+            .filter(Machine.project_id == project_id)
+            .scalar()
+            or 0
+        )
 
         next_no = max_no + 1
         machine_code = f"{project.project_code}-PN{next_no:03d}"
@@ -74,9 +73,7 @@ class MachineService:
         """验证健康度是否有效"""
         return health in VALID_HEALTH
 
-    def validate_stage_transition(
-        self, current_stage: str, new_stage: str
-    ) -> Tuple[bool, str]:
+    def validate_stage_transition(self, current_stage: str, new_stage: str) -> Tuple[bool, str]:
         """
         验证阶段转移是否合法
 
@@ -128,9 +125,11 @@ class ProjectAggregationService:
         Returns:
             Decimal: 项目进度百分比 (0-100)
         """
-        result = self.db.query(func.avg(Machine.progress_pct)).filter(
-            Machine.project_id == project_id
-        ).scalar()
+        result = (
+            self.db.query(func.avg(Machine.progress_pct))
+            .filter(Machine.project_id == project_id)
+            .scalar()
+        )
 
         if result is None:
             return Decimal("0.00")
@@ -150,9 +149,7 @@ class ProjectAggregationService:
         Returns:
             str: 项目阶段 (S1-S9)
         """
-        machines = self.db.query(Machine.stage).filter(
-            Machine.project_id == project_id
-        ).all()
+        machines = self.db.query(Machine.stage).filter(Machine.project_id == project_id).all()
 
         if not machines:
             return "S1"  # 无机台时默认S1
@@ -181,9 +178,7 @@ class ProjectAggregationService:
         Returns:
             str: 项目健康度 (H1-H4)
         """
-        machines = self.db.query(Machine.health).filter(
-            Machine.project_id == project_id
-        ).all()
+        machines = self.db.query(Machine.health).filter(Machine.project_id == project_id).all()
 
         if not machines:
             return "H1"  # 无机台时默认H1
@@ -238,9 +233,7 @@ class ProjectAggregationService:
         Returns:
             dict: 汇总信息
         """
-        machines = self.db.query(Machine).filter(
-            Machine.project_id == project_id
-        ).all()
+        machines = self.db.query(Machine).filter(Machine.project_id == project_id).all()
 
         if not machines:
             return {
@@ -282,7 +275,11 @@ class ProjectAggregationService:
             "total_machines": len(machines),
             "stage_distribution": stage_dist,
             "health_distribution": health_dist,
-            "avg_progress": (total_progress / len(machines)).quantize(Decimal("0.01")) if machines else Decimal("0"),
+            "avg_progress": (
+                (total_progress / len(machines)).quantize(Decimal("0.01"))
+                if machines
+                else Decimal("0")
+            ),
             "completed_count": completed,
             "at_risk_count": at_risk,
             "blocked_count": blocked,

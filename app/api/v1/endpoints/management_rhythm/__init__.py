@@ -29,4 +29,4 @@ router.include_router(metrics_router)
 router.include_router(reports_router)
 router.include_router(reports_unified_router)
 
-__all__ = ['router']
+__all__ = ["router"]

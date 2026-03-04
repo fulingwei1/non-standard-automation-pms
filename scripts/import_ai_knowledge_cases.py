@@ -2,16 +2,16 @@
 导入AI知识库示例案例
 包含50+个历史案例，涵盖多个行业和技术领域
 """
-import sys
+
 import os
+import sys
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal
-from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
 from app.schemas.presale_ai_knowledge import KnowledgeCaseCreate
-
+from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
 # ============= 示例案例数据 =============
 
@@ -203,7 +203,6 @@ SAMPLE_CASES = [
         "tags": ["功能测试", "ABS", "汽车安全", "HIL"],
         "quality_score": 0.93,
     },
-    
     # 消费电子行业案例 (15个)
     {
         "case_name": "智能手机主板ICT测试",
@@ -388,7 +387,6 @@ SAMPLE_CASES = [
         "tags": ["显示测试", "电子书", "电子墨水屏"],
         "quality_score": 0.81,
     },
-    
     # 工业设备行业案例 (10个)
     {
         "case_name": "工业控制器测试系统",
@@ -511,7 +509,6 @@ SAMPLE_CASES = [
         "tags": ["电源测试", "UPS", "工业", "不间断电源"],
         "quality_score": 0.87,
     },
-    
     # 医疗设备行业案例 (5个)
     {
         "case_name": "医疗监护仪测试系统",
@@ -574,7 +571,6 @@ SAMPLE_CASES = [
         "tags": ["功能测试", "医疗", "传感器", "精度"],
         "quality_score": 0.86,
     },
-    
     # 通讯设备行业案例 (5个)
     {
         "case_name": "5G基站测试系统",
@@ -644,29 +640,31 @@ def import_cases():
     """导入案例到数据库"""
     db = SessionLocal()
     service = PresaleAIKnowledgeService(db)
-    
+
     success_count = 0
     fail_count = 0
-    
+
     print("=" * 80)
     print("开始导入AI知识库案例...")
     print(f"总计案例数: {len(SAMPLE_CASES)}")
     print("=" * 80)
-    
+
     for i, case_data in enumerate(SAMPLE_CASES, 1):
         try:
             case_create = KnowledgeCaseCreate(**case_data)
             case = service.create_case(case_create)
-            
+
             success_count += 1
             print(f"[{i}/{len(SAMPLE_CASES)}] ✅ 成功导入: {case.case_name} (ID: {case.id})")
-            
+
         except Exception as e:
             fail_count += 1
-            print(f"[{i}/{len(SAMPLE_CASES)}] ❌ 导入失败: {case_data.get('case_name', 'Unknown')} - {str(e)}")
-    
+            print(
+                f"[{i}/{len(SAMPLE_CASES)}] ❌ 导入失败: {case_data.get('case_name', 'Unknown')} - {str(e)}"
+            )
+
     db.close()
-    
+
     print("=" * 80)
     print("导入完成!")
     print(f"✅ 成功: {success_count}")

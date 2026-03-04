@@ -31,6 +31,7 @@ class SalesTeam(Base, TimestampMixin):
     - 项目组：临时的、项目驱动的
     - 销售团队：长期的、业绩驱动的
     """
+
     __tablename__ = "sales_teams"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -42,7 +43,7 @@ class SalesTeam(Base, TimestampMixin):
     team_type = Column(
         String(20),
         default="REGION",
-        comment="团队类型：REGION(区域)/INDUSTRY(行业)/SCALE(客户规模)/OTHER(其他)"
+        comment="团队类型：REGION(区域)/INDUSTRY(行业)/SCALE(客户规模)/OTHER(其他)",
     )
 
     # 所属部门（团队通常隶属于某个部门）
@@ -90,17 +91,22 @@ class SalesTeamMember(Base, TimestampMixin):
     支持一人多队：一个销售可以同时属于多个团队
     例如：张三同时属于"华东组"和"大客户组"
     """
+
     __tablename__ = "sales_team_members"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    team_id = Column(Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID")
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, comment="用户ID")
+    team_id = Column(
+        Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID"
+    )
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, comment="用户ID"
+    )
 
     # 成员角色
     role = Column(
         String(20),
         default="MEMBER",
-        comment="成员角色：LEADER(负责人)/DEPUTY(副负责人)/MEMBER(成员)"
+        comment="成员角色：LEADER(负责人)/DEPUTY(副负责人)/MEMBER(成员)",
     )
 
     # 加入时间
@@ -137,16 +143,23 @@ class TeamPerformanceSnapshot(Base, TimestampMixin):
     """团队业绩快照表
 
     定期记录团队业绩数据，用于排名和趋势分析。
-    
+
     【状态】未启用 - 团队绩效快照"""
+
     __tablename__ = "team_performance_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    team_id = Column(Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID")
+    team_id = Column(
+        Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID"
+    )
 
     # 快照周期
-    period_type = Column(String(20), nullable=False, comment="周期类型：DAILY/WEEKLY/MONTHLY/QUARTERLY")
-    period_value = Column(String(20), nullable=False, comment="周期标识：2026-01-20/2026-W03/2026-01/2026-Q1")
+    period_type = Column(
+        String(20), nullable=False, comment="周期类型：DAILY/WEEKLY/MONTHLY/QUARTERLY"
+    )
+    period_value = Column(
+        String(20), nullable=False, comment="周期标识：2026-01-20/2026-W03/2026-01/2026-Q1"
+    )
     snapshot_date = Column(DateTime, nullable=False, comment="快照时间")
 
     # 业绩指标
@@ -173,7 +186,9 @@ class TeamPerformanceSnapshot(Base, TimestampMixin):
 
     __table_args__ = (
         # 同一团队同一周期只有一条记录
-        UniqueConstraint("team_id", "period_type", "period_value", name="uq_team_performance_period"),
+        UniqueConstraint(
+            "team_id", "period_type", "period_value", name="uq_team_performance_period"
+        ),
         Index("idx_team_perf_team", "team_id"),
         Index("idx_team_perf_period", "period_type", "period_value"),
         Index("idx_team_perf_date", "snapshot_date"),
@@ -190,11 +205,14 @@ class TeamPKRecord(Base, TimestampMixin):
 
     记录团队间的业绩PK比赛。
     """
+
     __tablename__ = "team_pk_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     pk_name = Column(String(100), nullable=False, comment="PK名称")
-    pk_type = Column(String(20), nullable=False, comment="PK类型：CONTRACT_AMOUNT/COLLECTION_AMOUNT/LEAD_COUNT")
+    pk_type = Column(
+        String(20), nullable=False, comment="PK类型：CONTRACT_AMOUNT/COLLECTION_AMOUNT/LEAD_COUNT"
+    )
 
     # 参与团队（JSON数组存储团队ID列表）
     team_ids = Column(Text, nullable=False, comment="参与团队ID列表(JSON)")
@@ -207,7 +225,9 @@ class TeamPKRecord(Base, TimestampMixin):
     target_value = Column(Numeric(14, 2), comment="PK目标值")
 
     # 状态
-    status = Column(String(20), default="ONGOING", comment="状态：PENDING/ONGOING/COMPLETED/CANCELLED")
+    status = Column(
+        String(20), default="ONGOING", comment="状态：PENDING/ONGOING/COMPLETED/CANCELLED"
+    )
 
     # 结果
     winner_team_id = Column(Integer, ForeignKey("sales_teams.id"), comment="获胜团队ID")

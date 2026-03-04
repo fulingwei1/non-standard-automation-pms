@@ -31,10 +31,10 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.material import Material
-from app.models.vendor import Vendor
 from app.models.purchase import PurchaseOrder
 from app.models.shortage import ArrivalFollowUp, MaterialArrival, ShortageReport
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (
     ArrivalFollowUpCreate,
@@ -51,6 +51,7 @@ router = APIRouter()
 # 工具函数
 # ============================================================
 
+
 def _generate_arrival_no(db: Session) -> str:
     """生成到货跟踪单号：ARR-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
@@ -58,11 +59,11 @@ def _generate_arrival_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=MaterialArrival,
-        no_field='arrival_no',
-        prefix='ARR',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="arrival_no",
+        prefix="ARR",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
@@ -98,6 +99,7 @@ def _build_arrival_response(arrival: MaterialArrival) -> MaterialArrivalResponse
 # CRUD 操作
 # ============================================================
 
+
 @router.get("", response_model=PaginatedResponse)
 def list_arrivals(
     db: Session = Depends(deps.get_db),
@@ -122,7 +124,9 @@ def list_arrivals(
         query = query.filter(MaterialArrival.is_delayed == is_delayed)
 
     total = query.count()
-    arrivals = apply_pagination(query.order_by(desc(MaterialArrival.created_at)), pagination.offset, pagination.limit).all()
+    arrivals = apply_pagination(
+        query.order_by(desc(MaterialArrival.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 
@@ -131,7 +135,7 @@ def list_arrivals(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -157,7 +161,9 @@ def create_arrival(
     # 如果提供了供应商ID，验证供应商存在
     supplier = None
     if arrival_in.supplier_id:
-        supplier = get_or_404(db, Vendor, arrival_in.supplier_id, Vendor.vendor_type == 'MATERIAL', "供应商不存在")
+        supplier = get_or_404(
+            db, Vendor, arrival_in.supplier_id, Vendor.vendor_type == "MATERIAL", "供应商不存在"
+        )
 
     arrival = MaterialArrival(
         arrival_no=_generate_arrival_no(db),
@@ -171,8 +177,8 @@ def create_arrival(
         supplier_id=arrival_in.supplier_id,
         supplier_name=arrival_in.supplier_name or (supplier.supplier_name if supplier else None),
         expected_date=arrival_in.expected_date,
-        status='PENDING',
-        remark=arrival_in.remark
+        status="PENDING",
+        remark=arrival_in.remark,
     )
 
     save_obj(db, arrival)
@@ -190,17 +196,18 @@ def get_delayed_arrivals(
     """延迟到货列表"""
     query = db.query(MaterialArrival).filter(
         MaterialArrival.is_delayed,
-        MaterialArrival.status.in_(['PENDING', 'IN_TRANSIT', 'DELAYED']),
+        MaterialArrival.status.in_(["PENDING", "IN_TRANSIT", "DELAYED"]),
     )
 
     if supplier_id:
         query = query.filter(MaterialArrival.supplier_id == supplier_id)
 
     total = query.count()
-    arrivals = apply_pagination(query.order_by(
-        MaterialArrival.delay_days.desc(),
-        MaterialArrival.expected_date
-    ), pagination.offset, pagination.limit).all()
+    arrivals = apply_pagination(
+        query.order_by(MaterialArrival.delay_days.desc(), MaterialArrival.expected_date),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = [_build_arrival_response(arrival) for arrival in arrivals]
 
@@ -209,7 +216,7 @@ def get_delayed_arrivals(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -229,6 +236,7 @@ def get_arrival(
 # 状态操作
 # ============================================================
 
+
 @router.put("/{arrival_id}/status", response_model=MaterialArrivalResponse)
 def update_arrival_status(
     *,
@@ -240,19 +248,21 @@ def update_arrival_status(
     """更新到货状态"""
     arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
-    valid_statuses = ['PENDING', 'IN_TRANSIT', 'DELAYED', 'RECEIVED', 'CANCELLED']
+    valid_statuses = ["PENDING", "IN_TRANSIT", "DELAYED", "RECEIVED", "CANCELLED"]
     if status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"无效的状态，允许的状态：{', '.join(valid_statuses)}")
+        raise HTTPException(
+            status_code=400, detail=f"无效的状态，允许的状态：{', '.join(valid_statuses)}"
+        )
 
     arrival.status = status
 
     # 如果状态为在途，检查是否延迟
-    if status == 'IN_TRANSIT':
+    if status == "IN_TRANSIT":
         today = date.today()
         if arrival.expected_date < today:
             arrival.is_delayed = True
             arrival.delay_days = (today - arrival.expected_date).days
-            arrival.status = 'DELAYED'
+            arrival.status = "DELAYED"
 
     save_obj(db, arrival)
 
@@ -270,7 +280,7 @@ def receive_arrival(
     """确认收货"""
     arrival = get_or_404(db, MaterialArrival, arrival_id, "到货跟踪不存在")
 
-    arrival.status = 'RECEIVED'
+    arrival.status = "RECEIVED"
     arrival.received_qty = received_qty
     arrival.received_by = current_user.id
     arrival.received_at = datetime.now()
@@ -290,6 +300,7 @@ def receive_arrival(
 # 跟催管理
 # ============================================================
 
+
 @router.get("/{arrival_id}/follow-ups", response_model=PaginatedResponse)
 def list_arrival_follow_ups(
     *,
@@ -304,35 +315,45 @@ def list_arrival_follow_ups(
     query = db.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id == arrival_id)
 
     total = query.count()
-    follow_ups = apply_pagination(query.order_by(desc(ArrivalFollowUp.followed_at)), pagination.offset, pagination.limit).all()
+    follow_ups = apply_pagination(
+        query.order_by(desc(ArrivalFollowUp.followed_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for follow_up in follow_ups:
         followed_by_user = db.query(User).filter(User.id == follow_up.followed_by).first()
-        items.append(ArrivalFollowUpResponse(
-            id=follow_up.id,
-            arrival_id=follow_up.arrival_id,
-            follow_up_type=follow_up.follow_up_type,
-            follow_up_note=follow_up.follow_up_note,
-            followed_by=follow_up.followed_by,
-            followed_by_name=followed_by_user.real_name or followed_by_user.username if followed_by_user else None,
-            followed_at=follow_up.followed_at,
-            supplier_response=follow_up.supplier_response,
-            next_follow_up_date=follow_up.next_follow_up_date,
-            created_at=follow_up.created_at,
-            updated_at=follow_up.updated_at,
-        ))
+        items.append(
+            ArrivalFollowUpResponse(
+                id=follow_up.id,
+                arrival_id=follow_up.arrival_id,
+                follow_up_type=follow_up.follow_up_type,
+                follow_up_note=follow_up.follow_up_note,
+                followed_by=follow_up.followed_by,
+                followed_by_name=(
+                    followed_by_user.real_name or followed_by_user.username
+                    if followed_by_user
+                    else None
+                ),
+                followed_at=follow_up.followed_at,
+                supplier_response=follow_up.supplier_response,
+                next_follow_up_date=follow_up.next_follow_up_date,
+                created_at=follow_up.created_at,
+                updated_at=follow_up.updated_at,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.post("/{arrival_id}/follow-up", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{arrival_id}/follow-up", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
+)
 def create_follow_up(
     *,
     db: Session = Depends(deps.get_db),
@@ -350,7 +371,7 @@ def create_follow_up(
         followed_by=current_user.id,
         followed_at=datetime.now(),
         supplier_response=follow_up_in.supplier_response,
-        next_follow_up_date=follow_up_in.next_follow_up_date
+        next_follow_up_date=follow_up_in.next_follow_up_date,
     )
 
     # 更新到货跟踪的跟催信息

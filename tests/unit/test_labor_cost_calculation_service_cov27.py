@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - labor_cost_calculation_service 单元测试"""
 
-import pytest
 import warnings
+
+import pytest
 
 
 class TestLaborCostCalculationServiceDeprecatedImports:
@@ -12,6 +13,7 @@ class TestLaborCostCalculationServiceDeprecatedImports:
             warnings.simplefilter("always")
             import importlib
             import sys
+
             # 移除缓存确保重新导入
             mod_name = "app.services.labor_cost_calculation_service"
             if mod_name in sys.modules:
@@ -26,6 +28,7 @@ class TestLaborCostCalculationServiceDeprecatedImports:
     def test_module_imports_query_approved_timesheets(self):
         try:
             import warnings
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", DeprecationWarning)
                 from app.services.labor_cost_calculation_service import query_approved_timesheets
@@ -36,6 +39,7 @@ class TestLaborCostCalculationServiceDeprecatedImports:
     def test_module_imports_delete_existing_costs(self):
         try:
             import warnings
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", DeprecationWarning)
                 from app.services.labor_cost_calculation_service import delete_existing_costs
@@ -132,6 +136,7 @@ class TestLaborCostCalculationServiceDeprecatedImports:
             warnings.simplefilter("always")
             import importlib
             import sys
+
             mod_name = "app.services.labor_cost_calculation_service"
             if mod_name in sys.modules:
                 del sys.modules[mod_name]

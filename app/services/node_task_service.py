@@ -57,24 +57,28 @@ class NodeTaskService:
             NodeTask: 创建的任务
         """
         # 验证节点存在
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node:
             raise ValueError(f"节点实例 {node_instance_id} 不存在")
 
         # 自动生成任务编码
         if not task_code:
-            task_count = self.db.query(NodeTask).filter(
-                NodeTask.node_instance_id == node_instance_id
-            ).count()
+            task_count = (
+                self.db.query(NodeTask)
+                .filter(NodeTask.node_instance_id == node_instance_id)
+                .count()
+            )
             task_code = f"{node.node_code}T{task_count + 1:02d}"
 
         # 获取下一个序号
-        max_seq = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node_instance_id
-        ).count()
+        max_seq = (
+            self.db.query(NodeTask).filter(NodeTask.node_instance_id == node_instance_id).count()
+        )
 
         # 如果未指定执行人，继承节点负责人
         if assignee_id is None:
@@ -119,9 +123,7 @@ class NodeTaskService:
         Returns:
             List[NodeTask]: 任务列表
         """
-        query = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node_instance_id
-        )
+        query = self.db.query(NodeTask).filter(NodeTask.node_instance_id == node_instance_id)
 
         if status:
             query = query.filter(NodeTask.status == status)
@@ -130,11 +132,7 @@ class NodeTaskService:
 
         return query.order_by(NodeTask.sequence).all()
 
-    def update_task(
-        self,
-        task_id: int,
-        **kwargs
-    ) -> Optional[NodeTask]:
+    def update_task(self, task_id: int, **kwargs) -> Optional[NodeTask]:
         """更新任务"""
         task = self.db.query(NodeTask).filter(NodeTask.id == task_id).first()
 
@@ -162,10 +160,7 @@ class NodeTaskService:
         """重新排序任务"""
         for index, task_id in enumerate(task_ids):
             self.db.query(NodeTask).filter(
-                and_(
-                    NodeTask.id == task_id,
-                    NodeTask.node_instance_id == node_instance_id
-                )
+                and_(NodeTask.id == task_id, NodeTask.node_instance_id == node_instance_id)
             ).update({"sequence": index})
         self.db.flush()
         return True
@@ -322,9 +317,7 @@ class NodeTaskService:
                 "total_actual_hours": 总实际工时,
             }
         """
-        tasks = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node_instance_id
-        ).all()
+        tasks = self.db.query(NodeTask).filter(NodeTask.node_instance_id == node_instance_id).all()
 
         total = len(tasks)
         completed = sum(1 for t in tasks if t.status == StageStatusEnum.COMPLETED.value)
@@ -388,24 +381,25 @@ class NodeTaskService:
         当节点配置了 auto_complete_on_tasks=True 且所有任务都完成/跳过时，
         自动将节点标记为完成。
         """
-        node = self.db.query(ProjectNodeInstance).filter(
-            ProjectNodeInstance.id == node_instance_id
-        ).first()
+        node = (
+            self.db.query(ProjectNodeInstance)
+            .filter(ProjectNodeInstance.id == node_instance_id)
+            .first()
+        )
 
         if not node or not node.auto_complete_on_tasks:
             return
 
         # 检查是否有任务
-        tasks = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node_instance_id
-        ).all()
+        tasks = self.db.query(NodeTask).filter(NodeTask.node_instance_id == node_instance_id).all()
 
         if not tasks:
             return
 
         # 检查是否所有任务都完成或跳过
         incomplete = [
-            t for t in tasks
+            t
+            for t in tasks
             if t.status not in [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
         ]
 

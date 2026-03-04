@@ -2,12 +2,12 @@
 """
 第三十九批覆盖率测试 - collaboration_rating/ratings.py
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, call
 
-pytest.importorskip("app.services.collaboration_rating.ratings",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.collaboration_rating.ratings", reason="import failed, skip")
 
 
 @pytest.fixture
@@ -18,6 +18,7 @@ def mock_db():
 @pytest.fixture
 def manager(mock_db):
     from app.services.collaboration_rating.ratings import RatingManager
+
     service = MagicMock()
     return RatingManager(mock_db, service)
 
@@ -56,7 +57,7 @@ class TestRatingManagerSubmitRating:
             response_score=4,
             delivery_score=5,
             interface_score=3,
-            comment="不错"
+            comment="不错",
         )
         assert rating.communication_score == 4
         assert rating.response_score == 4
@@ -70,9 +71,14 @@ class TestRatingManagerSubmitRating:
         mock_q.first.return_value = None
 
         with pytest.raises(ValueError, match="不存在"):
-            manager.submit_rating(1, rater_id=10,
-                                  communication_score=3, response_score=3,
-                                  delivery_score=3, interface_score=3)
+            manager.submit_rating(
+                1,
+                rater_id=10,
+                communication_score=3,
+                response_score=3,
+                delivery_score=3,
+                interface_score=3,
+            )
 
     def test_submit_rating_invalid_score_raises(self, manager, mock_db):
         rating = _make_rating(1, rater_id=10, ratee_id=20, period_id=1)
@@ -82,9 +88,14 @@ class TestRatingManagerSubmitRating:
         mock_q.first.return_value = rating
 
         with pytest.raises(ValueError, match="评分"):
-            manager.submit_rating(1, rater_id=10,
-                                  communication_score=6, response_score=3,
-                                  delivery_score=3, interface_score=3)
+            manager.submit_rating(
+                1,
+                rater_id=10,
+                communication_score=6,
+                response_score=3,
+                delivery_score=3,
+                interface_score=3,
+            )
 
     def test_submit_rating_calculates_total_score(self, manager, mock_db):
         rating = _make_rating(1, rater_id=10, ratee_id=20, period_id=1)
@@ -93,9 +104,14 @@ class TestRatingManagerSubmitRating:
         mock_q.filter.return_value = mock_q
         mock_q.first.return_value = rating
 
-        manager.submit_rating(1, rater_id=10,
-                              communication_score=5, response_score=5,
-                              delivery_score=5, interface_score=5)
+        manager.submit_rating(
+            1,
+            rater_id=10,
+            communication_score=5,
+            response_score=5,
+            delivery_score=5,
+            interface_score=5,
+        )
         # 根据代码公式：(5*25+5*25+5*25+5*25)/5*20 = 500/5*20 = 2000
         # 只验证 total_score 被设置（非None）
         assert rating.total_score is not None

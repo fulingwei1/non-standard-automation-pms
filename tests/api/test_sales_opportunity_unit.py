@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 O1组 API层单元测试 - sales/opportunity_crud.py
@@ -18,6 +19,7 @@ sys.modules.setdefault("redis", redis_mock)
 sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import os
+
 os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
@@ -25,10 +27,10 @@ os.environ.setdefault("ENABLE_SCHEDULER", "false")
 import pytest
 from fastapi import HTTPException
 
-
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
+
 
 def _make_db():
     db = MagicMock()
@@ -81,6 +83,7 @@ def _make_pagination():
 # Tests: read_opportunities
 # ──────────────────────────────────────────────
 
+
 class TestReadOpportunities:
 
     def test_list_opportunities_empty(self):
@@ -103,7 +106,10 @@ class TestReadOpportunities:
 
         with patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec:
             mock_sec.filter_sales_data_by_scope.return_value = mock_query
-            with patch("app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter", return_value=mock_query):
+            with patch(
+                "app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter",
+                return_value=mock_query,
+            ):
 
                 result = read_opportunities(
                     db=db,
@@ -137,7 +143,10 @@ class TestReadOpportunities:
 
         with patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec:
             mock_sec.filter_sales_data_by_scope.return_value = mock_query
-            with patch("app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter", return_value=mock_query):
+            with patch(
+                "app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter",
+                return_value=mock_query,
+            ):
 
                 result = read_opportunities(
                     db=db,
@@ -155,6 +164,7 @@ class TestReadOpportunities:
 # ──────────────────────────────────────────────
 # Tests: create_opportunity
 # ──────────────────────────────────────────────
+
 
 class TestCreateOpportunity:
 
@@ -180,16 +190,21 @@ class TestCreateOpportunity:
 
         db.query.return_value.filter.return_value.first.return_value = None  # no duplicate
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.generate_opportunity_code", return_value="OPP0001"), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.Customer") as MockCustomer, \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.Opportunity") as MockOpp, \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"):
+        with (
+            patch(
+                "app.api.v1.endpoints.sales.opportunity_crud.generate_opportunity_code",
+                return_value="OPP0001",
+            ),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.Customer") as MockCustomer,
+            patch("app.api.v1.endpoints.sales.opportunity_crud.Opportunity") as MockOpp,
+            patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"),
+        ):
 
             # customer lookup
             db.query.return_value.filter.return_value.first.side_effect = [
-                None,           # duplicate code check
+                None,  # duplicate code check
                 customer_mock,  # customer lookup
-                None,           # requirement lookup at end
+                None,  # requirement lookup at end
             ]
 
             MockOpp.return_value = opp_instance
@@ -218,7 +233,10 @@ class TestCreateOpportunity:
         # First call: code check -> None (not duplicate), then customer -> None
         db.query.return_value.filter.return_value.first.side_effect = [None, None]
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.generate_opportunity_code", return_value="OPP0001"):
+        with patch(
+            "app.api.v1.endpoints.sales.opportunity_crud.generate_opportunity_code",
+            return_value="OPP0001",
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 create_opportunity(db=db, opp_in=opp_in, current_user=current_user)
 
@@ -251,6 +269,7 @@ class TestCreateOpportunity:
 # Tests: read_opportunity
 # ──────────────────────────────────────────────
 
+
 class TestReadOpportunity:
 
     def test_read_opportunity_success(self):
@@ -268,8 +287,10 @@ class TestReadOpportunity:
         mock_query.first.return_value = opp
         db.query.return_value = mock_query
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityResponse") as MockResp:
+        with (
+            patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityResponse") as MockResp,
+        ):
             MockResp.return_value = MagicMock()
 
             result = read_opportunity(db=db, opp_id=1, current_user=current_user)
@@ -299,6 +320,7 @@ class TestReadOpportunity:
 # Tests: update_opportunity
 # ──────────────────────────────────────────────
 
+
 class TestUpdateOpportunity:
 
     def test_update_opportunity_success(self):
@@ -314,11 +336,15 @@ class TestUpdateOpportunity:
         opp_in.requirement = None
         opp_in.model_dump.return_value = {"opp_name": "更新后的商机名"}
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.get_or_404", return_value=opp), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec, \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.get_entity_creator_id", return_value=1), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityResponse") as MockResp:
+        with (
+            patch("app.api.v1.endpoints.sales.opportunity_crud.get_or_404", return_value=opp),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec,
+            patch(
+                "app.api.v1.endpoints.sales.opportunity_crud.get_entity_creator_id", return_value=1
+            ),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityResponse") as MockResp,
+        ):
             mock_sec.check_sales_edit_permission.return_value = True
             MockResp.return_value = MagicMock()
             db.query.return_value.filter.return_value.first.return_value = None  # no requirement
@@ -332,8 +358,7 @@ class TestUpdateOpportunity:
         from app.api.v1.endpoints.sales.opportunity_crud import update_opportunity
 
         db = _make_db()
-        current_user = _make_user(
-        )
+        current_user = _make_user()
         current_user.is_superuser = False
         opp = _make_opp()
 
@@ -341,9 +366,13 @@ class TestUpdateOpportunity:
         opp_in.requirement = None
         opp_in.model_dump.return_value = {}
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.get_or_404", return_value=opp), \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec, \
-             patch("app.api.v1.endpoints.sales.opportunity_crud.get_entity_creator_id", return_value=2):
+        with (
+            patch("app.api.v1.endpoints.sales.opportunity_crud.get_or_404", return_value=opp),
+            patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec,
+            patch(
+                "app.api.v1.endpoints.sales.opportunity_crud.get_entity_creator_id", return_value=2
+            ),
+        ):
             mock_sec.check_sales_edit_permission.return_value = False
 
             with pytest.raises(HTTPException) as exc_info:

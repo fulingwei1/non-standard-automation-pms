@@ -32,9 +32,9 @@ class SalesPredictionService:
         "LOST": 0.0,
     }
     DEFAULT_AMOUNT_FACTORS = {
-        "large": {"threshold": 1000000, "factor": 0.9},      # >100万
-        "medium": {"threshold": 500000, "factor": 0.95},      # >50万
-        "small": {"threshold": 100000, "factor": 1.1},        # <10万（反向）
+        "large": {"threshold": 1000000, "factor": 0.9},  # >100万
+        "medium": {"threshold": 500000, "factor": 0.95},  # >50万
+        "small": {"threshold": 100000, "factor": 1.1},  # <10万（反向）
     }
     DEFAULT_SMOOTHING_ALPHA = 0.3
     DEFAULT_WIN_RATE_FALLBACK = 0.5
@@ -117,7 +117,9 @@ class SalesPredictionService:
             "opportunity_based_revenue": float(opportunity_based_revenue),
             "combined_revenue": float((predicted_revenue + opportunity_based_revenue) / 2),
             "confidence_level": self._calculate_confidence(monthly_revenue, len(opportunities)),
-            "breakdown": self._generate_breakdown(days, predicted_revenue, opportunity_based_revenue),
+            "breakdown": self._generate_breakdown(
+                days, predicted_revenue, opportunity_based_revenue
+            ),
         }
 
         return final_forecast
@@ -182,14 +184,28 @@ class SalesPredictionService:
         final_probability = max(lo, min(hi, final_probability))
 
         # 计算置信度
-        confidence = "HIGH" if len(historical_win_rate) > 10 else "MEDIUM" if len(historical_win_rate) > 5 else "LOW"
+        confidence = (
+            "HIGH"
+            if len(historical_win_rate) > 10
+            else "MEDIUM" if len(historical_win_rate) > 5 else "LOW"
+        )
 
         factors = [
             {"factor": "阶段", "value": stage, "impact": f"{base_probability:.1%}"},
-            {"factor": "金额", "value": f"¥{float(amount or 0):,.0f}" if amount else "未知", "impact": f"{amount_factor:.1%}"},
+            {
+                "factor": "金额",
+                "value": f"¥{float(amount or 0):,.0f}" if amount else "未知",
+                "impact": f"{amount_factor:.1%}",
+            },
         ]
         if customer_win_rate:
-            factors.append({"factor": "客户历史", "value": f"{customer_win_rate:.1%}", "impact": f"{customer_factor:.1%}"})
+            factors.append(
+                {
+                    "factor": "客户历史",
+                    "value": f"{customer_win_rate:.1%}",
+                    "impact": f"{customer_factor:.1%}",
+                }
+            )
 
         return {
             "win_probability": float(final_probability),
@@ -213,11 +229,13 @@ class SalesPredictionService:
         # 转换为列表并按月份排序
         result = []
         for month in sorted(monthly_data.keys()):
-            result.append({
-                "month": month,
-                "revenue": float(monthly_data[month]["amount"]),
-                "count": monthly_data[month]["count"],
-            })
+            result.append(
+                {
+                    "month": month,
+                    "revenue": float(monthly_data[month]["amount"]),
+                    "count": monthly_data[month]["count"],
+                }
+            )
 
         return result
 
@@ -234,7 +252,9 @@ class SalesPredictionService:
         months = days / 30.0
         return Decimal(str(avg_revenue * months))
 
-    def _exponential_smoothing_forecast(self, monthly_data: List[Dict[str, Any]], days: int, alpha: float = None) -> Decimal:
+    def _exponential_smoothing_forecast(
+        self, monthly_data: List[Dict[str, Any]], days: int, alpha: float = None
+    ) -> Decimal:
         """指数平滑法预测"""
         if not monthly_data:
             return Decimal("0")
@@ -281,9 +301,15 @@ class SalesPredictionService:
         # 统计各阶段的商机数量和赢单数量
         stage_stats = defaultdict(lambda: {"total": 0, "won": 0})
 
-        opportunities = self.db.query(Opportunity).filter(
-            Opportunity.stage.in_(["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"])
-        ).all()
+        opportunities = (
+            self.db.query(Opportunity)
+            .filter(
+                Opportunity.stage.in_(
+                    ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]
+                )
+            )
+            .all()
+        )
 
         for opp in opportunities:
             stage = opp.stage
@@ -323,10 +349,11 @@ class SalesPredictionService:
             return None
 
         # 统计该客户的商机
-        opportunities = self.db.query(Opportunity).filter(
-            Opportunity.customer_id == customer_id,
-            Opportunity.stage.in_(["WON", "LOST"])
-        ).all()
+        opportunities = (
+            self.db.query(Opportunity)
+            .filter(Opportunity.customer_id == customer_id, Opportunity.stage.in_(["WON", "LOST"]))
+            .all()
+        )
 
         if not opportunities:
             return None
@@ -336,7 +363,9 @@ class SalesPredictionService:
 
         return won_count / total_count if total_count > 0 else None
 
-    def _calculate_confidence(self, monthly_data: List[Dict[str, Any]], opportunity_count: int) -> str:
+    def _calculate_confidence(
+        self, monthly_data: List[Dict[str, Any]], opportunity_count: int
+    ) -> str:
         """计算预测置信度"""
         data_points = len(monthly_data)
 
@@ -347,7 +376,9 @@ class SalesPredictionService:
         else:
             return "LOW"
 
-    def _generate_breakdown(self, days: int, predicted_revenue: Decimal, opportunity_revenue: Decimal) -> List[Dict[str, Any]]:
+    def _generate_breakdown(
+        self, days: int, predicted_revenue: Decimal, opportunity_revenue: Decimal
+    ) -> List[Dict[str, Any]]:
         """生成预测明细（按时间段）"""
         breakdown = []
         periods = [30, 60, 90] if days >= 90 else ([30, 60] if days >= 60 else [30])
@@ -357,13 +388,17 @@ class SalesPredictionService:
                 continue
 
             ratio = period / days
-            breakdown.append({
-                "period": period,
-                "period_label": f"未来{period}天",
-                "predicted_revenue": float(predicted_revenue * Decimal(str(ratio))),
-                "opportunity_revenue": float(opportunity_revenue * Decimal(str(ratio))),
-                "combined_revenue": float((predicted_revenue + opportunity_revenue) / 2 * Decimal(str(ratio))),
-            })
+            breakdown.append(
+                {
+                    "period": period,
+                    "period_label": f"未来{period}天",
+                    "predicted_revenue": float(predicted_revenue * Decimal(str(ratio))),
+                    "opportunity_revenue": float(opportunity_revenue * Decimal(str(ratio))),
+                    "combined_revenue": float(
+                        (predicted_revenue + opportunity_revenue) / 2 * Decimal(str(ratio))
+                    ),
+                }
+            )
 
         return breakdown
 
@@ -379,26 +414,38 @@ class SalesPredictionService:
         start_date = today - timedelta(days=days_back)
 
         # 获取该时间段内实际签约的合同
-        actual_contracts = self.db.query(Contract).filter(
-            Contract.status == "SIGNED",
-            Contract.signing_date >= start_date,
-            Contract.signing_date <= today,
-        ).all()
+        actual_contracts = (
+            self.db.query(Contract)
+            .filter(
+                Contract.status == "SIGNED",
+                Contract.signing_date >= start_date,
+                Contract.signing_date <= today,
+            )
+            .all()
+        )
 
         actual_revenue = sum([float(c.total_amount or 0) for c in actual_contracts])
 
         # 获取该时间段开始时的商机（模拟历史预测）
-        historical_opps = self.db.query(Opportunity).filter(
-            Opportunity.created_at <= start_date,
-            Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"]),
-        ).all()
+        historical_opps = (
+            self.db.query(Opportunity)
+            .filter(
+                Opportunity.created_at <= start_date,
+                Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"]),
+            )
+            .all()
+        )
 
         # 计算预测值（基于历史商机）
         predicted_revenue = self._forecast_from_opportunities(historical_opps, days_back)
 
         # 计算准确度
         if actual_revenue > 0:
-            accuracy = min(1.0, float(predicted_revenue) / actual_revenue) if predicted_revenue > 0 else 0.0
+            accuracy = (
+                min(1.0, float(predicted_revenue) / actual_revenue)
+                if predicted_revenue > 0
+                else 0.0
+            )
             error_rate = abs(1.0 - accuracy)
         else:
             accuracy = 0.0

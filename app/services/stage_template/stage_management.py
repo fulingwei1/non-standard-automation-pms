@@ -40,19 +40,21 @@ class StageManagementMixin:
             StageDefinition: 创建的阶段定义
         """
         # 检查模板存在
-        template = self.db.query(StageTemplate).filter(
-            StageTemplate.id == template_id
-        ).first()
+        template = self.db.query(StageTemplate).filter(StageTemplate.id == template_id).first()
         if not template:
             raise ValueError(f"模板 {template_id} 不存在")
 
         # 检查编码在模板内唯一
-        existing = self.db.query(StageDefinition).filter(
-            and_(
-                StageDefinition.template_id == template_id,
-                StageDefinition.stage_code == stage_code
+        existing = (
+            self.db.query(StageDefinition)
+            .filter(
+                and_(
+                    StageDefinition.template_id == template_id,
+                    StageDefinition.stage_code == stage_code,
+                )
             )
-        ).first()
+            .first()
+        )
         if existing:
             raise ValueError(f"阶段编码 {stage_code} 在该模板中已存在")
 
@@ -69,15 +71,9 @@ class StageManagementMixin:
         self.db.flush()
         return stage
 
-    def update_stage(
-        self,
-        stage_id: int,
-        **kwargs
-    ) -> Optional[StageDefinition]:
+    def update_stage(self, stage_id: int, **kwargs) -> Optional[StageDefinition]:
         """更新阶段定义"""
-        stage = self.db.query(StageDefinition).filter(
-            StageDefinition.id == stage_id
-        ).first()
+        stage = self.db.query(StageDefinition).filter(StageDefinition.id == stage_id).first()
 
         if not stage:
             return None
@@ -91,9 +87,7 @@ class StageManagementMixin:
 
     def delete_stage(self, stage_id: int) -> bool:
         """删除阶段定义（级联删除节点）"""
-        stage = self.db.query(StageDefinition).filter(
-            StageDefinition.id == stage_id
-        ).first()
+        stage = self.db.query(StageDefinition).filter(StageDefinition.id == stage_id).first()
 
         if not stage:
             return False
@@ -105,10 +99,7 @@ class StageManagementMixin:
         """重新排序阶段"""
         for index, stage_id in enumerate(stage_ids):
             self.db.query(StageDefinition).filter(
-                and_(
-                    StageDefinition.id == stage_id,
-                    StageDefinition.template_id == template_id
-                )
+                and_(StageDefinition.id == stage_id, StageDefinition.template_id == template_id)
             ).update({"sequence": index})
         self.db.flush()
         return True

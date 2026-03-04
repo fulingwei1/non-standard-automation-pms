@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/service.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.service import (
-    ServiceTicketCreate,
-    ServiceTicketUpdate,
-    ServiceTicketAssign,
-    ServiceTicketClose,
-    ServiceTicketResponse,
-    ServiceRecordCreate,
-    ServiceRecordUpdate,
-    ServiceRecordResponse,
     CustomerCommunicationCreate,
     CustomerCommunicationUpdate,
     CustomerSatisfactionCreate,
     CustomerSatisfactionUpdate,
-    ServiceDashboardStatistics,
     KnowledgeBaseCreate,
-    KnowledgeBaseUpdate,
     KnowledgeBaseResponse,
+    KnowledgeBaseUpdate,
     SatisfactionSurveyTemplateCreate,
+    ServiceDashboardStatistics,
+    ServiceRecordCreate,
+    ServiceRecordResponse,
+    ServiceRecordUpdate,
+    ServiceTicketAssign,
+    ServiceTicketClose,
+    ServiceTicketCreate,
+    ServiceTicketResponse,
+    ServiceTicketUpdate,
 )
 
 
 class TestServiceTicketCreate:
     def test_valid(self):
         t = ServiceTicketCreate(
-            project_id=1, customer_id=1,
-            problem_type="MECHANICAL", problem_desc="设备异响",
-            urgency="HIGH", reported_by="客户张三",
+            project_id=1,
+            customer_id=1,
+            problem_type="MECHANICAL",
+            problem_desc="设备异响",
+            urgency="HIGH",
+            reported_by="客户张三",
             reported_time=datetime.now(),
         )
         assert t.assignee_id is None
@@ -43,11 +47,15 @@ class TestServiceTicketCreate:
 
     def test_with_assignee(self):
         t = ServiceTicketCreate(
-            project_id=1, customer_id=1,
-            problem_type="ELECTRICAL", problem_desc="D",
-            urgency="LOW", reported_by="R",
+            project_id=1,
+            customer_id=1,
+            problem_type="ELECTRICAL",
+            problem_desc="D",
+            urgency="LOW",
+            reported_by="R",
             reported_time=datetime.now(),
-            assignee_id=5, cc_user_ids=[6, 7],
+            assignee_id=5,
+            cc_user_ids=[6, 7],
         )
         assert t.assignee_id == 5
 
@@ -96,7 +104,8 @@ class TestServiceRecordCreate:
     def test_valid(self):
         r = ServiceRecordCreate(
             service_type="INSTALLATION",
-            project_id=1, customer_id=1,
+            project_id=1,
+            customer_id=1,
             service_date=date(2024, 6, 1),
             service_engineer_id=1,
             service_content="安装调试",
@@ -106,18 +115,26 @@ class TestServiceRecordCreate:
 
     def test_satisfaction_bounds(self):
         r = ServiceRecordCreate(
-            service_type="T", project_id=1, customer_id=1,
-            service_date=date(2024, 1, 1), service_engineer_id=1,
-            service_content="C", customer_satisfaction=1,
+            service_type="T",
+            project_id=1,
+            customer_id=1,
+            service_date=date(2024, 1, 1),
+            service_engineer_id=1,
+            service_content="C",
+            customer_satisfaction=1,
         )
         assert r.customer_satisfaction == 1
 
     def test_satisfaction_invalid(self):
         with pytest.raises(ValidationError):
             ServiceRecordCreate(
-                service_type="T", project_id=1, customer_id=1,
-                service_date=date(2024, 1, 1), service_engineer_id=1,
-                service_content="C", customer_satisfaction=6,
+                service_type="T",
+                project_id=1,
+                customer_id=1,
+                service_date=date(2024, 1, 1),
+                service_engineer_id=1,
+                service_content="C",
+                customer_satisfaction=6,
             )
 
     def test_missing(self):
@@ -131,7 +148,8 @@ class TestCustomerCommunicationCreate:
             communication_type="PHONE",
             customer_name="客户A",
             communication_date=date(2024, 6, 1),
-            topic="项目进展", subject="进度沟通",
+            topic="项目进展",
+            subject="进度沟通",
             content="讨论了项目进度",
         )
         assert c.follow_up_required is False
@@ -166,8 +184,10 @@ class TestServiceDashboardStatistics:
 
     def test_with_data(self):
         d = ServiceDashboardStatistics(
-            active_cases=10, resolved_today=5,
-            avg_response_time=2.5, customer_satisfaction=4.5,
+            active_cases=10,
+            resolved_today=5,
+            avg_response_time=2.5,
+            customer_satisfaction=4.5,
         )
         assert d.avg_response_time == 2.5
 
@@ -199,10 +219,19 @@ class TestKnowledgeBaseResponse:
     def test_valid(self):
         now = datetime.now()
         k = KnowledgeBaseResponse(
-            id=1, article_no="KB001", title="T", category="C",
-            is_faq=False, is_featured=False, status="PUBLISHED",
-            view_count=10, like_count=5, helpful_count=3,
-            author_id=1, created_at=now, updated_at=now,
+            id=1,
+            article_no="KB001",
+            title="T",
+            category="C",
+            is_faq=False,
+            is_featured=False,
+            status="PUBLISHED",
+            view_count=10,
+            like_count=5,
+            helpful_count=3,
+            author_id=1,
+            created_at=now,
+            updated_at=now,
         )
         assert k.download_count == 0
         assert k.adopt_count == 0

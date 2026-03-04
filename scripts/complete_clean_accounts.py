@@ -34,11 +34,13 @@ def main():
             # 转移项目管理权到项目经理tanzhangbin
             try:
                 db.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE projects
                     SET pm_id = (SELECT id FROM users WHERE username = 'tanzhangbin' LIMIT 1)
                     WHERE pm_id = :user_id
-                """),
+                """
+                    ),
                     {"user_id": user_id},
                 )
                 print(f"    ✅ 项目管理权已转移")
@@ -48,11 +50,13 @@ def main():
             # 转移项目创建权
             try:
                 db.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE projects
                     SET created_by = (SELECT id FROM users WHERE username = 'tanzhangbin' LIMIT 1)
                     WHERE created_by = :user_id
-                """),
+                """
+                    ),
                     {"user_id": user_id},
                 )
                 print(f"    ✅ 项目创建权已转移")
@@ -62,19 +66,23 @@ def main():
             # 转移问题
             try:
                 db.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE issues
                     SET reporter_id = (SELECT id FROM users WHERE username = 'tanzhangbin' LIMIT 1)
                     WHERE reporter_id = :user_id
-                """),
+                """
+                    ),
                     {"user_id": user_id},
                 )
                 db.execute(
-                    text("""
+                    text(
+                        """
                     UPDATE issues
                     SET assignee_id = (SELECT id FROM users WHERE username = 'tanzhangbin' LIMIT 1)
                     WHERE assignee_id = :user_id
-                """),
+                """
+                    ),
                     {"user_id": user_id},
                 )
                 print(f"    ✅ 问题已转移")

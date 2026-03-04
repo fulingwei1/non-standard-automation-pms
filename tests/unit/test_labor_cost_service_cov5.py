@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第五批：labor_cost_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.labor_cost_service import (
-        LaborCostService,
         LaborCostCalculationService,
         LaborCostExpenseService,
+        LaborCostService,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -42,8 +44,10 @@ class TestLaborCostServiceCalculateAll:
         q.distinct.return_value = q
         q.all.return_value = [(1,)]
         db.query.return_value = q
-        with patch("app.services.labor_cost_service.LaborCostService.calculate_project_labor_cost",
-                   return_value={"success": True, "total_cost": 1000}):
+        with patch(
+            "app.services.labor_cost_service.LaborCostService.calculate_project_labor_cost",
+            return_value={"success": True, "total_cost": 1000},
+        ):
             result = LaborCostService.calculate_all_projects_labor_cost(db)
             assert result["success"] is True
             assert result["total_projects"] == 1
@@ -76,9 +80,11 @@ class TestLaborCostExpenseServiceIdentifyLostProjects:
         q.all.return_value = [project]
         db.query.return_value.filter.return_value = q
         svc = LaborCostExpenseService(db)
-        with patch.object(svc, "_has_detailed_design", return_value=False), \
-             patch.object(svc, "_get_project_hours", return_value=10.0), \
-             patch.object(svc, "_calculate_project_cost", return_value=Decimal("1000")):
+        with (
+            patch.object(svc, "_has_detailed_design", return_value=False),
+            patch.object(svc, "_get_project_hours", return_value=10.0),
+            patch.object(svc, "_calculate_project_cost", return_value=Decimal("1000")),
+        ):
             result = svc.identify_lost_projects()
             assert len(result) == 1
             assert result[0]["project_id"] == 1

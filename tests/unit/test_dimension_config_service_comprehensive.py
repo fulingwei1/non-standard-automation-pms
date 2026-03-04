@@ -12,9 +12,9 @@ DimensionConfigService 综合单元测试
 - get_pending_approvals: 获取待审批配置
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -24,7 +24,9 @@ class TestDimensionConfigServiceInit:
 
     def test_initializes_with_db(self):
         """测试使用数据库会话初始化"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -38,7 +40,9 @@ class TestGetConfig:
 
     def test_returns_department_config_first(self):
         """测试优先返回部门配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -58,7 +62,9 @@ class TestGetConfig:
 
     def test_falls_back_to_global_config(self):
         """测试回退到全局配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -76,7 +82,9 @@ class TestGetConfig:
 
     def test_uses_today_as_default_date(self):
         """测试默认使用今天日期"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -91,7 +99,9 @@ class TestGetConfig:
 
     def test_filters_by_job_level(self):
         """测试按岗位级别过滤"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -115,7 +125,9 @@ class TestGetDepartmentConfig:
 
     def test_queries_department_config(self):
         """测试查询部门配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -135,7 +147,9 @@ class TestGetDepartmentConfig:
 
     def test_returns_none_when_not_found(self):
         """测试未找到时返回None"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -156,7 +170,9 @@ class TestCreateConfig:
 
     def test_creates_config_successfully(self):
         """测试成功创建配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()
@@ -184,7 +200,9 @@ class TestCreateConfig:
 
     def test_validates_weight_sum(self):
         """测试验证权重总和"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -204,7 +222,9 @@ class TestCreateConfig:
 
     def test_validates_department_manager_permission(self):
         """测试验证部门经理权限"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -225,7 +245,9 @@ class TestCreateConfig:
 
     def test_sets_approval_status_for_department_config(self):
         """测试部门配置设置待审批状态"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()
@@ -257,7 +279,9 @@ class TestValidateDepartmentManagerPermission:
 
     def test_raises_for_invalid_operator(self):
         """测试无效操作人时抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -271,7 +295,9 @@ class TestValidateDepartmentManagerPermission:
 
     def test_raises_for_non_manager(self):
         """测试非部门经理时抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -281,7 +307,7 @@ class TestValidateDepartmentManagerPermission:
         # First query returns operator
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             mock_operator,
-            None  # Department not found
+            None,  # Department not found
         ]
 
         service = DimensionConfigService(mock_db)
@@ -297,7 +323,9 @@ class TestListConfigs:
 
     def test_returns_all_configs(self):
         """测试返回所有配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -319,7 +347,9 @@ class TestListConfigs:
 
     def test_filters_by_job_type(self):
         """测试按岗位类型过滤"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -336,7 +366,9 @@ class TestListConfigs:
 
     def test_filters_by_department(self):
         """测试按部门过滤"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -353,7 +385,9 @@ class TestListConfigs:
 
     def test_excludes_expired_by_default(self):
         """测试默认排除过期配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -374,7 +408,9 @@ class TestGetDepartmentConfigs:
 
     def test_returns_not_manager_for_invalid_user(self):
         """测试无效用户返回非经理状态"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -383,12 +419,14 @@ class TestGetDepartmentConfigs:
 
         result = service.get_department_configs(999)
 
-        assert result['is_manager'] is False
-        assert result['department_id'] is None
+        assert result["is_manager"] is False
+        assert result["department_id"] is None
 
     def test_returns_not_manager_when_no_department(self):
         """测试无管理部门时返回非经理状态"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -396,20 +434,19 @@ class TestGetDepartmentConfigs:
         mock_user.employee_id = 1
 
         # First query returns user, second returns None (no department)
-        mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_user,
-            None
-        ]
+        mock_db.query.return_value.filter.return_value.first.side_effect = [mock_user, None]
 
         service = DimensionConfigService(mock_db)
 
         result = service.get_department_configs(1)
 
-        assert result['is_manager'] is False
+        assert result["is_manager"] is False
 
     def test_returns_department_info_for_manager(self):
         """测试经理返回部门信息"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -433,8 +470,8 @@ class TestGetDepartmentConfigs:
 
         result = service.get_department_configs(1)
 
-        assert result['is_manager'] is True
-        assert result['department_id'] == 1
+        assert result["is_manager"] is True
+        assert result["department_id"] == 1
 
 
 class TestAnalyzeJobTypeDistribution:
@@ -442,7 +479,9 @@ class TestAnalyzeJobTypeDistribution:
 
     def test_analyzes_distribution(self):
         """测试分析岗位类型分布"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -460,7 +499,9 @@ class TestAnalyzeJobTypeDistribution:
 
         service = DimensionConfigService(mock_db)
 
-        result = service._analyze_job_type_distribution([mock_profile1, mock_profile2, mock_profile3])
+        result = service._analyze_job_type_distribution(
+            [mock_profile1, mock_profile2, mock_profile3]
+        )
 
         assert "mechanical" in result
         assert result["mechanical"]["count"] == 2
@@ -473,13 +514,13 @@ class TestBuildConfigList:
 
     def test_builds_config_list(self):
         """测试构建配置列表"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
-        job_type_distribution = {
-            "mechanical": {"count": 5, "levels": {"senior": 2, "junior": 3}}
-        }
+        job_type_distribution = {"mechanical": {"count": 5, "levels": {"senior": 2, "junior": 3}}}
 
         mock_dept_config = MagicMock()
         mock_dept_config.job_type = "mechanical"
@@ -492,9 +533,7 @@ class TestBuildConfigList:
         service._format_config = MagicMock(return_value={"id": 1})
 
         result = service._build_config_list(
-            job_type_distribution,
-            [mock_dept_config],
-            [mock_global_config]
+            job_type_distribution, [mock_dept_config], [mock_global_config]
         )
 
         assert len(result) == 1
@@ -507,7 +546,9 @@ class TestFormatConfig:
 
     def test_formats_config(self):
         """测试格式化配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -531,7 +572,9 @@ class TestFormatConfig:
 
     def test_returns_none_for_none_config(self):
         """测试空配置返回None"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -547,7 +590,9 @@ class TestApproveConfig:
 
     def test_approves_config_successfully(self):
         """测试成功审批配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -570,7 +615,9 @@ class TestApproveConfig:
 
     def test_rejects_config(self):
         """测试拒绝配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -586,14 +633,18 @@ class TestApproveConfig:
         service = DimensionConfigService(mock_db)
         service._validate_admin_permission = MagicMock()
 
-        result = service.approve_config(1, approver_id=1, approved=False, approval_reason="不符合要求")
+        result = service.approve_config(
+            1, approver_id=1, approved=False, approval_reason="不符合要求"
+        )
 
         assert mock_config.approval_status == "REJECTED"
         assert mock_config.approval_reason == "不符合要求"
 
     def test_raises_for_missing_config(self):
         """测试配置不存在时抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -607,7 +658,9 @@ class TestApproveConfig:
 
     def test_raises_for_global_config(self):
         """测试全局配置抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -626,7 +679,9 @@ class TestApproveConfig:
 
     def test_raises_for_non_pending_status(self):
         """测试非待审批状态抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -650,7 +705,9 @@ class TestValidateAdminPermission:
 
     def test_allows_superuser(self):
         """测试允许超级用户"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -666,7 +723,9 @@ class TestValidateAdminPermission:
 
     def test_allows_admin_role(self):
         """测试允许管理员角色"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -692,7 +751,9 @@ class TestValidateAdminPermission:
 
     def test_raises_for_non_admin(self):
         """测试非管理员抛出异常"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -722,7 +783,9 @@ class TestGetPendingApprovals:
 
     def test_returns_pending_configs(self):
         """测试返回待审批配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -747,7 +810,9 @@ class TestGetPendingApprovals:
 
     def test_returns_empty_list_when_no_pending(self):
         """测试无待审批时返回空列表"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_db = MagicMock()
 
@@ -767,6 +832,7 @@ class TestGetPendingApprovals:
 # G4 补充测试 - DimensionConfigService
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 class TestDimensionConfigServiceG4:
     """G4 补充：dimension_config_service 额外覆盖"""
 
@@ -777,7 +843,9 @@ class TestDimensionConfigServiceG4:
 
     def test_get_config_no_dept_uses_global(self):
         """不传 department_id 时应直接查全局配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_config = MagicMock()
         q = MagicMock()
@@ -794,7 +862,9 @@ class TestDimensionConfigServiceG4:
 
     def test_create_config_invalid_weight_raises(self):
         """五维权重之和不等于100时应抛出 ValueError"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         service = DimensionConfigService(self.mock_db)
         data = MagicMock()
@@ -805,6 +875,7 @@ class TestDimensionConfigServiceG4:
         data.collaboration_weight = 10  # sum = 90 ≠ 100
 
         import pytest
+
         with pytest.raises(ValueError, match="权重总和必须为100"):
             service.create_config(data, operator_id=1)
 
@@ -812,8 +883,11 @@ class TestDimensionConfigServiceG4:
 
     def test_create_config_valid_weight(self):
         """权重之和=100 时，db.add/commit 被调用"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
         from unittest.mock import patch
+
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         service = DimensionConfigService(self.mock_db)
         data = MagicMock()
@@ -828,11 +902,14 @@ class TestDimensionConfigServiceG4:
         data.config_name = "测试配置"
         data.description = ""
 
-        with patch(
-            "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
-        ) as MockConfig, patch(
-            "app.services.engineer_performance.dimension_config_service.save_obj"
-        ) as mock_save:
+        with (
+            patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig,
+            patch(
+                "app.services.engineer_performance.dimension_config_service.save_obj"
+            ) as mock_save,
+        ):
             mock_instance = MagicMock()
             MockConfig.return_value = mock_instance
             mock_save.return_value = mock_instance
@@ -844,7 +921,9 @@ class TestDimensionConfigServiceG4:
 
     def test_get_config_dept_config_found(self):
         """指定 department_id 且部门配置存在时返回部门配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         dept_config = MagicMock()
         q = MagicMock()
@@ -861,7 +940,9 @@ class TestDimensionConfigServiceG4:
 
     def test_list_configs_returns_all(self):
         """list_configs 不带过滤时应返回所有配置"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_configs = [MagicMock(), MagicMock(), MagicMock()]
         q = MagicMock()
@@ -876,7 +957,9 @@ class TestDimensionConfigServiceG4:
 
     def test_list_configs_by_job_type(self):
         """传入 job_type 时结果正确"""
-        from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+        from app.services.engineer_performance.dimension_config_service import (
+            DimensionConfigService,
+        )
 
         mock_configs = [MagicMock()]
         q = MagicMock()

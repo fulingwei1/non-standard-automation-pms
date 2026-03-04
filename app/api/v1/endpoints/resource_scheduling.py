@@ -30,13 +30,13 @@ from app.schemas.resource_scheduling import (
 )
 from app.services.resource_scheduling import ResourceSchedulingService
 
-
 router = APIRouter()
 
 
 # ============================================================================
 # 1. 资源冲突检测 API (5个端点)
 # ============================================================================
+
 
 @router.post("/conflicts/detect", response_model=ConflictDetectionResponse, summary="检测资源冲突")
 def detect_resource_conflicts(
@@ -47,14 +47,14 @@ def detect_resource_conflicts(
 ) -> Any:
     """
     **检测资源冲突**
-    
+
     - 实时扫描资源分配
     - 识别时间重叠和超负荷
     - 可选自动生成调度方案
     - AI评估严重程度
     """
     service = ResourceSchedulingService(db)
-    
+
     result = service.detect_conflicts(
         resource_id=request.resource_id,
         resource_type=request.resource_type or "PERSON",
@@ -65,7 +65,7 @@ def detect_resource_conflicts(
         operator_id=current_user.id,
         operator_name=current_user.real_name,
     )
-    
+
     return ConflictDetectionResponse(
         total_conflicts=result["total_conflicts"],
         new_conflicts=result["total_conflicts"],
@@ -76,7 +76,9 @@ def detect_resource_conflicts(
     )
 
 
-@router.get("/conflicts", response_model=List[ResourceConflictDetectionInDB], summary="查询资源冲突列表")
+@router.get(
+    "/conflicts", response_model=List[ResourceConflictDetectionInDB], summary="查询资源冲突列表"
+)
 def list_conflicts(
     *,
     db: Session = Depends(deps.get_db),
@@ -90,11 +92,11 @@ def list_conflicts(
 ) -> Any:
     """
     **查询资源冲突列表**
-    
+
     支持分页和多条件筛选
     """
     service = ResourceSchedulingService(db)
-    
+
     conflicts = service.list_conflicts(
         skip=skip,
         limit=limit,
@@ -103,11 +105,13 @@ def list_conflicts(
         resource_id=resource_id,
         is_resolved=is_resolved,
     )
-    
+
     return [ResourceConflictDetectionInDB.model_validate(c) for c in conflicts]
 
 
-@router.get("/conflicts/{conflict_id}", response_model=ResourceConflictDetectionInDB, summary="获取冲突详情")
+@router.get(
+    "/conflicts/{conflict_id}", response_model=ResourceConflictDetectionInDB, summary="获取冲突详情"
+)
 def get_conflict(
     *,
     db: Session = Depends(deps.get_db),
@@ -116,19 +120,21 @@ def get_conflict(
 ) -> Any:
     """获取指定冲突的详细信息"""
     service = ResourceSchedulingService(db)
-    
+
     conflict = service.get_conflict(conflict_id)
-    
+
     if not conflict:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Conflict {conflict_id} not found",
         )
-    
+
     return ResourceConflictDetectionInDB.model_validate(conflict)
 
 
-@router.put("/conflicts/{conflict_id}", response_model=ResourceConflictDetectionInDB, summary="更新冲突状态")
+@router.put(
+    "/conflicts/{conflict_id}", response_model=ResourceConflictDetectionInDB, summary="更新冲突状态"
+)
 def update_conflict(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,26 +144,26 @@ def update_conflict(
 ) -> Any:
     """
     **更新冲突状态**
-    
+
     - 标记为已解决
     - 修改严重程度
     - 添加解决说明
     """
     service = ResourceSchedulingService(db)
-    
+
     conflict = service.update_conflict(
         conflict_id=conflict_id,
         update_data=update_data.model_dump(exclude_unset=True),
         operator_id=current_user.id,
         operator_name=current_user.real_name,
     )
-    
+
     if not conflict:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Conflict {conflict_id} not found",
         )
-    
+
     return ResourceConflictDetectionInDB.model_validate(conflict)
 
 
@@ -170,15 +176,15 @@ def delete_conflict(
 ) -> Any:
     """删除指定的冲突记录（仅用于误检）"""
     service = ResourceSchedulingService(db)
-    
+
     success = service.delete_conflict(conflict_id)
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Conflict {conflict_id} not found",
         )
-    
+
     return {"message": f"Conflict {conflict_id} deleted"}
 
 
@@ -186,7 +192,10 @@ def delete_conflict(
 # 2. AI调度方案推荐 API (5个端点)
 # ============================================================================
 
-@router.post("/suggestions/generate", response_model=AISchedulingSuggestionResponse, summary="AI生成调度方案")
+
+@router.post(
+    "/suggestions/generate", response_model=AISchedulingSuggestionResponse, summary="AI生成调度方案"
+)
 def generate_scheduling_suggestions(
     *,
     db: Session = Depends(deps.get_db),
@@ -195,14 +204,14 @@ def generate_scheduling_suggestions(
 ) -> Any:
     """
     **AI生成多个调度方案**
-    
+
     - 使用GLM-5分析冲突
     - 生成2-5个备选方案
     - 评估可行性、成本、风险
     - 自动推荐最优方案
     """
     service = ResourceSchedulingService(db)
-    
+
     try:
         result = service.generate_suggestions(
             conflict_id=request.conflict_id,
@@ -221,17 +230,23 @@ def generate_scheduling_suggestions(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI生成失败: {str(e)}",
         )
-    
+
     return AISchedulingSuggestionResponse(
         conflict_id=request.conflict_id,
-        suggestions=[ResourceSchedulingSuggestionInDB.model_validate(s) for s in result["suggestions"]],
+        suggestions=[
+            ResourceSchedulingSuggestionInDB.model_validate(s) for s in result["suggestions"]
+        ],
         recommended_suggestion_id=result["recommended_id"],
         generation_time_ms=result["generation_time_ms"],
         ai_tokens_used=result["total_tokens"],
     )
 
 
-@router.get("/suggestions", response_model=List[ResourceSchedulingSuggestionInDB], summary="查询调度方案列表")
+@router.get(
+    "/suggestions",
+    response_model=List[ResourceSchedulingSuggestionInDB],
+    summary="查询调度方案列表",
+)
 def list_suggestions(
     *,
     db: Session = Depends(deps.get_db),
@@ -245,7 +260,7 @@ def list_suggestions(
 ) -> Any:
     """查询调度方案列表"""
     service = ResourceSchedulingService(db)
-    
+
     suggestions = service.list_suggestions(
         skip=skip,
         limit=limit,
@@ -254,11 +269,15 @@ def list_suggestions(
         solution_type=solution_type,
         is_recommended=is_recommended,
     )
-    
+
     return [ResourceSchedulingSuggestionInDB.model_validate(s) for s in suggestions]
 
 
-@router.get("/suggestions/{suggestion_id}", response_model=ResourceSchedulingSuggestionInDB, summary="获取方案详情")
+@router.get(
+    "/suggestions/{suggestion_id}",
+    response_model=ResourceSchedulingSuggestionInDB,
+    summary="获取方案详情",
+)
 def get_suggestion(
     *,
     db: Session = Depends(deps.get_db),
@@ -267,19 +286,23 @@ def get_suggestion(
 ) -> Any:
     """获取指定方案的详细信息"""
     service = ResourceSchedulingService(db)
-    
+
     suggestion = service.get_suggestion(suggestion_id)
-    
+
     if not suggestion:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Suggestion {suggestion_id} not found",
         )
-    
+
     return ResourceSchedulingSuggestionInDB.model_validate(suggestion)
 
 
-@router.put("/suggestions/{suggestion_id}/review", response_model=ResourceSchedulingSuggestionInDB, summary="审核调度方案")
+@router.put(
+    "/suggestions/{suggestion_id}/review",
+    response_model=ResourceSchedulingSuggestionInDB,
+    summary="审核调度方案",
+)
 def review_suggestion(
     *,
     db: Session = Depends(deps.get_db),
@@ -290,12 +313,12 @@ def review_suggestion(
 ) -> Any:
     """
     **审核调度方案**
-    
+
     - ACCEPT: 接受方案
     - REJECT: 拒绝方案
     """
     service = ResourceSchedulingService(db)
-    
+
     success, suggestion, error_msg = service.review_suggestion(
         suggestion_id=suggestion_id,
         action=action,
@@ -303,7 +326,7 @@ def review_suggestion(
         operator_id=current_user.id,
         operator_name=current_user.real_name,
     )
-    
+
     if not success:
         if "not found" in error_msg:
             raise HTTPException(
@@ -315,11 +338,15 @@ def review_suggestion(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_msg,
             )
-    
+
     return ResourceSchedulingSuggestionInDB.model_validate(suggestion)
 
 
-@router.put("/suggestions/{suggestion_id}/implement", response_model=ResourceSchedulingSuggestionInDB, summary="执行调度方案")
+@router.put(
+    "/suggestions/{suggestion_id}/implement",
+    response_model=ResourceSchedulingSuggestionInDB,
+    summary="执行调度方案",
+)
 def implement_suggestion(
     *,
     db: Session = Depends(deps.get_db),
@@ -329,18 +356,18 @@ def implement_suggestion(
 ) -> Any:
     """
     **执行调度方案**
-    
+
     标记方案为已执行状态
     """
     service = ResourceSchedulingService(db)
-    
+
     success, suggestion, error_msg = service.implement_suggestion(
         suggestion_id=suggestion_id,
         implementation_result=implementation_result,
         operator_id=current_user.id,
         operator_name=current_user.real_name,
     )
-    
+
     if not success:
         if "not found" in error_msg:
             raise HTTPException(
@@ -352,13 +379,14 @@ def implement_suggestion(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_msg,
             )
-    
+
     return ResourceSchedulingSuggestionInDB.model_validate(suggestion)
 
 
 # ============================================================================
 # 3. 资源需求预测 API (3个端点)
 # ============================================================================
+
 
 @router.post("/forecast", response_model=ForecastResponse, summary="生成资源需求预测")
 def generate_forecast(
@@ -369,20 +397,20 @@ def generate_forecast(
 ) -> Any:
     """
     **生成资源需求预测**
-    
+
     - 预测未来1-12个月资源需求
     - AI分析历史趋势
     - 识别技能缺口
     - 提供招聘/培训建议
     """
     service = ResourceSchedulingService(db)
-    
+
     result = service.generate_forecast(
         forecast_period=request.forecast_period,
         resource_type=request.resource_type,
         skill_category=request.skill_category,
     )
-    
+
     return ForecastResponse(
         forecasts=[ResourceDemandForecastInDB.model_validate(f) for f in result["forecasts"]],
         critical_gaps=result["critical_gaps"],
@@ -404,18 +432,20 @@ def list_forecasts(
 ) -> Any:
     """查询资源需求预测列表"""
     service = ResourceSchedulingService(db)
-    
+
     forecasts = service.list_forecasts(
         skip=skip,
         limit=limit,
         forecast_period=forecast_period,
         status=status,
     )
-    
+
     return [ResourceDemandForecastInDB.model_validate(f) for f in forecasts]
 
 
-@router.get("/forecast/{forecast_id}", response_model=ResourceDemandForecastInDB, summary="获取预测详情")
+@router.get(
+    "/forecast/{forecast_id}", response_model=ResourceDemandForecastInDB, summary="获取预测详情"
+)
 def get_forecast(
     *,
     db: Session = Depends(deps.get_db),
@@ -424,15 +454,15 @@ def get_forecast(
 ) -> Any:
     """获取指定预测的详细信息"""
     service = ResourceSchedulingService(db)
-    
+
     forecast = service.get_forecast(forecast_id)
-    
+
     if not forecast:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Forecast {forecast_id} not found",
         )
-    
+
     return ResourceDemandForecastInDB.model_validate(forecast)
 
 
@@ -440,7 +470,10 @@ def get_forecast(
 # 4. 资源利用率分析 API (3个端点)
 # ============================================================================
 
-@router.post("/utilization/analyze", response_model=UtilizationAnalysisResponse, summary="分析资源利用率")
+
+@router.post(
+    "/utilization/analyze", response_model=UtilizationAnalysisResponse, summary="分析资源利用率"
+)
 def analyze_utilization(
     *,
     db: Session = Depends(deps.get_db),
@@ -449,21 +482,21 @@ def analyze_utilization(
 ) -> Any:
     """
     **分析资源利用率**
-    
+
     - 统计实际工时和可用工时
     - 计算利用率、效率率
     - 识别闲置和超负荷资源
     - AI优化建议
     """
     service = ResourceSchedulingService(db)
-    
+
     result = service.analyze_utilization(
         resource_id=request.resource_id,
         start_date=request.start_date,
         end_date=request.end_date,
         analysis_period=request.analysis_period,
     )
-    
+
     return UtilizationAnalysisResponse(
         analyses=[ResourceUtilizationAnalysisInDB.model_validate(a) for a in result["analyses"]],
         idle_resources_count=result["idle_count"],
@@ -474,7 +507,11 @@ def analyze_utilization(
     )
 
 
-@router.get("/utilization", response_model=List[ResourceUtilizationAnalysisInDB], summary="查询利用率分析列表")
+@router.get(
+    "/utilization",
+    response_model=List[ResourceUtilizationAnalysisInDB],
+    summary="查询利用率分析列表",
+)
 def list_utilization_analyses(
     *,
     db: Session = Depends(deps.get_db),
@@ -487,7 +524,7 @@ def list_utilization_analyses(
 ) -> Any:
     """查询资源利用率分析列表"""
     service = ResourceSchedulingService(db)
-    
+
     analyses = service.list_utilization_analyses(
         skip=skip,
         limit=limit,
@@ -495,11 +532,15 @@ def list_utilization_analyses(
         is_idle=is_idle,
         is_overloaded=is_overloaded,
     )
-    
+
     return [ResourceUtilizationAnalysisInDB.model_validate(a) for a in analyses]
 
 
-@router.get("/utilization/{analysis_id}", response_model=ResourceUtilizationAnalysisInDB, summary="获取利用率分析详情")
+@router.get(
+    "/utilization/{analysis_id}",
+    response_model=ResourceUtilizationAnalysisInDB,
+    summary="获取利用率分析详情",
+)
 def get_utilization_analysis(
     *,
     db: Session = Depends(deps.get_db),
@@ -508,21 +549,22 @@ def get_utilization_analysis(
 ) -> Any:
     """获取指定利用率分析的详细信息"""
     service = ResourceSchedulingService(db)
-    
+
     analysis = service.get_utilization_analysis(analysis_id)
-    
+
     if not analysis:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Analysis {analysis_id} not found",
         )
-    
+
     return ResourceUtilizationAnalysisInDB.model_validate(analysis)
 
 
 # ============================================================================
 # 5. 仪表板和统计 API (2个端点)
 # ============================================================================
+
 
 @router.get("/dashboard/summary", response_model=DashboardSummary, summary="资源调度仪表板摘要")
 def get_dashboard_summary(
@@ -532,13 +574,13 @@ def get_dashboard_summary(
 ) -> Any:
     """
     **资源调度仪表板摘要**
-    
+
     汇总所有关键指标
     """
     service = ResourceSchedulingService(db)
-    
+
     summary = service.get_dashboard_summary()
-    
+
     return DashboardSummary(**summary)
 
 
@@ -554,12 +596,12 @@ def list_logs(
 ) -> Any:
     """查询资源调度操作日志"""
     service = ResourceSchedulingService(db)
-    
+
     logs = service.list_logs(
         skip=skip,
         limit=limit,
         action_type=action_type,
         conflict_id=conflict_id,
     )
-    
+
     return [ResourceSchedulingLogInDB.model_validate(log) for log in logs]

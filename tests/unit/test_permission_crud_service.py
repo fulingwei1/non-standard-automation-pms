@@ -4,9 +4,10 @@ Tests for permission_crud_service
 Covers: app/services/permission_crud_service.py
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.user import ApiPermission

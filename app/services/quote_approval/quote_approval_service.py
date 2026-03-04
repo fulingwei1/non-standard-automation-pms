@@ -118,19 +118,13 @@ class QuoteApprovalService:
         Returns:
             包含任务列表和总数的字典
         """
-        tasks = self.approval_engine.get_pending_tasks(
-            user_id=user_id, entity_type="QUOTE"
-        )
+        tasks = self.approval_engine.get_pending_tasks(user_id=user_id, entity_type="QUOTE")
 
         # 客户筛选
         if customer_id:
             filtered_tasks = []
             for task in tasks:
-                quote = (
-                    self.db.query(Quote)
-                    .filter(Quote.id == task.instance.entity_id)
-                    .first()
-                )
+                quote = self.db.query(Quote).filter(Quote.id == task.instance.entity_id).first()
                 if quote and quote.customer_id == customer_id:
                     filtered_tasks.append(task)
             tasks = filtered_tasks
@@ -152,23 +146,19 @@ class QuoteApprovalService:
                     "instance_id": instance.id,
                     "quote_id": instance.entity_id,
                     "quote_code": quote.quote_code if quote else None,
-                    "customer_name": quote.customer.name
-                    if quote and quote.customer
-                    else None,
+                    "customer_name": quote.customer.name if quote and quote.customer else None,
                     "version_no": version.version_no if version else None,
-                    "total_price": float(version.total_price)
-                    if version and version.total_price
-                    else 0,
-                    "gross_margin": float(version.gross_margin)
-                    if version and version.gross_margin
-                    else 0,
+                    "total_price": (
+                        float(version.total_price) if version and version.total_price else 0
+                    ),
+                    "gross_margin": (
+                        float(version.gross_margin) if version and version.gross_margin else 0
+                    ),
                     "lead_time_days": version.lead_time_days if version else None,
-                    "initiator_name": instance.initiator.real_name
-                    if instance.initiator
-                    else None,
-                    "submitted_at": instance.created_at.isoformat()
-                    if instance.created_at
-                    else None,
+                    "initiator_name": instance.initiator.real_name if instance.initiator else None,
+                    "submitted_at": (
+                        instance.created_at.isoformat() if instance.created_at else None
+                    ),
                     "urgency": instance.urgency,
                     "node_name": task.node.node_name if task.node else None,
                 }
@@ -256,9 +246,7 @@ class QuoteApprovalService:
                         comment=comment,
                     )
                 else:
-                    errors.append(
-                        {"task_id": task_id, "error": f"不支持的操作: {action}"}
-                    )
+                    errors.append({"task_id": task_id, "error": f"不支持的操作: {action}"})
                     continue
 
                 results.append({"task_id": task_id, "status": "success"})
@@ -313,15 +301,11 @@ class QuoteApprovalService:
                 {
                     "task_id": task.id,
                     "node_name": task.node.node_name if task.node else None,
-                    "assignee_name": task.assignee.real_name
-                    if task.assignee
-                    else None,
+                    "assignee_name": task.assignee.real_name if task.assignee else None,
                     "status": task.status,
                     "action": task.action,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 
@@ -331,12 +315,8 @@ class QuoteApprovalService:
         if version:
             version_info = {
                 "version_no": version.version_no,
-                "total_price": float(version.total_price)
-                if version.total_price
-                else 0,
-                "gross_margin": float(version.gross_margin)
-                if version.gross_margin
-                else 0,
+                "total_price": float(version.total_price) if version.total_price else 0,
+                "gross_margin": float(version.gross_margin) if version.gross_margin else 0,
             }
 
         return {
@@ -348,12 +328,8 @@ class QuoteApprovalService:
             "instance_id": instance.id,
             "instance_status": instance.status,
             "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
+            "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+            "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
             "task_history": task_history,
         }
 
@@ -435,12 +411,7 @@ class QuoteApprovalService:
             query = query.filter(ApprovalTask.status == status_filter)
 
         total = query.count()
-        tasks = (
-            query.order_by(ApprovalTask.completed_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        tasks = query.order_by(ApprovalTask.completed_at.desc()).offset(offset).limit(limit).all()
 
         items = []
         for task in tasks:
@@ -452,15 +423,11 @@ class QuoteApprovalService:
                     "task_id": task.id,
                     "quote_id": instance.entity_id,
                     "quote_code": quote.quote_code if quote else None,
-                    "customer_name": quote.customer.name
-                    if quote and quote.customer
-                    else None,
+                    "customer_name": quote.customer.name if quote and quote.customer else None,
                     "action": task.action,
                     "status": task.status,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 

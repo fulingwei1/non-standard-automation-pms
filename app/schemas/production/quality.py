@@ -10,11 +10,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 质检记录 ====================
+
 
 class QualityInspectionCreate(BaseModel):
     """创建质检记录"""
+
     work_order_id: Optional[int] = Field(default=None, description="工单ID")
     material_id: Optional[int] = Field(default=None, description="物料ID")
     batch_no: Optional[str] = Field(default=None, description="批次号")
@@ -32,12 +33,15 @@ class QualityInspectionCreate(BaseModel):
     defect_type: Optional[str] = Field(default=None, description="不良类型")
     defect_description: Optional[str] = Field(default=None, description="不良描述")
     defect_images: Optional[str] = Field(default=None, description="不良照片(JSON数组)")
-    handling_result: Optional[str] = Field(default=None, description="处理结果: REWORK/SCRAP/CONCESSION")
+    handling_result: Optional[str] = Field(
+        default=None, description="处理结果: REWORK/SCRAP/CONCESSION"
+    )
     remark: Optional[str] = Field(default=None, description="备注")
 
 
 class QualityInspectionResponse(TimestampSchema):
     """质检记录响应"""
+
     id: int
     inspection_no: str
     work_order_id: Optional[int] = None
@@ -65,13 +69,16 @@ class QualityInspectionResponse(TimestampSchema):
 
 class QualityInspectionListResponse(PaginatedResponse):
     """质检记录列表响应"""
+
     items: List[QualityInspectionResponse]
 
 
 # ==================== 质量趋势分析 ====================
 
+
 class QualityTrendRequest(BaseModel):
     """质量趋势分析请求"""
+
     start_date: datetime = Field(description="开始日期")
     end_date: datetime = Field(description="结束日期")
     material_id: Optional[int] = Field(default=None, description="物料ID筛选")
@@ -81,6 +88,7 @@ class QualityTrendRequest(BaseModel):
 
 class QualityTrendDataPoint(BaseModel):
     """质量趋势数据点"""
+
     date: str
     total_qty: int
     qualified_qty: int
@@ -91,6 +99,7 @@ class QualityTrendDataPoint(BaseModel):
 
 class QualityTrendResponse(BaseModel):
     """质量趋势分析响应"""
+
     trend_data: List[QualityTrendDataPoint]
     avg_defect_rate: float
     total_inspections: int
@@ -101,8 +110,10 @@ class QualityTrendResponse(BaseModel):
 
 # ==================== 不良品分析 ====================
 
+
 class DefectAnalysisCreate(BaseModel):
     """创建不良品分析"""
+
     inspection_id: int = Field(description="质检记录ID")
     analyst_id: int = Field(description="分析员ID")
     defect_type: str = Field(description="不良类型")
@@ -125,6 +136,7 @@ class DefectAnalysisCreate(BaseModel):
 
 class DefectAnalysisResponse(TimestampSchema):
     """不良品分析响应"""
+
     id: int
     inspection_id: int
     analysis_no: str
@@ -154,8 +166,10 @@ class DefectAnalysisResponse(TimestampSchema):
 
 # ==================== 质量预警 ====================
 
+
 class QualityAlertRuleCreate(BaseModel):
     """创建质量预警规则"""
+
     rule_name: str = Field(description="规则名称")
     alert_type: str = Field(description="预警类型: DEFECT_RATE/SPC_UCL/SPC_LCL/TREND")
     target_material_id: Optional[int] = Field(default=None, description="目标物料ID")
@@ -173,6 +187,7 @@ class QualityAlertRuleCreate(BaseModel):
 
 class QualityAlertRuleResponse(TimestampSchema):
     """质量预警规则响应"""
+
     id: int
     rule_no: str
     rule_name: str
@@ -194,6 +209,7 @@ class QualityAlertRuleResponse(TimestampSchema):
 
 class QualityAlertResponse(BaseModel):
     """质量预警响应"""
+
     alert_id: int
     rule_id: int
     rule_name: str
@@ -211,13 +227,16 @@ class QualityAlertResponse(BaseModel):
 
 class QualityAlertListResponse(PaginatedResponse):
     """质量预警列表响应"""
+
     items: List[QualityAlertResponse]
 
 
 # ==================== 返工单 ====================
 
+
 class ReworkOrderCreate(BaseModel):
     """创建返工单"""
+
     original_work_order_id: int = Field(description="原工单ID")
     quality_inspection_id: Optional[int] = Field(default=None, description="质检记录ID")
     rework_qty: int = Field(description="返工数量")
@@ -233,6 +252,7 @@ class ReworkOrderCreate(BaseModel):
 
 class ReworkOrderCompleteRequest(BaseModel):
     """完成返工单请求"""
+
     completed_qty: int = Field(description="完成数量")
     qualified_qty: int = Field(description="合格数量")
     scrap_qty: int = Field(default=0, description="报废数量")
@@ -243,6 +263,7 @@ class ReworkOrderCompleteRequest(BaseModel):
 
 class ReworkOrderResponse(TimestampSchema):
     """返工单响应"""
+
     id: int
     rework_order_no: str
     original_work_order_id: int
@@ -271,13 +292,16 @@ class ReworkOrderResponse(TimestampSchema):
 
 class ReworkOrderListResponse(PaginatedResponse):
     """返工单列表响应"""
+
     items: List[ReworkOrderResponse]
 
 
 # ==================== SPC控制图 ====================
 
+
 class SPCDataRequest(BaseModel):
     """SPC控制图数据请求"""
+
     material_id: int = Field(description="物料ID")
     start_date: datetime = Field(description="开始日期")
     end_date: datetime = Field(description="结束日期")
@@ -286,6 +310,7 @@ class SPCDataRequest(BaseModel):
 
 class SPCDataPoint(BaseModel):
     """SPC数据点"""
+
     inspection_no: str
     inspection_date: datetime
     measured_value: float
@@ -295,6 +320,7 @@ class SPCDataPoint(BaseModel):
 
 class SPCControlLimits(BaseModel):
     """SPC控制限"""
+
     ucl: float = Field(description="控制上限(UCL)")
     cl: float = Field(description="中心线(CL)")
     lcl: float = Field(description="控制下限(LCL)")
@@ -304,6 +330,7 @@ class SPCControlLimits(BaseModel):
 
 class SPCDataResponse(BaseModel):
     """SPC控制图数据响应"""
+
     data_points: List[SPCDataPoint]
     control_limits: SPCControlLimits
     out_of_control_points: List[str] = Field(description="失控点列表(inspection_no)")
@@ -312,8 +339,10 @@ class SPCDataResponse(BaseModel):
 
 # ==================== 帕累托分析 ====================
 
+
 class ParetoAnalysisRequest(BaseModel):
     """帕累托分析请求"""
+
     start_date: datetime = Field(description="开始日期")
     end_date: datetime = Field(description="结束日期")
     material_id: Optional[int] = Field(default=None, description="物料ID筛选")
@@ -322,6 +351,7 @@ class ParetoAnalysisRequest(BaseModel):
 
 class ParetoDataPoint(BaseModel):
     """帕累托数据点"""
+
     defect_type: str
     defect_qty: int
     defect_rate: float
@@ -330,6 +360,7 @@ class ParetoDataPoint(BaseModel):
 
 class ParetoAnalysisResponse(BaseModel):
     """帕累托分析响应"""
+
     data_points: List[ParetoDataPoint]
     total_defects: int
     top_80_percent_types: List[str] = Field(description="占80%不良的类型")
@@ -337,8 +368,10 @@ class ParetoAnalysisResponse(BaseModel):
 
 # ==================== 质量统计看板 ====================
 
+
 class QualityStatisticsResponse(BaseModel):
     """质量统计看板响应"""
+
     total_inspections: int
     total_inspection_qty: int
     total_qualified_qty: int
@@ -354,13 +387,16 @@ class QualityStatisticsResponse(BaseModel):
 
 # ==================== 批次质量追溯 ====================
 
+
 class BatchTracingRequest(BaseModel):
     """批次质量追溯请求"""
+
     batch_no: str = Field(description="批次号")
 
 
 class BatchTracingResponse(BaseModel):
     """批次质量追溯响应"""
+
     batch_no: str
     material_id: Optional[int] = None
     material_name: Optional[str] = None
@@ -374,8 +410,10 @@ class BatchTracingResponse(BaseModel):
 
 # ==================== 纠正措施 ====================
 
+
 class CorrectiveActionCreate(BaseModel):
     """创建纠正措施"""
+
     defect_analysis_id: int = Field(description="不良品分析ID")
     action_description: str = Field(description="措施描述")
     responsible_person_id: int = Field(description="责任人ID")
@@ -385,6 +423,7 @@ class CorrectiveActionCreate(BaseModel):
 
 class CorrectiveActionResponse(BaseModel):
     """纠正措施响应"""
+
     id: int
     defect_analysis_id: int
     action_description: str

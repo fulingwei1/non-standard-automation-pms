@@ -11,8 +11,8 @@ DataSyncService 综合单元测试
 - sync_customer_to_contracts: 同步客户信息到合同
 """
 
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -31,8 +31,8 @@ class TestSyncContractToProject:
         service = DataSyncService(mock_db)
         result = service.sync_contract_to_project(999)
 
-        assert result['success'] is False
-        assert "合同不存在" in result['message']
+        assert result["success"] is False
+        assert "合同不存在" in result["message"]
 
     def test_returns_error_when_no_project_linked(self):
         """测试合同未关联项目时返回错误"""
@@ -47,8 +47,8 @@ class TestSyncContractToProject:
         service = DataSyncService(mock_db)
         result = service.sync_contract_to_project(1)
 
-        assert result['success'] is False
-        assert "未关联项目" in result['message']
+        assert result["success"] is False
+        assert "未关联项目" in result["message"]
 
     def test_syncs_contract_amount(self):
         """测试同步合同金额"""
@@ -68,6 +68,7 @@ class TestSyncContractToProject:
         mock_project.contract_amount = Decimal("50000")
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -82,8 +83,8 @@ class TestSyncContractToProject:
         service = DataSyncService(mock_db)
         result = service.sync_contract_to_project(1)
 
-        assert result['success'] is True
-        assert "contract_amount" in result['updated_fields']
+        assert result["success"] is True
+        assert "contract_amount" in result["updated_fields"]
         assert mock_project.contract_amount == Decimal("100000")
 
     def test_returns_no_sync_needed(self):
@@ -104,6 +105,7 @@ class TestSyncContractToProject:
         mock_project.contract_amount = Decimal("100000")
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -118,8 +120,8 @@ class TestSyncContractToProject:
         service = DataSyncService(mock_db)
         result = service.sync_contract_to_project(1)
 
-        assert result['success'] is True
-        assert "无需同步" in result['message']
+        assert result["success"] is True
+        assert "无需同步" in result["message"]
 
 
 class TestSyncPaymentPlansFromContract:
@@ -135,7 +137,7 @@ class TestSyncPaymentPlansFromContract:
         service = DataSyncService(mock_db)
         result = service.sync_payment_plans_from_contract(999)
 
-        assert result['success'] is False
+        assert result["success"] is False
 
     def test_returns_plan_count(self):
         """测试返回收款计划数量"""
@@ -150,6 +152,7 @@ class TestSyncPaymentPlansFromContract:
         mock_plans = [MagicMock(), MagicMock(), MagicMock()]
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -164,8 +167,8 @@ class TestSyncPaymentPlansFromContract:
         service = DataSyncService(mock_db)
         result = service.sync_payment_plans_from_contract(1)
 
-        assert result['success'] is True
-        assert result['plan_count'] == 3
+        assert result["success"] is True
+        assert result["plan_count"] == 3
 
 
 class TestSyncProjectToContract:
@@ -181,8 +184,8 @@ class TestSyncProjectToContract:
         service = DataSyncService(mock_db)
         result = service.sync_project_to_contract(999)
 
-        assert result['success'] is False
-        assert "项目不存在" in result['message']
+        assert result["success"] is False
+        assert "项目不存在" in result["message"]
 
     def test_returns_error_when_no_contracts(self):
         """测试项目无关联合同时返回错误"""
@@ -194,6 +197,7 @@ class TestSyncProjectToContract:
         mock_project.id = 1
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -208,8 +212,8 @@ class TestSyncProjectToContract:
         service = DataSyncService(mock_db)
         result = service.sync_project_to_contract(1)
 
-        assert result['success'] is False
-        assert "未关联合同" in result['message']
+        assert result["success"] is False
+        assert "未关联合同" in result["message"]
 
     def test_updates_contract_status_on_project_completion(self):
         """测试项目完成时更新合同状态"""
@@ -227,6 +231,7 @@ class TestSyncProjectToContract:
         mock_contract.status = "IN_PROGRESS"
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -241,9 +246,9 @@ class TestSyncProjectToContract:
         service = DataSyncService(mock_db)
         result = service.sync_project_to_contract(1)
 
-        assert result['success'] is True
+        assert result["success"] is True
         assert mock_contract.status == "COMPLETED"
-        assert 100 in result['updated_contracts']
+        assert 100 in result["updated_contracts"]
 
 
 class TestGetSyncStatus:
@@ -258,8 +263,8 @@ class TestGetSyncStatus:
 
         result = service.get_sync_status()
 
-        assert result['success'] is False
-        assert "请提供" in result['message']
+        assert result["success"] is False
+        assert "请提供" in result["message"]
 
     def test_returns_project_sync_status(self):
         """测试返回项目同步状态"""
@@ -277,6 +282,7 @@ class TestGetSyncStatus:
         mock_contract.contract_amount = Decimal("100000")
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -291,10 +297,10 @@ class TestGetSyncStatus:
         service = DataSyncService(mock_db)
         result = service.get_sync_status(project_id=1)
 
-        assert result['success'] is True
-        assert result['project_id'] == 1
-        assert result['contract_count'] == 1
-        assert result['contracts'][0]['amount_synced'] is True
+        assert result["success"] is True
+        assert result["project_id"] == 1
+        assert result["contract_count"] == 1
+        assert result["contracts"][0]["amount_synced"] is True
 
     def test_returns_contract_sync_status(self):
         """测试返回合同同步状态"""
@@ -314,6 +320,7 @@ class TestGetSyncStatus:
         mock_project.contract_date = date.today()
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -328,11 +335,11 @@ class TestGetSyncStatus:
         service = DataSyncService(mock_db)
         result = service.get_sync_status(contract_id=1)
 
-        assert result['success'] is True
-        assert result['contract_id'] == 1
-        assert result['project_id'] == 10
-        assert result['amount_synced'] is True
-        assert result['date_synced'] is True
+        assert result["success"] is True
+        assert result["contract_id"] == 1
+        assert result["project_id"] == 10
+        assert result["amount_synced"] is True
+        assert result["date_synced"] is True
 
 
 class TestSyncCustomerToProjects:
@@ -348,8 +355,8 @@ class TestSyncCustomerToProjects:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_projects(999)
 
-        assert result['success'] is False
-        assert "客户不存在" in result['message']
+        assert result["success"] is False
+        assert "客户不存在" in result["message"]
 
     def test_returns_zero_when_no_projects(self):
         """测试无关联项目时返回0"""
@@ -361,6 +368,7 @@ class TestSyncCustomerToProjects:
         mock_customer.id = 1
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -375,8 +383,8 @@ class TestSyncCustomerToProjects:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_projects(1)
 
-        assert result['success'] is True
-        assert result['updated_count'] == 0
+        assert result["success"] is True
+        assert result["updated_count"] == 0
 
     def test_syncs_customer_name(self):
         """测试同步客户名称"""
@@ -397,6 +405,7 @@ class TestSyncCustomerToProjects:
         mock_project.customer_phone = None
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -411,8 +420,8 @@ class TestSyncCustomerToProjects:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_projects(1)
 
-        assert result['success'] is True
-        assert result['updated_count'] == 1
+        assert result["success"] is True
+        assert result["updated_count"] == 1
         assert mock_project.customer_name == "新客户名称"
 
     def test_syncs_multiple_fields(self):
@@ -434,6 +443,7 @@ class TestSyncCustomerToProjects:
         mock_project.customer_phone = "13900139000"
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -448,10 +458,10 @@ class TestSyncCustomerToProjects:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_projects(1)
 
-        assert result['success'] is True
-        assert "customer_name" in result['updated_fields']
-        assert "customer_contact" in result['updated_fields']
-        assert "customer_phone" in result['updated_fields']
+        assert result["success"] is True
+        assert "customer_name" in result["updated_fields"]
+        assert "customer_contact" in result["updated_fields"]
+        assert "customer_phone" in result["updated_fields"]
 
 
 class TestSyncCustomerToContracts:
@@ -467,8 +477,8 @@ class TestSyncCustomerToContracts:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_contracts(999)
 
-        assert result['success'] is False
-        assert "客户不存在" in result['message']
+        assert result["success"] is False
+        assert "客户不存在" in result["message"]
 
     def test_returns_zero_when_no_contracts(self):
         """测试无关联合同时返回0"""
@@ -480,6 +490,7 @@ class TestSyncCustomerToContracts:
         mock_customer.id = 1
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -494,8 +505,8 @@ class TestSyncCustomerToContracts:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_contracts(1)
 
-        assert result['success'] is True
-        assert result['updated_count'] == 0
+        assert result["success"] is True
+        assert result["updated_count"] == 0
 
     def test_syncs_customer_name_to_contract(self):
         """测试同步客户名称到合同"""
@@ -514,6 +525,7 @@ class TestSyncCustomerToContracts:
         mock_contract.customer_name = "旧客户名称"
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -528,7 +540,7 @@ class TestSyncCustomerToContracts:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_contracts(1)
 
-        assert result['success'] is True
+        assert result["success"] is True
         assert mock_contract.customer_name == "新客户名称"
 
     def test_skips_contracts_without_redundant_fields(self):
@@ -544,10 +556,11 @@ class TestSyncCustomerToContracts:
         mock_customer.contact_phone = None
 
         # 创建没有 customer_name 属性的合同
-        mock_contract = MagicMock(spec=['id'])
+        mock_contract = MagicMock(spec=["id"])
         mock_contract.id = 10
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -562,5 +575,5 @@ class TestSyncCustomerToContracts:
         service = DataSyncService(mock_db)
         result = service.sync_customer_to_contracts(1)
 
-        assert result['success'] is True
-        assert result['updated_count'] == 0
+        assert result["success"] is True
+        assert result["updated_count"] == 0

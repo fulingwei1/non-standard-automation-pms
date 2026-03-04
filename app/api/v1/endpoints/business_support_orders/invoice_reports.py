@@ -21,12 +21,16 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/reports/invoice", response_model=ResponseModel[InvoiceReportResponse], summary="获取开票统计报表")
+@router.get(
+    "/reports/invoice",
+    response_model=ResponseModel[InvoiceReportResponse],
+    summary="获取开票统计报表",
+)
 async def get_invoice_report(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD格式）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD格式）"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取开票统计报表"""
     try:
@@ -50,7 +54,7 @@ async def get_invoice_report(
             .filter(
                 func.date(Invoice.issue_date) >= start_dt,
                 func.date(Invoice.issue_date) <= end_dt,
-                Invoice.status == "ISSUED"
+                Invoice.status == "ISSUED",
             )
             .all()
         )
@@ -76,7 +80,7 @@ async def get_invoice_report(
             .filter(
                 func.date(Invoice.issue_date) >= start_dt,
                 func.date(Invoice.issue_date) <= end_dt,
-                Invoice.status == "ISSUED"
+                Invoice.status == "ISSUED",
             )
             .count()
         )
@@ -85,7 +89,9 @@ async def get_invoice_report(
         timeliness_rate = Decimal("100") if total_invoices_count > 0 else Decimal("0")
 
         # 按客户统计（前10名）
-        top_customers_result = db.execute(text("""
+        top_customers_result = db.execute(
+            text(
+                """
             SELECT
                 c.customer_name,
                 COALESCE(SUM(i.amount), 0) as invoice_amount
@@ -98,7 +104,10 @@ async def get_invoice_report(
             GROUP BY c.id, c.customer_name
             ORDER BY invoice_amount DESC
             LIMIT 10
-        """), {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")}).fetchall()
+        """
+            ),
+            {"start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")},
+        ).fetchall()
 
         top_customers = [
             {"customer_name": row[0], "invoice_amount": float(row[1])}
@@ -123,8 +132,8 @@ async def get_invoice_report(
                 on_time_invoices_count=on_time_invoices_count,
                 overdue_invoices_count=overdue_invoices_count,
                 timeliness_rate=timeliness_rate,
-                top_customers=top_customers
-            )
+                top_customers=top_customers,
+            ),
         )
     except HTTPException:
         raise

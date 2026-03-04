@@ -34,7 +34,8 @@ def get_kpi_detail(db: Session, kpi_id: int) -> Optional[KPIDetailResponse]:
         return None
 
     # 获取健康度
-    from .health_calculator import calculate_kpi_health, calculate_kpi_completion_rate
+    from .health_calculator import calculate_kpi_completion_rate, calculate_kpi_health
+
     health_data = calculate_kpi_health(db, kpi_id)
     completion_rate = calculate_kpi_completion_rate(kpi)
 
@@ -42,6 +43,7 @@ def get_kpi_detail(db: Session, kpi_id: int) -> Optional[KPIDetailResponse]:
     owner_name = None
     if kpi.owner_user_id:
         from app.models.user import User
+
         user = db.query(User).filter(User.id == kpi.owner_user_id).first()
         if user:
             owner_name = user.name
@@ -86,11 +88,7 @@ def get_kpi_detail(db: Session, kpi_id: int) -> Optional[KPIDetailResponse]:
     )
 
 
-def get_kpi_history(
-    db: Session,
-    kpi_id: int,
-    limit: int = 12
-) -> List[KPIHistoryResponse]:
+def get_kpi_history(db: Session, kpi_id: int, limit: int = 12) -> List[KPIHistoryResponse]:
     """
     获取 KPI 历史记录
 
@@ -102,9 +100,13 @@ def get_kpi_history(
     Returns:
         List[KPIHistoryResponse]: 历史记录列表
     """
-    history = db.query(KPIHistory).filter(
-        KPIHistory.kpi_id == kpi_id
-    ).order_by(desc(KPIHistory.snapshot_date)).limit(limit).all()
+    history = (
+        db.query(KPIHistory)
+        .filter(KPIHistory.kpi_id == kpi_id)
+        .order_by(desc(KPIHistory.snapshot_date))
+        .limit(limit)
+        .all()
+    )
 
     return [
         KPIHistoryResponse(

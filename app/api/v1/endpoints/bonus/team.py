@@ -38,20 +38,22 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/bonus/team",
-    tags=["team"]
-)
+router = APIRouter(prefix="/bonus/team", tags=["team"])
 
 # 共 3 个路由
 
 # ==================== 团队奖金分配 ====================
 
-@router.get("/team-allocations", response_model=TeamBonusAllocationListResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/team-allocations",
+    response_model=TeamBonusAllocationListResponse,
+    status_code=status.HTTP_200_OK,
+)
 def get_team_bonus_allocations(
     *,
     db: Session = Depends(deps.get_db),
@@ -74,20 +76,27 @@ def get_team_bonus_allocations(
         query = query.filter(TeamBonusAllocation.status == allocation_status)
 
     total = query.count()
-    allocations = query.order_by(desc(TeamBonusAllocation.created_at)).offset(
-        pagination.offset
-    ).limit(pagination.limit).all()
+    allocations = (
+        query.order_by(desc(TeamBonusAllocation.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
 
     return TeamBonusAllocationListResponse(
         items=allocations,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.get("/team-allocations/{allocation_id}", response_model=ResponseModel[TeamBonusAllocationResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/team-allocations/{allocation_id}",
+    response_model=ResponseModel[TeamBonusAllocationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_team_bonus_allocation(
     *,
     db: Session = Depends(deps.get_db),
@@ -102,7 +111,11 @@ def get_team_bonus_allocation(
     return ResponseModel(code=200, data=allocation)
 
 
-@router.post("/team-allocations/{allocation_id}/approve", response_model=ResponseModel[TeamBonusAllocationResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/team-allocations/{allocation_id}/approve",
+    response_model=ResponseModel[TeamBonusAllocationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def approve_team_bonus_allocation(
     *,
     db: Session = Depends(deps.get_db),
@@ -116,11 +129,11 @@ def approve_team_bonus_allocation(
     allocation = get_or_404(db, TeamBonusAllocation, allocation_id, "团队奖金分配记录不存在")
 
     if approve_in.approved:
-        allocation.status = 'APPROVED'
+        allocation.status = "APPROVED"
         allocation.approved_by = current_user.id
         allocation.approved_at = datetime.now()
     else:
-        allocation.status = 'REJECTED'
+        allocation.status = "REJECTED"
         allocation.approved_by = current_user.id
         allocation.approved_at = datetime.now()
 
@@ -128,6 +141,3 @@ def approve_team_bonus_allocation(
     db.refresh(allocation)
 
     return ResponseModel(code=200, message="审批完成", data=allocation)
-
-
-

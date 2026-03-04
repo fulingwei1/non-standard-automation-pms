@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第九批: test_execution_logger_cov9.py - ApprovalExecutionLogger 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.execution_logger")
 

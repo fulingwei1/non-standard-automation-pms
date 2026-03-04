@@ -26,7 +26,9 @@ class ApprovalFlowDefinition(Base, TimestampMixin):
     __tablename__ = "approval_flow_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    template_id = Column(Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID")
+    template_id = Column(
+        Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
+    )
     flow_name = Column(String(100), nullable=False, comment="流程名称")
     description = Column(Text, comment="流程描述")
 
@@ -42,8 +44,12 @@ class ApprovalFlowDefinition(Base, TimestampMixin):
 
     # 关系
     template = relationship("ApprovalTemplate", back_populates="flows")
-    nodes = relationship("ApprovalNodeDefinition", back_populates="flow",
-                        cascade="all, delete-orphan", order_by="ApprovalNodeDefinition.node_order")
+    nodes = relationship(
+        "ApprovalNodeDefinition",
+        back_populates="flow",
+        cascade="all, delete-orphan",
+        order_by="ApprovalNodeDefinition.node_order",
+    )
     routing_rules = relationship("ApprovalRoutingRule", back_populates="flow")
     instances = relationship("ApprovalInstance", back_populates="flow")
 
@@ -63,7 +69,9 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
     __tablename__ = "approval_node_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    flow_id = Column(Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="流程ID")
+    flow_id = Column(
+        Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="流程ID"
+    )
 
     # 节点基础信息
     node_code = Column(String(50), comment="节点编码")
@@ -71,27 +79,38 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
     node_order = Column(Integer, nullable=False, comment="节点顺序")
 
     # 节点类型
-    node_type = Column(String(20), nullable=False, default="APPROVAL", comment="""
+    node_type = Column(
+        String(20),
+        nullable=False,
+        default="APPROVAL",
+        comment="""
         节点类型：
         APPROVAL: 审批节点
         CC: 抄送节点
         CONDITION: 条件分支节点
         PARALLEL: 并行网关（分支）
         JOIN: 合并网关（汇聚）
-    """)
+    """,
+    )
 
     # 审批模式（仅APPROVAL类型有效）
-    approval_mode = Column(String(20), default="SINGLE", comment="""
+    approval_mode = Column(
+        String(20),
+        default="SINGLE",
+        comment="""
         审批模式：
         SINGLE: 单人审批
         OR_SIGN: 或签（任一人通过即通过）
         AND_SIGN: 会签（全部通过才通过）
         SEQUENTIAL: 依次审批（按顺序逐个审批）
-    """)
+    """,
+    )
     is_active = Column(Boolean, default=True, comment="节点是否启用")
 
     # 审批人配置
-    approver_type = Column(String(30), comment="""
+    approver_type = Column(
+        String(30),
+        comment="""
         审批人确定方式：
         FIXED_USER: 指定用户
         ROLE: 指定角色
@@ -101,58 +120,77 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
         INITIATOR_DEPT_HEAD: 发起人部门主管
         MULTI_DEPT: 多部门会签（如ECN评估）
         DYNAMIC: 动态计算
-    """)
-    approver_config = Column(JSON, comment="""
+    """,
+    )
+    approver_config = Column(
+        JSON,
+        comment="""
         审批人配置详情，示例：
         - FIXED_USER: {"user_ids": [1, 2, 3]}
         - ROLE: {"role_codes": ["SALES_MANAGER", "DEPT_HEAD"]}
         - DEPARTMENT_HEAD: {"level": 1}  // 向上几级
         - FORM_FIELD: {"field_name": "approver_id"}
         - MULTI_DEPT: {"departments": ["工程部", "采购部"], "eval_form": {...}}
-    """)
+    """,
+    )
 
     # 条件配置（仅CONDITION类型有效）
-    condition_expression = Column(Text, comment="""
+    condition_expression = Column(
+        Text,
+        comment="""
         条件表达式，示例：
         {"operator": "AND", "items": [
             {"field": "form.amount", "op": ">", "value": 10000}
         ]}
-    """)
+    """,
+    )
 
     # 分支配置（仅CONDITION类型有效）
-    branches = Column(JSON, comment="""
+    branches = Column(
+        JSON,
+        comment="""
         分支配置，示例：
         [
             {"condition": {...}, "next_node_id": 5},
             {"condition": null, "next_node_id": 6}  // 默认分支
         ]
-    """)
+    """,
+    )
 
     # 行为配置
     can_add_approver = Column(Boolean, default=False, comment="允许加签")
     can_transfer = Column(Boolean, default=True, comment="允许转审")
     can_delegate = Column(Boolean, default=True, comment="允许委托")
-    can_reject_to = Column(String(20), default="START", comment="""
+    can_reject_to = Column(
+        String(20),
+        default="START",
+        comment="""
         驳回目标：
         START: 退回到发起人
         PREV: 退回到上一节点
         SPECIFIC: 可选择退回到任意之前的节点
         NONE: 不允许驳回（直接终止）
-    """)
+    """,
+    )
 
     # 超时配置
     timeout_hours = Column(Integer, comment="超时时间（小时），空表示不限时")
-    timeout_action = Column(String(20), comment="""
+    timeout_action = Column(
+        String(20),
+        comment="""
         超时操作：
         REMIND: 仅提醒
         AUTO_PASS: 自动通过
         AUTO_REJECT: 自动驳回
         ESCALATE: 上报上级
-    """)
+    """,
+    )
     timeout_remind_hours = Column(Integer, comment="超时提醒时间（提前几小时提醒）")
 
     # 通知配置
-    notify_config = Column(JSON, comment="""
+    notify_config = Column(
+        JSON,
+        comment="""
         通知配置，示例：
         {
             "on_pending": true,       // 待审批时通知
@@ -160,10 +198,13 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
             "on_rejected": true,      // 审批驳回时通知发起人
             "channels": ["SYSTEM", "EMAIL", "WECHAT"]
         }
-    """)
+    """,
+    )
 
     # 评估表单配置（用于ECN等需要填写评估内容的场景）
-    eval_form_schema = Column(JSON, comment="""
+    eval_form_schema = Column(
+        JSON,
+        comment="""
         评估表单定义（会签时各审批人需要填写的内容），示例：
         {
             "fields": [
@@ -171,11 +212,14 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
                 {"name": "cost_estimate", "type": "number", "label": "成本估算"}
             ]
         }
-    """)
+    """,
+    )
 
     # 关系
     flow = relationship("ApprovalFlowDefinition", back_populates="nodes")
-    tasks = relationship("ApprovalTask", foreign_keys="[ApprovalTask.node_id]", back_populates="node")
+    tasks = relationship(
+        "ApprovalTask", foreign_keys="[ApprovalTask.node_id]", back_populates="node"
+    )
 
     __table_args__ = (
         Index("idx_approval_node_flow", "flow_id"),
@@ -193,8 +237,12 @@ class ApprovalRoutingRule(Base, TimestampMixin):
     __tablename__ = "approval_routing_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    template_id = Column(Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID")
-    flow_id = Column(Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="匹配的流程ID")
+    template_id = Column(
+        Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
+    )
+    flow_id = Column(
+        Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="匹配的流程ID"
+    )
 
     # 规则基础信息
     rule_name = Column(String(100), nullable=False, comment="规则名称")
@@ -202,7 +250,10 @@ class ApprovalRoutingRule(Base, TimestampMixin):
     description = Column(Text, comment="规则描述")
 
     # 条件配置（支持多条件组合）
-    conditions = Column(JSON, nullable=False, comment="""
+    conditions = Column(
+        JSON,
+        nullable=False,
+        comment="""
         条件配置示例：
         {
             "operator": "AND",  // AND/OR
@@ -222,7 +273,8 @@ class ApprovalRoutingRule(Base, TimestampMixin):
         entity.xxx - 业务实体属性
         initiator.xxx - 发起人属性
         sys.xxx - 系统变量
-    """)
+    """,
+    )
 
     is_active = Column(Boolean, default=True, comment="是否启用")
 

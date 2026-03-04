@@ -23,7 +23,7 @@ from app.schemas.sales.contract_enhanced import (
     ContractTermCreate,
     ContractUpdate,
 )
-from app.utils.db_helpers import save_obj, delete_obj
+from app.utils.db_helpers import delete_obj, save_obj
 
 
 class ContractEnhancedService:
@@ -36,28 +36,25 @@ class ContractEnhancedService:
         # 生成合同编号（如果未提供）
         if not contract_data.contract_code:
             contract_data.contract_code = ContractEnhancedService._generate_contract_code(db)
-        
+
         # 计算未收款金额
         unreceived_amount = contract_data.total_amount - contract_data.received_amount
-        
+
         # 创建合同主体
-        contract_dict = contract_data.model_dump(exclude={'terms'})
-        contract_dict['unreceived_amount'] = unreceived_amount
-        contract_dict['status'] = 'draft'  # 初始状态为草稿
-        
+        contract_dict = contract_data.model_dump(exclude={"terms"})
+        contract_dict["unreceived_amount"] = unreceived_amount
+        contract_dict["status"] = "draft"  # 初始状态为草稿
+
         contract = Contract(**contract_dict)
         db.add(contract)
         db.flush()  # 获取合同ID
-        
+
         # 创建合同条款
         if contract_data.terms:
             for term_data in contract_data.terms:
-                term = ContractTerm(
-                    contract_id=contract.id,
-                    **term_data.model_dump()
-                )
+                term = ContractTerm(contract_id=contract.id, **term_data.model_dump())
                 db.add(term)
-        
+
         db.commit()
         db.refresh(contract)
         return contract
@@ -67,7 +64,7 @@ class ContractEnhancedService:
         """生成合同编号: HT-YYYYMMDD-XXX"""
         today = datetime.now().strftime("%Y%m%d")
         prefix = f"HT-{today}-"
-        
+
         # 查询今天的最大编号
         last_contract = (
             db.query(Contract)
@@ -75,13 +72,13 @@ class ContractEnhancedService:
             .order_by(Contract.contract_code.desc())
             .first()
         )
-        
+
         if last_contract:
             last_number = int(last_contract.contract_code.split("-")[-1])
             new_number = last_number + 1
         else:
             new_number = 1
-        
+
         return f"{prefix}{new_number:03d}"
 
     @staticmethod
@@ -110,7 +107,7 @@ class ContractEnhancedService:
     ) -> tuple[List[Contract], int]:
         """获取合同列表（支持搜索/筛选）"""
         query = db.query(Contract)
-        
+
         # 筛选条件
         if status:
             query = query.filter(Contract.status == status)
@@ -126,10 +123,10 @@ class ContractEnhancedService:
                     Contract.customer_contract_no.like(f"%{keyword}%"),
                 )
             )
-        
+
         total = query.count()
         contracts = query.order_by(Contract.created_at.desc()).offset(skip).limit(limit).all()
-        
+
         return contracts, total
 
     @staticmethod
@@ -140,20 +137,20 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             return None
-        
+
         # 只允许在草稿状态下更新
-        if contract.status != 'draft':
+        if contract.status != "draft":
             raise ValueError("只能更新草稿状态的合同")
-        
+
         # 更新字段
         update_data = contract_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(contract, field, value)
-        
+
         # 重新计算未收款金额
         if contract_data.total_amount is not None or contract_data.received_amount is not None:
             contract.unreceived_amount = contract.total_amount - contract.received_amount
-        
+
         db.commit()
         db.refresh(contract)
         return contract
@@ -164,10 +161,10 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             return False
-        
-        if contract.status != 'draft':
+
+        if contract.status != "draft":
             raise ValueError("只能删除草稿状态的合同")
-        
+
         delete_obj(db, contract)
         return True
 
@@ -178,27 +175,29 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-        
-        if contract.status != 'draft':
+
+        if contract.status != "draft":
             raise ValueError("只能提交草稿状态的合同")
-        
+
         # 根据金额创建审批流程
         approvals = ContractEnhancedService._create_approval_flow(
             db, contract.id, contract.total_amount
         )
-        
+
         # 更新合同状态
-        contract.status = 'approving' if approvals else 'approved'
-        
+        contract.status = "approving" if approvals else "approved"
+
         db.commit()
         db.refresh(contract)
         return contract
 
     @staticmethod
-    def _create_approval_flow(db: Session, contract_id: int, amount: Decimal) -> List[ContractApproval]:
+    def _create_approval_flow(
+        db: Session, contract_id: int, amount: Decimal
+    ) -> List[ContractApproval]:
         """创建审批流程（根据金额分级）"""
         approvals = []
-        
+
         if amount < 100000:
             # 金额<10万：销售经理审批
             approvals.append(
@@ -221,30 +220,32 @@ class ContractEnhancedService:
             )
         else:
             # 金额>50万：销售总监 + 财务总监 + 总经理审批
-            approvals.extend([
-                ContractApproval(
-                    contract_id=contract_id,
-                    approval_level=1,
-                    approval_role="sales_director",
-                    approval_status="pending",
-                ),
-                ContractApproval(
-                    contract_id=contract_id,
-                    approval_level=2,
-                    approval_role="finance_director",
-                    approval_status="pending",
-                ),
-                ContractApproval(
-                    contract_id=contract_id,
-                    approval_level=3,
-                    approval_role="general_manager",
-                    approval_status="pending",
-                ),
-            ])
-        
+            approvals.extend(
+                [
+                    ContractApproval(
+                        contract_id=contract_id,
+                        approval_level=1,
+                        approval_role="sales_director",
+                        approval_status="pending",
+                    ),
+                    ContractApproval(
+                        contract_id=contract_id,
+                        approval_level=2,
+                        approval_role="finance_director",
+                        approval_status="pending",
+                    ),
+                    ContractApproval(
+                        contract_id=contract_id,
+                        approval_level=3,
+                        approval_role="general_manager",
+                        approval_status="pending",
+                    ),
+                ]
+            )
+
         for approval in approvals:
             db.add(approval)
-        
+
         db.flush()
         return approvals
 
@@ -261,19 +262,19 @@ class ContractEnhancedService:
             )
             .first()
         )
-        
+
         if not approval:
             raise ValueError("审批记录不存在")
-        
+
         if approval.approval_status != "pending":
             raise ValueError("该审批已处理")
-        
+
         # 更新审批记录
         approval.approver_id = user_id
         approval.approval_status = "approved"
         approval.approval_opinion = opinion
         approval.approved_at = datetime.now()
-        
+
         # 检查是否所有审批都已完成
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         pending_count = (
@@ -284,11 +285,11 @@ class ContractEnhancedService:
             )
             .count()
         )
-        
+
         if pending_count == 0:
             # 所有审批通过，更新合同状态
             contract.status = "approved"
-        
+
         db.commit()
         db.refresh(contract)
         return contract
@@ -306,23 +307,23 @@ class ContractEnhancedService:
             )
             .first()
         )
-        
+
         if not approval:
             raise ValueError("审批记录不存在")
-        
+
         if approval.approval_status != "pending":
             raise ValueError("该审批已处理")
-        
+
         # 更新审批记录
         approval.approver_id = user_id
         approval.approval_status = "rejected"
         approval.approval_opinion = opinion
         approval.approved_at = datetime.now()
-        
+
         # 驳回合同，回到草稿状态
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         contract.status = "draft"
-        
+
         db.commit()
         db.refresh(contract)
         return contract
@@ -377,9 +378,7 @@ class ContractEnhancedService:
     ) -> ContractAttachment:
         """上传附件"""
         attachment = ContractAttachment(
-            contract_id=contract_id,
-            uploaded_by=user_id,
-            **attachment_data.model_dump()
+            contract_id=contract_id, uploaded_by=user_id, **attachment_data.model_dump()
         )
         save_obj(db, attachment)
         return attachment
@@ -387,12 +386,16 @@ class ContractEnhancedService:
     @staticmethod
     def get_attachments(db: Session, contract_id: int) -> List[ContractAttachment]:
         """获取附件列表"""
-        return db.query(ContractAttachment).filter(ContractAttachment.contract_id == contract_id).all()
+        return (
+            db.query(ContractAttachment).filter(ContractAttachment.contract_id == contract_id).all()
+        )
 
     @staticmethod
     def delete_attachment(db: Session, attachment_id: int) -> bool:
         """删除附件"""
-        attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
+        attachment = (
+            db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
+        )
         if attachment:
             delete_obj(db, attachment)
             return True
@@ -405,10 +408,10 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-        
+
         if contract.status != "approved":
             raise ValueError("只能标记已审批的合同为已签署")
-        
+
         contract.status = "signed"
         db.commit()
         db.refresh(contract)
@@ -420,10 +423,10 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-        
+
         if contract.status != "signed":
             raise ValueError("只能标记已签署的合同为执行中")
-        
+
         contract.status = "executing"
         db.commit()
         db.refresh(contract)
@@ -435,10 +438,10 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-        
+
         if contract.status != "executing":
             raise ValueError("只能标记执行中的合同为已完成")
-        
+
         contract.status = "completed"
         db.commit()
         db.refresh(contract)
@@ -450,10 +453,10 @@ class ContractEnhancedService:
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-        
+
         if contract.status == "completed":
             raise ValueError("已完成的合同不能作废")
-        
+
         contract.status = "voided"
         db.commit()
         db.refresh(contract)
@@ -464,17 +467,29 @@ class ContractEnhancedService:
     def get_contract_stats(db: Session) -> ContractStats:
         """获取合同统计"""
         total_count = db.query(func.count(Contract.id)).scalar() or 0
-        draft_count = db.query(func.count(Contract.id)).filter(Contract.status == "draft").scalar() or 0
-        approving_count = db.query(func.count(Contract.id)).filter(Contract.status == "approving").scalar() or 0
-        signed_count = db.query(func.count(Contract.id)).filter(Contract.status == "signed").scalar() or 0
-        executing_count = db.query(func.count(Contract.id)).filter(Contract.status == "executing").scalar() or 0
-        completed_count = db.query(func.count(Contract.id)).filter(Contract.status == "completed").scalar() or 0
-        voided_count = db.query(func.count(Contract.id)).filter(Contract.status == "voided").scalar() or 0
-        
+        draft_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "draft").scalar() or 0
+        )
+        approving_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "approving").scalar() or 0
+        )
+        signed_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "signed").scalar() or 0
+        )
+        executing_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "executing").scalar() or 0
+        )
+        completed_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "completed").scalar() or 0
+        )
+        voided_count = (
+            db.query(func.count(Contract.id)).filter(Contract.status == "voided").scalar() or 0
+        )
+
         total_amount = db.query(func.sum(Contract.total_amount)).scalar() or Decimal(0)
         received_amount = db.query(func.sum(Contract.received_amount)).scalar() or Decimal(0)
         unreceived_amount = db.query(func.sum(Contract.unreceived_amount)).scalar() or Decimal(0)
-        
+
         return ContractStats(
             total_count=total_count,
             draft_count=draft_count,

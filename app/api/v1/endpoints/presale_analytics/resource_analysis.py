@@ -24,22 +24,25 @@ from .utils import convert_lead_code_to_project_code
 router = APIRouter()
 
 
-@router.get("/lead/{lead_id}/resource-investment", response_model=ResponseModel[ResourceInvestmentSummary])
+@router.get(
+    "/lead/{lead_id}/resource-investment", response_model=ResponseModel[ResourceInvestmentSummary]
+)
 async def get_lead_resource_investment(
     lead_id: str,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("presale_analytics:create"))
+    current_user: User = Depends(security.require_permission("presale_analytics:create")),
 ) -> Any:
     """获取某线索/项目投入的资源工时"""
 
-    project_code = convert_lead_code_to_project_code(lead_id) if lead_id.startswith('XS') else lead_id
+    project_code = (
+        convert_lead_code_to_project_code(lead_id) if lead_id.startswith("XS") else lead_id
+    )
 
-    project = db.query(Project).filter(
-        or_(
-            Project.project_code == project_code,
-            Project.source_lead_id == lead_id
-        )
-    ).first()
+    project = (
+        db.query(Project)
+        .filter(or_(Project.project_code == project_code, Project.source_lead_id == lead_id))
+        .first()
+    )
 
     if not project:
         raise HTTPException(status_code=404, detail=f"未找到线索/项目: {lead_id}")
@@ -59,18 +62,17 @@ async def get_lead_resource_investment(
         engineer_hours[emp_id] += log.work_hours or 0
 
     engineers = [
-        {"employee_id": emp_id, "hours": hours}
-        for emp_id, hours in engineer_hours.items()
+        {"employee_id": emp_id, "hours": hours} for emp_id, hours in engineer_hours.items()
     ]
 
     investment_by_month = {}
     for log in work_logs:
-        month_key = log.work_date.strftime('%Y-%m') if log.work_date else 'unknown'
+        month_key = log.work_date.strftime("%Y-%m") if log.work_date else "unknown"
         if month_key not in investment_by_month:
             investment_by_month[month_key] = 0
         investment_by_month[month_key] += log.work_hours or 0
 
-    hourly_rate = Decimal('300')
+    hourly_rate = Decimal("300")
     estimated_cost = Decimal(str(total_hours)) * hourly_rate
 
     return ResponseModel(
@@ -88,8 +90,8 @@ async def get_lead_resource_investment(
             estimated_cost=estimated_cost,
             hourly_rate=hourly_rate,
             investment_by_stage={},
-            investment_by_month=investment_by_month
-        )
+            investment_by_month=investment_by_month,
+        ),
     )
 
 
@@ -97,7 +99,7 @@ async def get_lead_resource_investment(
 async def get_resource_waste_analysis(
     period: str = Query(..., description="分析周期，格式 YYYY-MM 或 YYYY"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("presale_analytics:create"))
+    current_user: User = Depends(security.require_permission("presale_analytics:create")),
 ) -> Any:
     """获取资源浪费分析报告"""
 
@@ -114,11 +116,15 @@ async def get_resource_waste_analysis(
         start_date = date(year, 1, 1)
         end_date = date(year + 1, 1, 1)
 
-    projects = db.query(Project).filter(
-        Project.created_at >= start_date,
-        Project.created_at < end_date,
-        Project.outcome.isnot(None)
-    ).all()
+    projects = (
+        db.query(Project)
+        .filter(
+            Project.created_at >= start_date,
+            Project.created_at < end_date,
+            Project.outcome.isnot(None),
+        )
+        .all()
+    )
 
     total_leads = len(projects)
     won_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.WON.value)
@@ -135,18 +141,19 @@ async def get_resource_waste_analysis(
     loss_reasons = {}
 
     for project in projects:
-        project_hours = db.query(func.sum(WorkLog.work_hours)).filter(
-            WorkLog.project_id == project.id
-        ).scalar() or 0
+        project_hours = (
+            db.query(func.sum(WorkLog.work_hours)).filter(WorkLog.project_id == project.id).scalar()
+            or 0
+        )
 
         total_investment_hours += project_hours
 
         if project.outcome in [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]:
             wasted_hours += project_hours
-            reason = project.loss_reason or 'OTHER'
+            reason = project.loss_reason or "OTHER"
             loss_reasons[reason] = loss_reasons.get(reason, 0) + 1
 
-    hourly_rate = Decimal('300')
+    hourly_rate = Decimal("300")
     wasted_cost = Decimal(str(wasted_hours)) * hourly_rate
     waste_rate = wasted_hours / total_investment_hours if total_investment_hours > 0 else 0
 
@@ -165,6 +172,6 @@ async def get_resource_waste_analysis(
             wasted_hours=wasted_hours,
             wasted_cost=wasted_cost,
             waste_rate=round(waste_rate, 3),
-            loss_reasons=loss_reasons
-        )
+            loss_reasons=loss_reasons,
+        ),
     )

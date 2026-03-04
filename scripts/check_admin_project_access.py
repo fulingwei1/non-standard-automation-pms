@@ -43,7 +43,9 @@ def check_admin_access(db):
     roles = admin.roles.all()
     print(f"  - 角色数量: {len(roles)}")
     for role in roles:
-        print(f"    * {role.role.role_name if role.role else 'N/A'} (data_scope: {role.role.data_scope if role.role else 'N/A'})")
+        print(
+            f"    * {role.role.role_name if role.role else 'N/A'} (data_scope: {role.role.data_scope if role.role else 'N/A'})"
+        )
 
     return admin
 

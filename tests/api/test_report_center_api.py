@@ -33,8 +33,7 @@ class TestReportGenerationAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/report-center/generate/status/1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/report-center/generate/status/1", headers=headers
         )
 
         # 即使报告不存在，也应该返回某种状态
@@ -57,10 +56,7 @@ class TestReportDownloadAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/report-center/download/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/report-center/download/1", headers=headers)
 
         # 报表不存在应该返回404
         if response.status_code == 404:
@@ -83,8 +79,7 @@ class TestReportCenterEdgeCases:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/report-center/templates/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/report-center/templates/99999", headers=headers
         )
 
         # 应该返回404

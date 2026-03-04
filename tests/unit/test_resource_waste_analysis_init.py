@@ -4,9 +4,10 @@ Tests for resource_waste_analysis service - initialization and basic tests
 Covers: app/services/resource_waste_analysis/
 """
 
-import pytest
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.services.resource_waste_analysis import ResourceWasteAnalysisService
@@ -25,7 +26,7 @@ class TestResourceWasteAnalysisServiceInit:
     def test_init_with_custom_hourly_rate(self):
         """测试使用自定义工时成本初始化"""
         mock_db = MagicMock(spec=Session)
-        custom_rate = Decimal('500')
+        custom_rate = Decimal("500")
         service = ResourceWasteAnalysisService(mock_db, hourly_rate=custom_rate)
         assert service.hourly_rate == custom_rate
 
@@ -33,14 +34,18 @@ class TestResourceWasteAnalysisServiceInit:
         """测试默认工时成本"""
         mock_db = MagicMock(spec=Session)
         service = ResourceWasteAnalysisService(mock_db)
-        assert service.hourly_rate == Decimal('300')
+        assert service.hourly_rate == Decimal("300")
 
-    @pytest.mark.skip(reason="Requires DB fixtures with lead/presale model fields (outcome, loss_reason) not on Project model")
+    @pytest.mark.skip(
+        reason="Requires DB fixtures with lead/presale model fields (outcome, loss_reason) not on Project model"
+    )
     def test_get_lead_resource_investment_success(self):
         """测试获取线索资源投入详情 - 成功场景"""
         pass
 
-    @pytest.mark.skip(reason="Requires DB fixtures with lead/presale model fields not on Project model")
+    @pytest.mark.skip(
+        reason="Requires DB fixtures with lead/presale model fields not on Project model"
+    )
     def test_calculate_waste_by_period_success(self):
         """测试计算周期内资源浪费 - 成功场景"""
         pass

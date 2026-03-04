@@ -4,17 +4,18 @@ Unit tests for app/utils/wechat_client.py — L4组补充
 覆盖 markdown 消息、网络重试、WeChatTokenCache 的 set 语义
 """
 
-import pytest
 import time
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from app.utils.wechat_client import WeChatClient, WeChatTokenCache
+import pytest
 
+from app.utils.wechat_client import WeChatClient, WeChatTokenCache
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_client():
     return WeChatClient(corp_id="corp1", agent_id="1000001", secret="secret1")
@@ -30,6 +31,7 @@ def _mock_ok_response():
 # ---------------------------------------------------------------------------
 # WeChatTokenCache — extra coverage
 # ---------------------------------------------------------------------------
+
 
 class TestWeChatTokenCacheL4:
     """Extra tests for WeChatTokenCache."""
@@ -69,6 +71,7 @@ class TestWeChatTokenCacheL4:
 # WeChatClient.get_access_token — extra
 # ---------------------------------------------------------------------------
 
+
 class TestGetAccessTokenL4:
     """Extra tests for get_access_token."""
 
@@ -78,6 +81,7 @@ class TestGetAccessTokenL4:
     def test_request_exception_is_wrapped(self):
         """requests.RequestException is caught and re-raised as generic Exception."""
         import requests as real_requests
+
         client = _make_client()
 
         with patch("app.utils.wechat_client.requests") as mock_req:
@@ -90,14 +94,11 @@ class TestGetAccessTokenL4:
     def test_token_cached_after_fetch(self):
         """After a successful fetch, subsequent call uses cache (no 2nd HTTP call)."""
         import requests as real_requests
+
         client = _make_client()
 
         resp = MagicMock()
-        resp.json.return_value = {
-            "errcode": 0,
-            "access_token": "tok_cache",
-            "expires_in": 7200
-        }
+        resp.json.return_value = {"errcode": 0, "access_token": "tok_cache", "expires_in": 7200}
         resp.raise_for_status = MagicMock()
 
         with patch("app.utils.wechat_client.requests") as mock_req:
@@ -116,6 +117,7 @@ class TestGetAccessTokenL4:
 # WeChatClient.send_message — markdown and misc
 # ---------------------------------------------------------------------------
 
+
 class TestSendMessageL4:
     """Extra tests for send_message."""
 
@@ -125,19 +127,19 @@ class TestSendMessageL4:
     def test_send_markdown_message(self):
         """Builds correct payload for markdown msgtype."""
         import requests as real_requests
+
         client = _make_client()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = _mock_ok_response()
             mock_req.RequestException = real_requests.RequestException
 
             result = client.send_message(
                 user_ids=["user1"],
-                message={
-                    "msgtype": "markdown",
-                    "markdown": {"content": "**Hello**"}
-                }
+                message={"msgtype": "markdown", "markdown": {"content": "**Hello**"}},
             )
 
         assert result is True
@@ -148,19 +150,19 @@ class TestSendMessageL4:
     def test_send_unknown_msgtype_uses_update(self):
         """Unknown msgtype falls through to payload.update(message)."""
         import requests as real_requests
+
         client = _make_client()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = _mock_ok_response()
             mock_req.RequestException = real_requests.RequestException
 
             result = client.send_message(
                 user_ids=["user1"],
-                message={
-                    "msgtype": "news",
-                    "news": {"articles": [{"title": "Test"}]}
-                }
+                message={"msgtype": "news", "news": {"articles": [{"title": "Test"}]}},
             )
 
         assert result is True
@@ -170,10 +172,13 @@ class TestSendMessageL4:
     def test_user_ids_joined_with_pipe(self):
         """Multiple user_ids are joined with '|' in touser field."""
         import requests as real_requests
+
         client = _make_client()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = _mock_ok_response()
             mock_req.RequestException = real_requests.RequestException
 
@@ -185,11 +190,14 @@ class TestSendMessageL4:
     def test_request_exception_retries_then_raises(self):
         """RequestException triggers retry; after retry_times exhausted, raises."""
         import requests as real_requests
+
         client = _make_client()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req, \
-             patch("app.utils.wechat_client.time") as mock_time:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+            patch("app.utils.wechat_client.time") as mock_time,
+        ):
             mock_req.post.side_effect = real_requests.ConnectionError("net down")
             mock_req.RequestException = real_requests.RequestException
             mock_time.sleep = MagicMock()
@@ -198,7 +206,7 @@ class TestSendMessageL4:
                 client.send_message(
                     user_ids=["u1"],
                     message={"msgtype": "text", "text": {"content": "hi"}},
-                    retry_times=2
+                    retry_times=2,
                 )
 
         # Called retry_times=2 times
@@ -207,10 +215,13 @@ class TestSendMessageL4:
     def test_agentid_set_in_payload(self):
         """agentid from client is included in the payload."""
         import requests as real_requests
+
         client = _make_client()  # agent_id="1000001"
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = _mock_ok_response()
             mock_req.RequestException = real_requests.RequestException
             client.send_text_message(["u1"], "test")
@@ -221,10 +232,13 @@ class TestSendMessageL4:
     def test_access_token_in_url_params(self):
         """access_token is passed as a URL query parameter."""
         import requests as real_requests
+
         client = _make_client()
 
-        with patch.object(client, "get_access_token", return_value="my_tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="my_tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = _mock_ok_response()
             mock_req.RequestException = real_requests.RequestException
             client.send_text_message(["u1"], "hello")

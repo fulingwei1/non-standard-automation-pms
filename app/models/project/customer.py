@@ -47,7 +47,7 @@ class Customer(Base, TimestampMixin):
     status = Column(String(20), default="ACTIVE", comment="状态")
     remark = Column(Text, comment="备注")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
-    
+
     # 销售管理扩展字段
     website = Column(String(200), comment="公司网址")
     established_date = Column(String(20), comment="成立日期")  # 使用Date会更好，但为兼容性用String
@@ -87,24 +87,24 @@ class Customer(Base, TimestampMixin):
     def contact_info(self) -> dict:
         """获取联系人信息"""
         return {
-            'person': self.contact_person,
-            'phone': self.contact_phone,
-            'email': self.contact_email,
+            "person": self.contact_person,
+            "phone": self.contact_phone,
+            "email": self.contact_email,
         }
 
     @property
     def bank_info(self) -> dict:
         """获取银行信息"""
         return {
-            'bank_name': self.bank_name,
-            'bank_account': self.bank_account,
-            'tax_no': self.tax_no,
+            "bank_name": self.bank_name,
+            "bank_account": self.bank_account,
+            "tax_no": self.tax_no,
         }
 
     @property
     def is_vip(self) -> bool:
         """是否为VIP客户（信用等级A或以上）"""
-        return self.credit_level in ['A', 'AA', 'AAA']
+        return self.credit_level in ["A", "AA", "AAA"]
 
     @property
     def project_count(self) -> int:
@@ -117,13 +117,13 @@ class Customer(Base, TimestampMixin):
         if not self.projects:
             return []
         return self.projects.filter(
-            Project.stage.in_(['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'])
+            Project.stage.in_(["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"])
         ).all()
 
     def update_level(self):
         """
         根据年成交额和合作年限自动更新客户等级
-        
+
         规则：
         - A级：年成交额>100万，合作>3年
         - B级：年成交额50-100万，合作1-3年
@@ -132,7 +132,7 @@ class Customer(Base, TimestampMixin):
         """
         revenue = float(self.annual_revenue or 0)
         years = self.cooperation_years or 0
-        
+
         if revenue > 1000000 and years > 3:
             self.customer_level = "A"
         elif revenue >= 500000 and years >= 1:

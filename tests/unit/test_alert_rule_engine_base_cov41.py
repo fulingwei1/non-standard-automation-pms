@@ -15,6 +15,7 @@ def engine():
         mock_enum.CRITICAL = MagicMock(value="CRITICAL")
         mock_enum.URGENT = MagicMock(value="URGENT")
         from app.services.alert_rule_engine.base import AlertRuleEngineBase
+
         return AlertRuleEngineBase()
 
 

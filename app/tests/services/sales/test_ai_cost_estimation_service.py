@@ -3,29 +3,28 @@ AI智能成本估算服务测试
 目标覆盖率: 60%+
 测试数量: 30-45个
 """
-import pytest
-from decimal import Decimal
+
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.services.sales.ai_cost_estimation_service import AICostEstimationService
-from app.models.sales.presale_ai_cost import (
-    PresaleAICostEstimation,
-    PresaleCostHistory
-)
+from app.models.sales.presale_ai_cost import PresaleAICostEstimation, PresaleCostHistory
 from app.schemas.sales.presale_ai_cost import (
     CostEstimationInput,
     CostEstimationResponse,
     CostOptimizationInput,
     CostOptimizationResponse,
-    PricingInput,
-    PricingResponse,
+    HistoricalAccuracyResponse,
     OptimizationSuggestion,
+    PricingInput,
     PricingRecommendation,
+    PricingResponse,
     UpdateActualCostInput,
-    HistoricalAccuracyResponse
 )
+from app.services.sales.ai_cost_estimation_service import AICostEstimationService
 
 
 @pytest.fixture
@@ -55,19 +54,20 @@ def basic_estimation_input():
         complexity_level="medium",
         hardware_items=[
             {"name": "PLC", "unit_price": 5000, "quantity": 2},
-            {"name": "触摸屏", "unit_price": 3000, "quantity": 1}
+            {"name": "触摸屏", "unit_price": 3000, "quantity": 1},
         ],
         software_requirements="开发监控系统，包含数据采集、实时监控、报警功能",
         estimated_man_days=15,
         installation_difficulty="medium",
         service_years=3,
-        target_margin_rate=Decimal("0.30")
+        target_margin_rate=Decimal("0.30"),
     )
 
 
 # ============================================================================
 # 1. 硬件成本计算测试 (5个测试)
 # ============================================================================
+
 
 def test_calculate_hardware_cost_empty(service):
     """测试空硬件列表"""
@@ -85,10 +85,7 @@ def test_calculate_hardware_cost_single_item(service):
 
 def test_calculate_hardware_cost_multiple_items(service):
     """测试多个硬件项"""
-    items = [
-        {"unit_price": 5000, "quantity": 2},
-        {"unit_price": 3000, "quantity": 1}
-    ]
+    items = [{"unit_price": 5000, "quantity": 2}, {"unit_price": 3000, "quantity": 1}]
     result = service._calculate_hardware_cost(items)
     # (5000*2 + 3000*1) * 1.15 = 14950
     assert result == Decimal("14950")
@@ -113,6 +110,7 @@ def test_calculate_hardware_cost_with_markup(service):
 # ============================================================================
 # 2. 软件成本计算测试 (6个测试)
 # ============================================================================
+
 
 def test_calculate_software_cost_with_man_days(service):
     """测试指定人天的软件成本"""
@@ -162,6 +160,7 @@ def test_calculate_software_cost_zero_man_days(service):
 # 3. 安装成本计算测试 (4个测试)
 # ============================================================================
 
+
 def test_calculate_installation_cost_low_difficulty(service):
     """测试低难度安装"""
     hardware_cost = Decimal("10000")
@@ -197,6 +196,7 @@ def test_calculate_installation_cost_none_difficulty(service):
 # 4. 服务成本计算测试 (3个测试)
 # ============================================================================
 
+
 def test_calculate_service_cost_one_year(service):
     """测试1年服务成本"""
     base_cost = Decimal("100000")
@@ -223,6 +223,7 @@ def test_calculate_service_cost_zero_years(service):
 # ============================================================================
 # 5. 风险储备金计算测试 (5个测试)
 # ============================================================================
+
 
 def test_calculate_risk_reserve_medium_complexity(service, mock_db):
     """测试中等复杂度风险储备"""
@@ -271,14 +272,12 @@ def test_get_historical_variance_no_data(service, mock_db):
 # 6. 置信度评分测试 (4个测试)
 # ============================================================================
 
+
 def test_calculate_confidence_score_minimal_input(service, mock_db):
     """测试最少输入的置信度"""
     mock_db.query.return_value.filter.return_value.count.return_value = 0
     input_data = CostEstimationInput(
-        presale_ticket_id=1,
-        solution_id=1,
-        project_type="automation",
-        complexity_level="medium"
+        presale_ticket_id=1, solution_id=1, project_type="automation", complexity_level="medium"
     )
     result = service._calculate_confidence_score(input_data)
     assert result == Decimal("0.5")  # 仅基础分
@@ -292,7 +291,7 @@ def test_calculate_confidence_score_with_hardware(service, mock_db):
         solution_id=1,
         project_type="automation",
         complexity_level="medium",
-        hardware_items=[{"unit_price": 1000, "quantity": 1}]
+        hardware_items=[{"unit_price": 1000, "quantity": 1}],
     )
     result = service._calculate_confidence_score(input_data)
     assert result == Decimal("0.7")  # 0.5 + 0.2
@@ -308,7 +307,7 @@ def test_calculate_confidence_score_complete_input(service, mock_db):
         complexity_level="medium",
         hardware_items=[{"unit_price": 1000, "quantity": 1}],
         software_requirements="详细需求" * 50,  # >100字符
-        estimated_man_days=10
+        estimated_man_days=10,
     )
     result = service._calculate_confidence_score(input_data)
     # 0.5 + 0.2 + 0.15 + 0.1 + 0.05 = 1.0
@@ -325,7 +324,7 @@ def test_calculate_confidence_score_capped_at_one(service, mock_db):
         complexity_level="medium",
         hardware_items=[{"unit_price": 1000, "quantity": 1}],
         software_requirements="详细需求" * 100,
-        estimated_man_days=20
+        estimated_man_days=20,
     )
     result = service._calculate_confidence_score(input_data)
     assert result <= Decimal("1.0")
@@ -335,12 +334,13 @@ def test_calculate_confidence_score_capped_at_one(service, mock_db):
 # 7. 定价推荐测试 (4个测试)
 # ============================================================================
 
+
 def test_generate_pricing_recommendations_30_percent_margin(service):
     """测试30%毛利率定价"""
     total_cost = Decimal("100000")
     target_margin = Decimal("0.30")
     result = service._generate_pricing_recommendations(total_cost, target_margin)
-    
+
     # 建议价格 = 100000 / (1 - 0.30) = 142857.14
     assert abs(result.suggested_price - Decimal("142857.14")) < Decimal("0.5")
     assert result.target_margin_rate == Decimal("30")
@@ -350,7 +350,7 @@ def test_generate_pricing_recommendations_three_tiers(service):
     """测试三档定价"""
     total_cost = Decimal("100000")
     result = service._generate_pricing_recommendations(total_cost, Decimal("0.30"))
-    
+
     assert result.low < result.medium < result.high
     assert result.medium == result.suggested_price
 
@@ -360,7 +360,7 @@ def test_generate_pricing_recommendations_low_margin(service):
     total_cost = Decimal("100000")
     target_margin = Decimal("0.10")  # 10%毛利
     result = service._generate_pricing_recommendations(total_cost, target_margin)
-    
+
     # 100000 / 0.9 = 111111.11
     assert abs(result.suggested_price - Decimal("111111.11")) < Decimal("0.5")
 
@@ -369,7 +369,7 @@ def test_pricing_recommendation_market_analysis(service):
     """测试定价推荐包含市场分析"""
     total_cost = Decimal("100000")
     result = service._generate_pricing_recommendations(total_cost, Decimal("0.30"))
-    
+
     assert result.market_analysis is not None
     assert len(result.market_analysis) > 0
 
@@ -378,24 +378,25 @@ def test_pricing_recommendation_market_analysis(service):
 # 8. 完整成本估算流程测试 (3个测试)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_estimate_cost_complete_flow(service, mock_db, basic_estimation_input):
     """测试完整成本估算流程"""
     # Mock 数据库操作
     mock_db.query.return_value.filter.return_value.scalar.return_value = None
     mock_db.query.return_value.filter.return_value.count.return_value = 5
-    
-    with patch('app.utils.db_helpers.save_obj') as mock_save:
+
+    with patch("app.utils.db_helpers.save_obj") as mock_save:
         # 修复：创建实际的 estimation 对象，并让 save_obj 修改它
         def save_side_effect(db, obj):
             obj.id = 1
             obj.created_at = datetime.now()
             return obj
-        
+
         mock_save.side_effect = save_side_effect
-        
+
         result = await service.estimate_cost(basic_estimation_input)
-        
+
         assert isinstance(result, CostEstimationResponse)
         assert result.cost_breakdown.total_cost > Decimal("0")
         assert len(result.optimization_suggestions) >= 0
@@ -403,21 +404,24 @@ async def test_estimate_cost_complete_flow(service, mock_db, basic_estimation_in
 
 
 @pytest.mark.asyncio
-async def test_estimate_cost_generates_optimization_suggestions(service, mock_db, basic_estimation_input):
+async def test_estimate_cost_generates_optimization_suggestions(
+    service, mock_db, basic_estimation_input
+):
     """测试成本估算生成优化建议"""
     mock_db.query.return_value.filter.return_value.scalar.return_value = None
     mock_db.query.return_value.filter.return_value.count.return_value = 5
-    
-    with patch('app.utils.db_helpers.save_obj') as mock_save:
+
+    with patch("app.utils.db_helpers.save_obj") as mock_save:
+
         def save_side_effect(db, obj):
             obj.id = 1
             obj.created_at = datetime.now()
             return obj
-        
+
         mock_save.side_effect = save_side_effect
-        
+
         result = await service.estimate_cost(basic_estimation_input)
-        
+
         # 应该至少有一些优化建议
         assert result.optimization_suggestions is not None
 
@@ -427,17 +431,18 @@ async def test_estimate_cost_saves_to_database(service, mock_db, basic_estimatio
     """测试成本估算保存到数据库"""
     mock_db.query.return_value.filter.return_value.scalar.return_value = None
     mock_db.query.return_value.filter.return_value.count.return_value = 5
-    
-    with patch('app.utils.db_helpers.save_obj') as mock_save:
+
+    with patch("app.utils.db_helpers.save_obj") as mock_save:
+
         def save_side_effect(db, obj):
             obj.id = 1
             obj.created_at = datetime.now()
             return obj
-        
+
         mock_save.side_effect = save_side_effect
-        
+
         await service.estimate_cost(basic_estimation_input)
-        
+
         mock_save.assert_called_once()
         saved_obj = mock_save.call_args[0][1]
         assert isinstance(saved_obj, PresaleAICostEstimation)
@@ -447,16 +452,14 @@ async def test_estimate_cost_saves_to_database(service, mock_db, basic_estimatio
 # 9. 成本优化测试 (4个测试)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_optimize_cost_not_found(service, mock_db):
     """测试优化不存在的估算"""
     mock_db.query.return_value.filter.return_value.first.return_value = None
-    
-    input_data = CostOptimizationInput(
-        estimation_id=999,
-        max_risk_level="medium"
-    )
-    
+
+    input_data = CostOptimizationInput(estimation_id=999, max_risk_level="medium")
+
     with pytest.raises(ValueError, match="估算记录不存在"):
         await service.optimize_cost(input_data)
 
@@ -476,19 +479,16 @@ async def test_optimize_cost_applies_suggestions(service, mock_db):
                 "saving_amount": Decimal("5000"),
                 "saving_rate": Decimal("10.0"),
                 "feasibility_score": Decimal("0.85"),
-                "alternative_solutions": []
+                "alternative_solutions": [],
             }
-        ]
+        ],
     )
     mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-    
-    input_data = CostOptimizationInput(
-        estimation_id=1,
-        max_risk_level="medium"
-    )
-    
+
+    input_data = CostOptimizationInput(estimation_id=1, max_risk_level="medium")
+
     result = await service.optimize_cost(input_data)
-    
+
     assert isinstance(result, CostOptimizationResponse)
     assert result.total_saving > Decimal("0")
 
@@ -502,9 +502,9 @@ def test_is_acceptable_risk_low_threshold(service):
         optimized_cost=Decimal("90"),
         saving_amount=Decimal("10"),
         saving_rate=Decimal("10"),
-        feasibility_score=Decimal("0.80")
+        feasibility_score=Decimal("0.80"),
     )
-    
+
     assert service._is_acceptable_risk(suggestion, "low") is False
     assert service._is_acceptable_risk(suggestion, "medium") is True
     assert service._is_acceptable_risk(suggestion, "high") is True
@@ -514,19 +514,25 @@ def test_calculate_avg_feasibility(service):
     """测试平均可行性计算"""
     suggestions = [
         OptimizationSuggestion(
-            type="hardware", description="test",
-            original_cost=Decimal("100"), optimized_cost=Decimal("90"),
-            saving_amount=Decimal("10"), saving_rate=Decimal("10"),
-            feasibility_score=Decimal("0.8")
+            type="hardware",
+            description="test",
+            original_cost=Decimal("100"),
+            optimized_cost=Decimal("90"),
+            saving_amount=Decimal("10"),
+            saving_rate=Decimal("10"),
+            feasibility_score=Decimal("0.8"),
         ),
         OptimizationSuggestion(
-            type="software", description="test",
-            original_cost=Decimal("100"), optimized_cost=Decimal("90"),
-            saving_amount=Decimal("10"), saving_rate=Decimal("10"),
-            feasibility_score=Decimal("0.6")
-        )
+            type="software",
+            description="test",
+            original_cost=Decimal("100"),
+            optimized_cost=Decimal("90"),
+            saving_amount=Decimal("10"),
+            saving_rate=Decimal("10"),
+            feasibility_score=Decimal("0.6"),
+        ),
     ]
-    
+
     result = service._calculate_avg_feasibility(suggestions)
     assert result == Decimal("0.7")
 
@@ -535,17 +541,16 @@ def test_calculate_avg_feasibility(service):
 # 10. 定价策略测试 (3个测试)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_recommend_pricing_not_found(service, mock_db):
     """测试推荐定价找不到估算"""
     mock_db.query.return_value.filter.return_value.first.return_value = None
-    
+
     input_data = PricingInput(
-        estimation_id=999,
-        target_margin_rate=Decimal("0.30"),
-        market_competition_level="medium"
+        estimation_id=999, target_margin_rate=Decimal("0.30"), market_competition_level="medium"
     )
-    
+
     with pytest.raises(ValueError, match="估算记录不存在"):
         await service.recommend_pricing(input_data)
 
@@ -553,20 +558,15 @@ async def test_recommend_pricing_not_found(service, mock_db):
 @pytest.mark.asyncio
 async def test_recommend_pricing_adjusts_for_competition(service, mock_db):
     """测试定价根据市场竞争调整"""
-    mock_estimation = PresaleAICostEstimation(
-        id=1,
-        total_cost=Decimal("100000")
-    )
+    mock_estimation = PresaleAICostEstimation(id=1, total_cost=Decimal("100000"))
     mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-    
+
     input_high_competition = PricingInput(
-        estimation_id=1,
-        target_margin_rate=Decimal("0.30"),
-        market_competition_level="high"
+        estimation_id=1, target_margin_rate=Decimal("0.30"), market_competition_level="high"
     )
-    
+
     result = await service.recommend_pricing(input_high_competition)
-    
+
     # 高竞争应该调整价格
     assert isinstance(result, PricingResponse)
     assert result.pricing_recommendations.suggested_price > Decimal("0")
@@ -580,9 +580,9 @@ def test_get_pricing_strategy_high_budget(service):
         high=Decimal("140000"),
         suggested_price=Decimal("120000"),
         target_margin_rate=Decimal("30"),
-        market_analysis="test"
+        market_analysis="test",
     )
-    
+
     strategy = service._get_pricing_strategy(Decimal("150000"), pricing)
     assert "高价档" in strategy or "高附加值" in strategy
 
@@ -591,13 +591,14 @@ def test_get_pricing_strategy_high_budget(service):
 # 11. 历史数据分析测试 (2个测试)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_get_historical_accuracy_no_data(service, mock_db):
     """测试无历史数据时的准确度"""
     mock_db.query.return_value.all.return_value = []
-    
+
     result = await service.get_historical_accuracy()
-    
+
     assert isinstance(result, HistoricalAccuracyResponse)
     assert result.total_predictions == 0
     assert result.average_variance_rate == Decimal("0")
@@ -610,12 +611,12 @@ async def test_get_historical_accuracy_with_data(service, mock_db):
     mock_histories = [
         PresaleCostHistory(variance_rate=Decimal("5")),
         PresaleCostHistory(variance_rate=Decimal("10")),
-        PresaleCostHistory(variance_rate=Decimal("8"))
+        PresaleCostHistory(variance_rate=Decimal("8")),
     ]
     mock_db.query.return_value.all.return_value = mock_histories
-    
+
     result = await service.get_historical_accuracy()
-    
+
     assert result.total_predictions == 3
     # (5 + 10 + 8) / 3 = 7.67
     assert abs(result.average_variance_rate - Decimal("7.67")) < Decimal("0.1")
@@ -625,18 +626,16 @@ async def test_get_historical_accuracy_with_data(service, mock_db):
 # 12. 实际成本更新测试 (3个测试)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_update_actual_cost_not_found(service, mock_db):
     """测试更新不存在的估算实际成本"""
     mock_db.query.return_value.filter.return_value.first.return_value = None
-    
+
     input_data = UpdateActualCostInput(
-        estimation_id=999,
-        project_id=1,
-        project_name="测试项目",
-        actual_cost=Decimal("100000")
+        estimation_id=999, project_id=1, project_name="测试项目", actual_cost=Decimal("100000")
     )
-    
+
     with pytest.raises(ValueError, match="估算记录不存在"):
         await service.update_actual_cost(input_data)
 
@@ -645,25 +644,20 @@ async def test_update_actual_cost_not_found(service, mock_db):
 async def test_update_actual_cost_calculates_variance(service, mock_db):
     """测试更新实际成本计算偏差"""
     mock_estimation = PresaleAICostEstimation(
-        id=1,
-        total_cost=Decimal("100000"),
-        input_parameters={}
+        id=1, total_cost=Decimal("100000"), input_parameters={}
     )
     mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-    
-    with patch('app.utils.db_helpers.save_obj') as mock_save:
+
+    with patch("app.utils.db_helpers.save_obj") as mock_save:
         mock_history = PresaleCostHistory(id=1)
         mock_save.return_value = mock_history
-        
+
         input_data = UpdateActualCostInput(
-            estimation_id=1,
-            project_id=1,
-            project_name="测试项目",
-            actual_cost=Decimal("110000")
+            estimation_id=1, project_id=1, project_name="测试项目", actual_cost=Decimal("110000")
         )
-        
+
         result = await service.update_actual_cost(input_data)
-        
+
         assert result["variance_rate"] == Decimal("10")  # (110000-100000)/100000 * 100
         assert result["learning_applied"] is True
 
@@ -672,28 +666,24 @@ async def test_update_actual_cost_calculates_variance(service, mock_db):
 async def test_update_actual_cost_saves_history(service, mock_db):
     """测试更新实际成本保存历史记录"""
     mock_estimation = PresaleAICostEstimation(
-        id=1,
-        total_cost=Decimal("100000"),
-        input_parameters={}
+        id=1, total_cost=Decimal("100000"), input_parameters={}
     )
     mock_db.query.return_value.filter.return_value.first.return_value = mock_estimation
-    
-    with patch('app.utils.db_helpers.save_obj') as mock_save:
+
+    with patch("app.utils.db_helpers.save_obj") as mock_save:
+
         def save_side_effect(db, obj):
             obj.id = 1
             return obj
-        
+
         mock_save.side_effect = save_side_effect
-        
+
         input_data = UpdateActualCostInput(
-            estimation_id=1,
-            project_id=1,
-            project_name="测试项目",
-            actual_cost=Decimal("110000")
+            estimation_id=1, project_id=1, project_name="测试项目", actual_cost=Decimal("110000")
         )
-        
+
         await service.update_actual_cost(input_data)
-        
+
         mock_save.assert_called_once()
         saved_obj = mock_save.call_args[0][1]
         assert isinstance(saved_obj, PresaleCostHistory)
@@ -703,6 +693,7 @@ async def test_update_actual_cost_saves_history(service, mock_db):
 # 13. 价格敏感度分析测试 (2个测试)
 # ============================================================================
 
+
 def test_analyze_price_sensitivity_without_budget(service):
     """测试无客户预算的价格敏感度分析"""
     pricing = PricingRecommendation(
@@ -711,15 +702,11 @@ def test_analyze_price_sensitivity_without_budget(service):
         high=Decimal("140000"),
         suggested_price=Decimal("120000"),
         target_margin_rate=Decimal("30"),
-        market_analysis="test"
+        market_analysis="test",
     )
-    
-    result = service._analyze_price_sensitivity(
-        Decimal("90000"),
-        pricing,
-        None
-    )
-    
+
+    result = service._analyze_price_sensitivity(Decimal("90000"), pricing, None)
+
     assert "price_range" in result
     assert "margin_analysis" in result
     assert "budget_fit" not in result
@@ -733,15 +720,11 @@ def test_analyze_price_sensitivity_with_budget(service):
         high=Decimal("140000"),
         suggested_price=Decimal("120000"),
         target_margin_rate=Decimal("30"),
-        market_analysis="test"
+        market_analysis="test",
     )
-    
-    result = service._analyze_price_sensitivity(
-        Decimal("90000"),
-        pricing,
-        Decimal("110000")
-    )
-    
+
+    result = service._analyze_price_sensitivity(Decimal("90000"), pricing, Decimal("110000"))
+
     assert "budget_fit" in result
     assert result["budget_fit"]["customer_budget"] == 110000.0
     assert "recommended_strategy" in result["budget_fit"]
@@ -751,6 +734,7 @@ def test_analyze_price_sensitivity_with_budget(service):
 # 14. 竞争力评分测试 (2个测试)
 # ============================================================================
 
+
 def test_calculate_competitiveness_no_budget(service):
     """测试无预算时的竞争力评分"""
     pricing = PricingRecommendation(
@@ -759,9 +743,9 @@ def test_calculate_competitiveness_no_budget(service):
         high=Decimal("140000"),
         suggested_price=Decimal("120000"),
         target_margin_rate=Decimal("30"),
-        market_analysis="test"
+        market_analysis="test",
     )
-    
+
     result = service._calculate_competitiveness(pricing, None)
     assert result == Decimal("0.70")
 
@@ -774,17 +758,17 @@ def test_calculate_competitiveness_with_budget(service):
         high=Decimal("140000"),
         suggested_price=Decimal("120000"),
         target_margin_rate=Decimal("30"),
-        market_analysis="test"
+        market_analysis="test",
     )
-    
+
     # 预算充足
     result_high = service._calculate_competitiveness(pricing, Decimal("150000"))
     assert result_high == Decimal("0.90")
-    
+
     # 预算适中
     result_medium = service._calculate_competitiveness(pricing, Decimal("110000"))
     assert result_medium == Decimal("0.75")
-    
+
     # 预算不足
     result_low = service._calculate_competitiveness(pricing, Decimal("90000"))
     assert result_low == Decimal("0.50")

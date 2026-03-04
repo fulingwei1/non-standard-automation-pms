@@ -15,7 +15,7 @@ ApprovalExecutionLogger 单元测试 - G2组覆盖率提升
 - get_approval_logs
 """
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -25,12 +25,14 @@ class TestApprovalExecutionLoggerInit:
 
     def test_init_stores_db(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         db = MagicMock()
         logger = ApprovalExecutionLogger(db)
         assert logger.db is db
 
     def test_default_log_flags_true(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         logger = ApprovalExecutionLogger(MagicMock())
         assert logger.log_actions is True
         assert logger.log_routing is True
@@ -43,6 +45,7 @@ class TestLogInstanceCreated:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -96,6 +99,7 @@ class TestLogInstanceStatusChange:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -129,6 +133,7 @@ class TestLogInstanceCompleted:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -161,6 +166,7 @@ class TestLogTaskCompleted:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -210,6 +216,7 @@ class TestLogTaskTimeout:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -237,6 +244,7 @@ class TestLogApprovalAction:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -275,24 +283,21 @@ class TestGetExecutionHistory:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
     def test_returns_ordered_logs(self):
         expected = [MagicMock(), MagicMock()]
-        (self.db.query.return_value
-             .filter.return_value
-             .order_by.return_value
-             .all.return_value) = expected
+        (self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value) = (
+            expected
+        )
 
         result = self.exec_logger.get_execution_history(instance_id=1)
         assert result == expected
 
     def test_returns_empty_list_when_no_logs(self):
-        (self.db.query.return_value
-             .filter.return_value
-             .order_by.return_value
-             .all.return_value) = []
+        (self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value) = []
 
         result = self.exec_logger.get_execution_history(instance_id=999)
         assert result == []
@@ -303,6 +308,7 @@ class TestGetApprovalLogs:
 
     def setup_method(self):
         from app.services.approval_engine.execution_logger import ApprovalExecutionLogger
+
         self.db = MagicMock()
         self.exec_logger = ApprovalExecutionLogger(self.db)
 
@@ -323,8 +329,6 @@ class TestGetApprovalLogs:
         q.order_by.return_value.all.return_value = expected
         self.db.query.return_value = q
 
-        result = self.exec_logger.get_approval_logs(
-            instance_id=1, node_id=2, approver_id=5
-        )
+        result = self.exec_logger.get_approval_logs(instance_id=1, node_id=2, approver_id=5)
         # filter should be called 3 times: instance, node, approver
         assert q.filter.call_count >= 3

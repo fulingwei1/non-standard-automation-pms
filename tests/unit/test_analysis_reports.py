@@ -21,7 +21,7 @@ class TestGenerateWorkloadAnalysis(unittest.TestCase):
 
         db.query.return_value.filter.return_value.all.side_effect = [
             [user],  # users
-            [],      # timesheets
+            [],  # timesheets
         ]
 
         result = AnalysisReportMixin.generate_workload_analysis(
@@ -49,7 +49,7 @@ class TestGenerateWorkloadAnalysis(unittest.TestCase):
         db.query.return_value.filter.return_value.first.return_value = dept
         db.query.return_value.filter.return_value.all.side_effect = [
             [user],  # users
-            [ts],    # timesheets
+            [ts],  # timesheets
         ]
         # For user lookup in loop
         db.query.return_value.filter.return_value.first.return_value = user
@@ -94,7 +94,7 @@ class TestGenerateCostAnalysis(unittest.TestCase):
 
         db.query.return_value.filter.return_value.all.side_effect = [
             [project],  # projects
-            [ts],       # timesheets
+            [ts],  # timesheets
         ]
 
         result = AnalysisReportMixin.generate_cost_analysis(

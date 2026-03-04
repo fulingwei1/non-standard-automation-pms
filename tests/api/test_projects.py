@@ -47,9 +47,7 @@ class TestProjectCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         assert response.status_code in [200, 201]
@@ -76,17 +74,13 @@ class TestProjectCRUD:
 
         # 创建第一个项目
         response1 = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
         assert response1.status_code in [200, 201]
 
         # 尝试创建相同编码的项目
         response2 = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
         # 应该返回400或422（验证错误）
         assert response2.status_code in [400, 422, 409]
@@ -104,9 +98,7 @@ class TestProjectCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
         assert response.status_code == 422  # Validation error
 
@@ -124,9 +116,7 @@ class TestProjectCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code in [200, 201]:
@@ -145,10 +135,7 @@ class TestProjectCRUD:
         project_code = project["project_code"]
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -162,8 +149,7 @@ class TestProjectCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -184,22 +170,19 @@ class TestProjectCRUD:
 
         # 测试按阶段筛选
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?stage=S1&page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?stage=S1&page=1&page_size=10", headers=headers
         )
         assert response.status_code == 200
 
         # 测试按健康度筛选
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?health=H1&page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?health=H1&page=1&page_size=10", headers=headers
         )
         assert response.status_code == 200
 
         # 测试关键词搜索
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?keyword=测试&page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?keyword=测试&page=1&page_size=10", headers=headers
         )
         assert response.status_code == 200
 
@@ -212,16 +195,14 @@ class TestProjectCRUD:
 
         # 第一页
         response1 = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=5",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=5", headers=headers
         )
         assert response1.status_code == 200
         data1 = response1.json()
 
         # 第二页
         response2 = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?page=2&page_size=5",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?page=2&page_size=5", headers=headers
         )
         assert response2.status_code == 200
         data2 = response2.json()
@@ -249,9 +230,7 @@ class TestProjectCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -276,9 +255,7 @@ class TestProjectCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", json=update_data, headers=headers
         )
         # 目前后端允许超范围进度，至少不应报错
         assert response.status_code in [200, 400, 422]
@@ -300,9 +277,7 @@ class TestProjectCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", json=update_data, headers=headers
         )
 
         # 如果用户存在，应该成功；如果不存在，可能返回404或400
@@ -320,18 +295,14 @@ class TestProjectCRUD:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         # 删除项目（软删除）
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers)
 
         # 根据实际实现，可能是204 No Content或200 OK
         assert response.status_code in [200, 204]
 
         # 验证项目被标记为删除（is_active=False）
         get_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers
         )
         # 根据实现，可能返回404或返回is_active=False的项目
         if get_response.status_code == 200:
@@ -351,10 +322,7 @@ class TestProjectCRUD:
 
         # 如果有关联数据（如机台、任务等），删除应该检查关联
         # 这里只是测试删除接口，实际关联检查由后端实现
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers)
 
         # 根据实现，可能成功（软删除）或返回错误（如果有强制关联）
         assert response.status_code in [200, 204, 400, 409]
@@ -365,14 +333,13 @@ class TestProjectCRUD:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/999999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/999999", headers=headers)
 
         assert response.status_code == 404
 
-    def test_project_permission_filter(self, client: TestClient, admin_token: str, regular_user_token: str):
+    def test_project_permission_filter(
+        self, client: TestClient, admin_token: str, regular_user_token: str
+    ):
         """测试项目权限过滤"""
         if not admin_token or not regular_user_token:
             pytest.skip("Tokens not available")
@@ -381,8 +348,7 @@ class TestProjectCRUD:
         headers = {"Authorization": f"Bearer {regular_user_token}"}
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -406,9 +372,7 @@ class TestProjectCodeGeneration:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code in [200, 201]:
@@ -434,9 +398,7 @@ class TestProjectStageInitialization:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:

@@ -60,17 +60,22 @@ class InitializationMixin:
             raise ValueError(f"项目 {project_id} 不存在")
 
         # 获取模板（包含完整结构）
-        template = self.db.query(StageTemplate).options(
-            joinedload(StageTemplate.stages).joinedload(StageDefinition.nodes)
-        ).filter(StageTemplate.id == template_id).first()
+        template = (
+            self.db.query(StageTemplate)
+            .options(joinedload(StageTemplate.stages).joinedload(StageDefinition.nodes))
+            .filter(StageTemplate.id == template_id)
+            .first()
+        )
 
         if not template:
             raise ValueError(f"模板 {template_id} 不存在")
 
         # 检查项目是否已有阶段实例
-        existing_count = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.project_id == project_id
-        ).count()
+        existing_count = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.project_id == project_id)
+            .count()
+        )
 
         if existing_count > 0:
             raise ValueError(f"项目 {project_id} 已有阶段实例，请先清除")
@@ -103,7 +108,9 @@ class InitializationMixin:
                 sequence=stage_def.sequence,
                 status=StageStatusEnum.PENDING.value,
                 planned_start_date=current_date,
-                planned_end_date=current_date + timedelta(days=estimated_days) if estimated_days else None,
+                planned_end_date=(
+                    current_date + timedelta(days=estimated_days) if estimated_days else None
+                ),
                 is_modified=bool(stage_override),
             )
             self.db.add(stage_instance)
@@ -117,7 +124,9 @@ class InitializationMixin:
 
                 # 应用节点覆盖
                 node_override = node_overrides.get(node_def.node_code, {})
-                node_estimated_days = node_override.get("estimated_days", node_def.estimated_days) or 0
+                node_estimated_days = (
+                    node_override.get("estimated_days", node_def.estimated_days) or 0
+                )
 
                 node_instance = ProjectNodeInstance(
                     project_id=project_id,
@@ -130,7 +139,11 @@ class InitializationMixin:
                     status=StageStatusEnum.PENDING.value,
                     completion_method=node_def.completion_method,
                     is_required=node_override.get("is_required", node_def.is_required),
-                    planned_date=node_start_date + timedelta(days=node_estimated_days) if node_estimated_days else None,
+                    planned_date=(
+                        node_start_date + timedelta(days=node_estimated_days)
+                        if node_estimated_days
+                        else None
+                    ),
                     # 复制责任分配与交付物字段
                     owner_role_code=node_def.owner_role_code,
                     participant_role_codes=node_def.participant_role_codes,
@@ -155,9 +168,11 @@ class InitializationMixin:
         for stage_instance in created_stages:
             for node_instance in stage_instance.nodes:
                 if node_instance.node_definition_id:
-                    node_def = self.db.query(NodeDefinition).filter(
-                        NodeDefinition.id == node_instance.node_definition_id
-                    ).first()
+                    node_def = (
+                        self.db.query(NodeDefinition)
+                        .filter(NodeDefinition.id == node_instance.node_definition_id)
+                        .first()
+                    )
                     if node_def and node_def.dependency_node_ids:
                         instance_deps = [
                             node_def_to_instance[def_id]
@@ -189,11 +204,13 @@ class InitializationMixin:
             int: 删除的阶段实例数量
         """
         # 先清除项目的当前阶段引用
-        self.db.query(Project).filter(Project.id == project_id).update({
-            "stage_template_id": None,
-            "current_stage_instance_id": None,
-            "current_node_instance_id": None,
-        })
+        self.db.query(Project).filter(Project.id == project_id).update(
+            {
+                "stage_template_id": None,
+                "current_stage_instance_id": None,
+                "current_node_instance_id": None,
+            }
+        )
 
         # 删除节点实例（会由 cascade 自动删除，但显式删除更清晰）
         self.db.query(ProjectNodeInstance).filter(
@@ -201,8 +218,10 @@ class InitializationMixin:
         ).delete()
 
         # 删除阶段实例
-        count = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.project_id == project_id
-        ).delete()
+        count = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.project_id == project_id)
+            .delete()
+        )
 
         return count

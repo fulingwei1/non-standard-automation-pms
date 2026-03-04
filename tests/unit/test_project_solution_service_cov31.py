@@ -50,6 +50,7 @@ def _make_issue(
 # get_project_solutions
 # ---------------------------------------------------------------------------
 
+
 class TestGetProjectSolutions:
     def test_returns_solutions_for_project(self, service, mock_db):
         issue = _make_issue()
@@ -113,6 +114,7 @@ class TestGetProjectSolutions:
 # ---------------------------------------------------------------------------
 # get_solution_templates
 # ---------------------------------------------------------------------------
+
 
 class TestGetSolutionTemplates:
     def test_returns_templates(self, service, mock_db):

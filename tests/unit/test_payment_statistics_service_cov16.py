@@ -2,16 +2,18 @@
 """
 第十六批：回款统计服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.payment_statistics_service import (
         build_invoice_query,
         calculate_monthly_statistics,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -61,7 +63,9 @@ class TestBuildInvoiceQuery:
         db.query.return_value.filter.return_value = q
         q.join.return_value.filter.return_value = q
         q.filter.return_value = q
-        result = build_invoice_query(db, customer_id=3, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31))
+        result = build_invoice_query(
+            db, customer_id=3, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
+        )
         assert result is not None
 
 
@@ -71,14 +75,26 @@ class TestCalculateMonthlyStatistics:
         assert result == {}
 
     def test_single_invoice(self):
-        inv = make_invoice(issue_date=date(2025, 3, 15), total_amount=Decimal("100000"), paid_amount=Decimal("80000"))
+        inv = make_invoice(
+            issue_date=date(2025, 3, 15),
+            total_amount=Decimal("100000"),
+            paid_amount=Decimal("80000"),
+        )
         result = calculate_monthly_statistics([inv])
         assert "2025-03" in result
         assert result["2025-03"]["count"] == 1
 
     def test_multiple_invoices_same_month(self):
-        inv1 = make_invoice(issue_date=date(2025, 3, 10), total_amount=Decimal("50000"), paid_amount=Decimal("50000"))
-        inv2 = make_invoice(issue_date=date(2025, 3, 20), total_amount=Decimal("30000"), paid_amount=Decimal("20000"))
+        inv1 = make_invoice(
+            issue_date=date(2025, 3, 10),
+            total_amount=Decimal("50000"),
+            paid_amount=Decimal("50000"),
+        )
+        inv2 = make_invoice(
+            issue_date=date(2025, 3, 20),
+            total_amount=Decimal("30000"),
+            paid_amount=Decimal("20000"),
+        )
         result = calculate_monthly_statistics([inv1, inv2])
         assert result["2025-03"]["count"] == 2
 

@@ -59,7 +59,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
 
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = [mock_material]
-            
+
             result = self.service.get_realtime_stock(page=1, page_size=20)
 
         self.assertEqual(result["total"], 1)
@@ -79,7 +79,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
 
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = [mock_material]
-            
+
             result = self.service.get_realtime_stock(material_id=5)
 
         self.assertEqual(result["total"], 1)
@@ -96,7 +96,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
 
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = [mock_material]
-            
+
             result = self.service.get_realtime_stock(low_stock_only=True)
 
         self.assertEqual(result["total"], 1)
@@ -107,7 +107,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
             with patch("app.common.query_filters.apply_pagination") as mock_pagination:
                 mock_pagination.return_value.all.return_value = []
                 self.db.query.return_value.filter.return_value.count.return_value = 0
-                
+
                 result = self.service.get_realtime_stock(material_code="MAT001")
 
         mock_filter.assert_called()
@@ -116,10 +116,10 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
     def test_get_realtime_stock_with_category_filter(self):
         """测试按分类筛选"""
         self.db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = []
-            
+
             result = self.service.get_realtime_stock(category_id=3)
 
         self.assertEqual(result["total"], 0)
@@ -131,7 +131,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
 
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = []
-            
+
             result = self.service.get_realtime_stock(page=3, page_size=10)
 
         self.assertEqual(result["page"], 3)
@@ -150,7 +150,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
         with patch("app.common.query_filters.apply_keyword_filter"):
             with patch("app.common.query_filters.apply_pagination") as mock_pagination:
                 mock_pagination.return_value.all.return_value = [mock_material]
-                
+
                 result = self.service.get_realtime_stock(warehouse_location="A01")
 
         self.assertEqual(result["total"], 1)
@@ -167,7 +167,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
 
         with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = [mock_material]
-            
+
             result = self.service.get_realtime_stock(status="ACTIVE")
 
         self.assertEqual(result["total"], 1)
@@ -965,9 +965,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
         self.db.query.return_value.filter.return_value.all.return_value = [mock_rule]
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch.object(
-            self.service, "calculate_avg_daily_consumption", return_value=5.0
-        ):
+        with patch.object(self.service, "calculate_avg_daily_consumption", return_value=5.0):
             self.service.check_and_create_alerts(mock_material)
 
         self.db.add.assert_called_once()
@@ -991,9 +989,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
         self.db.query.return_value.filter.return_value.all.return_value = [mock_rule]
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch.object(
-            self.service, "calculate_avg_daily_consumption", return_value=2.0
-        ):
+        with patch.object(self.service, "calculate_avg_daily_consumption", return_value=2.0):
             self.service.check_and_create_alerts(mock_material)
 
         self.db.add.assert_called_once()
@@ -1016,9 +1012,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
         self.db.query.return_value.filter.return_value.all.return_value = [mock_rule]
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch.object(
-            self.service, "calculate_avg_daily_consumption", return_value=10.0
-        ):
+        with patch.object(self.service, "calculate_avg_daily_consumption", return_value=10.0):
             self.service.check_and_create_alerts(mock_material)
 
         self.db.add.assert_called_once()
@@ -1038,9 +1032,7 @@ class TestMaterialTrackingServiceEnhanced(unittest.TestCase):
         mock_existing_alert = Mock()
 
         self.db.query.return_value.filter.return_value.all.return_value = [mock_rule]
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing_alert
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = mock_existing_alert
 
         self.service.check_and_create_alerts(mock_material)
 

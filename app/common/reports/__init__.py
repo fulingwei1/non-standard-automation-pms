@@ -5,7 +5,7 @@
 """
 
 from app.common.reports.base import BaseReportGenerator
-from app.common.reports.renderers import PDFRenderer, ExcelRenderer, WordRenderer
+from app.common.reports.renderers import ExcelRenderer, PDFRenderer, WordRenderer
 
 __all__ = [
     "BaseReportGenerator",

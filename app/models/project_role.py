@@ -43,8 +43,8 @@ class ProjectRoleType(Base, TimestampMixin):
     role_name = Column(String(100), nullable=False, comment="角色名称")
     role_category = Column(
         String(50),
-        default='GENERAL',
-        comment="角色分类: MANAGEMENT(管理), TECHNICAL(技术), SUPPORT(支持)"
+        default="GENERAL",
+        comment="角色分类: MANAGEMENT(管理), TECHNICAL(技术), SUPPORT(支持)",
     )
     description = Column(Text, comment="角色职责描述")
     can_have_team = Column(Boolean, default=False, comment="是否可带团队")
@@ -92,16 +92,10 @@ class ProjectRoleConfig(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(
-        Integer,
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
-        comment="项目ID"
+        Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, comment="项目ID"
     )
     role_type_id = Column(
-        Integer,
-        ForeignKey("project_role_types.id"),
-        nullable=False,
-        comment="角色类型ID"
+        Integer, ForeignKey("project_role_types.id"), nullable=False, comment="角色类型ID"
     )
     is_enabled = Column(Boolean, default=True, comment="是否启用该角色")
     is_required = Column(Boolean, default=False, comment="是否必填（必须指定负责人）")
@@ -141,9 +135,9 @@ class ProjectRoleConfig(Base, TimestampMixin):
 # 角色分类常量
 class RoleCategoryEnum:
     MANAGEMENT = "MANAGEMENT"  # 管理类：项目经理
-    TECHNICAL = "TECHNICAL"    # 技术类：技术负责人、机械/电气/软件负责人
-    SUPPORT = "SUPPORT"        # 支持类：采购、客服、质量负责人
-    GENERAL = "GENERAL"        # 通用类
+    TECHNICAL = "TECHNICAL"  # 技术类：技术负责人、机械/电气/软件负责人
+    SUPPORT = "SUPPORT"  # 支持类：采购、客服、质量负责人
+    GENERAL = "GENERAL"  # 通用类
 
     @classmethod
     def choices(cls):
@@ -157,13 +151,13 @@ class RoleCategoryEnum:
 
 # 预置角色编码常量
 class ProjectRoleCodeEnum:
-    PM = "PM"                  # 项目经理
-    TECH_LEAD = "TECH_LEAD"    # 技术负责人
-    ME_LEAD = "ME_LEAD"        # 机械负责人
-    EE_LEAD = "EE_LEAD"        # 电气负责人
-    SW_LEAD = "SW_LEAD"        # 软件负责人
-    PROC_LEAD = "PROC_LEAD"    # 采购负责人
-    CS_LEAD = "CS_LEAD"        # 客服负责人
-    QA_LEAD = "QA_LEAD"        # 质量负责人
-    PMC_LEAD = "PMC_LEAD"      # PMC负责人
+    PM = "PM"  # 项目经理
+    TECH_LEAD = "TECH_LEAD"  # 技术负责人
+    ME_LEAD = "ME_LEAD"  # 机械负责人
+    EE_LEAD = "EE_LEAD"  # 电气负责人
+    SW_LEAD = "SW_LEAD"  # 软件负责人
+    PROC_LEAD = "PROC_LEAD"  # 采购负责人
+    CS_LEAD = "CS_LEAD"  # 客服负责人
+    QA_LEAD = "QA_LEAD"  # 质量负责人
+    PMC_LEAD = "PMC_LEAD"  # PMC负责人
     INSTALL_LEAD = "INSTALL_LEAD"  # 安装负责人

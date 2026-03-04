@@ -2,11 +2,13 @@
 """
 第十四批：预算执行检查服务 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services import budget_execution_check_service as becs
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -70,7 +72,7 @@ class TestBudgetExecutionCheckService:
             project_name="大项目",
             project_code="P-001",
             budget_amount=100000,
-            actual_cost=130000
+            actual_cost=130000,
         )
         assert level is not None
         assert "超支" in (title or "")
@@ -82,7 +84,7 @@ class TestBudgetExecutionCheckService:
             project_name="测试项目",
             project_code="P-002",
             budget_amount=100000,
-            actual_cost=107000
+            actual_cost=107000,
         )
         assert level is not None
 

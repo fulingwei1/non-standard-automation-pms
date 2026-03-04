@@ -20,12 +20,7 @@ def generate_lead_code(db: Session) -> str:
     from app.utils.number_generator import generate_monthly_no
 
     return generate_monthly_no(
-        db=db,
-        model_class=Lead,
-        no_field='lead_code',
-        prefix='L',
-        separator='-',
-        seq_length=3
+        db=db, model_class=Lead, no_field="lead_code", prefix="L", separator="-", seq_length=3
     )
 
 
@@ -34,12 +29,7 @@ def generate_opportunity_code(db: Session) -> str:
     from app.utils.number_generator import generate_monthly_no
 
     return generate_monthly_no(
-        db=db,
-        model_class=Opportunity,
-        no_field='opp_code',
-        prefix='O',
-        separator='-',
-        seq_length=3
+        db=db, model_class=Opportunity, no_field="opp_code", prefix="O", separator="-", seq_length=3
     )
 
 
@@ -48,12 +38,7 @@ def generate_quote_code(db: Session) -> str:
     from app.utils.number_generator import generate_monthly_no
 
     return generate_monthly_no(
-        db=db,
-        model_class=Quote,
-        no_field='quote_code',
-        prefix='Q',
-        separator='-',
-        seq_length=3
+        db=db, model_class=Quote, no_field="quote_code", prefix="Q", separator="-", seq_length=3
     )
 
 
@@ -64,10 +49,10 @@ def generate_contract_code(db: Session) -> str:
     return generate_monthly_no(
         db=db,
         model_class=Contract,
-        no_field='contract_code',
-        prefix='HT',
-        separator='-',
-        seq_length=3
+        no_field="contract_code",
+        prefix="HT",
+        separator="-",
+        seq_length=3,
     )
 
 
@@ -94,9 +79,9 @@ def generate_invoice_code(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=Invoice,
-        no_field='invoice_code',
-        prefix='INV',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="invoice_code",
+        prefix="INV",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )

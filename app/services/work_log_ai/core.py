@@ -28,12 +28,7 @@ class WorkLogAICore:
         self.db = db
         self.use_ai = USE_AI
 
-    def analyze_work_log(
-        self,
-        content: str,
-        user_id: int,
-        work_date: date
-    ) -> Dict[str, Any]:
+    def analyze_work_log(self, content: str, user_id: int, work_date: date) -> Dict[str, Any]:
         """
         分析工作日志内容，提取工作项、工时和项目关联（同步版本）
 

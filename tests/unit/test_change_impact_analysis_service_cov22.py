@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """第二十二批：change_impact_analysis_service 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.change_impact_analysis_service import (
-        analyze_schedule_impact,
         analyze_cost_impact,
-        analyze_resource_impact,
         analyze_related_project_impact,
+        analyze_resource_impact,
+        analyze_schedule_impact,
         build_impact_analysis,
         calculate_change_statistics,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

@@ -2,8 +2,9 @@
 """
 Tests for app/services/permission_audit_service.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.permission_audit_service import PermissionAuditService
@@ -18,16 +19,14 @@ def mock_db():
 
 def test_log_audit_creates_record(mock_db):
     """log_audit 应创建并保存审计记录"""
-    with patch("app.services.permission_audit_service.save_obj") as mock_save, \
-         patch("app.services.permission_audit_service.PermissionAudit") as MockAudit:
+    with (
+        patch("app.services.permission_audit_service.save_obj") as mock_save,
+        patch("app.services.permission_audit_service.PermissionAudit") as MockAudit,
+    ):
         mock_instance = MagicMock()
         MockAudit.return_value = mock_instance
         result = PermissionAuditService.log_audit(
-            db=mock_db,
-            operator_id=1,
-            action="USER_CREATED",
-            target_type="user",
-            target_id=5
+            db=mock_db, operator_id=1, action="USER_CREATED", target_type="user", target_id=5
         )
         MockAudit.assert_called_once()
         mock_save.assert_called_once_with(mock_db, mock_instance)
@@ -35,12 +34,18 @@ def test_log_audit_creates_record(mock_db):
 
 def test_log_audit_serializes_detail(mock_db):
     """detail 字典应被序列化为 JSON 字符串"""
-    with patch("app.services.permission_audit_service.save_obj"), \
-         patch("app.services.permission_audit_service.PermissionAudit") as MockAudit:
+    with (
+        patch("app.services.permission_audit_service.save_obj"),
+        patch("app.services.permission_audit_service.PermissionAudit") as MockAudit,
+    ):
         detail = {"role_ids": [1, 2, 3]}
         PermissionAuditService.log_audit(
-            db=mock_db, operator_id=1, action="ROLE_ASSIGNED",
-            target_type="user", target_id=2, detail=detail
+            db=mock_db,
+            operator_id=1,
+            action="ROLE_ASSIGNED",
+            target_type="user",
+            target_id=2,
+            detail=detail,
         )
         call_kwargs = MockAudit.call_args[1]
         assert '"role_ids"' in call_kwargs.get("detail", "")

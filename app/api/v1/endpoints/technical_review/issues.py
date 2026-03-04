@@ -11,6 +11,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.technical_review import ReviewIssue, TechnicalReview
 from app.models.user import User
@@ -20,11 +22,9 @@ from app.schemas.technical_review import (
     ReviewIssueResponse,
     ReviewIssueUpdate,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_issue_no, update_review_issue_counts
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -52,7 +52,11 @@ def _build_issue_response(issue: ReviewIssue) -> ReviewIssueResponse:
     )
 
 
-@router.post("/technical-reviews/{review_id}/issues", response_model=ReviewIssueResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/technical-reviews/{review_id}/issues",
+    response_model=ReviewIssueResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_review_issue(
     review_id: int,
     issue_in: ReviewIssueCreate,
@@ -73,7 +77,7 @@ def create_review_issue(
         suggestion=issue_in.suggestion,
         assignee_id=issue_in.assignee_id,
         deadline=issue_in.deadline,
-        status='OPEN',
+        status="OPEN",
     )
 
     db.add(issue)
@@ -86,7 +90,11 @@ def create_review_issue(
     return _build_issue_response(issue)
 
 
-@router.put("/technical-reviews/issues/{issue_id}", response_model=ReviewIssueResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/technical-reviews/issues/{issue_id}",
+    response_model=ReviewIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_review_issue(
     issue_id: int,
     issue_in: ReviewIssueUpdate,
@@ -115,7 +123,9 @@ def update_review_issue(
     return _build_issue_response(issue)
 
 
-@router.get("/technical-reviews/issues", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/technical-reviews/issues", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_review_issues(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -142,7 +152,9 @@ def read_review_issues(
         query = query.filter(ReviewIssue.assignee_id == assignee_id)
 
     total = query.count()
-    issues = apply_pagination(query.order_by(desc(ReviewIssue.created_at)), pagination.offset, pagination.limit).all()
+    issues = apply_pagination(
+        query.order_by(desc(ReviewIssue.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_issue_response(issue) for issue in issues]
 
@@ -151,5 +163,5 @@ def read_review_issues(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )

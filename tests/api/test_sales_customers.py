@@ -81,7 +81,7 @@ class TestCustomerCRUD:
         """测试创建重复编码的客户（应失败）"""
         headers = _auth_headers(admin_token)
         unique_code = _unique_code("TESTCUST")
-        
+
         # 第一次创建
         payload1 = {
             "customer_code": unique_code,
@@ -112,7 +112,7 @@ class TestCustomerCRUD:
     def test_read_customer_detail(self, client: TestClient, admin_token: str):
         """测试获取客户详情"""
         headers = _auth_headers(admin_token)
-        
+
         # 先创建一个客户
         create_payload = {
             "customer_name": f"详情测试客户-{uuid.uuid4().hex[:4]}",
@@ -149,7 +149,7 @@ class TestCustomerCRUD:
     def test_update_customer_success(self, client: TestClient, admin_token: str):
         """测试成功更新客户信息"""
         headers = _auth_headers(admin_token)
-        
+
         # 先创建一个客户
         create_payload = {
             "customer_name": f"更新测试客户-{uuid.uuid4().hex[:4]}",
@@ -183,7 +183,7 @@ class TestCustomerCRUD:
     def test_delete_customer_success(self, client: TestClient, admin_token: str):
         """测试成功删除客户"""
         headers = _auth_headers(admin_token)
-        
+
         # 先创建一个客户
         create_payload = {
             "customer_name": f"删除测试客户-{uuid.uuid4().hex[:4]}",
@@ -255,7 +255,7 @@ class TestCustomerCRUD:
     def test_search_customers_by_keyword(self, client: TestClient, admin_token: str):
         """测试关键词搜索客户"""
         headers = _auth_headers(admin_token)
-        
+
         # 创建一个特征明显的客户
         unique_name = f"搜索测试-{uuid.uuid4().hex[:8]}"
         create_payload = {"customer_name": unique_name}
@@ -383,7 +383,7 @@ class TestCustomerLevelAutomation:
     def test_customer_level_update(self, client: TestClient, admin_token: str):
         """测试客户等级自动更新"""
         headers = _auth_headers(admin_token)
-        
+
         # 创建D级客户
         create_payload = {
             "customer_name": f"升级测试客户-{uuid.uuid4().hex[:4]}",
@@ -432,7 +432,7 @@ class TestContactCRUD:
         """测试成功创建联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         payload = {
             "customer_id": customer_id,
             "customer_name": "张三",
@@ -456,7 +456,7 @@ class TestContactCRUD:
         """测试创建主要联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         payload = {
             "customer_id": customer_id,
             "customer_name": "李四",
@@ -476,7 +476,7 @@ class TestContactCRUD:
         """测试获取联系人详情"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建联系人
         create_payload = {
             "customer_id": customer_id,
@@ -503,7 +503,7 @@ class TestContactCRUD:
         """测试更新联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建联系人
         create_payload = {
             "customer_id": customer_id,
@@ -536,7 +536,7 @@ class TestContactCRUD:
         """测试删除联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建联系人
         create_payload = {
             "customer_id": customer_id,
@@ -560,7 +560,7 @@ class TestContactCRUD:
         """测试获取客户的联系人列表"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建多个联系人
         for i in range(3):
             payload = {
@@ -584,9 +584,13 @@ class TestContactCRUD:
         """测试设置主要联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建两个联系人
-        contact1_payload = {"customer_id": customer_id, "customer_name": "联系人1", "is_primary": True}
+        contact1_payload = {
+            "customer_id": customer_id,
+            "customer_name": "联系人1",
+            "is_primary": True,
+        }
         contact1_response = client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
             json=contact1_payload,
@@ -614,7 +618,7 @@ class TestContactCRUD:
         """测试关键词搜索联系人"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         unique_name = f"搜索测试-{uuid.uuid4().hex[:6]}"
         payload = {
             "customer_id": customer_id,
@@ -639,7 +643,7 @@ class TestContactCRUD:
         """测试联系人列表按主要联系人排序"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建普通联系人
         payload1 = {"customer_id": customer_id, "customer_name": "普通联系人"}
         client.post(
@@ -696,7 +700,7 @@ class TestCustomerTags:
         """测试创建客户标签"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         payload = {
             "customer_id": customer_id,
             "tag_name": "重点客户",
@@ -714,12 +718,12 @@ class TestCustomerTags:
         """测试创建重复标签（应失败）"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         payload = {
             "customer_id": customer_id,
             "tag_name": "战略客户",
         }
-        
+
         # 第一次创建
         response1 = client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/tags",
@@ -740,7 +744,7 @@ class TestCustomerTags:
         """测试批量创建标签"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         payload = {
             "customer_id": customer_id,
             "tag_names": ["重点客户", "长期合作", "高价值客户"],
@@ -758,7 +762,7 @@ class TestCustomerTags:
         """测试获取客户标签列表"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建标签
         payload = {
             "customer_id": customer_id,
@@ -781,7 +785,7 @@ class TestCustomerTags:
         """测试删除客户标签"""
         customer_id = self._create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
-        
+
         # 创建标签
         create_payload = {
             "customer_id": customer_id,

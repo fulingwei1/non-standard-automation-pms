@@ -12,12 +12,12 @@ from sqlalchemy.orm import Session
 from app.models.ecn import Ecn, EcnTask
 from app.models.project import ProjectMember
 from app.models.user import User
-
-from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationPriority,
+    NotificationRequest,
 )
+from app.services.notification_dispatcher import NotificationDispatcher
+
 from .utils import find_users_by_department
 
 
@@ -118,9 +118,7 @@ def notify_task_assigned(
                         "task_type": task.task_type,
                         "task_dept": task.task_dept,
                         "assignee_ids": assignee_ids,
-                        "planned_end": task.planned_end.isoformat()
-                        if task.planned_end
-                        else None,
+                        "planned_end": task.planned_end.isoformat() if task.planned_end else None,
                         "is_cc": True,  # 标记为抄送
                     },
                 )

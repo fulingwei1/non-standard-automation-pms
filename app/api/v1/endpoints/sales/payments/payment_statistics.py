@@ -10,11 +10,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -55,7 +55,9 @@ def get_payment_statistics(
     status_stats = calculate_status_statistics(invoices)
 
     # 计算汇总
-    total_invoiced = sum([invoice.total_amount or invoice.amount or Decimal("0") for invoice in invoices])
+    total_invoiced = sum(
+        [invoice.total_amount or invoice.amount or Decimal("0") for invoice in invoices]
+    )
     total_paid = sum([invoice.paid_amount or Decimal("0") for invoice in invoices])
     total_unpaid = total_invoiced - total_paid
     total_overdue = calculate_overdue_amount(invoices, today)
@@ -83,18 +85,18 @@ def get_payment_statistics(
             "status_statistics": {
                 "PAID": {
                     "count": status_stats["PAID"]["count"],
-                    "amount": float(status_stats["PAID"]["amount"])
+                    "amount": float(status_stats["PAID"]["amount"]),
                 },
                 "PARTIAL": {
                     "count": status_stats["PARTIAL"]["count"],
-                    "amount": float(status_stats["PARTIAL"]["amount"])
+                    "amount": float(status_stats["PARTIAL"]["amount"]),
                 },
                 "PENDING": {
                     "count": status_stats["PENDING"]["count"],
-                    "amount": float(status_stats["PENDING"]["amount"])
+                    "amount": float(status_stats["PENDING"]["amount"]),
                 },
-            }
-        }
+            },
+        },
     )
 
 
@@ -120,41 +122,57 @@ def get_payment_reminders(
         Invoice.status == "ISSUED",
         Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
         Invoice.due_date.isnot(None),
-        Invoice.due_date <= reminder_date
+        Invoice.due_date <= reminder_date,
     )
 
     total = query.count()
-    invoices = apply_pagination(query.order_by(Invoice.due_date), pagination.offset, pagination.limit).all()
+    invoices = apply_pagination(
+        query.order_by(Invoice.due_date), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for invoice in invoices:
         contract = invoice.contract
-        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (
+            invoice.paid_amount or Decimal("0")
+        )
         days_until_due = (invoice.due_date - today).days if invoice.due_date else None
         is_overdue = days_until_due is not None and days_until_due < 0
 
-        items.append({
-            "id": invoice.id,
-            "invoice_code": invoice.invoice_code,
-            "contract_id": invoice.contract_id,
-            "contract_code": contract.contract_code if contract else None,
-            "project_id": invoice.project_id,
-            "project_code": invoice.project.project_code if invoice.project else None,
-            "customer_id": contract.customer_id if contract else None,
-            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
-            "unpaid_amount": float(unpaid),
-            "due_date": invoice.due_date,
-            "days_until_due": days_until_due,
-            "is_overdue": is_overdue,
-            "overdue_days": abs(days_until_due) if is_overdue else None,
-            "payment_status": invoice.payment_status,
-            "reminder_level": "urgent" if is_overdue else ("warning" if days_until_due is not None and days_until_due <= 3 else "normal"),
-        })
+        items.append(
+            {
+                "id": invoice.id,
+                "invoice_code": invoice.invoice_code,
+                "contract_id": invoice.contract_id,
+                "contract_code": contract.contract_code if contract else None,
+                "project_id": invoice.project_id,
+                "project_code": invoice.project.project_code if invoice.project else None,
+                "customer_id": contract.customer_id if contract else None,
+                "customer_name": (
+                    contract.customer.customer_name if contract and contract.customer else None
+                ),
+                "unpaid_amount": float(unpaid),
+                "due_date": invoice.due_date,
+                "days_until_due": days_until_due,
+                "is_overdue": is_overdue,
+                "overdue_days": abs(days_until_due) if is_overdue else None,
+                "payment_status": invoice.payment_status,
+                "reminder_level": (
+                    "urgent"
+                    if is_overdue
+                    else (
+                        "warning"
+                        if days_until_due is not None and days_until_due <= 3
+                        else "normal"
+                    )
+                ),
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )

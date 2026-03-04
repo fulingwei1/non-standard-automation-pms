@@ -13,17 +13,18 @@ TimesheetAnalyticsService 单元测试
 - analyze_project_distribution (项目分布)
 """
 
-import pytest
-from datetime import date, timedelta, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.timesheet_analytics_service import TimesheetAnalyticsService
+import pytest
 
+from app.services.timesheet_analytics_service import TimesheetAnalyticsService
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def db():
@@ -46,6 +47,7 @@ def _make_query_row(**kwargs):
 # ---------------------------------------------------------------------------
 # Tests: _calculate_trend
 # ---------------------------------------------------------------------------
+
 
 class TestCalculateTrend:
     def test_less_than_two_results_returns_stable(self, service):
@@ -90,10 +92,13 @@ class TestCalculateTrend:
 # Tests: _generate_trend_chart
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateTrendChart:
     def test_daily_chart_format(self, service):
         results = [
-            _make_query_row(work_date=date(2024, 1, i), total_hours=8*i, normal_hours=8*i, overtime_hours=0)
+            _make_query_row(
+                work_date=date(2024, 1, i), total_hours=8 * i, normal_hours=8 * i, overtime_hours=0
+            )
             for i in range(1, 4)
         ]
         chart = service._generate_trend_chart(results, "DAILY")
@@ -103,7 +108,9 @@ class TestGenerateTrendChart:
 
     def test_monthly_chart_format(self, service):
         results = [
-            _make_query_row(work_date=date(2024, m, 1), total_hours=100, normal_hours=80, overtime_hours=20)
+            _make_query_row(
+                work_date=date(2024, m, 1), total_hours=100, normal_hours=80, overtime_hours=20
+            )
             for m in range(1, 4)
         ]
         chart = service._generate_trend_chart(results, "MONTHLY")
@@ -119,6 +126,7 @@ class TestGenerateTrendChart:
 # Tests: analyze_trend
 # ---------------------------------------------------------------------------
 
+
 class TestAnalyzeTrend:
     def test_returns_trend_response_with_correct_fields(self, service, db):
         start = date(2024, 1, 1)
@@ -130,7 +138,9 @@ class TestAnalyzeTrend:
             normal_hours=128,
             overtime_hours=32,
         )
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = [row]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+            row
+        ]
 
         result = service.analyze_trend("MONTHLY", start, end)
         assert result.period_type == "MONTHLY"
@@ -138,7 +148,9 @@ class TestAnalyzeTrend:
         assert result.trend in ("INCREASING", "DECREASING", "STABLE")
 
     def test_empty_data_returns_zeros(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         start = date(2024, 1, 1)
         end = date(2024, 3, 31)
         result = service.analyze_trend("MONTHLY", start, end)
@@ -147,7 +159,9 @@ class TestAnalyzeTrend:
 
     def test_filter_by_user_ids(self, service, db):
         """传入 user_ids 时查询链中包含 filter"""
-        db.query.return_value.filter.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         start = date(2024, 1, 1)
         end = date(2024, 3, 31)
         result = service.analyze_trend("DAILY", start, end, user_ids=[1, 2])
@@ -157,6 +171,7 @@ class TestAnalyzeTrend:
 # ---------------------------------------------------------------------------
 # Tests: analyze_efficiency
 # ---------------------------------------------------------------------------
+
 
 class TestAnalyzeEfficiency:
     def test_efficiency_rate_formula(self, service, db):
@@ -195,6 +210,7 @@ class TestAnalyzeEfficiency:
 # Tests: analyze_overtime
 # ---------------------------------------------------------------------------
 
+
 class TestAnalyzeOvertime:
     def _make_overtime_result(self, total_overtime=20, weekend=10, holiday=5, total_hours=160):
         r = MagicMock()
@@ -208,8 +224,12 @@ class TestAnalyzeOvertime:
         r = self._make_overtime_result(total_overtime=32, total_hours=160)
         db.query.return_value.filter.return_value.first.return_value = r
         db.query.return_value.filter.return_value.scalar.return_value = 4  # 4 users
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         result = service.analyze_overtime("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
         # rate = 32/160*100 = 20%
@@ -219,8 +239,12 @@ class TestAnalyzeOvertime:
         r = self._make_overtime_result(total_overtime=40, total_hours=160)
         db.query.return_value.filter.return_value.first.return_value = r
         db.query.return_value.filter.return_value.scalar.return_value = 5  # 5 users
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         result = service.analyze_overtime("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
         # avg = 40/5 = 8
@@ -231,9 +255,15 @@ class TestAnalyzeOvertime:
         db.query.return_value.filter.return_value.first.return_value = r
         db.query.return_value.filter.return_value.scalar.return_value = 2
 
-        user_row = _make_query_row(user_id=1, user_name="张三", department_name="研发部", overtime_hours=20)
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [user_row]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        user_row = _make_query_row(
+            user_id=1, user_name="张三", department_name="研发部", overtime_hours=20
+        )
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            user_row
+        ]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         result = service.analyze_overtime("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
         assert len(result.top_overtime_users) == 1
@@ -243,6 +273,7 @@ class TestAnalyzeOvertime:
 # ---------------------------------------------------------------------------
 # Tests: analyze_department_comparison
 # ---------------------------------------------------------------------------
+
 
 class TestAnalyzeDepartmentComparison:
     def _make_dept_row(self, dept_id, dept_name, total, normal, overtime, user_count, entry_count):
@@ -259,28 +290,40 @@ class TestAnalyzeDepartmentComparison:
     def test_departments_sorted_by_total_hours(self, service, db):
         rows = [
             self._make_dept_row(1, "研发部", 500, 400, 100, 5, 50),
-            self._make_dept_row(2, "测试部", 300, 250, 50,  3, 30),
+            self._make_dept_row(2, "测试部", 300, 250, 50, 3, 30),
         ]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_department_comparison("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_department_comparison(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         assert len(result.departments) == 2
         # 第一个部门 total_hours 应 >= 第二个
         assert result.departments[0]["total_hours"] >= result.departments[1]["total_hours"]
 
     def test_avg_hours_per_person(self, service, db):
         rows = [self._make_dept_row(1, "研发部", 400, 320, 80, 4, 40)]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_department_comparison("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_department_comparison(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         dept = result.departments[0]
         assert dept["avg_hours_per_person"] == 100.0  # 400/4
 
     def test_overtime_rate_in_department(self, service, db):
         rows = [self._make_dept_row(1, "研发部", 200, 160, 40, 2, 20)]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_department_comparison("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_department_comparison(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         dept = result.departments[0]
         assert dept["overtime_rate"] == 20.0  # 40/200*100
 
@@ -289,9 +332,13 @@ class TestAnalyzeDepartmentComparison:
             self._make_dept_row(1, "研发部", 500, 400, 100, 5, 50),
             self._make_dept_row(2, "测试部", 300, 250, 50, 3, 30),
         ]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_department_comparison("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_department_comparison(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         ranks = [d["rank"] for d in result.rankings]
         assert 1 in ranks
         assert 2 in ranks
@@ -300,6 +347,7 @@ class TestAnalyzeDepartmentComparison:
 # ---------------------------------------------------------------------------
 # Tests: analyze_project_distribution
 # ---------------------------------------------------------------------------
+
 
 class TestAnalyzeProjectDistribution:
     def _make_proj_row(self, project_id, project_name, total_hours, user_count, entry_count):
@@ -317,23 +365,35 @@ class TestAnalyzeProjectDistribution:
             self._make_proj_row(2, "项目B", 300, 2, 20),
             self._make_proj_row(3, "项目C", 100, 1, 10),
         ]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_project_distribution("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_project_distribution(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         total_pct = sum(p["percentage"] for p in result.project_details)
         assert abs(total_pct - 100.0) < 0.1
 
     def test_concentration_index_range(self, service, db):
         rows = [self._make_proj_row(i, f"Proj{i}", 100, 1, 10) for i in range(5)]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_project_distribution("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_project_distribution(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         assert 0.0 <= float(result.concentration_index) <= 1.0
 
     def test_empty_results(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
-        result = service.analyze_project_distribution("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_project_distribution(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         assert float(result.total_hours) == 0
         assert result.total_projects == 0
 
@@ -342,9 +402,13 @@ class TestAnalyzeProjectDistribution:
             self._make_proj_row(1, "项目A", 400, 2, 20),
             self._make_proj_row(2, "项目B", 200, 1, 10),
         ]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
-        result = service.analyze_project_distribution("MONTHLY", date(2024, 1, 1), date(2024, 1, 31))
+        result = service.analyze_project_distribution(
+            "MONTHLY", date(2024, 1, 1), date(2024, 1, 31)
+        )
         assert "项目A" in result.pie_chart.labels
         assert "项目B" in result.pie_chart.labels
 
@@ -353,9 +417,12 @@ class TestAnalyzeProjectDistribution:
 # Tests: analyze_workload
 # ---------------------------------------------------------------------------
 
+
 class TestAnalyzeWorkload:
     def test_empty_data_returns_no_overload(self, service, db):
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         start = date(2024, 1, 1)
         end = date(2024, 1, 7)
@@ -380,7 +447,9 @@ class TestAnalyzeWorkload:
             row.daily_hours = 12  # 超时
             rows.append(row)
 
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            rows
+        )
 
         result = service.analyze_workload("WEEKLY", start, end)
         assert len(result.overload_users) >= 1

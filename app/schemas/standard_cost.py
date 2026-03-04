@@ -14,6 +14,7 @@ from app.schemas.common import TimestampSchema
 
 class StandardCostCreate(BaseModel):
     """创建标准成本"""
+
     cost_code: str = Field(..., max_length=50, description="成本项编码")
     cost_name: str = Field(..., max_length=200, description="成本项名称")
     cost_category: str = Field(..., description="成本类别：MATERIAL/LABOR/OVERHEAD")
@@ -21,7 +22,9 @@ class StandardCostCreate(BaseModel):
     unit: str = Field(..., max_length=20, description="单位（如：件、kg、人天）")
     standard_cost: Decimal = Field(..., description="标准成本")
     currency: str = Field(default="CNY", max_length=10, description="币种")
-    cost_source: str = Field(..., description="成本来源：HISTORICAL_AVG/INDUSTRY_STANDARD/EXPERT_ESTIMATE/VENDOR_QUOTE")
+    cost_source: str = Field(
+        ..., description="成本来源：HISTORICAL_AVG/INDUSTRY_STANDARD/EXPERT_ESTIMATE/VENDOR_QUOTE"
+    )
     source_description: Optional[str] = Field(None, description="来源说明")
     effective_date: date = Field(..., description="生效日期")
     expiry_date: Optional[date] = Field(None, description="失效日期（为空表示长期有效）")
@@ -31,6 +34,7 @@ class StandardCostCreate(BaseModel):
 
 class StandardCostUpdate(BaseModel):
     """更新标准成本"""
+
     cost_name: Optional[str] = Field(None, max_length=200, description="成本项名称")
     cost_category: Optional[str] = Field(None, description="成本类别")
     specification: Optional[str] = Field(None, max_length=500, description="规格型号")
@@ -47,6 +51,7 @@ class StandardCostUpdate(BaseModel):
 
 class StandardCostResponse(TimestampSchema):
     """标准成本响应"""
+
     id: int
     cost_code: str
     cost_name: str
@@ -73,6 +78,7 @@ class StandardCostResponse(TimestampSchema):
 
 class StandardCostHistoryResponse(TimestampSchema):
     """标准成本历史记录响应"""
+
     id: int
     standard_cost_id: int
     change_type: str
@@ -92,6 +98,7 @@ class StandardCostHistoryResponse(TimestampSchema):
 
 class StandardCostImportRow(BaseModel):
     """标准成本导入行数据"""
+
     cost_code: str = Field(..., description="成本项编码")
     cost_name: str = Field(..., description="成本项名称")
     cost_category: str = Field(..., description="成本类别")
@@ -109,6 +116,7 @@ class StandardCostImportRow(BaseModel):
 
 class StandardCostImportResult(BaseModel):
     """标准成本导入结果"""
+
     success_count: int = Field(..., description="成功导入数量")
     error_count: int = Field(..., description="失败数量")
     errors: List[dict] = Field(default=[], description="错误详情")
@@ -117,6 +125,7 @@ class StandardCostImportResult(BaseModel):
 
 class StandardCostSearchRequest(BaseModel):
     """标准成本搜索请求"""
+
     keyword: Optional[str] = Field(None, description="关键词（编码或名称）")
     cost_category: Optional[str] = Field(None, description="成本类别筛选")
     cost_source: Optional[str] = Field(None, description="成本来源筛选")
@@ -127,12 +136,14 @@ class StandardCostSearchRequest(BaseModel):
 
 class ProjectCostComparisonRequest(BaseModel):
     """项目成本对比请求"""
+
     project_id: int = Field(..., description="项目ID")
     comparison_date: Optional[date] = Field(None, description="对比日期（默认当前日期）")
 
 
 class ProjectCostComparisonItem(BaseModel):
     """项目成本对比项"""
+
     cost_code: str
     cost_name: str
     cost_category: str
@@ -148,6 +159,7 @@ class ProjectCostComparisonItem(BaseModel):
 
 class ProjectCostComparisonResponse(BaseModel):
     """项目成本对比响应"""
+
     project_id: int
     project_code: Optional[str] = None
     project_name: Optional[str] = None
@@ -161,6 +173,7 @@ class ProjectCostComparisonResponse(BaseModel):
 
 class ApplyStandardCostRequest(BaseModel):
     """应用标准成本到项目预算请求"""
+
     project_id: int = Field(..., description="项目ID")
     cost_items: List[dict] = Field(..., description="成本项列表 [{cost_code, quantity}]")
     budget_name: str = Field(..., description="预算名称")
@@ -170,6 +183,7 @@ class ApplyStandardCostRequest(BaseModel):
 
 class ApplyStandardCostResponse(BaseModel):
     """应用标准成本响应"""
+
     budget_id: int
     budget_no: str
     project_id: int

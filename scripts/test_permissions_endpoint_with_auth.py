@@ -27,18 +27,14 @@ def test_auth_flow():
     try:
         # 1. 获取一个用户
         with get_db_session() as db:
-            result = db.execute(
-                text("SELECT id, username, is_active FROM users LIMIT 1")
-            )
+            result = db.execute(text("SELECT id, username, is_active FROM users LIMIT 1"))
             user_row = result.fetchone()
             if not user_row:
                 print("❌ 未找到用户")
                 return False
 
             user_id, username, is_active = user_row
-            print(
-                f"✅ 找到用户: ID={user_id}, username={username}, is_active={is_active}"
-            )
+            print(f"✅ 找到用户: ID={user_id}, username={username}, is_active={is_active}")
 
             # 2. 创建token（sub必须是字符串）
             token_data = {"sub": str(user_id)}
@@ -52,9 +48,7 @@ def test_auth_flow():
             from app.core.config import settings
 
             try:
-                payload = jwt.decode(
-                    token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-                )
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
                 decoded_user_id = payload.get("sub")
                 print(f"✅ Token解码成功: user_id={decoded_user_id}")
 
@@ -69,9 +63,7 @@ def test_auth_flow():
                     print(f"⚠️  ORM查询用户失败（预期）: {e}")
                     # 使用SQL查询
                     result = db.execute(
-                        text(
-                            "SELECT id, username, is_active FROM users WHERE id = :user_id"
-                        ),
+                        text("SELECT id, username, is_active FROM users WHERE id = :user_id"),
                         {"user_id": decoded_user_id},
                     )
                     sql_user = result.fetchone()

@@ -53,7 +53,7 @@ class ApprovalEngineCore:
         if max_instance:
             # 从已有最大单号提取序号并递增
             try:
-                current_seq = int(max_instance[len(prefix):])
+                current_seq = int(max_instance[len(prefix) :])
                 next_seq = current_seq + 1
             except (ValueError, IndexError):
                 next_seq = 1
@@ -237,11 +237,7 @@ class ApprovalEngineCore:
         user_id: int,
     ) -> ApprovalTask:
         """获取并验证任务"""
-        task = (
-            self.db.query(ApprovalTask)
-            .filter(ApprovalTask.id == task_id)
-            .first()
-        )
+        task = self.db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
 
         if not task:
             raise ValueError(f"任务不存在: {task_id}")

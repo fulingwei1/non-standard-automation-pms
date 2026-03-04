@@ -19,10 +19,11 @@ class TestAcceptanceHandler:
         """Test importing acceptance handler module."""
         from app.services.acceptance_handler import (
             check_acceptance_eligibility,
-            initiate_acceptance_process,
             get_acceptance_status,
-            record_acceptance_result
+            initiate_acceptance_process,
+            record_acceptance_result,
         )
+
         assert callable(check_acceptance_eligibility)
         assert callable(initiate_acceptance_process)
         assert callable(get_acceptance_status)
@@ -34,14 +35,14 @@ class TestAcceptanceHandler:
 
         # These functions should exist
         expected_functions = [
-            'check_acceptance_eligibility',
-            'initiate_acceptance_process',
-            'get_acceptance_status',
-            'record_acceptance_result',
+            "check_acceptance_eligibility",
+            "initiate_acceptance_process",
+            "get_acceptance_status",
+            "record_acceptance_result",
         ]
 
         for func_name in expected_functions:
-            assert hasattr(acceptance_handler, func_name), \
-                f"Missing function: {func_name}"
-            assert callable(getattr(acceptance_handler, func_name)), \
-                f"{func_name} should be callable"
+            assert hasattr(acceptance_handler, func_name), f"Missing function: {func_name}"
+            assert callable(
+                getattr(acceptance_handler, func_name)
+            ), f"{func_name} should be callable"

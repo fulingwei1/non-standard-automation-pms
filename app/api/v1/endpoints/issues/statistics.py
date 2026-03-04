@@ -16,6 +16,7 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.issue import Issue, IssueStatisticsSnapshot
 from app.models.user import User
@@ -28,7 +29,6 @@ from app.schemas.issue import (
 )
 from app.services.data_scope import DataScopeService
 from app.services.issue_cost_service import IssueCostService
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -41,28 +41,28 @@ def get_issue_statistics(
 ) -> Any:
     """获取问题统计"""
     query = db.query(Issue)
-    query = query.filter(Issue.status != 'DELETED')
+    query = query.filter(Issue.status != "DELETED")
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     if project_id:
         query = query.filter(Issue.project_id == project_id)
 
     total = query.count()
-    open_count = query.filter(Issue.status == 'OPEN').count()
-    processing_count = query.filter(Issue.status == 'PROCESSING').count()
-    resolved_count = query.filter(Issue.status == 'RESOLVED').count()
-    closed_count = query.filter(Issue.status == 'CLOSED').count()
+    open_count = query.filter(Issue.status == "OPEN").count()
+    processing_count = query.filter(Issue.status == "PROCESSING").count()
+    resolved_count = query.filter(Issue.status == "RESOLVED").count()
+    closed_count = query.filter(Issue.status == "CLOSED").count()
     overdue_count = query.filter(
         and_(
             Issue.due_date.isnot(None),
             Issue.due_date < date.today(),
-            Issue.status.in_(['OPEN', 'PROCESSING'])
+            Issue.status.in_(["OPEN", "PROCESSING"]),
         )
     ).count()
     blocking_count = query.filter(Issue.is_blocking).count()
 
     # 按严重程度统计
     by_severity = {}
-    for severity in ['CRITICAL', 'MAJOR', 'MINOR']:
+    for severity in ["CRITICAL", "MAJOR", "MINOR"]:
         by_severity[severity] = query.filter(Issue.severity == severity).count()
 
     # 按分类统计
@@ -95,7 +95,9 @@ def get_issue_statistics(
 def get_engineer_design_issues_statistics(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    engineer_id: Optional[int] = Query(None, description="工程师ID（可选，不提供则统计所有工程师）"),
+    engineer_id: Optional[int] = Query(
+        None, description="工程师ID（可选，不提供则统计所有工程师）"
+    ),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     project_id: Optional[int] = Query(None, description="项目ID"),
@@ -107,10 +109,7 @@ def get_engineer_design_issues_statistics(
     汇总库存损失和额外工时
     """
     # 查询设计问题
-    query = db.query(Issue).filter(
-        Issue.root_cause == 'DESIGN_ERROR',
-        Issue.status != 'DELETED'
-    )
+    query = db.query(Issue).filter(Issue.root_cause == "DESIGN_ERROR", Issue.status != "DELETED")
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     # 筛选条件
@@ -134,32 +133,32 @@ def get_engineer_design_issues_statistics(
         eng_id = issue.responsible_engineer_id
         if eng_id not in engineer_stats:
             engineer_stats[eng_id] = {
-                'engineer_id': eng_id,
-                'engineer_name': issue.responsible_engineer_name or '未知',
-                'total_issues': 0,
-                'design_issues': 0,
-                'total_inventory_loss': Decimal(0),
-                'total_extra_hours': Decimal(0),
-                'issues': []
+                "engineer_id": eng_id,
+                "engineer_name": issue.responsible_engineer_name or "未知",
+                "total_issues": 0,
+                "design_issues": 0,
+                "total_inventory_loss": Decimal(0),
+                "total_extra_hours": Decimal(0),
+                "issues": [],
             }
 
         stats = engineer_stats[eng_id]
-        stats['total_issues'] += 1
-        stats['design_issues'] += 1
+        stats["total_issues"] += 1
+        stats["design_issues"] += 1
 
         # 累加预估的库存损失和额外工时
         if issue.estimated_inventory_loss:
-            stats['total_inventory_loss'] += issue.estimated_inventory_loss or Decimal(0)
+            stats["total_inventory_loss"] += issue.estimated_inventory_loss or Decimal(0)
         if issue.estimated_extra_hours:
-            stats['total_extra_hours'] += issue.estimated_extra_hours or Decimal(0)
+            stats["total_extra_hours"] += issue.estimated_extra_hours or Decimal(0)
 
         # 从关联的成本和工时记录中获取实际损失
         try:
             cost_summary = IssueCostService.get_issue_cost_summary(db, issue.issue_no)
-            if cost_summary.get('inventory_loss', 0) > 0:
-                stats['total_inventory_loss'] += cost_summary['inventory_loss']
-            if cost_summary.get('total_hours', 0) > 0:
-                stats['total_extra_hours'] += cost_summary['total_hours']
+            if cost_summary.get("inventory_loss", 0) > 0:
+                stats["total_inventory_loss"] += cost_summary["inventory_loss"]
+            if cost_summary.get("total_hours", 0) > 0:
+                stats["total_extra_hours"] += cost_summary["total_hours"]
         except Exception as e:
             # 如果查询失败，只记录错误，不影响统计
             logging.warning(f"Failed to get cost summary for issue {issue.issue_no}: {e}")
@@ -213,7 +212,7 @@ def get_engineer_design_issues_statistics(
             machine_code=issue.machine.machine_code if issue.machine else None,
             machine_name=issue.machine.machine_name if issue.machine else None,
         )
-        stats['issues'].append(issue_response)
+        stats["issues"].append(issue_response)
 
     # 转换为响应列表
     result = [EngineerIssueStatistics(**stats) for stats in engineer_stats.values()]
@@ -234,7 +233,7 @@ def get_issue_cause_analysis(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题原因分析（Top N原因统计）"""
-    query = db.query(Issue).filter(Issue.status != 'DELETED')
+    query = db.query(Issue).filter(Issue.status != "DELETED")
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
@@ -249,65 +248,69 @@ def get_issue_cause_analysis(
     # 分析问题原因（从描述、解决方案、影响范围等字段提取）
     # 这里使用简单的关键词匹配，实际可以使用NLP技术
     cause_keywords = {
-        '设计': ['设计', '图纸', '规格', '参数', '方案'],
-        '工艺': ['工艺', '加工', '装配', '焊接', '涂装'],
-        '物料': ['物料', '材料', '零件', '配件', '缺料'],
-        '质量': ['质量', '缺陷', '不合格', '不良', '瑕疵'],
-        '进度': ['进度', '延期', '延迟', '时间', '计划'],
-        '人员': ['人员', '人力', '技能', '培训', '经验'],
-        '设备': ['设备', '机器', '工具', '故障', '维护'],
-        '沟通': ['沟通', '协调', '配合', '信息', '反馈'],
-        '其他': []
+        "设计": ["设计", "图纸", "规格", "参数", "方案"],
+        "工艺": ["工艺", "加工", "装配", "焊接", "涂装"],
+        "物料": ["物料", "材料", "零件", "配件", "缺料"],
+        "质量": ["质量", "缺陷", "不合格", "不良", "瑕疵"],
+        "进度": ["进度", "延期", "延迟", "时间", "计划"],
+        "人员": ["人员", "人力", "技能", "培训", "经验"],
+        "设备": ["设备", "机器", "工具", "故障", "维护"],
+        "沟通": ["沟通", "协调", "配合", "信息", "反馈"],
+        "其他": [],
     }
 
     cause_stats = {}
     for keyword, patterns in cause_keywords.items():
-        cause_stats[keyword] = {
-            "cause": keyword,
-            "count": 0,
-            "issues": []
-        }
+        cause_stats[keyword] = {"cause": keyword, "count": 0, "issues": []}
 
     for issue in issues:
         # 合并所有文本字段进行分析
-        text_content = f"{issue.description or ''} {issue.solution or ''} {issue.impact_scope or ''}".lower()
+        text_content = (
+            f"{issue.description or ''} {issue.solution or ''} {issue.impact_scope or ''}".lower()
+        )
 
         matched = False
         for keyword, patterns in cause_keywords.items():
-            if keyword == '其他':
+            if keyword == "其他":
                 continue
             for pattern in patterns:
                 if pattern in text_content:
                     cause_stats[keyword]["count"] += 1
-                    cause_stats[keyword]["issues"].append({
-                        "issue_id": issue.id,
-                        "issue_no": issue.issue_no,
-                        "title": issue.title,
-                    })
+                    cause_stats[keyword]["issues"].append(
+                        {
+                            "issue_id": issue.id,
+                            "issue_no": issue.issue_no,
+                            "title": issue.title,
+                        }
+                    )
                     matched = True
                     break
             if matched:
                 break
 
         if not matched:
-            cause_stats['其他']["count"] += 1
-            cause_stats['其他']["issues"].append({
-                "issue_id": issue.id,
-                "issue_no": issue.issue_no,
-                "title": issue.title,
-            })
+            cause_stats["其他"]["count"] += 1
+            cause_stats["其他"]["issues"].append(
+                {
+                    "issue_id": issue.id,
+                    "issue_no": issue.issue_no,
+                    "title": issue.title,
+                }
+            )
 
     # 按数量排序，取Top N
     sorted_causes = sorted(
         [stats for stats in cause_stats.values() if stats["count"] > 0],
         key=lambda x: x["count"],
-        reverse=True
+        reverse=True,
     )[:top_n]
 
     # 计算百分比
     total_issues = len(issues)
     for cause in sorted_causes:
-        cause["percentage"] = round((cause["count"] / total_issues * 100) if total_issues > 0 else 0, 2)
+        cause["percentage"] = round(
+            (cause["count"] / total_issues * 100) if total_issues > 0 else 0, 2
+        )
         # 只返回问题ID列表，不返回完整问题信息（避免响应过大）
         cause["issue_ids"] = [item["issue_id"] for item in cause["issues"]]
         cause.pop("issues", None)
@@ -318,7 +321,7 @@ def get_issue_cause_analysis(
         "analysis_period": {
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
-        }
+        },
     }
 
 

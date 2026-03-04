@@ -10,10 +10,9 @@
 
 import json
 import unittest
-from datetime import datetime, date
-from unittest.mock import MagicMock, patch, call
+from datetime import date, datetime
+from unittest.mock import MagicMock, call, patch
 
-from app.services.business_support_utils.service import BusinessSupportUtilsService
 from app.models.business_support import (
     CustomerSupplierRegistration,
     DeliveryOrder,
@@ -22,6 +21,7 @@ from app.models.business_support import (
     SalesOrder,
 )
 from app.models.sales import Invoice
+from app.services.business_support_utils.service import BusinessSupportUtilsService
 
 
 class TestBusinessSupportUtilsServiceInit(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestNotificationMethods(unittest.TestCase):
         self.mock_db = MagicMock()
         self.service = BusinessSupportUtilsService(self.mock_db)
 
-    @patch('app.services.business_support_utils.service.NotificationDispatcher')
+    @patch("app.services.business_support_utils.service.NotificationDispatcher")
     def test_send_department_notification_success(self, mock_dispatcher_class):
         """测试成功发送部门通知"""
         mock_dispatcher = MagicMock()
@@ -55,7 +55,7 @@ class TestNotificationMethods(unittest.TestCase):
             source_type="SalesOrder",
             source_id=100,
             priority="HIGH",
-            extra_data={"key": "value"}
+            extra_data={"key": "value"},
         )
 
         mock_dispatcher_class.assert_called_once_with(self.mock_db)
@@ -72,7 +72,7 @@ class TestNotificationMethods(unittest.TestCase):
         )
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.business_support_utils.service.NotificationDispatcher')
+    @patch("app.services.business_support_utils.service.NotificationDispatcher")
     def test_send_department_notification_default_priority(self, mock_dispatcher_class):
         """测试使用默认优先级发送通知"""
         mock_dispatcher = MagicMock()
@@ -84,15 +84,15 @@ class TestNotificationMethods(unittest.TestCase):
             title="测试",
             content="内容",
             source_type="Invoice",
-            source_id=50
+            source_id=50,
         )
 
         call_args = mock_dispatcher.create_system_notification.call_args
-        self.assertEqual(call_args.kwargs['priority'], "NORMAL")
-        self.assertEqual(call_args.kwargs['extra_data'], {})
+        self.assertEqual(call_args.kwargs["priority"], "NORMAL")
+        self.assertEqual(call_args.kwargs["extra_data"], {})
 
-    @patch('app.services.business_support_utils.service.NotificationDispatcher')
-    @patch('app.services.business_support_utils.service.logger')
+    @patch("app.services.business_support_utils.service.NotificationDispatcher")
+    @patch("app.services.business_support_utils.service.logger")
     def test_send_department_notification_failure(self, mock_logger, mock_dispatcher_class):
         """测试发送通知失败（记录警告但不抛出异常）"""
         mock_dispatcher = MagicMock()
@@ -106,7 +106,7 @@ class TestNotificationMethods(unittest.TestCase):
             title="测试",
             content="内容",
             source_type="Order",
-            source_id=1
+            source_id=1,
         )
 
         mock_logger.warning.assert_called_once()
@@ -120,32 +120,32 @@ class TestCodeGenerationMethods(unittest.TestCase):
         self.mock_db = MagicMock()
         self.service = BusinessSupportUtilsService(self.mock_db)
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_order_no_first_order(self, mock_datetime, mock_apply_like):
         """测试生成第一个销售订单编号"""
         mock_datetime.now.return_value = datetime(2025, 1, 15, 10, 30)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         # apply_like_filter 返回传入的第一个参数（query）
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_order_no()
-        
+
         self.assertEqual(result, "SO250115-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_order_no_increment(self, mock_datetime, mock_apply_like):
         """测试生成递增的订单编号"""
         mock_datetime.now.return_value = datetime(2025, 1, 15, 10, 30)
-        
+
         mock_order = MagicMock()
         mock_order.order_no = "SO250115-005"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_order
         self.mock_db.query.return_value = mock_query
@@ -153,18 +153,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_order_no()
-        
+
         self.assertEqual(result, "SO250115-006")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_order_no_invalid_format(self, mock_datetime, mock_apply_like):
         """测试处理无效格式的订单编号"""
         mock_datetime.now.return_value = datetime(2025, 1, 15, 10, 30)
-        
+
         mock_order = MagicMock()
         mock_order.order_no = "INVALID-FORMAT"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_order
         self.mock_db.query.return_value = mock_query
@@ -172,15 +172,15 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_order_no()
-        
+
         self.assertEqual(result, "SO250115-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_delivery_no_first(self, mock_datetime, mock_apply_like):
         """测试生成第一个送货单号"""
         mock_datetime.now.return_value = datetime(2025, 2, 20, 14, 0)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
@@ -188,18 +188,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_delivery_no()
-        
+
         self.assertEqual(result, "DO250220-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_delivery_no_increment(self, mock_datetime, mock_apply_like):
         """测试递增送货单号"""
         mock_datetime.now.return_value = datetime(2025, 2, 20, 14, 0)
-        
+
         mock_delivery = MagicMock()
         mock_delivery.delivery_no = "DO250220-010"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_delivery
         self.mock_db.query.return_value = mock_query
@@ -207,15 +207,15 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_delivery_no()
-        
+
         self.assertEqual(result, "DO250220-011")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_invoice_request_no_first(self, mock_datetime, mock_apply_like):
         """测试生成第一个开票申请编号"""
         mock_datetime.now.return_value = datetime(2025, 3, 5)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
@@ -223,18 +223,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_invoice_request_no()
-        
+
         self.assertEqual(result, "IR250305-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_invoice_request_no_increment(self, mock_datetime, mock_apply_like):
         """测试递增开票申请编号"""
         mock_datetime.now.return_value = datetime(2025, 3, 5)
-        
+
         mock_request = MagicMock()
         mock_request.request_no = "IR250305-099"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_request
         self.mock_db.query.return_value = mock_query
@@ -242,18 +242,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_invoice_request_no()
-        
+
         self.assertEqual(result, "IR250305-100")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_invoice_request_no_parse_error(self, mock_datetime, mock_apply_like):
         """测试解析错误时重置编号"""
         mock_datetime.now.return_value = datetime(2025, 3, 5)
-        
+
         mock_request = MagicMock()
         mock_request.request_no = "INVALID"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_request
         self.mock_db.query.return_value = mock_query
@@ -261,15 +261,15 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_invoice_request_no()
-        
+
         self.assertEqual(result, "IR250305-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_registration_no_first(self, mock_datetime, mock_apply_like):
         """测试生成第一个入驻编号"""
         mock_datetime.now.return_value = datetime(2025, 4, 10)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
@@ -277,18 +277,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_registration_no()
-        
+
         self.assertEqual(result, "CR250410-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_registration_no_increment(self, mock_datetime, mock_apply_like):
         """测试递增入驻编号"""
         mock_datetime.now.return_value = datetime(2025, 4, 10)
-        
+
         mock_reg = MagicMock()
         mock_reg.registration_no = "CR250410-042"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_reg
         self.mock_db.query.return_value = mock_query
@@ -296,15 +296,15 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_registration_no()
-        
+
         self.assertEqual(result, "CR250410-043")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_invoice_code_first(self, mock_datetime, mock_apply_like):
         """测试生成第一个发票编码"""
         mock_datetime.now.return_value = datetime(2025, 5, 20, 9, 0)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
@@ -312,18 +312,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_invoice_code()
-        
+
         self.assertEqual(result, "INV-250520-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_invoice_code_increment(self, mock_datetime, mock_apply_like):
         """测试递增发票编码"""
         mock_datetime.now.return_value = datetime(2025, 5, 20, 9, 0)
-        
+
         mock_invoice = MagicMock()
         mock_invoice.invoice_code = "INV-250520-077"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_invoice
         self.mock_db.query.return_value = mock_query
@@ -331,15 +331,15 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_invoice_code()
-        
+
         self.assertEqual(result, "INV-250520-078")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_reconciliation_no_first(self, mock_datetime, mock_apply_like):
         """测试生成第一个对账单号"""
         mock_datetime.now.return_value = datetime(2025, 6, 15, 10, 0)
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
@@ -347,18 +347,18 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_reconciliation_no()
-        
+
         self.assertEqual(result, "RC250615-001")
 
-    @patch('app.services.business_support_utils.service.apply_like_filter')
-    @patch('app.services.business_support_utils.service.datetime')
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
     def test_generate_reconciliation_no_increment(self, mock_datetime, mock_apply_like):
         """测试递增对账单号"""
         mock_datetime.now.return_value = datetime(2025, 6, 15, 10, 0)
-        
+
         mock_reconciliation = MagicMock()
         mock_reconciliation.reconciliation_no = "RC250615-123"
-        
+
         mock_query = MagicMock()
         mock_query.order_by.return_value.first.return_value = mock_reconciliation
         self.mock_db.query.return_value = mock_query
@@ -366,7 +366,7 @@ class TestCodeGenerationMethods(unittest.TestCase):
         mock_apply_like.side_effect = lambda q, *args, **kwargs: q
 
         result = self.service.generate_reconciliation_no()
-        
+
         self.assertEqual(result, "RC250615-124")
 
 
@@ -381,7 +381,7 @@ class TestSerializationMethods(unittest.TestCase):
         """测试序列化有效的附件列表"""
         attachments = ["file1.pdf", "file2.doc", "file3.jpg"]
         result = self.service.serialize_attachments(attachments)
-        
+
         self.assertIsInstance(result, str)
         self.assertEqual(json.loads(result), attachments)
 
@@ -397,13 +397,14 @@ class TestSerializationMethods(unittest.TestCase):
 
     def test_serialize_attachments_with_objects(self):
         """测试序列化包含对象的列表（降级处理）"""
+
         class CustomObj:
             def __str__(self):
                 return "custom_object"
-        
+
         items = [CustomObj(), "normal.txt"]
         result = self.service.serialize_attachments(items)
-        
+
         self.assertIsInstance(result, str)
         data = json.loads(result)
         self.assertEqual(data[0], "custom_object")
@@ -413,7 +414,7 @@ class TestSerializationMethods(unittest.TestCase):
         """测试反序列化有效的JSON"""
         payload = '["file1.pdf", "file2.doc"]'
         result = self.service.deserialize_attachments(payload)
-        
+
         self.assertEqual(result, ["file1.pdf", "file2.doc"])
 
     def test_deserialize_attachments_empty_string(self):
@@ -430,14 +431,14 @@ class TestSerializationMethods(unittest.TestCase):
         """测试反序列化无效JSON（降级为单元素列表）"""
         payload = "not-a-json"
         result = self.service.deserialize_attachments(payload)
-        
+
         self.assertEqual(result, ["not-a-json"])
 
     def test_deserialize_attachments_non_list_json(self):
         """测试反序列化非列表JSON"""
         payload = '{"key": "value"}'
         result = self.service.deserialize_attachments(payload)
-        
+
         self.assertIsNone(result)
 
 
@@ -452,20 +453,20 @@ class TestResponseConversionMethods(unittest.TestCase):
         """测试转换完整的开票申请数据"""
         mock_contract = MagicMock()
         mock_contract.contract_code = "CT-2025-001"
-        
+
         mock_project = MagicMock()
         mock_project.project_name = "测试项目"
-        
+
         mock_customer = MagicMock()
         mock_customer.customer_name = "测试客户"
-        
+
         mock_approver = MagicMock()
         mock_approver.real_name = "张三"
         mock_approver.username = "zhangsan"
-        
+
         mock_invoice = MagicMock()
         mock_invoice.invoice_code = "INV-250101-001"
-        
+
         mock_request = MagicMock()
         mock_request.id = 1
         mock_request.request_no = "IR250101-001"
@@ -528,7 +529,7 @@ class TestResponseConversionMethods(unittest.TestCase):
         mock_request.approver = None
         mock_request.invoice = None
         mock_request.attachments = None
-        
+
         # 必填字段
         mock_request.contract_id = 1  # 改为有效整数
         mock_request.project_id = None
@@ -572,7 +573,7 @@ class TestResponseConversionMethods(unittest.TestCase):
         mock_approver = MagicMock()
         mock_approver.real_name = None
         mock_approver.username = "admin"
-        
+
         mock_request = MagicMock()
         mock_request.approver = mock_approver
         mock_request.contract = None
@@ -580,7 +581,7 @@ class TestResponseConversionMethods(unittest.TestCase):
         mock_request.customer = None
         mock_request.invoice = None
         mock_request.attachments = None
-        
+
         # 必填字段
         mock_request.id = 3
         mock_request.request_no = "IR250103-001"
@@ -622,7 +623,7 @@ class TestResponseConversionMethods(unittest.TestCase):
         mock_reviewer = MagicMock()
         mock_reviewer.real_name = "审核员"
         mock_reviewer.username = "reviewer"
-        
+
         mock_record = MagicMock()
         mock_record.id = 1
         mock_record.registration_no = "CR250101-001"
@@ -693,7 +694,7 @@ class TestResponseConversionMethods(unittest.TestCase):
         mock_reviewer = MagicMock()
         mock_reviewer.real_name = ""
         mock_reviewer.username = "reviewer123"
-        
+
         mock_record = MagicMock()
         mock_record.id = 3
         mock_record.registration_no = "CR250103-001"

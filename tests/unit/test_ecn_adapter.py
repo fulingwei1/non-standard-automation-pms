@@ -5,14 +5,16 @@ approval_engine/adapters/ecn.py 单元测试 - 简化版
 测试ECN审批适配器的核心方法
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
 
 
 class MockEcnApprovalAdapter(EcnApprovalAdapter):
     """测试用适配器子类"""
+
     def __init__(self, db):
         self.db = db
 

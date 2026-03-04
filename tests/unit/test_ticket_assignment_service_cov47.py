@@ -20,6 +20,7 @@ def _make_db():
 
 # ---------- get_project_members_for_ticket ----------
 
+
 def test_get_members_empty_project_ids():
     db = _make_db()
     result = get_project_members_for_ticket(db, project_ids=[])
@@ -108,6 +109,7 @@ def test_get_members_sorted_by_role():
 
 # ---------- get_ticket_related_projects ----------
 
+
 def test_get_ticket_related_projects_not_found():
     db = _make_db()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -143,8 +145,10 @@ def test_get_ticket_related_projects_with_data():
 
     db.query.side_effect = query_side
 
-    with patch("app.models.service.ServiceTicket", ServiceTicket_mock), \
-         patch("app.models.service.ServiceTicketProject", ServiceTicketProject_mock):
+    with (
+        patch("app.models.service.ServiceTicket", ServiceTicket_mock),
+        patch("app.models.service.ServiceTicketProject", ServiceTicketProject_mock),
+    ):
         result = get_ticket_related_projects(db, ticket_id=1)
 
     # 主要验证函数能正常执行并返回字典结构

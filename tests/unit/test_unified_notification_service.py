@@ -4,9 +4,10 @@ Tests for unified_notification_service
 Covers: app/services/unified_notification_service.py
 """
 
-import pytest
 from datetime import datetime, time, timedelta
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification
@@ -338,7 +339,7 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is False
 
-    @patch('app.services.unified_notification_service.datetime')
+    @patch("app.services.unified_notification_service.datetime")
     def test_check_quiet_hours_within_same_day_range(self, mock_datetime, db_session):
         from app.services.unified_notification_service import NotificationService
 
@@ -357,7 +358,7 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is True
 
-    @patch('app.services.unified_notification_service.datetime')
+    @patch("app.services.unified_notification_service.datetime")
     def test_check_quiet_hours_outside_same_day_range(self, mock_datetime, db_session):
         from app.services.unified_notification_service import NotificationService
 
@@ -376,7 +377,7 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is False
 
-    @patch('app.services.unified_notification_service.datetime')
+    @patch("app.services.unified_notification_service.datetime")
     def test_check_quiet_hours_spans_midnight_within(self, mock_datetime, db_session):
         from app.services.unified_notification_service import NotificationService
 
@@ -626,9 +627,9 @@ class TestSendToChannels:
         service = NotificationService(db_session)
 
         mock_handler = Mock()
-        mock_handler.send = Mock(return_value=NotificationResult(
-            channel=NotificationChannel.SYSTEM, success=True
-        ))
+        mock_handler.send = Mock(
+            return_value=NotificationResult(channel=NotificationChannel.SYSTEM, success=True)
+        )
         service._handlers[NotificationChannel.SYSTEM] = mock_handler
 
         request = NotificationRequest(
@@ -731,9 +732,9 @@ class TestSendNotification:
         db_session.query = Mock(return_value=mock_query)
 
         mock_handler = Mock()
-        mock_handler.send = Mock(return_value=NotificationResult(
-            channel=NotificationChannel.SYSTEM, success=True
-        ))
+        mock_handler.send = Mock(
+            return_value=NotificationResult(channel=NotificationChannel.SYSTEM, success=True)
+        )
         service._handlers[NotificationChannel.SYSTEM] = mock_handler
 
         request = NotificationRequest(
@@ -747,7 +748,7 @@ class TestSendNotification:
         request.force_send = False
 
         # Mock _should_send_by_category to work around the arg order bug in code
-        with patch.object(service, '_should_send_by_category', return_value=True):
+        with patch.object(service, "_should_send_by_category", return_value=True):
             result = service.send_notification(request)
 
         assert result["success"] is True
@@ -773,9 +774,9 @@ class TestSendBulkNotification:
         db_session.query = Mock(return_value=mock_query)
 
         mock_handler = Mock()
-        mock_handler.send = Mock(return_value=NotificationResult(
-            channel=NotificationChannel.SYSTEM, success=True
-        ))
+        mock_handler.send = Mock(
+            return_value=NotificationResult(channel=NotificationChannel.SYSTEM, success=True)
+        )
         service._handlers[NotificationChannel.SYSTEM] = mock_handler
 
         request1 = NotificationRequest(
@@ -799,7 +800,7 @@ class TestSendBulkNotification:
         request2.force_send = False
 
         # Mock _should_send_by_category to work around the arg order bug in code
-        with patch.object(service, '_should_send_by_category', return_value=True):
+        with patch.object(service, "_should_send_by_category", return_value=True):
             results = service.send_bulk_notification([request1, request2])
 
         assert len(results) == 2
@@ -965,7 +966,7 @@ class TestStaticMethods:
         mock_query.first = Mock(return_value=None)
         db_session.query = Mock(return_value=mock_query)
 
-        with patch.object(NotificationService, 'send_notification') as mock_send:
+        with patch.object(NotificationService, "send_notification") as mock_send:
             mock_send.return_value = {"success": True}
 
             result = NotificationService.send_notification_legacy(

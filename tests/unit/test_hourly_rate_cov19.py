@@ -2,10 +2,11 @@
 """
 第十九批 - 时薪配置服务单元测试
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.hourly_rate_service")
 
@@ -16,13 +17,17 @@ def _make_config(hourly_rate=Decimal("150")):
     return cfg
 
 
-def _make_db_with_side_effect(user_return, user_config_return=None, role_return=None,
-                               dept_config_return=None, default_config_return=None):
+def _make_db_with_side_effect(
+    user_return,
+    user_config_return=None,
+    role_return=None,
+    dept_config_return=None,
+    default_config_return=None,
+):
     """构建按查询模型区分返回值的 db mock"""
-    from app.models.user import User
     from app.models.hourly_rate import HourlyRateConfig
-    from app.models.user import UserRole
     from app.models.organization import Department
+    from app.models.user import User, UserRole
 
     db = MagicMock()
 
@@ -54,6 +59,7 @@ def _make_db_with_side_effect(user_return, user_config_return=None, role_return=
 def test_get_user_hourly_rate_user_not_found():
     """用户不存在时返回默认时薪"""
     from app.services.hourly_rate_service import HourlyRateService
+
     db = _make_db_with_side_effect(user_return=None)
     rate = HourlyRateService.get_user_hourly_rate(db, user_id=999)
     assert rate == HourlyRateService.DEFAULT_HOURLY_RATE
@@ -62,6 +68,7 @@ def test_get_user_hourly_rate_user_not_found():
 def test_get_user_hourly_rate_user_config():
     """用户有个人配置时返回用户配置时薪"""
     from app.services.hourly_rate_service import HourlyRateService
+
     user = MagicMock()
     user.department = None
     user_config = _make_config(Decimal("200"))
@@ -73,6 +80,7 @@ def test_get_user_hourly_rate_user_config():
 def test_get_user_hourly_rate_fallback_to_default_constant():
     """无任何配置时使用硬编码默认值 100"""
     from app.services.hourly_rate_service import HourlyRateService
+
     user = MagicMock()
     user.department = None
     db = _make_db_with_side_effect(user_return=user, user_config_return=None)
@@ -84,14 +92,16 @@ def test_get_user_hourly_rate_fallback_to_default_constant():
 def test_default_hourly_rate_value():
     """默认时薪常量为 100"""
     from app.services.hourly_rate_service import HourlyRateService
+
     assert HourlyRateService.DEFAULT_HOURLY_RATE == Decimal("100")
 
 
 def test_get_users_hourly_rates_multiple():
     """批量获取多用户时薪"""
     from app.services.hourly_rate_service import HourlyRateService
+
     db = MagicMock()
-    with patch.object(HourlyRateService, 'get_user_hourly_rate') as mock_get:
+    with patch.object(HourlyRateService, "get_user_hourly_rate") as mock_get:
         mock_get.side_effect = [Decimal("100"), Decimal("150"), Decimal("200")]
         result = HourlyRateService.get_users_hourly_rates(db, [1, 2, 3])
     assert result == {1: Decimal("100"), 2: Decimal("150"), 3: Decimal("200")}
@@ -100,6 +110,7 @@ def test_get_users_hourly_rates_multiple():
 def test_get_users_hourly_rates_empty():
     """空列表时返回空字典"""
     from app.services.hourly_rate_service import HourlyRateService
+
     db = MagicMock()
     result = HourlyRateService.get_users_hourly_rates(db, [])
     assert result == {}
@@ -128,8 +139,8 @@ def test_get_hourly_rate_history_no_filters():
 
     result = HourlyRateService.get_hourly_rate_history(db)
     assert len(result) == 1
-    assert result[0]['config_type'] == 'USER'
-    assert result[0]['hourly_rate'] == Decimal("150")
+    assert result[0]["config_type"] == "USER"
+    assert result[0]["hourly_rate"] == Decimal("150")
 
 
 def test_get_hourly_rate_history_with_user_filter():

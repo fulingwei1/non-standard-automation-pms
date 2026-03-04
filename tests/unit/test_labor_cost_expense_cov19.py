@@ -2,8 +2,9 @@
 """
 第十九批 - 工时费用化服务（向后兼容模块）单元测试
 """
-import pytest
 import warnings
+
+import pytest
 
 
 def test_import_shows_deprecation_warning():
@@ -13,7 +14,9 @@ def test_import_shows_deprecation_warning():
         warnings.simplefilter("always")
         try:
             import importlib
+
             import app.services.labor_cost_expense_service as mod
+
             importlib.reload(mod)
         except Exception:
             pytest.skip("无法加载 labor_cost_expense_service")
@@ -25,6 +28,7 @@ def test_exports_labor_cost_expense_service():
     """模块导出 LaborCostExpenseService"""
     try:
         from app.services.labor_cost_expense_service import LaborCostExpenseService
+
         assert LaborCostExpenseService is not None
     except ImportError:
         pytest.skip("labor_cost_expense_service 不可导入")
@@ -34,6 +38,7 @@ def test_exports_presale_expense():
     """模块导出 PresaleExpense"""
     try:
         from app.services.labor_cost_expense_service import PresaleExpense
+
         assert PresaleExpense is not None
     except ImportError:
         pytest.skip("labor_cost_expense_service 不可导入")
@@ -44,6 +49,7 @@ def test_labor_cost_expense_service_same_class():
     try:
         from app.services.labor_cost_expense_service import LaborCostExpenseService as cls1
         from app.services.labor_cost_service import LaborCostExpenseService as cls2
+
         assert cls1 is cls2
     except ImportError:
         pytest.skip("无法加载相关模块")
@@ -53,7 +59,8 @@ def test_all_exports():
     """__all__ 包含必要的导出名称"""
     try:
         import app.services.labor_cost_expense_service as mod
-        assert 'LaborCostExpenseService' in mod.__all__
-        assert 'PresaleExpense' in mod.__all__
+
+        assert "LaborCostExpenseService" in mod.__all__
+        assert "PresaleExpense" in mod.__all__
     except ImportError:
         pytest.skip("无法加载 labor_cost_expense_service")

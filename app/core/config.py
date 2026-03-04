@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     OLD_SECRET_KEYS_FILE: Optional[str] = None  # 旧密钥文件路径
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24小时
-    
+
     # 密钥管理配置
     SECRET_KEY_MIN_LENGTH: int = 32  # 密钥最小长度（字符数）
     SECRET_KEY_ROTATION_DAYS: int = 90  # 推荐的密钥轮转周期（天）
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_secret_key(self) -> "Settings":
         """验证并设置 SECRET_KEY
-        
+
         注意: 密钥验证和加载逻辑已移至 SecretKeyManager
         这里仅做基本检查和开发环境的临时密钥生成
         """
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
                     "生产环境必须设置 SECRET_KEY 环境变量或 SECRET_KEY_FILE。"
                     "使用 'python scripts/manage_secrets.py generate' 生成安全密钥。"
                 )
-        
+
         # 验证密钥长度（基本检查）
         if len(self.SECRET_KEY) < self.SECRET_KEY_MIN_LENGTH:
             raise ValueError(
@@ -94,7 +94,7 @@ class Settings(BaseSettings):
                 f"当前长度: {len(self.SECRET_KEY)}。"
                 "使用 'python scripts/manage_secrets.py generate' 生成安全密钥。"
             )
-        
+
         return self
 
     # CORS配置
@@ -133,7 +133,17 @@ class Settings(BaseSettings):
     # 文件上传配置
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
-    ALLOWED_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip"]
+    ALLOWED_EXTENSIONS: List[str] = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".xls",
+        ".xlsx",
+        ".zip",
+    ]
 
     # 分页配置
     DEFAULT_PAGE_SIZE: int = 20
@@ -186,7 +196,9 @@ class Settings(BaseSettings):
     # Kimi AI 配置
     KIMI_API_KEY: Optional[str] = None  # Kimi API Key
     KIMI_API_BASE: str = "https://api.moonshot.cn/v1"  # Kimi API 基础URL
-    KIMI_MODEL: str = "moonshot-v1-8k"  # 默认模型，可选：moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k
+    KIMI_MODEL: str = (
+        "moonshot-v1-8k"  # 默认模型，可选：moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k
+    )
     KIMI_MAX_TOKENS: int = 4000  # 最大生成token数
     KIMI_TEMPERATURE: float = 0.7  # 温度参数，控制随机性
     KIMI_TIMEOUT: int = 30  # 请求超时时间（秒）
@@ -211,7 +223,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_PASSWORD_CHANGE: str = "3/hour"  # 密码修改限制
     RATE_LIMIT_DELETE: str = "20/minute"  # 删除操作限制
     RATE_LIMIT_BATCH: str = "10/minute"  # 批量操作限制
-    
+
     @model_validator(mode="after")
     def validate_rate_limit_storage(self) -> "Settings":
         """验证速率限制存储配置"""

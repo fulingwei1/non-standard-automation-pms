@@ -5,6 +5,7 @@
 - 预警管理（alerts）
 - 齐套检查、库存监控（monitoring）
 """
+
 from fastapi import APIRouter
 
 from . import alerts, monitoring

@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Dict, List, Sequence, Tuple
 
-
 # ---------------------------------------------------------------------------
 # 精度常量
 # ---------------------------------------------------------------------------
@@ -38,6 +37,7 @@ DAILY_WORK_HOURS = Decimal("8")
 # ---------------------------------------------------------------------------
 # 1. EVM — 进度/成本绩效指数（防除零版本）
 # ---------------------------------------------------------------------------
+
 
 def calc_spi_safe(
     ev: float | int | Decimal,
@@ -156,6 +156,7 @@ def calc_vac(
 # 2. 套件率（Kit Rate）
 # ---------------------------------------------------------------------------
 
+
 def calc_cumulative_kit_rate(
     batches: Sequence[Tuple[float | int | Decimal, float | int | Decimal]],
 ) -> Decimal:
@@ -187,7 +188,7 @@ def calc_cumulative_kit_rate(
         raise ValueError("批次列表不能为空")
 
     total_actual = Decimal("0")
-    bom_required = Decimal(str(batches[0][1]))   # 取第一批的 BOM 需求量
+    bom_required = Decimal(str(batches[0][1]))  # 取第一批的 BOM 需求量
 
     if bom_required <= 0:
         raise ValueError("BOM 需求量必须大于 0")
@@ -202,6 +203,7 @@ def calc_cumulative_kit_rate(
 # ---------------------------------------------------------------------------
 # 3. 工时计算
 # ---------------------------------------------------------------------------
+
 
 def calc_hourly_rate(monthly_salary: float | int | Decimal) -> Decimal:
     """
@@ -234,6 +236,7 @@ def calc_hourly_rate(monthly_salary: float | int | Decimal) -> Decimal:
 # ---------------------------------------------------------------------------
 # 4. 报价含税计算
 # ---------------------------------------------------------------------------
+
 
 def calc_price_with_vat(
     price: float | int | Decimal,
@@ -323,15 +326,17 @@ def calc_price_breakdown(
 # 5. 纯函数分页工具（不依赖 SQLAlchemy）
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PageResult:
     """分页结果数据类"""
+
     items: List = field(default_factory=list)
     total: int = 0
     page: int = 1
     page_size: int = 10
     total_pages: int = 0
-    items_count: int = 0   # 当前页实际条数
+    items_count: int = 0  # 当前页实际条数
 
 
 def paginate_pure(

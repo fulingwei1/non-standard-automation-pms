@@ -47,7 +47,7 @@ class ResourceSchedulingService:
     ) -> Dict[str, Any]:
         """
         检测资源冲突
-        
+
         Returns:
             dict: {
                 'conflicts': List[ResourceConflictDetection],
@@ -124,13 +124,20 @@ class ResourceSchedulingService:
         if is_resolved is not None:
             query = query.filter(ResourceConflictDetection.is_resolved == is_resolved)
 
-        return query.order_by(desc(ResourceConflictDetection.priority_score)).offset(skip).limit(limit).all()
+        return (
+            query.order_by(desc(ResourceConflictDetection.priority_score))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def get_conflict(self, conflict_id: int) -> Optional[ResourceConflictDetection]:
         """获取冲突详情"""
-        return self.db.query(ResourceConflictDetection).filter(
-            ResourceConflictDetection.id == conflict_id
-        ).first()
+        return (
+            self.db.query(ResourceConflictDetection)
+            .filter(ResourceConflictDetection.id == conflict_id)
+            .first()
+        )
 
     def update_conflict(
         self,
@@ -195,7 +202,7 @@ class ResourceSchedulingService:
     ) -> Dict[str, Any]:
         """
         AI生成调度方案
-        
+
         Returns:
             dict: {
                 'suggestions': List[ResourceSchedulingSuggestion],
@@ -258,13 +265,17 @@ class ResourceSchedulingService:
         if is_recommended is not None:
             query = query.filter(ResourceSchedulingSuggestion.is_recommended == is_recommended)
 
-        return query.order_by(ResourceSchedulingSuggestion.rank_order).offset(skip).limit(limit).all()
+        return (
+            query.order_by(ResourceSchedulingSuggestion.rank_order).offset(skip).limit(limit).all()
+        )
 
     def get_suggestion(self, suggestion_id: int) -> Optional[ResourceSchedulingSuggestion]:
         """获取方案详情"""
-        return self.db.query(ResourceSchedulingSuggestion).filter(
-            ResourceSchedulingSuggestion.id == suggestion_id
-        ).first()
+        return (
+            self.db.query(ResourceSchedulingSuggestion)
+            .filter(ResourceSchedulingSuggestion.id == suggestion_id)
+            .first()
+        )
 
     def review_suggestion(
         self,
@@ -276,7 +287,7 @@ class ResourceSchedulingService:
     ) -> Tuple[bool, Optional[ResourceSchedulingSuggestion], Optional[str]]:
         """
         审核调度方案
-        
+
         Returns:
             (success, suggestion, error_msg)
         """
@@ -320,7 +331,7 @@ class ResourceSchedulingService:
     ) -> Tuple[bool, Optional[ResourceSchedulingSuggestion], Optional[str]]:
         """
         执行调度方案
-        
+
         Returns:
             (success, suggestion, error_msg)
         """
@@ -341,9 +352,11 @@ class ResourceSchedulingService:
         self.db.refresh(suggestion)
 
         # 同时解决关联的冲突
-        conflict = self.db.query(ResourceConflictDetection).filter(
-            ResourceConflictDetection.id == suggestion.conflict_id
-        ).first()
+        conflict = (
+            self.db.query(ResourceConflictDetection)
+            .filter(ResourceConflictDetection.id == suggestion.conflict_id)
+            .first()
+        )
 
         if conflict:
             conflict.is_resolved = True
@@ -378,7 +391,7 @@ class ResourceSchedulingService:
     ) -> Dict[str, Any]:
         """
         生成资源需求预测
-        
+
         Returns:
             dict: {
                 'forecasts': List[ResourceDemandForecast],
@@ -421,13 +434,17 @@ class ResourceSchedulingService:
         if status:
             query = query.filter(ResourceDemandForecast.status == status)
 
-        return query.order_by(desc(ResourceDemandForecast.created_at)).offset(skip).limit(limit).all()
+        return (
+            query.order_by(desc(ResourceDemandForecast.created_at)).offset(skip).limit(limit).all()
+        )
 
     def get_forecast(self, forecast_id: int) -> Optional[ResourceDemandForecast]:
         """获取预测详情"""
-        return self.db.query(ResourceDemandForecast).filter(
-            ResourceDemandForecast.id == forecast_id
-        ).first()
+        return (
+            self.db.query(ResourceDemandForecast)
+            .filter(ResourceDemandForecast.id == forecast_id)
+            .first()
+        )
 
     # ============================================================================
     # 4. 资源利用率分析
@@ -442,7 +459,7 @@ class ResourceSchedulingService:
     ) -> Dict[str, Any]:
         """
         分析资源利用率
-        
+
         Returns:
             dict: {
                 'analyses': List[ResourceUtilizationAnalysis],
@@ -486,7 +503,9 @@ class ResourceSchedulingService:
         overloaded_count = sum(1 for a in analyses if a.is_overloaded)
 
         # 计算平均利用率
-        avg_utilization = sum(a.utilization_rate or 0 for a in analyses) / len(analyses) if analyses else 0
+        avg_utilization = (
+            sum(a.utilization_rate or 0 for a in analyses) / len(analyses) if analyses else 0
+        )
 
         return {
             "analyses": analyses,
@@ -515,13 +534,20 @@ class ResourceSchedulingService:
         if is_overloaded is not None:
             query = query.filter(ResourceUtilizationAnalysis.is_overloaded == is_overloaded)
 
-        return query.order_by(desc(ResourceUtilizationAnalysis.created_at)).offset(skip).limit(limit).all()
+        return (
+            query.order_by(desc(ResourceUtilizationAnalysis.created_at))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def get_utilization_analysis(self, analysis_id: int) -> Optional[ResourceUtilizationAnalysis]:
         """获取利用率分析详情"""
-        return self.db.query(ResourceUtilizationAnalysis).filter(
-            ResourceUtilizationAnalysis.id == analysis_id
-        ).first()
+        return (
+            self.db.query(ResourceUtilizationAnalysis)
+            .filter(ResourceUtilizationAnalysis.id == analysis_id)
+            .first()
+        )
 
     # ============================================================================
     # 5. 仪表板和统计
@@ -530,63 +556,93 @@ class ResourceSchedulingService:
     def get_dashboard_summary(self) -> Dict[str, Any]:
         """
         资源调度仪表板摘要
-        
+
         Returns:
             dict: 包含所有关键指标的摘要
         """
         # 冲突统计
         total_conflicts = self.db.query(func.count(ResourceConflictDetection.id)).scalar() or 0
-        critical_conflicts = self.db.query(func.count(ResourceConflictDetection.id)).filter(
-            ResourceConflictDetection.severity == "CRITICAL"
-        ).scalar() or 0
-        unresolved_conflicts = self.db.query(func.count(ResourceConflictDetection.id)).filter(
-            ResourceConflictDetection.is_resolved == False
-        ).scalar() or 0
+        critical_conflicts = (
+            self.db.query(func.count(ResourceConflictDetection.id))
+            .filter(ResourceConflictDetection.severity == "CRITICAL")
+            .scalar()
+            or 0
+        )
+        unresolved_conflicts = (
+            self.db.query(func.count(ResourceConflictDetection.id))
+            .filter(ResourceConflictDetection.is_resolved == False)
+            .scalar()
+            or 0
+        )
 
         # 方案统计
         total_suggestions = self.db.query(func.count(ResourceSchedulingSuggestion.id)).scalar() or 0
-        pending_suggestions = self.db.query(func.count(ResourceSchedulingSuggestion.id)).filter(
-            ResourceSchedulingSuggestion.status == "PENDING"
-        ).scalar() or 0
-        implemented_suggestions = self.db.query(func.count(ResourceSchedulingSuggestion.id)).filter(
-            ResourceSchedulingSuggestion.status == "IMPLEMENTED"
-        ).scalar() or 0
+        pending_suggestions = (
+            self.db.query(func.count(ResourceSchedulingSuggestion.id))
+            .filter(ResourceSchedulingSuggestion.status == "PENDING")
+            .scalar()
+            or 0
+        )
+        implemented_suggestions = (
+            self.db.query(func.count(ResourceSchedulingSuggestion.id))
+            .filter(ResourceSchedulingSuggestion.status == "IMPLEMENTED")
+            .scalar()
+            or 0
+        )
 
         # 利用率统计
-        idle_resources = self.db.query(func.count(ResourceUtilizationAnalysis.id)).filter(
-            ResourceUtilizationAnalysis.is_idle_resource == True
-        ).scalar() or 0
-        overloaded_resources = self.db.query(func.count(ResourceUtilizationAnalysis.id)).filter(
-            ResourceUtilizationAnalysis.is_overloaded == True
-        ).scalar() or 0
+        idle_resources = (
+            self.db.query(func.count(ResourceUtilizationAnalysis.id))
+            .filter(ResourceUtilizationAnalysis.is_idle_resource == True)
+            .scalar()
+            or 0
+        )
+        overloaded_resources = (
+            self.db.query(func.count(ResourceUtilizationAnalysis.id))
+            .filter(ResourceUtilizationAnalysis.is_overloaded == True)
+            .scalar()
+            or 0
+        )
 
         # 平均利用率
         avg_util = self.db.query(func.avg(ResourceUtilizationAnalysis.utilization_rate)).scalar()
         avg_utilization = float(avg_util) if avg_util else 0.0
 
         # 预测统计
-        forecasts_count = self.db.query(func.count(ResourceDemandForecast.id)).filter(
-            ResourceDemandForecast.status == "ACTIVE"
-        ).scalar() or 0
+        forecasts_count = (
+            self.db.query(func.count(ResourceDemandForecast.id))
+            .filter(ResourceDemandForecast.status == "ACTIVE")
+            .scalar()
+            or 0
+        )
 
-        critical_gaps = self.db.query(func.count(ResourceDemandForecast.id)).filter(
-            ResourceDemandForecast.gap_severity.in_(["SHORTAGE", "CRITICAL"])
-        ).scalar() or 0
+        critical_gaps = (
+            self.db.query(func.count(ResourceDemandForecast.id))
+            .filter(ResourceDemandForecast.gap_severity.in_(["SHORTAGE", "CRITICAL"]))
+            .scalar()
+            or 0
+        )
 
         # 招聘需求
-        hiring_query = self.db.query(func.sum(ResourceDemandForecast.demand_gap)).filter(
-            ResourceDemandForecast.demand_gap > 0
-        ).scalar()
+        hiring_query = (
+            self.db.query(func.sum(ResourceDemandForecast.demand_gap))
+            .filter(ResourceDemandForecast.demand_gap > 0)
+            .scalar()
+        )
         hiring_needed = int(hiring_query) if hiring_query else 0
 
         # 最近检测/分析时间
-        last_conflict = self.db.query(ResourceConflictDetection).order_by(
-            desc(ResourceConflictDetection.created_at)
-        ).first()
+        last_conflict = (
+            self.db.query(ResourceConflictDetection)
+            .order_by(desc(ResourceConflictDetection.created_at))
+            .first()
+        )
 
-        last_analysis = self.db.query(ResourceUtilizationAnalysis).order_by(
-            desc(ResourceUtilizationAnalysis.created_at)
-        ).first()
+        last_analysis = (
+            self.db.query(ResourceUtilizationAnalysis)
+            .order_by(desc(ResourceUtilizationAnalysis.created_at))
+            .first()
+        )
 
         return {
             "total_conflicts": total_conflicts,
@@ -620,7 +676,9 @@ class ResourceSchedulingService:
         if conflict_id:
             query = query.filter(ResourceSchedulingLog.conflict_id == conflict_id)
 
-        return query.order_by(desc(ResourceSchedulingLog.created_at)).offset(skip).limit(limit).all()
+        return (
+            query.order_by(desc(ResourceSchedulingLog.created_at)).offset(skip).limit(limit).all()
+        )
 
     # ============================================================================
     # 私有辅助方法

@@ -3,18 +3,19 @@ import pytest
 
 pytestmark = pytest.mark.skip(reason="Mock configuration issues - needs rewrite")
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
+from app.services.lead_priority_scoring import LeadPriorityScoringService
 from app.services.timesheet_aggregation_service import TimesheetAggregationService
 from app.services.timesheet_quality_service import TimesheetQualityService
 from app.services.timesheet_sync_service import TimesheetSyncService
-from app.services.lead_priority_scoring import LeadPriorityScoringService
-from app.services.work_log_auto_generator import WorkLogAutoGenerator
 from app.services.wechat_alert_service import WeChatAlertService
+from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
 
 class TestTimesheetAggregationService:
@@ -73,9 +74,7 @@ class TestTimesheetAggregationService:
                                         mock_summary_obj.id = 1
                                         mock_get_summary.return_value = mock_summary_obj
 
-                                        result = service.aggregate_monthly_timesheet(
-                                            2024, 1
-                                        )
+                                        result = service.aggregate_monthly_timesheet(2024, 1)
 
                                         assert result["success"] is True
                                         assert "summary_id" in result
@@ -250,14 +249,10 @@ class TestTimesheetSyncService:
         mock_query_instance.filter.return_value.first.return_value = mock_timesheet
         mock_db.query.return_value = mock_query_instance
 
-        with patch(
-            "app.services.timesheet_sync_service.HourlyRateService"
-        ) as mock_rate:
+        with patch("app.services.timesheet_sync_service.HourlyRateService") as mock_rate:
             mock_rate.get_user_hourly_rate.return_value = Decimal("100.00")
 
-            with patch.object(
-                service, "_create_financial_cost_from_timesheet"
-            ) as mock_create:
+            with patch.object(service, "_create_financial_cost_from_timesheet") as mock_create:
                 mock_create.return_value = {
                     "success": True,
                     "created": True,
@@ -434,9 +429,7 @@ class TestWorkLogAutoGenerator:
         mock_log_query.filter.return_value.first.return_value = None
 
         mock_ts_query = Mock()
-        mock_ts_query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_timesheet
-        ]
+        mock_ts_query.filter.return_value.order_by.return_value.all.return_value = [mock_timesheet]
 
         mock_user_query = Mock()
         mock_user_query.filter.return_value.first.return_value = mock_user

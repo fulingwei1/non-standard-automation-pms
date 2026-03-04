@@ -4,9 +4,15 @@ import pytest
 
 pytest.importorskip("app.services.machine_service")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
-from app.services.machine_service import MachineService, ProjectAggregationService, VALID_STAGES, VALID_HEALTH
+from unittest.mock import MagicMock, patch
+
+from app.services.machine_service import (
+    VALID_HEALTH,
+    VALID_STAGES,
+    MachineService,
+    ProjectAggregationService,
+)
 
 
 def make_db():
@@ -51,7 +57,8 @@ def test_generate_machine_code_success():
 
     def mock_query(model):
         q = MagicMock()
-        from app.models.project import Project, Machine
+        from app.models.project import Machine, Project
+
         if model is Project:
             q.filter.return_value.first.return_value = project
         else:

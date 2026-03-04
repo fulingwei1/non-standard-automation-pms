@@ -50,7 +50,7 @@ def configure_reminder_rule(
 ) -> Any:
     """
     配置工时提醒规则
-    
+
     权限：timesheet:reminder:config
     """
     service = TimesheetReminderService(db)
@@ -72,9 +72,7 @@ def configure_reminder_rule(
             created_by=current_user.id,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     return config
 
@@ -93,7 +91,7 @@ def update_reminder_rule(
 ) -> Any:
     """
     更新工时提醒规则
-    
+
     权限：timesheet:reminder:config
     """
     service = TimesheetReminderService(db)
@@ -103,9 +101,7 @@ def update_reminder_rule(
     )
 
     if not config:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="提醒规则不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="提醒规则不存在")
 
     return config
 
@@ -126,7 +122,7 @@ def list_reminder_configs(
 ) -> Any:
     """
     获取提醒规则配置列表
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
@@ -162,7 +158,7 @@ def list_pending_reminders(
 ) -> Any:
     """
     获取待处理提醒列表
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
@@ -204,7 +200,7 @@ def list_reminder_history(
 ) -> Any:
     """
     获取提醒历史记录
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
@@ -244,7 +240,7 @@ def dismiss_reminder(
 ) -> Any:
     """
     忽略提醒
-    
+
     权限：timesheet:reminder:dismiss
     """
     service = TimesheetReminderService(db)
@@ -257,9 +253,7 @@ def dismiss_reminder(
     )
 
     if not updated_reminder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="提醒不存在或无权操作"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="提醒不存在或无权操作")
 
     return updated_reminder
 
@@ -277,19 +271,15 @@ def mark_reminder_read(
 ) -> Any:
     """
     标记提醒已读
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
 
-    updated_reminder = service.mark_reminder_read(
-        reminder_id=reminder_id, user_id=current_user.id
-    )
+    updated_reminder = service.mark_reminder_read(reminder_id=reminder_id, user_id=current_user.id)
 
     if not updated_reminder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="提醒不存在或无权操作"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="提醒不存在或无权操作")
 
     return updated_reminder
 
@@ -313,7 +303,7 @@ def list_anomalies(
 ) -> Any:
     """
     获取异常记录列表
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
@@ -348,7 +338,7 @@ def resolve_anomaly(
 ) -> Any:
     """
     解决异常记录
-    
+
     权限：timesheet:reminder:resolve
     """
     service = TimesheetReminderService(db)
@@ -383,7 +373,7 @@ def get_reminder_statistics(
 ) -> Any:
     """
     获取提醒统计信息
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)
@@ -402,7 +392,7 @@ def get_reminder_dashboard(
 ) -> Any:
     """
     获取提醒Dashboard（包含提醒和异常统计）
-    
+
     权限：timesheet:reminder:view
     """
     service = TimesheetReminderService(db)

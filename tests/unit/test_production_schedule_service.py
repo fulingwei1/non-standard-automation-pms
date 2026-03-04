@@ -3,9 +3,10 @@
 生产排程服务单元测试
 覆盖时间计算、冲突检测、优先级评分等核心算法
 """
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.production_schedule_service import ProductionScheduleService
 
@@ -20,8 +21,15 @@ def service(mock_db):
     return ProductionScheduleService(db=mock_db)
 
 
-def make_schedule(id=1, equipment_id=None, worker_id=None,
-                  start=None, end=None, work_order_id=1, priority_score=2.0):
+def make_schedule(
+    id=1,
+    equipment_id=None,
+    worker_id=None,
+    start=None,
+    end=None,
+    work_order_id=1,
+    priority_score=2.0,
+):
     s = MagicMock()
     s.id = id
     s.equipment_id = equipment_id
@@ -121,9 +129,12 @@ class TestDetectConflicts:
         t1 = datetime(2025, 1, 10, 8, 0)
         t2 = datetime(2025, 1, 10, 10, 0)
         s1 = make_schedule(id=1, equipment_id=5, start=t1, end=t2)
-        s2 = make_schedule(id=2, equipment_id=5,
-                           start=datetime(2025, 1, 10, 9, 0),
-                           end=datetime(2025, 1, 10, 11, 0))
+        s2 = make_schedule(
+            id=2,
+            equipment_id=5,
+            start=datetime(2025, 1, 10, 9, 0),
+            end=datetime(2025, 1, 10, 11, 0),
+        )
         conflicts = service._detect_conflicts([s1, s2])
         equipment_conflicts = [c for c in conflicts if c.conflict_type == "EQUIPMENT"]
         assert len(equipment_conflicts) >= 1
@@ -132,20 +143,26 @@ class TestDetectConflicts:
         t1 = datetime(2025, 1, 10, 8, 0)
         t2 = datetime(2025, 1, 10, 10, 0)
         s1 = make_schedule(id=1, worker_id=3, start=t1, end=t2)
-        s2 = make_schedule(id=2, worker_id=3,
-                           start=datetime(2025, 1, 10, 9, 0),
-                           end=datetime(2025, 1, 10, 11, 0))
+        s2 = make_schedule(
+            id=2, worker_id=3, start=datetime(2025, 1, 10, 9, 0), end=datetime(2025, 1, 10, 11, 0)
+        )
         conflicts = service._detect_conflicts([s1, s2])
         worker_conflicts = [c for c in conflicts if c.conflict_type == "WORKER"]
         assert len(worker_conflicts) >= 1
 
     def test_no_conflict_non_overlapping_times(self, service):
-        s1 = make_schedule(id=1, equipment_id=1,
-                           start=datetime(2025, 1, 10, 8, 0),
-                           end=datetime(2025, 1, 10, 10, 0))
-        s2 = make_schedule(id=2, equipment_id=1,
-                           start=datetime(2025, 1, 10, 10, 0),
-                           end=datetime(2025, 1, 10, 12, 0))
+        s1 = make_schedule(
+            id=1,
+            equipment_id=1,
+            start=datetime(2025, 1, 10, 8, 0),
+            end=datetime(2025, 1, 10, 10, 0),
+        )
+        s2 = make_schedule(
+            id=2,
+            equipment_id=1,
+            start=datetime(2025, 1, 10, 10, 0),
+            end=datetime(2025, 1, 10, 12, 0),
+        )
         conflicts = service._detect_conflicts([s1, s2])
         assert len(conflicts) == 0
 

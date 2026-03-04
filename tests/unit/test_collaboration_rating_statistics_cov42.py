@@ -6,6 +6,7 @@ pytest.importorskip("app.services.collaboration_rating.statistics")
 
 from decimal import Decimal
 from unittest.mock import MagicMock, call
+
 from app.services.collaboration_rating.statistics import RatingStatistics
 
 
@@ -25,6 +26,7 @@ def make_rating(total_score, ratee_job_type="mechanical", **extra):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_get_average_score_no_ratings_returns_default():
     stats, db = make_stats()
@@ -74,8 +76,12 @@ def test_analyze_rating_quality_empty():
 def test_analyze_rating_quality_recommendations():
     stats, db = make_stats()
     # avg < 70 → recommendation
-    ratings = [make_rating(60, communication_score=60, response_score=60,
-                           delivery_score=60, interface_score=60) for _ in range(5)]
+    ratings = [
+        make_rating(
+            60, communication_score=60, response_score=60, delivery_score=60, interface_score=60
+        )
+        for _ in range(5)
+    ]
     db.query.return_value.filter.return_value.all.return_value = ratings
     result = stats.analyze_rating_quality(1)
     assert any("平均" in r for r in result["recommendations"])

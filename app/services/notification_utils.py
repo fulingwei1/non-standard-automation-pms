@@ -43,9 +43,7 @@ def resolve_channels(alert: AlertRecord) -> list:
     return ["SYSTEM"]
 
 
-def resolve_recipients(
-    db: Session, alert: AlertRecord
-) -> Dict[int, Dict[str, Optional[User]]]:
+def resolve_recipients(db: Session, alert: AlertRecord) -> Dict[int, Dict[str, Optional[User]]]:
     """Return user_id -> {'user': User, 'settings': NotificationSettings or None} map."""
     user_ids = set()
     if alert.project and alert.project.pm_id:
@@ -60,12 +58,7 @@ def resolve_recipients(
     if not user_ids:
         user_ids.add(1)
 
-    users = (
-        db.query(User)
-        .filter(User.id.in_(user_ids))
-        .filter(User.is_active)
-        .all()
-    )
+    users = db.query(User).filter(User.id.in_(user_ids)).filter(User.is_active).all()
     settings_map = {}
     if users:
         user_id_list = [user.id for user in users]
@@ -75,9 +68,7 @@ def resolve_recipients(
             .all()
         )
         settings_map = {setting.user_id: setting for setting in settings_list}
-    return {
-        user.id: {"user": user, "settings": settings_map.get(user.id)} for user in users
-    }
+    return {user.id: {"user": user, "settings": settings_map.get(user.id)} for user in users}
 
 
 def resolve_channel_target(channel: str, user: Optional[User]) -> Optional[str]:
@@ -122,9 +113,7 @@ def parse_time_str(value: Optional[str]) -> Optional[time]:
         return None
 
 
-def is_quiet_hours(
-    settings: Optional[NotificationSettings], current_time: datetime
-) -> bool:
+def is_quiet_hours(settings: Optional[NotificationSettings], current_time: datetime) -> bool:
     if not settings:
         return False
     start = parse_time_str(settings.quiet_hours_start)
@@ -137,9 +126,7 @@ def is_quiet_hours(
     return now >= start or now <= end
 
 
-def next_quiet_resume(
-    settings: NotificationSettings, current_time: datetime
-) -> datetime:
+def next_quiet_resume(settings: NotificationSettings, current_time: datetime) -> datetime:
     end = parse_time_str(settings.quiet_hours_end)
     if not end:
         return current_time + timedelta(minutes=30)

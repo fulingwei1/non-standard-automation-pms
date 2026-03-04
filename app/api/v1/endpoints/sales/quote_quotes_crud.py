@@ -14,8 +14,8 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-
 from app.utils.db_helpers import delete_obj, get_or_404
+
 router = APIRouter()
 
 
@@ -36,12 +36,17 @@ def get_quote_detail(
     Returns:
         ResponseModel: 报价详情
     """
-    quote = db.query(Quote).options(
-        joinedload(Quote.opportunity),
-        joinedload(Quote.customer),
-        joinedload(Quote.owner),
-        joinedload(Quote.current_version).joinedload(QuoteVersion.items)
-    ).filter(Quote.id == quote_id).first()
+    quote = (
+        db.query(Quote)
+        .options(
+            joinedload(Quote.opportunity),
+            joinedload(Quote.customer),
+            joinedload(Quote.owner),
+            joinedload(Quote.current_version).joinedload(QuoteVersion.items),
+        )
+        .filter(Quote.id == quote_id)
+        .first()
+    )
 
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
@@ -50,16 +55,19 @@ def get_quote_detail(
     current_version = quote.current_version
     items_data = []
     if current_version and current_version.items:
-        items_data = [{
-            "id": item.id,
-            "item_type": item.item_type,
-            "item_name": item.item_name,
-            "qty": float(item.qty) if item.qty else None,
-            "unit_price": float(item.unit_price) if item.unit_price else None,
-            "cost": float(item.cost) if item.cost else None,
-            "lead_time_days": item.lead_time_days,
-            "remark": item.remark,
-        } for item in current_version.items]
+        items_data = [
+            {
+                "id": item.id,
+                "item_type": item.item_type,
+                "item_name": item.item_name,
+                "qty": float(item.qty) if item.qty else None,
+                "unit_price": float(item.unit_price) if item.unit_price else None,
+                "cost": float(item.cost) if item.cost else None,
+                "lead_time_days": item.lead_time_days,
+                "remark": item.remark,
+            }
+            for item in current_version.items
+        ]
 
     data = {
         "id": quote.id,
@@ -72,15 +80,25 @@ def get_quote_detail(
         "valid_until": quote.valid_until.isoformat() if quote.valid_until else None,
         "owner_id": quote.owner_id,
         "owner_name": quote.owner.real_name if quote.owner else None,
-        "current_version": {
-            "id": current_version.id,
-            "version_no": current_version.version_no,
-            "total_price": float(current_version.total_price) if current_version.total_price else None,
-            "cost_total": float(current_version.cost_total) if current_version.cost_total else None,
-            "gross_margin": float(current_version.gross_margin) if current_version.gross_margin else None,
-            "lead_time_days": current_version.lead_time_days,
-            "items": items_data,
-        } if current_version else None,
+        "current_version": (
+            {
+                "id": current_version.id,
+                "version_no": current_version.version_no,
+                "total_price": (
+                    float(current_version.total_price) if current_version.total_price else None
+                ),
+                "cost_total": (
+                    float(current_version.cost_total) if current_version.cost_total else None
+                ),
+                "gross_margin": (
+                    float(current_version.gross_margin) if current_version.gross_margin else None
+                ),
+                "lead_time_days": current_version.lead_time_days,
+                "items": items_data,
+            }
+            if current_version
+            else None
+        ),
         "created_at": quote.created_at.isoformat() if quote.created_at else None,
         "updated_at": quote.updated_at.isoformat() if quote.updated_at else None,
     }
@@ -116,6 +134,7 @@ def update_quote(
             value = quote_data[field]
             if field == "valid_until" and isinstance(value, str):
                 from datetime import date
+
                 value = date.fromisoformat(value)
             setattr(quote, field, value)
 

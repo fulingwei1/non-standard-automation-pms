@@ -69,11 +69,15 @@ def list_team_members(
             "team_name": team.team_name,
             "members": items,
             "total": len(items),
-        }
+        },
     )
 
 
-@router.post("/sales-teams/{team_id}/members", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sales-teams/{team_id}/members",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_team_member(
     *,
     db: Session = Depends(deps.get_db),
@@ -98,10 +102,14 @@ def add_team_member(
         )
 
     # 检查是否已是成员
-    existing = db.query(SalesTeamMember).filter(
-        SalesTeamMember.team_id == team_id,
-        SalesTeamMember.user_id == request.user_id,
-    ).first()
+    existing = (
+        db.query(SalesTeamMember)
+        .filter(
+            SalesTeamMember.team_id == team_id,
+            SalesTeamMember.user_id == request.user_id,
+        )
+        .first()
+    )
     if existing:
         if existing.is_active:
             raise HTTPException(
@@ -144,11 +152,15 @@ def add_team_member(
             "user_name": user.real_name or user.username,
             "role": member.role,
             "is_primary": member.is_primary,
-        }
+        },
     )
 
 
-@router.post("/sales-teams/{team_id}/members/batch", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sales-teams/{team_id}/members/batch",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 def batch_add_team_members(
     *,
     db: Session = Depends(deps.get_db),
@@ -167,11 +179,15 @@ def batch_add_team_members(
     added = []
     skipped = []
     for user_id in request.user_ids:
-        existing = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team_id,
-            SalesTeamMember.user_id == user_id,
-            SalesTeamMember.is_active,
-        ).first()
+        existing = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team_id,
+                SalesTeamMember.user_id == user_id,
+                SalesTeamMember.is_active,
+            )
+            .first()
+        )
         if existing:
             skipped.append(user_id)
             continue
@@ -192,7 +208,7 @@ def batch_add_team_members(
         data={
             "added": added,
             "skipped": skipped,
-        }
+        },
     )
 
 
@@ -206,10 +222,14 @@ def update_team_member(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新团队成员"""
-    member = db.query(SalesTeamMember).filter(
-        SalesTeamMember.id == member_id,
-        SalesTeamMember.team_id == team_id,
-    ).first()
+    member = (
+        db.query(SalesTeamMember)
+        .filter(
+            SalesTeamMember.id == member_id,
+            SalesTeamMember.team_id == team_id,
+        )
+        .first()
+    )
     if not member:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -239,7 +259,7 @@ def update_team_member(
             "role": member.role,
             "is_primary": member.is_primary,
             "is_active": member.is_active,
-        }
+        },
     )
 
 
@@ -252,10 +272,14 @@ def remove_team_member(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """移除团队成员（软删除）"""
-    member = db.query(SalesTeamMember).filter(
-        SalesTeamMember.id == member_id,
-        SalesTeamMember.team_id == team_id,
-    ).first()
+    member = (
+        db.query(SalesTeamMember)
+        .filter(
+            SalesTeamMember.id == member_id,
+            SalesTeamMember.team_id == team_id,
+        )
+        .first()
+    )
     if not member:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

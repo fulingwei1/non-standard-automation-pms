@@ -29,9 +29,7 @@ def get_cost_overrun_reasons(
     """成本超支原因分析"""
     service = CostOverrunAnalysisService(db)
     result = service.analyze_reasons(
-        start_date=start_date,
-        end_date=end_date,
-        project_id=project_id
+        start_date=start_date, end_date=end_date, project_id=project_id
     )
     return ResponseModel(code=200, message="分析成功", data=result)
 

@@ -4,8 +4,9 @@ Tests for material_category_service
 物料分类服务测试
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
 from sqlalchemy.orm import Session
 
 from app.models.material import MaterialCategory
@@ -24,11 +25,13 @@ class TestMaterialCategoryService:
     def service(self, mock_db):
         """创建 MaterialCategoryService 实例"""
         from app.services.material_category_service import MaterialCategoryService
+
         return MaterialCategoryService(mock_db)
 
     def test_init(self, mock_db):
         """测试服务初始化"""
         from app.services.material_category_service import MaterialCategoryService
+
         service = MaterialCategoryService(mock_db)
         assert service.db == mock_db
         assert service.model == MaterialCategory
@@ -44,7 +47,7 @@ class TestMaterialCategoryService:
             level=1,
             full_path="/电子元件",
             sort_order=1,
-            is_active=True
+            is_active=True,
         )
         mock_category.model_dump = lambda: {
             "id": 1,
@@ -54,11 +57,11 @@ class TestMaterialCategoryService:
             "level": 1,
             "full_path": "/电子元件",
             "sort_order": 1,
-            "is_active": True
+            "is_active": True,
         }
 
         # Patch model_validate
-        with patch('app.schemas.material.MaterialCategoryResponse.model_validate') as mock_validate:
+        with patch("app.schemas.material.MaterialCategoryResponse.model_validate") as mock_validate:
             mock_response = Mock()
             mock_validate.return_value = mock_response
 
@@ -104,7 +107,7 @@ class TestMaterialCategoryService:
             resp.name = cat.name
             return resp
 
-        with patch.object(service, '_to_response', side_effect=mock_to_response):
+        with patch.object(service, "_to_response", side_effect=mock_to_response):
             result = service.get_tree(parent_id=None)
 
             assert len(result) == 2
@@ -139,7 +142,7 @@ class TestMaterialCategoryService:
             resp.name = cat.name
             return resp
 
-        with patch.object(service, '_to_response', side_effect=mock_to_response):
+        with patch.object(service, "_to_response", side_effect=mock_to_response):
             result = service.get_tree()
 
             assert len(result) == 1
@@ -173,7 +176,7 @@ class TestMaterialCategoryService:
             resp.name = cat.name
             return resp
 
-        with patch.object(service, '_to_response', side_effect=mock_to_response):
+        with patch.object(service, "_to_response", side_effect=mock_to_response):
             result = service.get_tree(parent_id=1)
 
             assert len(result) == 2

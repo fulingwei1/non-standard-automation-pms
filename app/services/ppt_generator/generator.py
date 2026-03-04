@@ -31,9 +31,7 @@ class PresentationGenerator:
             "智能驱动 · 精准交付", "非标自动化测试设备全生命周期 AI 项目管理系统"
         )
         # 添加slogan
-        slogan_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(5.5), Inches(9), Inches(0.5)
-        )
+        slogan_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.5), Inches(9), Inches(0.5))
         p = slogan_box.text_frame.paragraphs[0]
         p.text = "让复杂项目变得可控、可预测、可信任"
         p.font.size = Pt(18)

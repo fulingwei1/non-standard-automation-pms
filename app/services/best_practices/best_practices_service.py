@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ class BestPracticesService:
 
     def __init__(self, db: Session):
         """初始化服务
-        
+
         Args:
             db: 数据库会话
         """
@@ -29,11 +29,11 @@ class BestPracticesService:
         category: Optional[str] = None,
     ) -> Tuple[List[Dict[str, Any]], int]:
         """获取热门最佳实践（按复用次数排序）
-        
+
         Args:
             pagination: 分页参数
             category: 分类筛选
-            
+
         Returns:
             (实践列表, 总数)
         """
@@ -80,14 +80,14 @@ class BestPracticesService:
         search: Optional[str] = None,
     ) -> Tuple[List[Dict[str, Any]], int]:
         """获取最佳实践列表
-        
+
         Args:
             pagination: 分页参数
             project_id: 项目ID筛选
             category: 分类筛选
             validation_status: 验证状态筛选
             search: 搜索关键词
-            
+
         Returns:
             (实践列表, 总数)
         """
@@ -137,10 +137,10 @@ class BestPracticesService:
 
     def get_practice_by_id(self, practice_id: int) -> Optional[Dict[str, Any]]:
         """获取最佳实践详情
-        
+
         Args:
             practice_id: 实践ID
-            
+
         Returns:
             实践信息字典，不存在时返回 None
         """
@@ -166,22 +166,20 @@ class BestPracticesService:
         self, practice_id: int, target_project_id: int, notes: Optional[str] = None
     ) -> bool:
         """应用最佳实践到目标项目
-        
+
         Args:
             practice_id: 实践ID
             target_project_id: 目标项目ID
             notes: 应用备注
-            
+
         Returns:
             成功返回 True，失败抛出异常
-            
+
         Raises:
             ValueError: 实践或项目不存在
         """
         # 检查最佳实践是否存在
-        check_query = (
-            "SELECT id, reuse_count FROM project_best_practices WHERE id = :practice_id"
-        )
+        check_query = "SELECT id, reuse_count FROM project_best_practices WHERE id = :practice_id"
         result = self.db.execute(text(check_query), {"practice_id": practice_id})
         practice = result.fetchone()
 
@@ -190,9 +188,7 @@ class BestPracticesService:
 
         # 检查目标项目是否存在
         project_check = "SELECT id FROM projects WHERE id = :project_id"
-        project_result = self.db.execute(
-            text(project_check), {"project_id": target_project_id}
-        )
+        project_result = self.db.execute(text(project_check), {"project_id": target_project_id})
         if not project_result.fetchone():
             raise ValueError("目标项目不存在")
 
@@ -204,9 +200,7 @@ class BestPracticesService:
                 updated_at = :now
             WHERE id = :practice_id
         """
-        self.db.execute(
-            text(update_query), {"practice_id": practice_id, "now": datetime.now()}
-        )
+        self.db.execute(text(update_query), {"practice_id": practice_id, "now": datetime.now()})
         self.db.commit()
 
         return True
@@ -227,7 +221,7 @@ class BestPracticesService:
         applicable_stages: Optional[str] = None,
     ) -> Dict[str, Any]:
         """创建最佳实践
-        
+
         Args:
             review_id: 评审ID
             project_id: 项目ID
@@ -241,7 +235,7 @@ class BestPracticesService:
             is_reusable: 是否可复用
             applicable_project_types: 适用项目类型
             applicable_stages: 适用阶段
-            
+
         Returns:
             创建的实践信息字典
         """
@@ -303,10 +297,10 @@ class BestPracticesService:
 
     def _row_to_dict(self, row) -> Dict[str, Any]:
         """将数据库行转换为字典
-        
+
         Args:
             row: 数据库行对象
-            
+
         Returns:
             字典格式的数据
         """

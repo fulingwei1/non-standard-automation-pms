@@ -12,18 +12,17 @@
 - 项目筛选
 """
 
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.main import app
 from app.models.project import Project
-from app.core.config import settings
-
-import uuid
 
 _PJ250119001 = f"PJ250119001-{uuid.uuid4().hex[:8]}"
-
 
 
 @pytest.mark.api
@@ -86,9 +85,7 @@ class TestProjectsAPI:
         assert "page" in data
         assert "page_size" in data
 
-    def test_list_projects_with_pagination(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_list_projects_with_pagination(self, client: TestClient, auth_headers: dict):
         """测试项目列表分页"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects?page=1&page_size=5",
@@ -172,9 +169,7 @@ class TestProjectsAPI:
             headers=auth_headers,
         )
 
-    def test_create_project_duplicate_code(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_create_project_duplicate_code(self, client: TestClient, auth_headers: dict):
         """测试创建重复项目编码"""
         project_data = {
             "project_code": _PJ250119001,
@@ -195,9 +190,7 @@ class TestProjectsAPI:
         # 可能返回 409 Conflict 或 200（取决于实现）
         assert response.status_code in [200, 400, 409]
 
-    def test_create_project_validation_error(
-        self, client: TestClient, auth_headers: dict
-    ):
+    def test_create_project_validation_error(self, client: TestClient, auth_headers: dict):
         """测试创建项目时验证错误"""
         project_data = {
             # 缺少必填字段

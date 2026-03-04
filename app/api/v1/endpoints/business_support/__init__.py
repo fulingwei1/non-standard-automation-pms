@@ -21,5 +21,7 @@ router.include_router(dashboard.router, tags=["商务支持-工作台"])
 router.include_router(bidding.router, prefix="/bidding", tags=["商务支持-投标管理"])
 router.include_router(contract_review.router, prefix="/contracts", tags=["商务支持-合同审核"])
 router.include_router(contract_seal.router, prefix="/contracts", tags=["商务支持-合同盖章"])
-router.include_router(payment_reminders.router, prefix="/payment-reminders", tags=["商务支持-回款催收"])
+router.include_router(
+    payment_reminders.router, prefix="/payment-reminders", tags=["商务支持-回款催收"]
+)
 router.include_router(document_archive.router, prefix="/archives", tags=["商务支持-文件归档"])

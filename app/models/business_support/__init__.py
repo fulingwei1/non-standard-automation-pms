@@ -40,27 +40,27 @@ from .sales_order import (
 
 __all__ = [
     # Bidding
-    'BiddingProject',
-    'BiddingDocument',
+    "BiddingProject",
+    "BiddingDocument",
     # Contract
-    'ContractReview',
-    'ContractSealRecord',
+    "ContractReview",
+    "ContractSealRecord",
     # Payment
-    'PaymentReminder',
+    "PaymentReminder",
     # Document
-    'DocumentArchive',
+    "DocumentArchive",
     # Sales Order
-    'SalesOrder',
-    'SalesOrderItem',
+    "SalesOrder",
+    "SalesOrderItem",
     # Delivery
-    'DeliveryOrder',
+    "DeliveryOrder",
     # Acceptance
-    'AcceptanceTracking',
-    'AcceptanceTrackingRecord',
+    "AcceptanceTracking",
+    "AcceptanceTrackingRecord",
     # Reconciliation
-    'Reconciliation',
+    "Reconciliation",
     # Invoice
-    'InvoiceRequest',
+    "InvoiceRequest",
     # Registration
-    'CustomerSupplierRegistration',
+    "CustomerSupplierRegistration",
 ]

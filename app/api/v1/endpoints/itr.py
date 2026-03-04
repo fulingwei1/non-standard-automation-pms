@@ -29,7 +29,9 @@ from app.services.itr_service import (
 router = APIRouter()
 
 
-@router.get("/tickets/{ticket_id}/timeline", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/tickets/{ticket_id}/timeline", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_ticket_timeline_api(
     *,
     db: Session = Depends(deps.get_db),
@@ -43,19 +45,14 @@ def get_ticket_timeline_api(
     timeline_data = get_ticket_timeline(db, ticket_id)
 
     if not timeline_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="工单不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工单不存在")
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=timeline_data
-    )
+    return ResponseModel(code=200, message="获取成功", data=timeline_data)
 
 
-@router.get("/issues/{issue_id}/related", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/issues/{issue_id}/related", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_issue_related_data_api(
     *,
     db: Session = Depends(deps.get_db),
@@ -68,16 +65,9 @@ def get_issue_related_data_api(
     related_data = get_issue_related_data(db, issue_id)
 
     if not related_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="问题不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="问题不存在")
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=related_data
-    )
+    return ResponseModel(code=200, message="获取成功", data=related_data)
 
 
 @router.get("/dashboard", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -100,8 +90,7 @@ def get_itr_dashboard(
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="开始日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
 
     if end_date:
@@ -109,22 +98,14 @@ def get_itr_dashboard(
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="结束日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
 
     dashboard_data = get_itr_dashboard_data(
-        db,
-        project_id=project_id,
-        start_date=start_dt,
-        end_date=end_dt
+        db, project_id=project_id, start_date=start_dt, end_date=end_dt
     )
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=dashboard_data
-    )
+    return ResponseModel(code=200, message="获取成功", data=dashboard_data)
 
 
 @router.get("/analytics/efficiency", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -148,8 +129,7 @@ def get_itr_efficiency_analysis(
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="开始日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
 
     if end_date:
@@ -157,8 +137,7 @@ def get_itr_efficiency_analysis(
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="结束日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
 
     resolution_analysis = analyze_resolution_time(db, start_dt, end_dt, project_id)
@@ -170,7 +149,7 @@ def get_itr_efficiency_analysis(
         data={
             "resolution_time": resolution_analysis,
             "bottlenecks": bottlenecks,
-        }
+        },
     )
 
 
@@ -194,8 +173,7 @@ def get_satisfaction_trend(
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="开始日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
 
     if end_date:
@@ -203,17 +181,12 @@ def get_satisfaction_trend(
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="结束日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
 
     satisfaction_trend = analyze_satisfaction_trend(db, start_dt, end_dt, project_id)
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=satisfaction_trend
-    )
+    return ResponseModel(code=200, message="获取成功", data=satisfaction_trend)
 
 
 @router.get("/analytics/bottlenecks", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -235,8 +208,7 @@ def get_bottlenecks_analysis(
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="开始日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
 
     if end_date:
@@ -244,17 +216,12 @@ def get_bottlenecks_analysis(
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="结束日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
 
     bottlenecks = identify_bottlenecks(db, start_dt, end_dt)
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=bottlenecks
-    )
+    return ResponseModel(code=200, message="获取成功", data=bottlenecks)
 
 
 @router.get("/analytics/sla", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -277,8 +244,7 @@ def get_sla_performance_analysis(
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="开始日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
 
     if end_date:
@@ -286,14 +252,9 @@ def get_sla_performance_analysis(
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="结束日期格式错误，应为 YYYY-MM-DD"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
 
     sla_performance = analyze_sla_performance(db, start_dt, end_dt, policy_id)
 
-    return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=sla_performance
-    )
+    return ResponseModel(code=200, message="获取成功", data=sla_performance)

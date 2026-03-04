@@ -12,19 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn
 
-from .base import create_ecn_notification
-from .utils import (
-    check_all_evaluations_completed,
-    find_department_manager,
-    find_users_by_department,
-    find_users_by_role,
-)
-
 # 导出通知函数（统一到 NotificationDispatcher）
-from .approval_notifications import (
-    notify_approval_assigned as _notify_approval_assigned,
-    notify_approval_result as _notify_approval_result,
-)
+from .approval_notifications import notify_approval_assigned as _notify_approval_assigned
+from .approval_notifications import notify_approval_result as _notify_approval_result
+from .base import create_ecn_notification
+from .ecn_notifications import notify_ecn_submitted as _notify_ecn_submitted
+from .ecn_notifications import notify_overdue_alert as _notify_overdue_alert
 from .evaluation_notifications import (
     notify_evaluation_assigned,
     notify_evaluation_completed,
@@ -33,9 +26,11 @@ from .task_notifications import (
     notify_task_assigned,
     notify_task_completed,
 )
-from .ecn_notifications import (
-    notify_ecn_submitted as _notify_ecn_submitted,
-    notify_overdue_alert as _notify_overdue_alert,
+from .utils import (
+    check_all_evaluations_completed,
+    find_department_manager,
+    find_users_by_department,
+    find_users_by_role,
 )
 
 

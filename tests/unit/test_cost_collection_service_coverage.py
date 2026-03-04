@@ -17,9 +17,11 @@ def mock_db():
 
 # ─── collect_from_purchase_order ──────────────────────────────────────────────
 
+
 class TestCollectFromPurchaseOrder:
     def test_order_not_found_returns_none(self, mock_db):
         from app.services.cost_collection_service import CostCollectionService
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_purchase_order(mock_db, 999)
         assert result is None
@@ -41,7 +43,7 @@ class TestCollectFromPurchaseOrder:
         call_count = [0]
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             mock_order,  # PurchaseOrder found
-            None,        # no existing cost
+            None,  # no existing cost
         ]
 
         result = CostCollectionService.collect_from_purchase_order(mock_db, 1)
@@ -66,9 +68,9 @@ class TestCollectFromPurchaseOrder:
         mock_project_costs = []
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_order,     # PurchaseOrder
-            None,           # no existing cost
-            mock_project,   # Project
+            mock_order,  # PurchaseOrder
+            None,  # no existing cost
+            mock_project,  # Project
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = mock_project_costs
 
@@ -99,9 +101,9 @@ class TestCollectFromPurchaseOrder:
         mock_project_costs = [existing_cost]
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_order,      # PurchaseOrder
-            existing_cost,   # existing ProjectCost
-            mock_project,    # Project
+            mock_order,  # PurchaseOrder
+            existing_cost,  # existing ProjectCost
+            mock_project,  # Project
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = mock_project_costs
 
@@ -111,9 +113,11 @@ class TestCollectFromPurchaseOrder:
 
 # ─── collect_from_outsourcing_order ───────────────────────────────────────────
 
+
 class TestCollectFromOutsourcingOrder:
     def test_order_not_found_returns_none(self, mock_db):
         from app.services.cost_collection_service import CostCollectionService
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_outsourcing_order(mock_db, 999)
         assert result is None
@@ -164,9 +168,11 @@ class TestCollectFromOutsourcingOrder:
 
 # ─── collect_from_ecn ─────────────────────────────────────────────────────────
 
+
 class TestCollectFromEcn:
     def test_ecn_not_found_returns_none(self, mock_db):
         from app.services.cost_collection_service import CostCollectionService
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_ecn(mock_db, 999)
         assert result is None
@@ -203,12 +209,16 @@ class TestCollectFromEcn:
 
 # ─── remove_cost_from_source ──────────────────────────────────────────────────
 
+
 class TestRemoveCostFromSource:
     def test_source_not_found_returns_false(self, mock_db):
         """来源成本记录不存在时返回 False"""
         from app.services.cost_collection_service import CostCollectionService
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        result = CostCollectionService.remove_cost_from_source(mock_db, "PURCHASE", "PURCHASE_ORDER", 999)
+        result = CostCollectionService.remove_cost_from_source(
+            mock_db, "PURCHASE", "PURCHASE_ORDER", 999
+        )
         assert result is False
 
     def test_removes_cost_record(self, mock_db):

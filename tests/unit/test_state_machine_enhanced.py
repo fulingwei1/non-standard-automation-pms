@@ -10,8 +10,9 @@
 - 向后兼容性验证
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 
@@ -21,11 +22,11 @@ class TestStateTransitionLog:
     @pytest.mark.skip(reason="需要完整的数据库初始化，暂时跳过")
     def test_create_state_transition_log(self, db_session: Session):
         """测试创建状态转换日志"""
+        # 创建测试用户
+        from app.models.organization import Employee
         from app.models.state_machine import StateTransitionLog
         from app.models.user import User
 
-        # 创建测试用户
-        from app.models.organization import Employee
         emp = Employee(
             employee_code="EMP-SM-001",
             name="test_user",
@@ -77,18 +78,18 @@ class TestStateTransitionLog:
 
         # 验证模型类存在
         assert StateTransitionLog is not None
-        assert hasattr(StateTransitionLog, '__tablename__')
-        assert StateTransitionLog.__tablename__ == 'state_transition_logs'
+        assert hasattr(StateTransitionLog, "__tablename__")
+        assert StateTransitionLog.__tablename__ == "state_transition_logs"
 
         # 验证字段存在
-        assert hasattr(StateTransitionLog, 'entity_type')
-        assert hasattr(StateTransitionLog, 'entity_id')
-        assert hasattr(StateTransitionLog, 'from_state')
-        assert hasattr(StateTransitionLog, 'to_state')
-        assert hasattr(StateTransitionLog, 'operator_id')
-        assert hasattr(StateTransitionLog, 'action_type')
-        assert hasattr(StateTransitionLog, 'comment')
-        assert hasattr(StateTransitionLog, 'extra_data')
+        assert hasattr(StateTransitionLog, "entity_type")
+        assert hasattr(StateTransitionLog, "entity_id")
+        assert hasattr(StateTransitionLog, "from_state")
+        assert hasattr(StateTransitionLog, "to_state")
+        assert hasattr(StateTransitionLog, "operator_id")
+        assert hasattr(StateTransitionLog, "action_type")
+        assert hasattr(StateTransitionLog, "comment")
+        assert hasattr(StateTransitionLog, "extra_data")
 
 
 class TestStateMachinePermissionChecker:
@@ -455,9 +456,7 @@ class TestStateMachineEnhanced:
         user.has_role = Mock(return_value=True)
         return user
 
-    def test_transition_with_permission_check_success(
-        self, mock_issue, mock_db_session, mock_user
-    ):
+    def test_transition_with_permission_check_success(self, mock_issue, mock_db_session, mock_user):
         """测试带权限检查的状态转换（成功）"""
         from app.core.state_machine.base import StateMachine
         from app.core.state_machine.decorators import transition
@@ -474,19 +473,17 @@ class TestStateMachineEnhanced:
         state_machine = IssueStateMachine(mock_issue, mock_db_session)
 
         # 执行转换（应该成功）
-        with patch.object(state_machine, '_create_audit_log'), \
-             patch.object(state_machine, '_send_notifications'):
-            result = state_machine.transition_to(
-                "IN_PROGRESS", current_user=mock_user
-            )
+        with (
+            patch.object(state_machine, "_create_audit_log"),
+            patch.object(state_machine, "_send_notifications"),
+        ):
+            result = state_machine.transition_to("IN_PROGRESS", current_user=mock_user)
 
         assert result is True
         assert mock_issue.status == "IN_PROGRESS"
         mock_user.has_permission.assert_called_with("issue:assign")
 
-    def test_transition_with_permission_check_failure(
-        self, mock_issue, mock_db_session
-    ):
+    def test_transition_with_permission_check_failure(self, mock_issue, mock_db_session):
         """测试带权限检查的状态转换（失败）"""
         from app.core.state_machine.base import StateMachine
         from app.core.state_machine.decorators import transition
@@ -509,9 +506,7 @@ class TestStateMachineEnhanced:
 
         # 执行转换（应该失败）
         with pytest.raises(PermissionDeniedError) as exc_info:
-            state_machine.transition_to(
-                "IN_PROGRESS", current_user=user_without_permission
-            )
+            state_machine.transition_to("IN_PROGRESS", current_user=user_without_permission)
 
         assert "缺少权限" in str(exc_info.value)
         assert mock_issue.status == "OPEN"  # 状态未改变
@@ -532,8 +527,10 @@ class TestStateMachineEnhanced:
 
         state_machine = IssueStateMachine(mock_issue, mock_db_session)
 
-        with patch.object(state_machine, '_create_audit_log') as mock_create_log, \
-             patch.object(state_machine, '_send_notifications'):
+        with (
+            patch.object(state_machine, "_create_audit_log") as mock_create_log,
+            patch.object(state_machine, "_send_notifications"),
+        ):
             state_machine.transition_to(
                 "IN_PROGRESS",
                 current_user=mock_user,
@@ -566,8 +563,10 @@ class TestStateMachineEnhanced:
 
         state_machine = IssueStateMachine(mock_issue, mock_db_session)
 
-        with patch.object(state_machine, '_create_audit_log'), \
-             patch.object(state_machine, '_send_notifications') as mock_send:
+        with (
+            patch.object(state_machine, "_create_audit_log"),
+            patch.object(state_machine, "_send_notifications") as mock_send,
+        ):
             state_machine.transition_to("IN_PROGRESS", current_user=mock_user)
 
         # 验证通知被发送

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """线索描述生成模块单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.lead_priority_scoring.descriptions import DescriptionsMixin
 
 

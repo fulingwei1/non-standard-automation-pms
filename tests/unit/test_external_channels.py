@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """外部渠道通知单元测试"""
 import pytest
+
 from app.services.approval_engine.notify.external_channels import ExternalChannelsMixin
 
 

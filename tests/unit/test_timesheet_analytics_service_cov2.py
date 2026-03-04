@@ -2,14 +2,16 @@
 """
 timesheet_analytics_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 
 def _make_svc(mock_db=None):
     from app.services.timesheet_analytics_service import TimesheetAnalyticsService
+
     if mock_db is None:
         mock_db = MagicMock()
     return TimesheetAnalyticsService(mock_db)
@@ -71,6 +73,7 @@ def test_calculate_trend_empty():
 # ─── 2. _generate_trend_chart ────────────────────────────────────────────────
 def test_generate_trend_chart_daily():
     from app.schemas.timesheet_analytics import TrendChartData
+
     svc = _make_svc()
 
     r = MagicMock()
@@ -87,6 +90,7 @@ def test_generate_trend_chart_daily():
 
 def test_generate_trend_chart_monthly():
     from app.schemas.timesheet_analytics import TrendChartData
+
     svc = _make_svc()
 
     r = MagicMock()
@@ -101,6 +105,7 @@ def test_generate_trend_chart_monthly():
 
 def test_generate_trend_chart_empty():
     from app.schemas.timesheet_analytics import TrendChartData
+
     svc = _make_svc()
     chart = svc._generate_trend_chart([], "DAILY")
     assert chart.labels == []
@@ -121,9 +126,7 @@ def test_analyze_trend_no_results():
     svc.db.query.return_value = mock_query
 
     result = svc.analyze_trend(
-        period_type="DAILY",
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 1, 31)
+        period_type="DAILY", start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
     )
 
     assert result.total_hours == Decimal("0")
@@ -133,6 +136,7 @@ def test_analyze_trend_no_results():
 # ─── 4. analyze_workload - 基本调用 ─────────────────────────────────────────
 def test_analyze_workload_no_results():
     from app.schemas.timesheet_analytics import WorkloadHeatmapResponse
+
     svc = _make_svc()
 
     mock_query = MagicMock()
@@ -144,9 +148,7 @@ def test_analyze_workload_no_results():
     svc.db.query.return_value = mock_query
 
     result = svc.analyze_workload(
-        period_type="DAILY",
-        start_date=date(2024, 1, 1),
-        end_date=date(2024, 1, 31)
+        period_type="DAILY", start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
     )
     # 应返回 WorkloadHeatmapResponse 实例
     assert isinstance(result, WorkloadHeatmapResponse)

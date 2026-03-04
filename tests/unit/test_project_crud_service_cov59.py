@@ -15,13 +15,13 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
 
-from app.services.project_crud import ProjectCrudService
-from app.models.project import Project, Customer
+from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.project import ProjectCreate
+from app.services.project_crud import ProjectCrudService
 
 
 class TestProjectCrudService(unittest.TestCase):
@@ -54,11 +54,7 @@ class TestProjectCrudService(unittest.TestCase):
 
         # Act
         result = self.service.get_projects_query(
-            customer_id=1,
-            stage="S1",
-            status="ST01",
-            health="H1",
-            is_active=True
+            customer_id=1, stage="S1", status="ST01", health="H1", is_active=True
         )
 
         # Assert
@@ -118,7 +114,7 @@ class TestProjectCrudService(unittest.TestCase):
         # Arrange
         customer_mock = MagicMock()
         customer_mock.customer_name = "测试客户"
-        
+
         manager_mock = MagicMock()
         manager_mock.real_name = "张三"
         manager_mock.username = "zhangsan"
@@ -172,8 +168,8 @@ class TestProjectCrudService(unittest.TestCase):
         # Assert
         self.assertFalse(result)
 
-    @patch('app.services.project_crud.service.save_obj')
-    @patch('app.utils.project_utils.init_project_stages')
+    @patch("app.services.project_crud.service.save_obj")
+    @patch("app.utils.project_utils.init_project_stages")
     def test_create_project_success(self, mock_init_stages, mock_save_obj):
         """测试成功创建项目"""
         # Arrange
@@ -244,9 +240,10 @@ class TestProjectCrudService(unittest.TestCase):
 
         # Act & Assert
         from fastapi import HTTPException
+
         with self.assertRaises(HTTPException) as context:
             self.service.create_project(project_in)
-        
+
         self.assertEqual(context.exception.status_code, 400)
 
     def test_update_project(self):
@@ -255,7 +252,7 @@ class TestProjectCrudService(unittest.TestCase):
         project_mock = MagicMock()
         project_mock.id = 1
         project_mock.project_name = "旧项目名"
-        
+
         update_data = {
             "project_name": "新项目名",
             "budget_amount": 200000.0,
@@ -274,12 +271,12 @@ class TestProjectCrudService(unittest.TestCase):
         # Arrange
         project_mock = MagicMock()
         project_mock.customer_id = 2
-        
+
         customer_mock = MagicMock()
         customer_mock.customer_name = "新客户"
         customer_mock.contact_person = "新联系人"
         customer_mock.contact_phone = "99999999"
-        
+
         self.db_mock.query.return_value.get.return_value = customer_mock
 
         update_data = {"customer_id": 2}
@@ -305,7 +302,7 @@ class TestProjectCrudService(unittest.TestCase):
         self.db_mock.add.assert_called_once_with(project_mock)
         self.db_mock.commit.assert_called_once()
 
-    @patch('app.services.project_crud.service.CacheService')
+    @patch("app.services.project_crud.service.CacheService")
     def test_invalidate_project_cache_with_id(self, mock_cache_service_class):
         """测试使项目缓存失效（指定项目ID）"""
         # Arrange
@@ -319,7 +316,7 @@ class TestProjectCrudService(unittest.TestCase):
         cache_service_mock.invalidate_project_detail.assert_called_once_with(1)
         cache_service_mock.invalidate_project_list.assert_called_once()
 
-    @patch('app.services.project_crud.service.CacheService')
+    @patch("app.services.project_crud.service.CacheService")
     def test_invalidate_project_cache_without_id(self, mock_cache_service_class):
         """测试使项目列表缓存失效（不指定项目ID）"""
         # Arrange
@@ -340,11 +337,11 @@ class TestProjectCrudService(unittest.TestCase):
         project_mock.id = 1
         project_mock.customer_name = None
         project_mock.pm_name = None
-        
+
         customer_mock = MagicMock()
         customer_mock.customer_name = "客户A"
         project_mock.customer = customer_mock
-        
+
         manager_mock = MagicMock()
         manager_mock.real_name = "经理B"
         project_mock.manager = manager_mock
@@ -376,5 +373,5 @@ class TestProjectCrudService(unittest.TestCase):
         self.assertIsNone(result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

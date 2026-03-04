@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.outsourcing import (
     OutsourcingEvaluation,
 )
-from app.models.vendor import Vendor
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
     VendorCreate,
@@ -51,7 +51,10 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 # ==================== 外协供应商 ====================
 
-@router.get("/outsourcing-vendors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/outsourcing-vendors", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_vendors(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -63,7 +66,7 @@ def read_vendors(
     """
     获取外协商列表
     """
-    query = db.query(Vendor).filter(Vendor.vendor_type == 'OUTSOURCING')
+    query = db.query(Vendor).filter(Vendor.vendor_type == "OUTSOURCING")
 
     query = apply_keyword_filter(query, Vendor, keyword, ["supplier_code", "supplier_name"])
 
@@ -74,33 +77,41 @@ def read_vendors(
         query = query.filter(Vendor.status == status)
 
     total = query.count()
-    vendors = apply_pagination(query.order_by(Vendor.created_at), pagination.offset, pagination.limit).all()
+    vendors = apply_pagination(
+        query.order_by(Vendor.created_at), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for vendor in vendors:
-        items.append(VendorResponse(
-            id=vendor.id,
-            vendor_code=vendor.supplier_code,
-            vendor_name=vendor.supplier_name,
-            vendor_short_name=vendor.supplier_short_name,
-            vendor_type=vendor.vendor_type,
-            contact_person=vendor.contact_person,
-            contact_phone=vendor.contact_phone,
-            quality_rating=vendor.quality_rating or Decimal("0"),
-            delivery_rating=vendor.delivery_rating or Decimal("0"),
-            service_rating=vendor.service_rating or Decimal("0"),
-            overall_rating=vendor.overall_rating or Decimal("0"),
-            status=vendor.status,
-            cooperation_start=vendor.cooperation_start,
-            last_order_date=vendor.last_order_date,
-            created_at=vendor.created_at,
-            updated_at=vendor.updated_at
-        ))
+        items.append(
+            VendorResponse(
+                id=vendor.id,
+                vendor_code=vendor.supplier_code,
+                vendor_name=vendor.supplier_name,
+                vendor_short_name=vendor.supplier_short_name,
+                vendor_type=vendor.vendor_type,
+                contact_person=vendor.contact_person,
+                contact_phone=vendor.contact_phone,
+                quality_rating=vendor.quality_rating or Decimal("0"),
+                delivery_rating=vendor.delivery_rating or Decimal("0"),
+                service_rating=vendor.service_rating or Decimal("0"),
+                overall_rating=vendor.overall_rating or Decimal("0"),
+                status=vendor.status,
+                cooperation_start=vendor.cooperation_start,
+                last_order_date=vendor.last_order_date,
+                created_at=vendor.created_at,
+                updated_at=vendor.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.get("/outsourcing-vendors/{vendor_id}", response_model=VendorResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-vendors/{vendor_id}",
+    response_model=VendorResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_vendor(
     vendor_id: int,
     db: Session = Depends(deps.get_db),
@@ -109,10 +120,9 @@ def read_vendor(
     """
     获取外协商详情
     """
-    vendor = db.query(Vendor).filter(
-        Vendor.id == vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.vendor_type == "OUTSOURCING").first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -132,11 +142,13 @@ def read_vendor(
         cooperation_start=vendor.cooperation_start,
         last_order_date=vendor.last_order_date,
         created_at=vendor.created_at,
-        updated_at=vendor.updated_at
+        updated_at=vendor.updated_at,
     )
 
 
-@router.post("/outsourcing-vendors", response_model=VendorResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/outsourcing-vendors", response_model=VendorResponse, status_code=status.HTTP_201_CREATED
+)
 def create_vendor(
     *,
     db: Session = Depends(deps.get_db),
@@ -147,10 +159,11 @@ def create_vendor(
     创建外协商
     """
     # 检查编码是否已存在
-    existing = db.query(Vendor).filter(
-        Vendor.supplier_code == vendor_in.vendor_code,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    existing = (
+        db.query(Vendor)
+        .filter(Vendor.supplier_code == vendor_in.vendor_code, Vendor.vendor_type == "OUTSOURCING")
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="外协商编码已存在")
 
@@ -158,7 +171,7 @@ def create_vendor(
         supplier_code=vendor_in.vendor_code,
         supplier_name=vendor_in.vendor_name,
         supplier_short_name=vendor_in.vendor_short_name,
-        vendor_type='OUTSOURCING',
+        vendor_type="OUTSOURCING",
         supplier_type=vendor_in.vendor_type,
         contact_person=vendor_in.contact_person,
         contact_phone=vendor_in.contact_phone,
@@ -172,7 +185,7 @@ def create_vendor(
         tax_number=vendor_in.tax_number,
         status="ACTIVE",
         created_by=current_user.id,
-        remark=vendor_in.remark
+        remark=vendor_in.remark,
     )
 
     db.add(vendor)
@@ -182,7 +195,11 @@ def create_vendor(
     return read_vendor(vendor.id, db, current_user)
 
 
-@router.put("/outsourcing-vendors/{vendor_id}", response_model=VendorResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/outsourcing-vendors/{vendor_id}",
+    response_model=VendorResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_vendor(
     *,
     db: Session = Depends(deps.get_db),
@@ -193,10 +210,9 @@ def update_vendor(
     """
     更新外协商
     """
-    vendor = db.query(Vendor).filter(
-        Vendor.id == vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.vendor_type == "OUTSOURCING").first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -211,7 +227,11 @@ def update_vendor(
     return read_vendor(vendor_id, db, current_user)
 
 
-@router.post("/outsourcing-vendors/{vendor_id}/evaluations", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/outsourcing-vendors/{vendor_id}/evaluations",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_vendor_evaluation(
     *,
     db: Session = Depends(deps.get_db),
@@ -226,10 +246,9 @@ def create_vendor_evaluation(
     """
     外协商评价
     """
-    vendor = db.query(Vendor).filter(
-        Vendor.id == vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.vendor_type == "OUTSOURCING").first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -252,7 +271,7 @@ def create_vendor_evaluation(
         overall_score=overall_rating,
         evaluator_id=current_user.id,
         evaluated_at=datetime.now(),
-        remark=remark
+        remark=remark,
     )
 
     db.add(vendor)
@@ -260,5 +279,3 @@ def create_vendor_evaluation(
     db.commit()
 
     return ResponseModel(message="评价成功")
-
-

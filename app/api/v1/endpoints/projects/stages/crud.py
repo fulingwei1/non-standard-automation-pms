@@ -74,9 +74,7 @@ def initialize_project_stages(
     - stage_overrides: 调整阶段配置（工期、名称等）
     - node_overrides: 调整节点配置
     """
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限初始化该项目的阶段"
-    )
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限初始化该项目的阶段")
 
     service = StageInstanceService(db)
     try:
@@ -88,13 +86,11 @@ def initialize_project_stages(
             adjustments["skip_nodes"] = init_in.skip_nodes
         if init_in.stage_overrides:
             adjustments["stage_overrides"] = {
-                k: v.model_dump(exclude_unset=True)
-                for k, v in init_in.stage_overrides.items()
+                k: v.model_dump(exclude_unset=True) for k, v in init_in.stage_overrides.items()
             }
         if init_in.node_overrides:
             adjustments["node_overrides"] = {
-                k: v.model_dump(exclude_unset=True)
-                for k, v in init_in.node_overrides.items()
+                k: v.model_dump(exclude_unset=True) for k, v in init_in.node_overrides.items()
             }
 
         stages = service.initialize_project_stages(
@@ -116,9 +112,7 @@ def clear_project_stages(
     current_user: User = Depends(security.get_current_user),
 ) -> Any:
     """清除项目的所有阶段实例"""
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限清除该项目的阶段"
-    )
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限清除该项目的阶段")
 
     service = StageInstanceService(db)
     count = service.clear_project_stages(project_id)

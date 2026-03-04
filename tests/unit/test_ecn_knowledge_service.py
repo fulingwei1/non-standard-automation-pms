@@ -109,19 +109,19 @@ class TestSearchSimilarEcns:
         # 创建相似的ECN
         for i in range(5):
             ecn = Ecn(
-            ecn_no=f"ECN-SIM-{i:04d}",
-            ecn_title=f"相似ECN{i}",
-            ecn_type=EcnChangeTypeEnum.DESIGN.value,
-            project_id=test_ecn.project_id,
-                    customer_id=test_ecn.customer_id,
-            customer_name=test_ecn.customer_name,
-            applicant_id=test_ecn.created_by,
-            applicant_dept="测试用户",
-            priority="NORMAL",
-            change_reason=f"相似设计变更{i}",
-            change_description="修改XXX参数",
-            created_at=datetime.now(),
-            created_by=test_ecn.created_by,
+                ecn_no=f"ECN-SIM-{i:04d}",
+                ecn_title=f"相似ECN{i}",
+                ecn_type=EcnChangeTypeEnum.DESIGN.value,
+                project_id=test_ecn.project_id,
+                customer_id=test_ecn.customer_id,
+                customer_name=test_ecn.customer_name,
+                applicant_id=test_ecn.created_by,
+                applicant_dept="测试用户",
+                priority="NORMAL",
+                change_reason=f"相似设计变更{i}",
+                change_description="修改XXX参数",
+                created_at=datetime.now(),
+                created_by=test_ecn.created_by,
             )
             db_session.add(ecn)
 
@@ -145,53 +145,51 @@ class TestSearchByCategory:
         """按设计类型搜索"""
         # 创建设计类型的ECN
         ecn2 = Ecn(
-        ecn_no="ECN-DES-002",
-        ecn_title="另一个设计ECN",
-        ecn_type=EcnChangeTypeEnum.DESIGN.value,
-        project_id=test_ecn.project_id,
-        customer_id=test_ecn.customer_id,
-        customer_name=test_ecn.customer_name,
-        applicant_id=test_engineer.id,
-        applicant_dept=test_engineer.real_name,
-        priority="NORMAL",
-        change_reason="设计优化",
-        change_description="修改参数",
-        created_at=datetime.now(),
-        created_by=test_engineer.id,
+            ecn_no="ECN-DES-002",
+            ecn_title="另一个设计ECN",
+            ecn_type=EcnChangeTypeEnum.DESIGN.value,
+            project_id=test_ecn.project_id,
+            customer_id=test_ecn.customer_id,
+            customer_name=test_ecn.customer_name,
+            applicant_id=test_engineer.id,
+            applicant_dept=test_engineer.real_name,
+            priority="NORMAL",
+            change_reason="设计优化",
+            change_description="修改参数",
+            created_at=datetime.now(),
+            created_by=test_engineer.id,
         )
         db_session.add(ecn2)
         db_session.commit()
 
         results = ecn_knowledge_service.search_similar_ecns(
-        "设计变更",
-        category=EcnChangeTypeEnum.DESIGN.value,
+            "设计变更",
+            category=EcnChangeTypeEnum.DESIGN.value,
         )
 
         assert len(results) >= 2
 
-    def test_material_type(
-        self, ecn_knowledge_service, test_project, test_engineer, db_session
-    ):
+    def test_material_type(self, ecn_knowledge_service, test_project, test_engineer, db_session):
         """按物料类型搜索"""
         ecn_material = Ecn(
-        ecn_no="ECN-MAT-001",
-        ecn_title="物料变更ECN",
-        ecn_type=EcnChangeTypeEnum.MATERIAL.value,
-        project_id=test_project.id,
-        applicant_id=test_engineer.id,
-        applicant_dept=test_engineer.real_name,
-        priority="HIGH",
-        change_reason="BOM变更",
-        change_description="替换物料",
-        created_at=datetime.now(),
-        created_by=test_engineer.id,
+            ecn_no="ECN-MAT-001",
+            ecn_title="物料变更ECN",
+            ecn_type=EcnChangeTypeEnum.MATERIAL.value,
+            project_id=test_project.id,
+            applicant_id=test_engineer.id,
+            applicant_dept=test_engineer.real_name,
+            priority="HIGH",
+            change_reason="BOM变更",
+            change_description="替换物料",
+            created_at=datetime.now(),
+            created_by=test_engineer.id,
         )
         db_session.add(ecn_material)
         db_session.commit()
 
         results = ecn_knowledge_service.search_similar_ecns(
-        "物料变更",
-        category=EcnChangeTypeEnum.MATERIAL.value,
+            "物料变更",
+            category=EcnChangeTypeEnum.MATERIAL.value,
         )
 
         assert len(results) >= 1
@@ -199,8 +197,8 @@ class TestSearchByCategory:
     def test_all_types(self, ecn_knowledge_service):
         """搜索所有类型"""
         results = ecn_knowledge_service.search_similar_ecns(
-        "",
-        category=None,
+            "",
+            category=None,
         )
 
         assert isinstance(results, list)
@@ -227,9 +225,9 @@ class TestGetEcnDetails:
     def test_with_related_info(self, ecn_knowledge_service, test_ecn):
         """包含相关信息"""
         details = ecn_knowledge_service.get_ecn_details(
-        test_ecn.id,
-        include_evaluation=True,
-        include_tasks=True,
+            test_ecn.id,
+            include_evaluation=True,
+            include_tasks=True,
         )
 
         assert details["id"] == test_ecn.id
@@ -242,7 +240,7 @@ class TestGetChangeImpactAnalysis:
         """成本影响分析"""
         ecn.change_content = "增加成本1000元"
         analysis = ecn_knowledge_service.get_change_impact_analysis(
-        test_ecn.id, analysis_type="COST"
+            test_ecn.id, analysis_type="COST"
         )
 
         assert analysis is not None
@@ -253,7 +251,7 @@ class TestGetChangeImpactAnalysis:
         """进度影响分析"""
         ecn.change_content = "延期2周"
         analysis = ecn_knowledge_service.get_change_impact_analysis(
-        test_ecn.id, analysis_type="SCHEDULE"
+            test_ecn.id, analysis_type="SCHEDULE"
         )
 
         assert analysis is not None
@@ -264,7 +262,7 @@ class TestGetChangeImpactAnalysis:
         """质量影响分析"""
         ecn.change_content = "需要重新测试"
         analysis = ecn_knowledge_service.get_change_impact_analysis(
-        test_ecn.id, analysis_type="QUALITY"
+            test_ecn.id, analysis_type="QUALITY"
         )
 
         assert analysis is not None
@@ -273,7 +271,7 @@ class TestGetChangeImpactAnalysis:
     def test_all_impact_types(self, ecn_knowledge_service):
         """综合影响分析"""
         analysis = ecn_knowledge_service.get_change_impact_analysis(
-        test_ecn.id, analysis_type="ALL"
+            test_ecn.id, analysis_type="ALL"
         )
 
         assert analysis is not None
@@ -285,9 +283,7 @@ class TestGetBestPractices:
     def test_design_practices(self, ecn_knowledge_service):
         """设计最佳实践"""
         ecn.change_content = "优化设计参数"
-        practices = ecn_knowledge_service.get_best_practices(
-        test_ecn.id, knowledge_type="DESIGN"
-        )
+        practices = ecn_knowledge_service.get_best_practices(test_ecn.id, knowledge_type="DESIGN")
 
         assert isinstance(practices, list)
         if len(practices) > 0:
@@ -296,17 +292,13 @@ class TestGetBestPractices:
     def test_material_practices(self, ecn_knowledge_service):
         """物料变更最佳实践"""
         ecn.change_content = "优化物料采购"
-        practices = ecn_knowledge_service.get_best_practices(
-        test_ecn.id, knowledge_type="MATERIAL"
-        )
+        practices = ecn_knowledge_service.get_best_practices(test_ecn.id, knowledge_type="MATERIAL")
 
         assert isinstance(practices, list)
 
     def test_no_practices_found(self, ecn_knowledge_service):
         """没有找到最佳实践"""
-        practices = ecn_knowledge_service.get_best_practices(
-        test_ecn.id, knowledge_type="UNKNOWN"
-        )
+        practices = ecn_knowledge_service.get_best_practices(test_ecn.id, knowledge_type="UNKNOWN")
 
         assert isinstance(practices, list)
         assert len(practices) == 0
@@ -329,25 +321,25 @@ class TestExtractLessonsLearned:
         # 创建多个ECN
         for i in range(3):
             ecn = Ecn(
-            ecn_no=f"ECN-LESS-{i:04d}",
-            ecn_title=f"经验提取测试{i}",
-            ecn_type=EcnChangeTypeEnum.DESIGN.value,
-            project_id=test_project.id,
-                            applicant_id=test_engineer.id,
-            applicant_dept=test_engineer.real_name,
-            priority="NORMAL",
-            change_reason=f"测试提取{i}",
-            outcome="APPROVED" if i % 2 == 0 else "REJECTED",
-            change_description=f"变更内容{i}",
-            created_at=datetime.now() - timedelta(days=i * 5),
-            created_by=test_engineer.id,
+                ecn_no=f"ECN-LESS-{i:04d}",
+                ecn_title=f"经验提取测试{i}",
+                ecn_type=EcnChangeTypeEnum.DESIGN.value,
+                project_id=test_project.id,
+                applicant_id=test_engineer.id,
+                applicant_dept=test_engineer.real_name,
+                priority="NORMAL",
+                change_reason=f"测试提取{i}",
+                outcome="APPROVED" if i % 2 == 0 else "REJECTED",
+                change_description=f"变更内容{i}",
+                created_at=datetime.now() - timedelta(days=i * 5),
+                created_by=test_engineer.id,
             )
             db_session.add(ecn)
 
             db_session.commit()
 
             lessons = ecn_knowledge_service.extract_lessons_learned(
-            [test_ecn.id for i in range(3)], limit=10
+                [test_ecn.id for i in range(3)], limit=10
             )
 
             assert len(lessons) >= 1
@@ -367,7 +359,7 @@ class TestGenerateKnowledgeEntry:
     def test_with_custom_tags(self, ecn_knowledge_service, test_ecn):
         """使用自定义标签"""
         entry = ecn_knowledge_service.generate_knowledge_entry(
-        test_ecn.id, tags=["设计", "优化", "成功案例"]
+            test_ecn.id, tags=["设计", "优化", "成功案例"]
         )
 
         assert "设计" in entry["tags"]
@@ -381,24 +373,22 @@ class TestBatchSearchAndAnalysis:
         # 创建多个相似ECN
         for i in range(10):
             ecn = Ecn(
-            ecn_no=f"ECN-BATCH-{i:04d}",
-            ecn_title=f"批量搜索{i}",
-            ecn_type=EcnChangeTypeEnum.DESIGN.value,
-            project_id=test_project.id,
-                            applicant_id=test_engineer.id,
-            applicant_dept=test_engineer.real_name,
-            priority="NORMAL",
-            change_reason=f"批量搜索{i}",
-            created_at=datetime.now() - timedelta(days=i * 3),
-            created_by=test_engineer.id,
+                ecn_no=f"ECN-BATCH-{i:04d}",
+                ecn_title=f"批量搜索{i}",
+                ecn_type=EcnChangeTypeEnum.DESIGN.value,
+                project_id=test_project.id,
+                applicant_id=test_engineer.id,
+                applicant_dept=test_engineer.real_name,
+                priority="NORMAL",
+                change_reason=f"批量搜索{i}",
+                created_at=datetime.now() - timedelta(days=i * 3),
+                created_by=test_engineer.id,
             )
             db_session.add(ecn)
 
             db_session.commit()
 
-            results = ecn_knowledge_service.batch_search_similar_cases(
-            ["设计变更", "物料变更"]
-            )
+            results = ecn_knowledge_service.batch_search_similar_cases(["设计变更", "物料变更"])
 
             assert isinstance(results, dict)
             assert "similar_cases" in results
@@ -406,9 +396,7 @@ class TestBatchSearchAndAnalysis:
 
     def test_batch_extract_patterns(self, ecn_knowledge_service):
         """批量提取模式"""
-        patterns = ecn_knowledge_service.batch_extract_patterns(
-        [test_ecn.id for i in range(5)]
-        )
+        patterns = ecn_knowledge_service.batch_extract_patterns([test_ecn.id for i in range(5)])
 
         assert isinstance(patterns, dict)
         assert "patterns" in patterns
@@ -422,25 +410,25 @@ class TestValidateKnowledgeAccuracy:
         for i in range(10):
             outcome = "SUCCESS" if i % 3 != 0 else "FAILURE"
             ecn = Ecn(
-            ecn_no=f"ECN-ACC-{i:04d}",
-            ecn_title=f"准确度测试{i}",
-            ecn_type=EcnChangeTypeEnum.DESIGN.value,
-            project_id=test_project.id,
-                            applicant_id=test_engineer.id,
-            applicant_dept=test_engineer.real_name,
-            priority="NORMAL",
-            change_reason=f"准确度测试{i}",
-            outcome=outcome,
-            change_description=f"变更{i}",
-            created_at=datetime.now() - timedelta(days=i * 10),
-            created_by=test_engineer.id,
+                ecn_no=f"ECN-ACC-{i:04d}",
+                ecn_title=f"准确度测试{i}",
+                ecn_type=EcnChangeTypeEnum.DESIGN.value,
+                project_id=test_project.id,
+                applicant_id=test_engineer.id,
+                applicant_dept=test_engineer.real_name,
+                priority="NORMAL",
+                change_reason=f"准确度测试{i}",
+                outcome=outcome,
+                change_description=f"变更{i}",
+                created_at=datetime.now() - timedelta(days=i * 10),
+                created_by=test_engineer.id,
             )
             db_session.add(ecn)
 
             db_session.commit()
 
             accuracy = ecn_knowledge_service.validate_knowledge_accuracy(
-            test_ecn.id, lookback_months=6
+                test_ecn.id, lookback_months=6
             )
 
             assert accuracy is not None
@@ -453,7 +441,7 @@ class TestGetRecommendations:
     def test_for_new_ecn(self, ecn_knowledge_service, test_ecn):
         """为新ECN提供推荐"""
         recommendations = ecn_knowledge_service.get_recommendations(
-        test_ecn.id, change_type=EcnChangeTypeEnum.DESIGN.value
+            test_ecn.id, change_type=EcnChangeTypeEnum.DESIGN.value
         )
 
         assert isinstance(recommendations, list)
@@ -475,7 +463,7 @@ class TestGetRecommendations:
     def test_for_material_changes(self, ecn_knowledge_service, test_ecn):
         """物料变更推荐"""
         recommendations = ecn_knowledge_service.get_recommendations(
-        test_ecn.id, change_type=EcnChangeTypeEnum.MATERIAL.value
+            test_ecn.id, change_type=EcnChangeTypeEnum.MATERIAL.value
         )
 
         assert isinstance(recommendations, list)
@@ -494,9 +482,7 @@ class TestGetRecommendations:
         recommendations = ecn_knowledge_service.get_recommendations(test_ecn.id)
 
         # 应该包含风险缓解措施
-        any_risk = any(
-        "风险" in rec.get("recommendation", "") for rec in recommendations
-        )
+        any_risk = any("风险" in rec.get("recommendation", "") for rec in recommendations)
         assert any_risk
 
 
@@ -525,7 +511,7 @@ class TestEdgeCases:
         """无效的变更类型"""
         # 传递无效类型
         recommendations = ecn_knowledge_service.get_recommendations(
-        test_ecn.id, change_type="INVALID_TYPE"
+            test_ecn.id, change_type="INVALID_TYPE"
         )
 
         # 应该能够处理无效类型

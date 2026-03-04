@@ -10,9 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.alert import (
     AlertRecord,
     AlertRule,
@@ -33,6 +33,7 @@ router = APIRouter(tags=["rules"])
 # 共 6 个路由
 
 # ==================== 预警规则管理 ====================
+
 
 @router.get("/alert-rule-templates", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_alert_rule_templates(
@@ -59,6 +60,7 @@ def read_alert_rule_templates(
         }
         for template in templates
     ]
+
 
 @router.get("/alert-rules", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_rules(
@@ -94,12 +96,16 @@ def read_alert_rules(
     total = query.count()
 
     # 分页
-    rules = apply_pagination(query.order_by(AlertRule.created_at.desc()), pagination.offset, pagination.limit).all()
+    rules = apply_pagination(
+        query.order_by(AlertRule.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     return pagination.to_response(rules, total)
 
 
-@router.get("/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK
+)
 def read_alert_rule(
     rule_id: int,
     db: Session = Depends(deps.get_db),
@@ -130,7 +136,8 @@ def create_alert_rule(
 
     # 验证规则编码格式（字母、数字、下划线）
     import re
-    if not re.match(r'^[A-Za-z0-9_]+$', rule_in.rule_code):
+
+    if not re.match(r"^[A-Za-z0-9_]+$", rule_in.rule_code):
         raise HTTPException(status_code=400, detail="规则编码只能包含字母、数字和下划线")
 
     # 验证阈值格式（如果是数值类型）
@@ -152,36 +159,38 @@ def create_alert_rule(
             pass
 
     # 验证通知渠道
-    valid_channels = ['SYSTEM', 'EMAIL', 'WECHAT', 'SMS']
+    valid_channels = ["SYSTEM", "EMAIL", "WECHAT", "SMS"]
     if rule_in.notify_channels:
         for channel in rule_in.notify_channels:
             if channel.upper() not in valid_channels:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"无效的通知渠道: {channel}。支持的渠道: {', '.join(valid_channels)}"
+                    detail=f"无效的通知渠道: {channel}。支持的渠道: {', '.join(valid_channels)}",
                 )
 
     # 验证检查频率
-    valid_frequencies = ['REALTIME', 'HOURLY', 'DAILY', 'WEEKLY']
+    valid_frequencies = ["REALTIME", "HOURLY", "DAILY", "WEEKLY"]
     if rule_in.check_frequency and rule_in.check_frequency.upper() not in valid_frequencies:
         raise HTTPException(
             status_code=400,
-            detail=f"无效的检查频率: {rule_in.check_frequency}。支持的频率: {', '.join(valid_frequencies)}"
+            detail=f"无效的检查频率: {rule_in.check_frequency}。支持的频率: {', '.join(valid_frequencies)}",
         )
 
     # 验证预警级别
-    valid_levels = ['INFO', 'WARNING', 'CRITICAL', 'URGENT']
+    valid_levels = ["INFO", "WARNING", "CRITICAL", "URGENT"]
     if rule_in.alert_level and rule_in.alert_level.upper() not in valid_levels:
         raise HTTPException(
             status_code=400,
-            detail=f"无效的预警级别: {rule_in.alert_level}。支持的级别: {', '.join(valid_levels)}"
+            detail=f"无效的预警级别: {rule_in.alert_level}。支持的级别: {', '.join(valid_levels)}",
         )
 
     rule = AlertRule(**rule_in.model_dump(), created_by=current_user.id)
     return save_obj(db, rule)
 
 
-@router.put("/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/alert-rules/{rule_id}", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK
+)
 def update_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -205,7 +214,11 @@ def update_alert_rule(
     return save_obj(db, rule)
 
 
-@router.put("/alert-rules/{rule_id}/toggle", response_model=AlertRuleResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/alert-rules/{rule_id}/toggle",
+    response_model=AlertRuleResponse,
+    status_code=status.HTTP_200_OK,
+)
 def toggle_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -222,7 +235,9 @@ def toggle_alert_rule(
     return save_obj(db, rule)
 
 
-@router.delete("/alert-rules/{rule_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/alert-rules/{rule_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def delete_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -243,11 +258,10 @@ def delete_alert_rule(
     if alert_count > 0:
         raise HTTPException(
             status_code=400,
-            detail=f"该规则已被 {alert_count} 条预警记录使用，无法删除。请先处理相关预警记录。"
+            detail=f"该规则已被 {alert_count} 条预警记录使用，无法删除。请先处理相关预警记录。",
         )
 
     db.delete(rule)
     db.commit()
 
     return ResponseModel(code=200, message="预警规则已删除")
-

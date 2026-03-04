@@ -2,14 +2,16 @@
 """
 第十六批：销售流程提醒服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.sales_reminder.sales_flow_reminders import (
         notify_gate_timeout,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -27,9 +29,7 @@ def make_lead(**kwargs):
     lead.lead_code = kwargs.get("lead_code", "LD-2025-001")
     lead.status = kwargs.get("status", "QUALIFYING")
     lead.owner_id = kwargs.get("owner_id", 10)
-    lead.updated_at = kwargs.get(
-        "updated_at", datetime.now() - timedelta(days=10)
-    )
+    lead.updated_at = kwargs.get("updated_at", datetime.now() - timedelta(days=10))
     return lead
 
 
@@ -85,7 +85,9 @@ class TestNotifyGateTimeout:
         q_mock.all.side_effect = [[lead], [], [], []]
         q_mock.first.return_value = None  # no existing notification
         db.query.return_value = q_mock
-        with patch("app.services.sales_reminder.sales_flow_reminders.create_notification") as mock_notif:
+        with patch(
+            "app.services.sales_reminder.sales_flow_reminders.create_notification"
+        ) as mock_notif:
             mock_notif.return_value = None
             try:
                 result = notify_gate_timeout(db, timeout_days=3)

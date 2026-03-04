@@ -30,4 +30,4 @@ router.include_router(calculation.router, tags=["产能分析-计算"])
 router.include_router(dashboard.router, tags=["产能分析-看板"])
 router.include_router(report.router, tags=["产能分析-报告"])
 
-__all__ = ['router']
+__all__ = ["router"]

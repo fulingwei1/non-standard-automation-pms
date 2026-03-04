@@ -24,9 +24,7 @@ def list_boms(
     *,
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
-    project_id: Optional[int] = Query(
-        None, alias="project", description="按项目ID筛选"
-    ),
+    project_id: Optional[int] = Query(None, alias="project", description="按项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="按机台ID筛选"),
     is_latest: Optional[bool] = Query(None, description="只返回最新版本"),
     current_user: User = Depends(security.get_current_active_user),

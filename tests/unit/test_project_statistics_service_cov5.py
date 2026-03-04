@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第五批：project_statistics_service.py 单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.project_statistics_service import (
-        calculate_status_statistics,
-        calculate_stage_statistics,
+        calculate_customer_statistics,
         calculate_health_statistics,
         calculate_pm_statistics,
-        calculate_customer_statistics,
+        calculate_stage_statistics,
+        calculate_status_statistics,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -39,7 +41,13 @@ def make_query(projects):
 
 class TestCalculateStatusStatistics:
     def test_basic_counts(self):
-        q = make_query([make_project(status="ACTIVE"), make_project(status="ACTIVE"), make_project(status="CLOSED")])
+        q = make_query(
+            [
+                make_project(status="ACTIVE"),
+                make_project(status="ACTIVE"),
+                make_project(status="CLOSED"),
+            ]
+        )
         result = calculate_status_statistics(q)
         assert result["ACTIVE"] == 2
         assert result["CLOSED"] == 1
@@ -58,7 +66,13 @@ class TestCalculateStatusStatistics:
 
 class TestCalculateStageStatistics:
     def test_basic_counts(self):
-        q = make_query([make_project(stage="DESIGN"), make_project(stage="DESIGN"), make_project(stage="PRODUCTION")])
+        q = make_query(
+            [
+                make_project(stage="DESIGN"),
+                make_project(stage="DESIGN"),
+                make_project(stage="PRODUCTION"),
+            ]
+        )
         result = calculate_stage_statistics(q)
         assert result["DESIGN"] == 2
         assert result["PRODUCTION"] == 1
@@ -74,11 +88,13 @@ class TestCalculateHealthStatistics:
 
 class TestCalculatePmStatistics:
     def test_single_pm(self):
-        q = make_query([
-            make_project(pm_id=1, pm_name="Alice"),
-            make_project(pm_id=1, pm_name="Alice"),
-            make_project(pm_id=2, pm_name="Bob"),
-        ])
+        q = make_query(
+            [
+                make_project(pm_id=1, pm_name="Alice"),
+                make_project(pm_id=1, pm_name="Alice"),
+                make_project(pm_id=2, pm_name="Bob"),
+            ]
+        )
         result = calculate_pm_statistics(q)
         counts = {r["pm_id"]: r["count"] for r in result}
         assert counts[1] == 2
@@ -92,18 +108,22 @@ class TestCalculatePmStatistics:
 
 class TestCalculateCustomerStatistics:
     def test_accumulate_amount(self):
-        q = make_query([
-            make_project(customer_id=10, customer_name="CustA", contract_amount=100),
-            make_project(customer_id=10, customer_name="CustA", contract_amount=200),
-        ])
+        q = make_query(
+            [
+                make_project(customer_id=10, customer_name="CustA", contract_amount=100),
+                make_project(customer_id=10, customer_name="CustA", contract_amount=200),
+            ]
+        )
         result = calculate_customer_statistics(q)
         assert len(result) == 1
         assert result[0]["total_amount"] == 300.0
 
     def test_multiple_customers(self):
-        q = make_query([
-            make_project(customer_id=1, customer_name="A", contract_amount=50),
-            make_project(customer_id=2, customer_name="B", contract_amount=80),
-        ])
+        q = make_query(
+            [
+                make_project(customer_id=1, customer_name="A", contract_amount=50),
+                make_project(customer_id=2, customer_name="B", contract_amount=80),
+            ]
+        )
         result = calculate_customer_statistics(q)
         assert len(result) == 2

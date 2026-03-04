@@ -16,8 +16,8 @@ ReportEngine 综合单元测试
 - _get_context_value: 获取上下文值
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -31,9 +31,9 @@ class TestReportEngineInit:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
         assert engine.db == mock_db
@@ -44,9 +44,9 @@ class TestReportEngineInit:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db, config_dir="test_configs")
 
         MockConfigLoader.assert_called_once_with("test_configs")
@@ -58,8 +58,8 @@ class TestReportEngineInit:
         mock_db = MagicMock()
         mock_cache = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
                 engine = ReportEngine(mock_db, cache_manager=mock_cache)
 
         assert engine.cache == mock_cache
@@ -70,9 +70,9 @@ class TestReportEngineInit:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
         assert "json" in engine.renderers
@@ -96,9 +96,11 @@ class TestGenerate:
 
         mock_result = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver') as MockDataResolver:
-                with patch('app.services.report_framework.engine.ReportCacheManager') as MockReportCacheManager:
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver") as MockDataResolver:
+                with patch(
+                    "app.services.report_framework.engine.ReportCacheManager"
+                ) as MockReportCacheManager:
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.get.return_value = mock_config
 
@@ -129,9 +131,11 @@ class TestGenerate:
 
         mock_cached_result = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager') as MockReportCacheManager:
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch(
+                    "app.services.report_framework.engine.ReportCacheManager"
+                ) as MockReportCacheManager:
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.get.return_value = mock_config
 
@@ -146,7 +150,7 @@ class TestGenerate:
 
     def test_checks_user_permission(self):
         """测试检查用户权限"""
-        from app.services.report_framework.engine import ReportEngine, PermissionError
+        from app.services.report_framework.engine import PermissionError, ReportEngine
 
         mock_db = MagicMock()
 
@@ -159,9 +163,11 @@ class TestGenerate:
         mock_user.is_superuser = False
         mock_user.roles = []
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager') as MockReportCacheManager:
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch(
+                    "app.services.report_framework.engine.ReportCacheManager"
+                ) as MockReportCacheManager:
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.get.return_value = mock_config
 
@@ -188,9 +194,9 @@ class TestListAvailable:
         mock_meta2 = MagicMock()
         mock_meta2.code = "report2"
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.list_available.return_value = [mock_meta1, mock_meta2]
 
@@ -216,9 +222,9 @@ class TestListAvailable:
         mock_user.is_superuser = False
         mock_user.roles = []
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.list_available.return_value = [mock_meta1]
                     mock_loader_instance.get.return_value = mock_config
@@ -260,9 +266,9 @@ class TestGetSchema:
         mock_config.parameters = [mock_param]
         mock_config.exports = mock_exports
 
-        with patch('app.services.report_framework.engine.ConfigLoader') as MockConfigLoader:
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader") as MockConfigLoader:
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     mock_loader_instance = MockConfigLoader.return_value
                     mock_loader_instance.get.return_value = mock_config
 
@@ -286,9 +292,9 @@ class TestRegisterRenderer:
         mock_db = MagicMock()
         mock_renderer = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     engine.register_renderer("custom", mock_renderer)
@@ -311,9 +317,9 @@ class TestCheckPermission:
         mock_user = MagicMock()
         mock_user.is_superuser = True
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     # Should not raise
@@ -335,9 +341,9 @@ class TestCheckPermission:
         mock_user.is_superuser = False
         mock_user.roles = [mock_role]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     # Should not raise
@@ -345,7 +351,7 @@ class TestCheckPermission:
 
     def test_raises_for_no_permission(self):
         """测试无权限时抛出异常"""
-        from app.services.report_framework.engine import ReportEngine, PermissionError
+        from app.services.report_framework.engine import PermissionError, ReportEngine
 
         mock_db = MagicMock()
 
@@ -357,9 +363,9 @@ class TestCheckPermission:
         mock_user.is_superuser = False
         mock_user.roles = []
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     with pytest.raises(PermissionError):
@@ -378,9 +384,9 @@ class TestCheckPermission:
         mock_user.is_superuser = False
         mock_user.roles = []
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     # Should not raise - no role restriction
@@ -392,7 +398,7 @@ class TestValidateParams:
 
     def test_validates_required_params(self):
         """测试验证必填参数"""
-        from app.services.report_framework.engine import ReportEngine, ParameterError
+        from app.services.report_framework.engine import ParameterError, ReportEngine
 
         mock_db = MagicMock()
 
@@ -405,9 +411,9 @@ class TestValidateParams:
         mock_config = MagicMock()
         mock_config.parameters = [mock_param]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     with pytest.raises(ParameterError):
@@ -429,9 +435,9 @@ class TestValidateParams:
         mock_config = MagicMock()
         mock_config.parameters = [mock_param]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._validate_params(mock_config, {})
@@ -451,9 +457,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "integer"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("42", mock_param_type)
@@ -469,9 +475,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "float"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("3.14", mock_param_type)
@@ -487,9 +493,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "boolean"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("true", mock_param_type)
@@ -505,9 +511,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "boolean"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("false", mock_param_type)
@@ -523,9 +529,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "date"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("2024-01-15", mock_param_type)
@@ -541,9 +547,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "string"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type(123, mock_param_type)
@@ -559,9 +565,9 @@ class TestConvertParamType:
         mock_param_type = MagicMock()
         mock_param_type.value = "list"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._convert_param_type("single", mock_param_type)
@@ -570,16 +576,16 @@ class TestConvertParamType:
 
     def test_raises_for_invalid_value(self):
         """测试无效值时抛出异常"""
-        from app.services.report_framework.engine import ReportEngine, ParameterError
+        from app.services.report_framework.engine import ParameterError, ReportEngine
 
         mock_db = MagicMock()
 
         mock_param_type = MagicMock()
         mock_param_type.value = "integer"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     with pytest.raises(ParameterError):
@@ -608,9 +614,9 @@ class TestRenderSections:
         mock_section2.source = None
         mock_section2.columns = []
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_sections([mock_section1, mock_section2], {})
@@ -638,9 +644,9 @@ class TestRenderSection:
         mock_section.type = SectionType.METRICS
         mock_section.items = [mock_item]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
                     engine.expression_parser = MagicMock()
                     engine.expression_parser.evaluate.return_value = 100
@@ -670,14 +676,13 @@ class TestRenderSection:
         mock_section.source = "projects"
         mock_section.columns = [mock_column]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_section(
-                        mock_section,
-                        {"projects": [{"name": "项目A"}, {"name": "项目B"}]}
+                        mock_section, {"projects": [{"name": "项目A"}, {"name": "项目B"}]}
                     )
 
         assert result["id"] == "table1"
@@ -699,14 +704,13 @@ class TestRenderSection:
         mock_section.chart_type = "bar"
         mock_section.source = "stats"
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_section(
-                        mock_section,
-                        {"stats": [{"label": "A", "value": 10}]}
+                        mock_section, {"stats": [{"label": "A", "value": 10}]}
                     )
 
         assert result["id"] == "chart1"
@@ -723,9 +727,9 @@ class TestGetContextValue:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._get_context_value({"key": "value"}, "key")
@@ -738,17 +742,11 @@ class TestGetContextValue:
 
         mock_db = MagicMock()
 
-        context = {
-            "data": {
-                "nested": {
-                    "value": 42
-                }
-            }
-        }
+        context = {"data": {"nested": {"value": 42}}}
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._get_context_value(context, "data.nested.value")
@@ -761,9 +759,9 @@ class TestGetContextValue:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._get_context_value({}, "nonexistent")
@@ -776,9 +774,9 @@ class TestGetContextValue:
 
         mock_db = MagicMock()
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._get_context_value({"key": "value"}, None)
@@ -800,9 +798,9 @@ class TestRenderChart:
 
         chart_data = [{"label": "A", "value": 10}, {"label": "B", "value": 20}]
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_chart(mock_section, {"chart_data": chart_data})
@@ -820,9 +818,9 @@ class TestRenderChart:
 
         grouped_data = {"Category A": 10, "Category B": 20}
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_chart(mock_section, {"grouped_data": grouped_data})
@@ -841,9 +839,9 @@ class TestRenderChart:
         mock_section = MagicMock()
         mock_section.source = None
 
-        with patch('app.services.report_framework.engine.ConfigLoader'):
-            with patch('app.services.report_framework.engine.DataResolver'):
-                with patch('app.services.report_framework.engine.ReportCacheManager'):
+        with patch("app.services.report_framework.engine.ConfigLoader"):
+            with patch("app.services.report_framework.engine.DataResolver"):
+                with patch("app.services.report_framework.engine.ReportCacheManager"):
                     engine = ReportEngine(mock_db)
 
                     result = engine._render_chart(mock_section, {})

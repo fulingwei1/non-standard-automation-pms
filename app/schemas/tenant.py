@@ -8,13 +8,14 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ============================================================
 # 租户 Schema
 # ============================================================
 
+
 class TenantBase(BaseModel):
     """租户基础字段"""
+
     tenant_name: str = Field(..., min_length=1, max_length=200, description="租户名称")
     plan_type: str = Field(default="FREE", description="套餐类型: FREE/STANDARD/ENTERPRISE")
     contact_name: Optional[str] = Field(None, max_length=100, description="联系人姓名")
@@ -25,7 +26,10 @@ class TenantBase(BaseModel):
 
 class TenantCreate(TenantBase):
     """创建租户"""
-    tenant_code: Optional[str] = Field(None, max_length=50, description="租户编码（可选，不填则自动生成）")
+
+    tenant_code: Optional[str] = Field(
+        None, max_length=50, description="租户编码（可选，不填则自动生成）"
+    )
     max_users: Optional[int] = Field(None, ge=1, description="最大用户数")
     max_roles: Optional[int] = Field(None, ge=1, description="最大角色数")
     expired_at: Optional[datetime] = Field(None, description="过期时间")
@@ -33,6 +37,7 @@ class TenantCreate(TenantBase):
 
 class TenantUpdate(BaseModel):
     """更新租户"""
+
     tenant_name: Optional[str] = Field(None, min_length=1, max_length=200)
     status: Optional[str] = Field(None, description="状态: ACTIVE/SUSPENDED/DELETED")
     plan_type: Optional[str] = Field(None, description="套餐类型")
@@ -47,6 +52,7 @@ class TenantUpdate(BaseModel):
 
 class TenantResponse(TenantBase):
     """租户响应"""
+
     id: int
     tenant_code: str
     status: str
@@ -67,6 +73,7 @@ class TenantResponse(TenantBase):
 
 class TenantListResponse(BaseModel):
     """租户列表响应"""
+
     items: list[TenantResponse]
     total: int
     page: int
@@ -76,6 +83,7 @@ class TenantListResponse(BaseModel):
 
 class TenantInitRequest(BaseModel):
     """租户初始化请求"""
+
     admin_username: str = Field(..., min_length=3, max_length=50, description="管理员用户名")
     admin_password: str = Field(..., min_length=6, max_length=100, description="管理员密码")
     admin_email: str = Field(..., description="管理员邮箱")
@@ -85,6 +93,7 @@ class TenantInitRequest(BaseModel):
 
 class TenantStatsResponse(BaseModel):
     """租户统计响应"""
+
     tenant_id: int
     tenant_code: str
     user_count: int
@@ -98,8 +107,10 @@ class TenantStatsResponse(BaseModel):
 # 角色模板 Schema
 # ============================================================
 
+
 class RoleTemplateBase(BaseModel):
     """角色模板基础字段"""
+
     role_code: str = Field(..., min_length=1, max_length=50, description="角色编码")
     role_name: str = Field(..., min_length=1, max_length=100, description="角色名称")
     description: Optional[str] = Field(None, description="角色描述")
@@ -112,11 +123,13 @@ class RoleTemplateBase(BaseModel):
 
 class RoleTemplateCreate(RoleTemplateBase):
     """创建角色模板"""
+
     pass
 
 
 class RoleTemplateUpdate(BaseModel):
     """更新角色模板"""
+
     role_name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
     data_scope: Optional[str] = None
@@ -129,6 +142,7 @@ class RoleTemplateUpdate(BaseModel):
 
 class RoleTemplateResponse(RoleTemplateBase):
     """角色模板响应"""
+
     id: int
     is_active: bool
     created_at: datetime

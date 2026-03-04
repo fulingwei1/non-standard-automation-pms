@@ -34,9 +34,13 @@ def get_alert_statistics(
         query = query.filter(AlertRecord.project_id == project_id)
 
     if start_date:
-        query = query.filter(AlertRecord.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query = query.filter(
+            AlertRecord.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
     if end_date:
-        query = query.filter(AlertRecord.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query = query.filter(
+            AlertRecord.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
 
     alerts = query.all()
 
@@ -90,7 +94,7 @@ def get_alert_statistics(
             "resolved_count": by_status.get("RESOLVED", 0),
             "critical_count": by_level.get("CRITICAL", 0),
             "high_count": by_level.get("HIGH", 0),
-        }
+        },
     }
 
 
@@ -108,9 +112,7 @@ def get_alert_dashboard(
     today_end = datetime.combine(today, datetime.max.time())
 
     # 活跃预警统计（按级别）
-    active_query = db.query(AlertRecord).filter(
-        AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"])
-    )
+    active_query = db.query(AlertRecord).filter(AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"]))
 
     total_active = active_query.count()
 
@@ -120,24 +122,33 @@ def get_alert_dashboard(
     info_count = active_query.filter(AlertRecord.alert_level == "INFO").count()
 
     # 今日新增预警
-    today_new = db.query(AlertRecord).filter(
-        AlertRecord.triggered_at >= today_start,
-        AlertRecord.triggered_at <= today_end
-    ).count()
+    today_new = (
+        db.query(AlertRecord)
+        .filter(AlertRecord.triggered_at >= today_start, AlertRecord.triggered_at <= today_end)
+        .count()
+    )
 
     # 今日关闭的预警
-    today_closed = db.query(AlertRecord).filter(
-        AlertRecord.status == "CLOSED",
-        AlertRecord.handle_end_at >= today_start,
-        AlertRecord.handle_end_at <= today_end
-    ).count()
+    today_closed = (
+        db.query(AlertRecord)
+        .filter(
+            AlertRecord.status == "CLOSED",
+            AlertRecord.handle_end_at >= today_start,
+            AlertRecord.handle_end_at <= today_end,
+        )
+        .count()
+    )
 
     # 今日处理的预警（包括已解决和已关闭）
-    today_processed = db.query(AlertRecord).filter(
-        AlertRecord.status.in_(["RESOLVED", "CLOSED"]),
-        AlertRecord.handle_end_at >= today_start,
-        AlertRecord.handle_end_at <= today_end
-    ).count()
+    today_processed = (
+        db.query(AlertRecord)
+        .filter(
+            AlertRecord.status.in_(["RESOLVED", "CLOSED"]),
+            AlertRecord.handle_end_at >= today_start,
+            AlertRecord.handle_end_at <= today_end,
+        )
+        .count()
+    )
 
     return {
         "active_alerts": {

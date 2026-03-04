@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from datetime import date, datetime, timedelta
 from typing import Dict, Optional
 
@@ -39,11 +40,8 @@ from app.models.acceptance import (
 from app.models.base import get_session
 from app.models.project import Machine, Project, ProjectStage, ProjectStatus
 
-import uuid
-
 _ELEC = f"ELEC-{uuid.uuid4().hex[:8]}"
 _FUNC = f"FUNC-{uuid.uuid4().hex[:8]}"
-
 
 
 class Colors:
@@ -81,12 +79,14 @@ def cleanup_records(created: Dict[str, Optional[int]]) -> None:
                 )
             ]
             if issue_ids:
-                session.query(IssueFollowUp).filter(
-                    IssueFollowUp.issue_id.in_(issue_ids)
-                ).delete(synchronize_session=False)
-            reports = session.query(AcceptanceReport).filter(
-                AcceptanceReport.order_id == created["order_id"]
-            ).all()
+                session.query(IssueFollowUp).filter(IssueFollowUp.issue_id.in_(issue_ids)).delete(
+                    synchronize_session=False
+                )
+            reports = (
+                session.query(AcceptanceReport)
+                .filter(AcceptanceReport.order_id == created["order_id"])
+                .all()
+            )
             for rpt in reports:
                 if rpt.file_path:
                     file_path = os.path.join(settings.UPLOAD_DIR, rpt.file_path)
@@ -104,9 +104,9 @@ def cleanup_records(created: Dict[str, Optional[int]]) -> None:
             session.query(AcceptanceOrderItem).filter(
                 AcceptanceOrderItem.order_id == created["order_id"]
             ).delete(synchronize_session=False)
-            session.query(AcceptanceOrder).filter(
-                AcceptanceOrder.id == created["order_id"]
-            ).delete(synchronize_session=False)
+            session.query(AcceptanceOrder).filter(AcceptanceOrder.id == created["order_id"]).delete(
+                synchronize_session=False
+            )
 
         if created.get("template_id"):
             category_ids = [
@@ -127,9 +127,9 @@ def cleanup_records(created: Dict[str, Optional[int]]) -> None:
             ).delete(synchronize_session=False)
 
         if created.get("machine_id"):
-            session.query(Machine).filter(
-                Machine.id == created["machine_id"]
-            ).delete(synchronize_session=False)
+            session.query(Machine).filter(Machine.id == created["machine_id"]).delete(
+                synchronize_session=False
+            )
 
         if created.get("project_id"):
             stage_ids = [
@@ -139,15 +139,15 @@ def cleanup_records(created: Dict[str, Optional[int]]) -> None:
                 )
             ]
             if stage_ids:
-                session.query(ProjectStatus).filter(
-                    ProjectStatus.stage_id.in_(stage_ids)
-                ).delete(synchronize_session=False)
-                session.query(ProjectStage).filter(
-                    ProjectStage.id.in_(stage_ids)
-                ).delete(synchronize_session=False)
-            session.query(Project).filter(
-                Project.id == created["project_id"]
-            ).delete(synchronize_session=False)
+                session.query(ProjectStatus).filter(ProjectStatus.stage_id.in_(stage_ids)).delete(
+                    synchronize_session=False
+                )
+                session.query(ProjectStage).filter(ProjectStage.id.in_(stage_ids)).delete(
+                    synchronize_session=False
+                )
+            session.query(Project).filter(Project.id == created["project_id"]).delete(
+                synchronize_session=False
+            )
         session.commit()
     finally:
         session.close()
@@ -204,7 +204,7 @@ def run_acceptance_flow() -> Dict[str, any]:
             machine_resp = client.post(
                 f"/api/v1/projects/{created['project_id']}/machines",
                 json=machine_payload,
-                headers=headers
+                headers=headers,
             )
             machine_resp.raise_for_status()
             machine = machine_resp.json()
@@ -265,7 +265,9 @@ def run_acceptance_flow() -> Dict[str, any]:
                     },
                 ],
             }
-            template_resp = client.post("/api/v1/acceptance-templates", json=template_payload, headers=headers)
+            template_resp = client.post(
+                "/api/v1/acceptance-templates", json=template_payload, headers=headers
+            )
             template_resp.raise_for_status()
             template = template_resp.json()
             created["template_id"] = template["id"]
@@ -280,13 +282,17 @@ def run_acceptance_flow() -> Dict[str, any]:
                 "planned_date": today.isoformat(),
                 "location": "FAT测试车间",
             }
-            order_resp = client.post("/api/v1/acceptance-orders", json=order_payload, headers=headers)
+            order_resp = client.post(
+                "/api/v1/acceptance-orders", json=order_payload, headers=headers
+            )
             order_resp.raise_for_status()
             order = order_resp.json()
             created["order_id"] = order["id"]
             log_success(f"验收单创建成功：{order['order_no']}，检查项 {order['total_items']}")
 
-            items_resp = client.get(f"/api/v1/acceptance-orders/{order['id']}/items", headers=headers)
+            items_resp = client.get(
+                f"/api/v1/acceptance-orders/{order['id']}/items", headers=headers
+            )
             items_resp.raise_for_status()
             items = items_resp.json()
             log_info(f"模板检查项复制完成，共 {len(items)} 条")
@@ -377,7 +383,9 @@ def run_acceptance_flow() -> Dict[str, any]:
                 }
 
             log_info("完成验收并生成结论...")
-            overall_result = "FAILED" if any(i["result_status"] == "FAILED" for i in latest_items) else "PASSED"
+            overall_result = (
+                "FAILED" if any(i["result_status"] == "FAILED" for i in latest_items) else "PASSED"
+            )
             complete_payload = {
                 "overall_result": overall_result,
                 "conclusion": "脚本测试完成，生成验收结论",

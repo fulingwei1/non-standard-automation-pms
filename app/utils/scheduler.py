@@ -27,26 +27,19 @@ from app.utils.scheduler_metrics import (
 logger = logging.getLogger(__name__)
 
 # 配置任务存储和执行器
-jobstores = {
-    'default': MemoryJobStore()
-}
+jobstores = {"default": MemoryJobStore()}
 
-executors = {
-    'default': ThreadPoolExecutor(5)
-}
+executors = {"default": ThreadPoolExecutor(5)}
 
 job_defaults = {
-    'coalesce': True,  # 如果任务堆积，只执行一次
-    'max_instances': 1,  # 同一任务最多1个实例
-    'misfire_grace_time': 300  # 错过执行时间后5分钟内仍可执行
+    "coalesce": True,  # 如果任务堆积，只执行一次
+    "max_instances": 1,  # 同一任务最多1个实例
+    "misfire_grace_time": 300,  # 错过执行时间后5分钟内仍可执行
 }
 
 # 创建调度器
 scheduler = BackgroundScheduler(
-    jobstores=jobstores,
-    executors=executors,
-    job_defaults=job_defaults,
-    timezone='Asia/Shanghai'
+    jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone="Asia/Shanghai"
 )
 
 
@@ -55,7 +48,9 @@ def job_listener(event):
     payload = {
         "job_id": event.job_id,
         "jobstore": event.jobstore,
-        "scheduled_time": event.scheduled_run_time.isoformat() if event.scheduled_run_time else None,
+        "scheduled_time": (
+            event.scheduled_run_time.isoformat() if event.scheduled_run_time else None
+        ),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     if event.exception:
@@ -139,18 +134,16 @@ def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
         from app.models.scheduler_config import SchedulerTaskConfig
 
         with get_db_session() as db:
-            config = db.query(SchedulerTaskConfig).filter(
-                SchedulerTaskConfig.task_id == task_id,
-                SchedulerTaskConfig.is_enabled
-            ).first()
+            config = (
+                db.query(SchedulerTaskConfig)
+                .filter(SchedulerTaskConfig.task_id == task_id, SchedulerTaskConfig.is_enabled)
+                .first()
+            )
 
             if config:
                 # JSONType会自动处理JSON序列化/反序列化
                 cron_config = config.cron_config if config.cron_config else {}
-                return {
-                    "enabled": config.is_enabled,
-                    "cron": cron_config
-                }
+                return {"enabled": config.is_enabled, "cron": cron_config}
     except Exception as e:
         logger.warning(f"从数据库加载任务配置失败 ({task_id}): {str(e)}")
     return None

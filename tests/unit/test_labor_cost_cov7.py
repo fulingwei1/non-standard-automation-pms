@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - labor_cost_service"""
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.labor_cost_service import (
-        LaborCostService,
         LaborCostCalculationService,
         LaborCostExpenseService,
+        LaborCostService,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -35,8 +37,10 @@ class TestLaborCostServiceInit:
 class TestGetUserHourlyRate:
     def test_returns_decimal(self):
         db = _make_db()
-        with patch("app.services.hourly_rate_service.HourlyRateService.get_user_hourly_rate",
-                   return_value=Decimal("150")):
+        with patch(
+            "app.services.hourly_rate_service.HourlyRateService.get_user_hourly_rate",
+            return_value=Decimal("150"),
+        ):
             try:
                 result = LaborCostService.get_user_hourly_rate(db, user_id=1)
                 assert isinstance(result, Decimal)

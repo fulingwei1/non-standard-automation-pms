@@ -11,13 +11,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import InvoiceResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +40,13 @@ def read_invoices_old(
     注意：此接口保留用于向后兼容，建议使用 /invoices 接口
     """
     query = db.query(Invoice).options(
-        joinedload(Invoice.contract).joinedload(Contract.customer),
-        joinedload(Invoice.project)
+        joinedload(Invoice.contract).joinedload(Contract.customer), joinedload(Invoice.project)
     )
 
     # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有发票）
-    query = security.filter_sales_finance_data_by_scope(query, current_user, db, Invoice, 'owner_id')
+    query = security.filter_sales_finance_data_by_scope(
+        query, current_user, db, Invoice, "owner_id"
+    )
 
     query = apply_keyword_filter(query, Invoice, keyword, "invoice_code")
 
@@ -56,7 +57,9 @@ def read_invoices_old(
         query = query.filter(Invoice.contract_id == contract_id)
 
     total = query.count()
-    invoices = apply_pagination(query.order_by(desc(Invoice.created_at)), pagination.offset, pagination.limit).all()
+    invoices = apply_pagination(
+        query.order_by(desc(Invoice.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     invoice_responses = []
     for invoice in invoices:
@@ -77,5 +80,5 @@ def read_invoices_old(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )

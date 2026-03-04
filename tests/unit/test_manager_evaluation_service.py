@@ -35,14 +35,10 @@ class TestCheckManagerPermission:
 
     def test_not_department_manager(self, db_session):
         """测试非部门经理"""
-        from app.services.manager_evaluation_service import ManagerEvaluationService
         from app.models.user import User
+        from app.services.manager_evaluation_service import ManagerEvaluationService
 
-        user = User(
-        username="test_user",
-        employee_id=1,
-        password_hash="test_hash_123"
-    )
+        user = User(username="test_user", employee_id=1, password_hash="test_hash_123")
         db_session.add(user)
         db_session.flush()
 
@@ -116,11 +112,7 @@ class TestAdjustPerformance:
         service = ManagerEvaluationService(db_session)
 
         with pytest.raises(ValueError) as exc_info:
-            service.adjust_performance(
-            result_id=1,
-            manager_id=1,
-            adjustment_reason=""
-            )
+            service.adjust_performance(result_id=1, manager_id=1, adjustment_reason="")
 
             assert "调整理由不能为空" in str(exc_info.value)
 
@@ -131,11 +123,7 @@ class TestAdjustPerformance:
         service = ManagerEvaluationService(db_session)
 
         with pytest.raises(ValueError) as exc_info:
-            service.adjust_performance(
-            result_id=1,
-            manager_id=1,
-            adjustment_reason="太短了"
-            )
+            service.adjust_performance(result_id=1, manager_id=1, adjustment_reason="太短了")
 
             assert "至少需要10个字符" in str(exc_info.value)
 
@@ -147,9 +135,7 @@ class TestAdjustPerformance:
 
         with pytest.raises(ValueError) as exc_info:
             service.adjust_performance(
-            result_id=99999,
-            manager_id=1,
-            adjustment_reason="这是一个有效的调整理由说明"
+                result_id=99999, manager_id=1, adjustment_reason="这是一个有效的调整理由说明"
             )
 
             assert "绩效结果不存在" in str(exc_info.value)
@@ -204,22 +190,20 @@ class TestSubmitEvaluation:
         service = ManagerEvaluationService(db_session)
 
         with pytest.raises(ValueError) as exc_info:
-            service.submit_evaluation(
-            result_id=99999,
-            manager_id=1,
-            overall_comment="评价内容"
-            )
+            service.submit_evaluation(result_id=99999, manager_id=1, overall_comment="评价内容")
 
             assert "绩效结果不存在" in str(exc_info.value)
 
-
             # pytest fixtures
+
+
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

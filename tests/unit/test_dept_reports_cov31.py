@@ -27,6 +27,7 @@ def _make_department(dept_id=1, name="研发部", code="RD"):
 # generate_dept_weekly_report
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateDeptWeeklyReport:
     def test_returns_error_when_dept_not_found(self, mock_db):
         chain = MagicMock()
@@ -36,7 +37,8 @@ class TestGenerateDeptWeeklyReport:
         chain.all.return_value = []
 
         result = DeptReportMixin.generate_dept_weekly_report(
-            mock_db, department_id=999,
+            mock_db,
+            department_id=999,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
@@ -59,7 +61,8 @@ class TestGenerateDeptWeeklyReport:
         mock_db.query.side_effect = query_side_effect
 
         result = DeptReportMixin.generate_dept_weekly_report(
-            mock_db, department_id=1,
+            mock_db,
+            department_id=1,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
@@ -83,7 +86,8 @@ class TestGenerateDeptWeeklyReport:
         mock_db.query.side_effect = query_side_effect
 
         result = DeptReportMixin.generate_dept_weekly_report(
-            mock_db, department_id=1,
+            mock_db,
+            department_id=1,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
@@ -95,6 +99,7 @@ class TestGenerateDeptWeeklyReport:
 # generate_dept_monthly_report (if exists)
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateDeptMonthlyReport:
     def test_error_when_dept_missing(self, mock_db):
         chain = MagicMock()
@@ -105,8 +110,10 @@ class TestGenerateDeptMonthlyReport:
 
         if hasattr(DeptReportMixin, "generate_dept_monthly_report"):
             result = DeptReportMixin.generate_dept_monthly_report(
-                mock_db, department_id=999,
-                year=2026, month=2,
+                mock_db,
+                department_id=999,
+                year=2026,
+                month=2,
             )
             assert "error" in result
         else:

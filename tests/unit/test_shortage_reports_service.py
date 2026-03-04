@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/shortage/shortage_reports_service.py"""
 from unittest.mock import MagicMock, patch
+
 from app.services.shortage.shortage_reports_service import (
     ShortageReportsService,
     calculate_alert_statistics,

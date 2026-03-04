@@ -11,13 +11,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice, Lead, SalesTeam, SalesTeamMember, TeamPKRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import TeamPKCreateRequest, TeamPKUpdateRequest
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import save_obj
 
 router = APIRouter()
@@ -38,29 +38,35 @@ def list_team_pks(
         query = query.filter(TeamPKRecord.status == status_filter)
 
     total = query.count()
-    pks = apply_pagination(query.order_by(TeamPKRecord.created_at.desc()), pagination.offset, pagination.limit).all()
+    pks = apply_pagination(
+        query.order_by(TeamPKRecord.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for pk in pks:
         team_ids = json.loads(pk.team_ids) if pk.team_ids else []
         teams = db.query(SalesTeam).filter(SalesTeam.id.in_(team_ids)).all()
-        team_info = [{"id": t.id, "team_code": t.team_code, "team_name": t.team_name} for t in teams]
+        team_info = [
+            {"id": t.id, "team_code": t.team_code, "team_name": t.team_name} for t in teams
+        ]
 
-        items.append({
-            "id": pk.id,
-            "pk_name": pk.pk_name,
-            "pk_type": pk.pk_type,
-            "team_ids": team_ids,
-            "teams": team_info,
-            "start_date": pk.start_date,
-            "end_date": pk.end_date,
-            "target_value": float(pk.target_value) if pk.target_value else None,
-            "status": pk.status,
-            "winner_team_id": pk.winner_team_id,
-            "winner_team_name": pk.winner_team.team_name if pk.winner_team else None,
-            "reward_description": pk.reward_description,
-            "created_at": pk.created_at,
-        })
+        items.append(
+            {
+                "id": pk.id,
+                "pk_name": pk.pk_name,
+                "pk_type": pk.pk_type,
+                "team_ids": team_ids,
+                "teams": team_info,
+                "start_date": pk.start_date,
+                "end_date": pk.end_date,
+                "target_value": float(pk.target_value) if pk.target_value else None,
+                "status": pk.status,
+                "winner_team_id": pk.winner_team_id,
+                "winner_team_name": pk.winner_team.team_name if pk.winner_team else None,
+                "reward_description": pk.reward_description,
+                "created_at": pk.created_at,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -70,7 +76,7 @@ def list_team_pks(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-        }
+        },
     )
 
 
@@ -110,7 +116,7 @@ def create_team_pk(
             "id": pk.id,
             "pk_name": pk.pk_name,
             "status": pk.status,
-        }
+        },
     )
 
 
@@ -136,10 +142,14 @@ def get_team_pk(
     team_data = []
     for team in teams:
         # 查询该团队在PK期间的业绩
-        members = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active,
-        ).all()
+        members = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team.id,
+                SalesTeamMember.is_active,
+            )
+            .all()
+        )
         member_ids = [m.user_id for m in members]
 
         contract_amount = 0
@@ -147,38 +157,53 @@ def get_team_pk(
         lead_count = 0
 
         if member_ids:
-            contracts = db.query(Contract).filter(
-                Contract.sales_owner_id.in_(member_ids),
-                Contract.created_at >= pk.start_date,
-                Contract.created_at <= pk.end_date,
-            ).all()
+            contracts = (
+                db.query(Contract)
+                .filter(
+                    Contract.sales_owner_id.in_(member_ids),
+                    Contract.created_at >= pk.start_date,
+                    Contract.created_at <= pk.end_date,
+                )
+                .all()
+            )
             contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
 
-            invoices = db.query(Invoice).join(Contract).filter(
-                Contract.sales_owner_id.in_(member_ids),
-                Invoice.paid_date.isnot(None),
-                Invoice.paid_date >= pk.start_date.date(),
-                Invoice.paid_date <= pk.end_date.date(),
-                Invoice.payment_status.in_(["PAID", "PARTIAL"]),
-            ).all()
+            invoices = (
+                db.query(Invoice)
+                .join(Contract)
+                .filter(
+                    Contract.sales_owner_id.in_(member_ids),
+                    Invoice.paid_date.isnot(None),
+                    Invoice.paid_date >= pk.start_date.date(),
+                    Invoice.paid_date <= pk.end_date.date(),
+                    Invoice.payment_status.in_(["PAID", "PARTIAL"]),
+                )
+                .all()
+            )
             collection_amount = sum(float(inv.paid_amount or 0) for inv in invoices)
 
-            leads = db.query(Lead).filter(
-                Lead.owner_id.in_(member_ids),
-                Lead.created_at >= pk.start_date,
-                Lead.created_at <= pk.end_date,
-            ).all()
+            leads = (
+                db.query(Lead)
+                .filter(
+                    Lead.owner_id.in_(member_ids),
+                    Lead.created_at >= pk.start_date,
+                    Lead.created_at <= pk.end_date,
+                )
+                .all()
+            )
             lead_count = len(leads)
 
-        team_data.append({
-            "id": team.id,
-            "team_code": team.team_code,
-            "team_name": team.team_name,
-            "member_count": len(member_ids),
-            "contract_amount": contract_amount,
-            "collection_amount": collection_amount,
-            "lead_count": lead_count,
-        })
+        team_data.append(
+            {
+                "id": team.id,
+                "team_code": team.team_code,
+                "team_name": team.team_name,
+                "member_count": len(member_ids),
+                "contract_amount": contract_amount,
+                "collection_amount": collection_amount,
+                "lead_count": lead_count,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -199,7 +224,7 @@ def get_team_pk(
             "reward_description": pk.reward_description,
             "creator_name": (pk.creator.real_name or pk.creator.username) if pk.creator else None,
             "created_at": pk.created_at,
-        }
+        },
     )
 
 
@@ -262,42 +287,61 @@ def complete_team_pk(
     # 计算各团队业绩
     results = []
     for team in teams:
-        members = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active,
-        ).all()
+        members = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team.id,
+                SalesTeamMember.is_active,
+            )
+            .all()
+        )
         member_ids = [m.user_id for m in members]
 
         value = 0
         if member_ids:
             if pk.pk_type == "CONTRACT_AMOUNT":
-                contracts = db.query(Contract).filter(
-                    Contract.sales_owner_id.in_(member_ids),
-                    Contract.created_at >= pk.start_date,
-                    Contract.created_at <= pk.end_date,
-                ).all()
+                contracts = (
+                    db.query(Contract)
+                    .filter(
+                        Contract.sales_owner_id.in_(member_ids),
+                        Contract.created_at >= pk.start_date,
+                        Contract.created_at <= pk.end_date,
+                    )
+                    .all()
+                )
                 value = sum(float(c.contract_amount or 0) for c in contracts)
             elif pk.pk_type == "COLLECTION_AMOUNT":
-                invoices = db.query(Invoice).join(Contract).filter(
-                    Contract.sales_owner_id.in_(member_ids),
-                    Invoice.paid_date.isnot(None),
-                    Invoice.paid_date >= pk.start_date.date(),
-                    Invoice.paid_date <= pk.end_date.date(),
-                    Invoice.payment_status.in_(["PAID", "PARTIAL"]),
-                ).all()
+                invoices = (
+                    db.query(Invoice)
+                    .join(Contract)
+                    .filter(
+                        Contract.sales_owner_id.in_(member_ids),
+                        Invoice.paid_date.isnot(None),
+                        Invoice.paid_date >= pk.start_date.date(),
+                        Invoice.paid_date <= pk.end_date.date(),
+                        Invoice.payment_status.in_(["PAID", "PARTIAL"]),
+                    )
+                    .all()
+                )
                 value = sum(float(inv.paid_amount or 0) for inv in invoices)
             elif pk.pk_type == "LEAD_COUNT":
-                value = db.query(Lead).filter(
-                    Lead.owner_id.in_(member_ids),
-                    Lead.created_at >= pk.start_date,
-                    Lead.created_at <= pk.end_date,
-                ).count()
+                value = (
+                    db.query(Lead)
+                    .filter(
+                        Lead.owner_id.in_(member_ids),
+                        Lead.created_at >= pk.start_date,
+                        Lead.created_at <= pk.end_date,
+                    )
+                    .count()
+                )
 
-        results.append({
-            "team_id": team.id,
-            "team_name": team.team_name,
-            "value": value,
-        })
+        results.append(
+            {
+                "team_id": team.id,
+                "team_name": team.team_name,
+                "value": value,
+            }
+        )
 
     # 找出获胜者
     results.sort(key=lambda x: x["value"], reverse=True)
@@ -316,5 +360,5 @@ def complete_team_pk(
             "winner_team_id": pk.winner_team_id,
             "winner_team_name": winner["team_name"] if winner else None,
             "results": results,
-        }
+        },
     )

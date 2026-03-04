@@ -21,7 +21,7 @@ def build_sales_order_response(sales_order: SalesOrder) -> SalesOrderResponse:
             amount=oi.amount,
             remark=oi.remark,
             created_at=oi.created_at,
-            updated_at=oi.updated_at
+            updated_at=oi.updated_at,
         )
         for oi in sales_order.order_items
     ]
@@ -53,5 +53,5 @@ def build_sales_order_response(sales_order: SalesOrder) -> SalesOrderResponse:
         remark=sales_order.remark,
         items=items_data,
         created_at=sales_order.created_at,
-        updated_at=sales_order.updated_at
+        updated_at=sales_order.updated_at,
     )

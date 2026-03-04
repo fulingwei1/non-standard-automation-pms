@@ -8,11 +8,18 @@ import pandas as pd
 import pytest
 
 from app.services.hr_profile_import_service import (
-    clean_str, clean_phone, parse_date, clean_decimal,
-    validate_excel_file, validate_required_columns,
-    get_existing_employees, generate_employee_code,
-    build_department_name, determine_employment_status,
-    determine_employment_type, import_hr_profiles_from_dataframe,
+    build_department_name,
+    clean_decimal,
+    clean_phone,
+    clean_str,
+    determine_employment_status,
+    determine_employment_type,
+    generate_employee_code,
+    get_existing_employees,
+    import_hr_profiles_from_dataframe,
+    parse_date,
+    validate_excel_file,
+    validate_required_columns,
 )
 
 
@@ -22,6 +29,7 @@ class TestCleanStr:
 
     def test_nan(self):
         import numpy as np
+
         assert clean_str(np.nan) is None
 
     def test_slash(self):
@@ -44,6 +52,7 @@ class TestCleanPhone:
 
     def test_nan(self):
         import numpy as np
+
         assert clean_phone(np.nan) is None
 
 
@@ -67,6 +76,7 @@ class TestParseDate:
 
     def test_nan(self):
         import numpy as np
+
         assert parse_date(np.nan) is None
 
 
@@ -76,6 +86,7 @@ class TestCleanDecimal:
 
     def test_nan(self):
         import numpy as np
+
         assert clean_decimal(np.nan) is None
 
     def test_invalid(self):
@@ -88,6 +99,7 @@ class TestValidateExcelFile:
 
     def test_invalid_file(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("test.csv")
 
@@ -95,6 +107,7 @@ class TestValidateExcelFile:
 class TestValidateRequiredColumns:
     def test_missing_name_column(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"其他": [1]})
         with pytest.raises(HTTPException):
             validate_required_columns(df)
@@ -149,16 +162,16 @@ class TestDetermineEmploymentType:
 
 
 class TestGenerateEmployeeCode:
-    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch("app.utils.code_config.CODE_PREFIX", {"EMPLOYEE": "EMP"})
+    @patch("app.utils.code_config.SEQ_LENGTH", {"EMPLOYEE": 5})
     def test_generate_new_code(self):
         existing = set()
         code = generate_employee_code(existing)
         assert code.startswith("EMP-")
         assert code in existing  # should be added
 
-    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch("app.utils.code_config.CODE_PREFIX", {"EMPLOYEE": "EMP"})
+    @patch("app.utils.code_config.SEQ_LENGTH", {"EMPLOYEE": 5})
     def test_generate_code_with_existing(self):
         existing = {"EMP-00001"}
         code = generate_employee_code(existing)

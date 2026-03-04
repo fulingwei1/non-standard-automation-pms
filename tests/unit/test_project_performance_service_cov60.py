@@ -60,7 +60,7 @@ class TestProjectPerformanceService(unittest.TestCase):
         role_obj = MagicMock()
         role_obj.role_code = "dept_manager"
         role_obj.role_name = "部门经理"
-        
+
         user_role = MagicMock()
         user_role.role = role_obj
         current_user.roles = [user_role]

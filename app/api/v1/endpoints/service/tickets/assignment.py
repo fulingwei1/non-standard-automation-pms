@@ -5,7 +5,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -14,8 +14,6 @@ from app.models.service import ServiceTicket, ServiceTicketCcUser
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
 from app.utils.db_helpers import get_or_404
-
-from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -50,6 +48,7 @@ def get_project_members_for_ticket(
             role_list = [role.strip() for role in include_roles.split(",") if role.strip()]
         except (ValueError, AttributeError) as e:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"解析角色列表失败: {e}, include_roles: {include_roles}")
             role_list = None
@@ -59,13 +58,10 @@ def get_project_members_for_ticket(
         db=db,
         project_ids=project_id_list,
         include_roles=role_list,
-        exclude_user_id=current_user.id  # 排除当前用户
+        exclude_user_id=current_user.id,  # 排除当前用户
     )
 
-    return {
-        "members": members,
-        "total": len(members)
-    }
+    return {"members": members, "total": len(members)}
 
 
 @router.get("/{ticket_id}/projects", response_model=dict, status_code=status.HTTP_200_OK)
@@ -85,7 +81,9 @@ def get_ticket_related_projects(
     return projects_data
 
 
-@router.put("/{ticket_id}/assign", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{ticket_id}/assign", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK
+)
 def assign_service_ticket(
     *,
     db: Session = Depends(deps.get_db),
@@ -120,27 +118,25 @@ def assign_service_ticket(
     # 更新时间线
     if not ticket.timeline:
         ticket.timeline = []
-    ticket.timeline.append({
-        "type": "ASSIGNED",
-        "timestamp": datetime.now().isoformat(),
-        "user": current_user.real_name or current_user.username,
-        "description": f"工单已分配给 {assignee.name or assignee.username}",
-    })
+    ticket.timeline.append(
+        {
+            "type": "ASSIGNED",
+            "timestamp": datetime.now().isoformat(),
+            "user": current_user.real_name or current_user.username,
+            "description": f"工单已分配给 {assignee.name or assignee.username}",
+        }
+    )
 
     # 更新抄送人员
     if assign_in.cc_user_ids is not None:
         # 删除旧的抄送人员
-        db.query(ServiceTicketCcUser).filter(
-            ServiceTicketCcUser.ticket_id == ticket_id
-        ).delete()
+        db.query(ServiceTicketCcUser).filter(ServiceTicketCcUser.ticket_id == ticket_id).delete()
 
         # 添加新的抄送人员（排除处理人）
         for user_id in assign_in.cc_user_ids:
             if user_id != assign_in.assignee_id:
                 cc_user = ServiceTicketCcUser(
-                    ticket_id=ticket_id,
-                    user_id=user_id,
-                    notified_at=datetime.now()
+                    ticket_id=ticket_id, user_id=user_id, notified_at=datetime.now()
                 )
                 db.add(cc_user)
 
@@ -151,9 +147,11 @@ def assign_service_ticket(
     # 同步SLA监控状态
     try:
         from app.services.sla_service import sync_ticket_to_sla_monitor
+
         sync_ticket_to_sla_monitor(db, ticket)
     except Exception as e:
         import logging
+
         logging.error(f"同步SLA监控状态失败: {e}")
 
     return ticket

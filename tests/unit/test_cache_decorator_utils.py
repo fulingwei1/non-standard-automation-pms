@@ -4,17 +4,19 @@ Unit tests for app/utils/cache_decorator.py
 Covers additional scenarios beyond test_utils_missing.py
 """
 
-import pytest
 import time
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.utils.cache_decorator import (
     QueryStats,
-    query_stats,
-    log_query_time,
-    track_query,
     cache_project_detail,
     cache_project_list,
     get_cache_service,
+    log_query_time,
+    query_stats,
+    track_query,
 )
 
 
@@ -97,6 +99,7 @@ class TestLogQueryTime:
 
     def test_fast_query_no_warning(self):
         """Fast queries don't emit warning logs."""
+
         @log_query_time(threshold=10.0)  # very high threshold
         def fast_func():
             return "result"
@@ -108,6 +111,7 @@ class TestLogQueryTime:
 
     def test_slow_query_emits_warning(self):
         """Queries exceeding threshold emit warning log."""
+
         @log_query_time(threshold=0.0)  # threshold=0 → always slow
         def slow_func():
             return "done"
@@ -122,6 +126,7 @@ class TestLogQueryTime:
 
     def test_preserves_return_value(self):
         """Decorated function return value is preserved."""
+
         @log_query_time()
         def func_with_value():
             return {"data": [1, 2, 3]}
@@ -131,6 +136,7 @@ class TestLogQueryTime:
 
     def test_default_threshold_is_half_second(self):
         """Default threshold is 0.5 seconds."""
+
         # Test that function works with default threshold
         @log_query_time()
         def instant_func():
@@ -148,6 +154,7 @@ class TestTrackQuery:
 
     def test_track_query_records_execution(self):
         """track_query records query in global query_stats."""
+
         @track_query
         def my_func(name="test"):
             return name
@@ -159,6 +166,7 @@ class TestTrackQuery:
 
     def test_track_query_records_function_name(self):
         """track_query records the function name."""
+
         @track_query
         def named_query():
             return None
@@ -169,6 +177,7 @@ class TestTrackQuery:
 
     def test_track_query_preserves_function_name(self):
         """track_query preserves __name__ via functools.wraps."""
+
         @track_query
         def my_special_query():
             pass
@@ -185,6 +194,7 @@ class TestCacheProjectDetail:
         mock_cache.get_project_detail.return_value = {"id": 1, "name": "Project 1"}
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_detail
             def get_project(self_obj, project_id):
                 return {"id": project_id, "name": "Fresh"}
@@ -200,6 +210,7 @@ class TestCacheProjectDetail:
         mock_cache.get_project_detail.return_value = None  # cache miss
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_detail
             def get_project(self_obj, project_id):
                 return {"id": project_id, "name": "Fresh"}
@@ -214,6 +225,7 @@ class TestCacheProjectDetail:
         mock_cache = MagicMock()
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_detail
             def get_project(self_obj, project_id=None):
                 return {"data": "direct"}
@@ -225,6 +237,7 @@ class TestCacheProjectDetail:
 
     def test_invalidate_method_available(self):
         """Decorated function exposes invalidate method."""
+
         @cache_project_detail
         def get_project(self_obj, project_id):
             return {}
@@ -241,6 +254,7 @@ class TestCacheProjectList:
         mock_cache.get_project_list.return_value = {"items": [1, 2, 3], "total": 3}
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_list
             def list_projects(self_obj, filters=None):
                 return {"items": [], "total": 0}
@@ -256,6 +270,7 @@ class TestCacheProjectList:
         mock_cache.get_project_list.return_value = None
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_project_list
             def list_projects(self_obj, filters=None):
                 return {"items": [{"id": 1}], "total": 1}
@@ -267,6 +282,7 @@ class TestCacheProjectList:
 
     def test_invalidate_method_on_list_decorator(self):
         """cache_project_list exposes invalidate method."""
+
         @cache_project_list
         def list_projects(self_obj, filters=None):
             return {}

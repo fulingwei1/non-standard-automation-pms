@@ -5,9 +5,10 @@
 测试项目成本核算、预算管理、成本分析等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/budget",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/budget", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Project budget API not implemented")
@@ -49,13 +47,11 @@ class TestProjectCostsBudgetAPI:
             "total_budget": 500000.0,
             "labor_cost_budget": 300000.0,
             "material_cost_budget": 150000.0,
-            "other_cost_budget": 50000.0
+            "other_cost_budget": 50000.0,
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/budget",
-            headers=headers,
-            json=budget_data
+            f"{settings.API_V1_PREFIX}/projects/1/costs/budget", headers=headers, json=budget_data
         )
 
         if response.status_code == 404:
@@ -70,10 +66,7 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/actual",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/actual", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Actual costs API not implemented")
@@ -88,8 +81,7 @@ class TestProjectCostsBudgetAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/breakdown",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/costs/breakdown", headers=headers
         )
 
         if response.status_code == 404:
@@ -105,8 +97,7 @@ class TestProjectCostsBudgetAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/variance",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/costs/variance", headers=headers
         )
 
         if response.status_code == 404:
@@ -122,8 +113,7 @@ class TestProjectCostsBudgetAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/forecast",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/costs/forecast", headers=headers
         )
 
         if response.status_code == 404:
@@ -138,10 +128,7 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/evm",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/evm", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("EVM API not implemented")
@@ -160,13 +147,11 @@ class TestProjectCostsBudgetAPI:
             "amount": 5000.0,
             "description": "开发人员工资",
             "cost_date": datetime.now().strftime("%Y-%m-%d"),
-            "vendor": "内部"
+            "vendor": "内部",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/entries",
-            headers=headers,
-            json=cost_entry
+            f"{settings.API_V1_PREFIX}/projects/1/costs/entries", headers=headers, json=cost_entry
         )
 
         if response.status_code == 404:
@@ -181,10 +166,7 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/entries",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/entries", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Cost entries API not implemented")
@@ -201,7 +183,7 @@ class TestProjectCostsBudgetAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/costs/entries"
             f"?start_date=2024-01-01&end_date=2024-12-31",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -217,8 +199,7 @@ class TestProjectCostsBudgetAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/entries?category=labor",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/costs/entries?category=labor", headers=headers
         )
 
         if response.status_code == 404:
@@ -233,10 +214,7 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/export", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Cost export API not implemented")
@@ -250,16 +228,12 @@ class TestProjectCostsBudgetAPI:
 
         headers = _auth_headers(admin_token)
 
-        approval_data = {
-            "budget_change": 50000.0,
-            "reason": "项目范围扩大",
-            "approver_id": 1
-        }
+        approval_data = {"budget_change": 50000.0, "reason": "项目范围扩大", "approver_id": 1}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/costs/budget/approval",
             headers=headers,
-            json=approval_data
+            json=approval_data,
         )
 
         if response.status_code == 404:
@@ -269,9 +243,7 @@ class TestProjectCostsBudgetAPI:
 
     def test_cost_unauthorized_access(self, client: TestClient):
         """测试未授权访问成本数据"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/budget"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/costs/budget")
 
         assert response.status_code in [401, 403], response.text
 
@@ -283,8 +255,7 @@ class TestProjectCostsBudgetAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/costs/analysis/charts",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/costs/analysis/charts", headers=headers
         )
 
         if response.status_code == 404:

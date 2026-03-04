@@ -137,7 +137,11 @@ class TestApprovalWorkflowIntegration:
     def test_approval_record_creation(self, db_session: Session):
         """测试审批记录创建"""
         try:
-            from app.models.sales.workflow import ApprovalRecord, ApprovalWorkflow, ApprovalWorkflowStep
+            from app.models.sales.workflow import (
+                ApprovalRecord,
+                ApprovalWorkflow,
+                ApprovalWorkflowStep,
+            )
         except ImportError:
             pytest.skip("ApprovalRecord model not available")
 

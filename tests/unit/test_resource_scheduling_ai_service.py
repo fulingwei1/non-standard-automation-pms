@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_db():
@@ -22,12 +22,14 @@ def mock_db():
 def service(mock_db):
     with patch("app.services.resource_scheduling_ai_service.AIClientService"):
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
         svc = ResourceSchedulingAIService(mock_db)
         svc.ai_client = MagicMock()
         return svc
 
 
 # ─── _calculate_severity ─────────────────────────────────────────────────────
+
 
 class TestCalculateSeverity:
     def test_critical_by_allocation(self, service):
@@ -54,6 +56,7 @@ class TestCalculateSeverity:
 
 # ─── _calculate_priority_score ────────────────────────────────────────────────
 
+
 class TestCalculatePriorityScore:
     def test_critical_base(self, service):
         score = service._calculate_priority_score("CRITICAL", 0)
@@ -78,6 +81,7 @@ class TestCalculatePriorityScore:
 
 
 # ─── _determine_utilization_status ───────────────────────────────────────────
+
 
 class TestDetermineUtilizationStatus:
     def test_underutilized(self, service):
@@ -104,6 +108,7 @@ class TestDetermineUtilizationStatus:
 
 # ─── _get_default_suggestions ────────────────────────────────────────────────
 
+
 class TestGetDefaultSuggestions:
     def test_returns_list(self, service):
         conflict = MagicMock()
@@ -124,14 +129,17 @@ class TestGetDefaultSuggestions:
 
 # ─── _ai_assess_conflict (AI mock) ───────────────────────────────────────────
 
+
 class TestAIAssessConflict:
     def test_success_path(self, service):
         fake_response = {
-            "content": json.dumps({
-                "risk_factors": ["超负荷"],
-                "impact_analysis": {"schedule_impact": "延期"},
-                "confidence": 0.85
-            })
+            "content": json.dumps(
+                {
+                    "risk_factors": ["超负荷"],
+                    "impact_analysis": {"schedule_impact": "延期"},
+                    "confidence": 0.85,
+                }
+            )
         }
         service.ai_client.generate_solution.return_value = fake_response
 
@@ -178,13 +186,14 @@ class TestAIAssessConflict:
 
 # ─── _ai_forecast_demand ─────────────────────────────────────────────────────
 
+
 class TestAIForecastDemand:
     def test_success(self, service):
         fake = {
             "predicted_demand": 15,
             "demand_gap": 3,
             "gap_severity": "SHORTAGE",
-            "ai_confidence": 0.78
+            "ai_confidence": 0.78,
         }
         service.ai_client.generate_solution.return_value = {"content": json.dumps(fake)}
 
@@ -200,14 +209,14 @@ class TestAIForecastDemand:
     def test_ai_failure_returns_defaults(self, service):
         service.ai_client.generate_solution.side_effect = Exception("error")
         result = service._ai_forecast_demand(
-            projects=[], forecast_period="1MONTH",
-            resource_type="PERSON", skill_category=None
+            projects=[], forecast_period="1MONTH", resource_type="PERSON", skill_category=None
         )
         assert "predicted_demand" in result
         assert result["ai_confidence"] == 0.5
 
 
 # ─── _ai_analyze_utilization ─────────────────────────────────────────────────
+
 
 class TestAIAnalyzeUtilization:
     def test_success(self, service):
@@ -224,6 +233,7 @@ class TestAIAnalyzeUtilization:
 
 
 # ─── _create_forecast_record ─────────────────────────────────────────────────
+
 
 class TestCreateForecastRecord:
     def test_creates_record(self, service, mock_db):
@@ -276,14 +286,17 @@ class TestCreateForecastRecord:
 
 # ─── forecast_resource_demand ─────────────────────────────────────────────────
 
+
 class TestForecastResourceDemand:
     def test_returns_list(self, service, mock_db):
         # Mock the entire DB query chain to avoid Project model attribute issues
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.object(service, "_ai_forecast_demand") as mock_ai, \
-             patch.object(service, "_create_forecast_record") as mock_create, \
-             patch("app.services.resource_scheduling_ai_service.and_"):
+        with (
+            patch.object(service, "_ai_forecast_demand") as mock_ai,
+            patch.object(service, "_create_forecast_record") as mock_create,
+            patch("app.services.resource_scheduling_ai_service.and_"),
+        ):
             mock_ai.return_value = {"predicted_demand": 5, "ai_confidence": 0.7}
             mock_create.return_value = MagicMock()
 
@@ -294,6 +307,7 @@ class TestForecastResourceDemand:
 
 
 # ─── analyze_resource_utilization ────────────────────────────────────────────
+
 
 class TestAnalyzeResourceUtilization:
     def _mock_timesheet_import(self, mock_db, timesheets):
@@ -308,9 +322,11 @@ class TestAnalyzeResourceUtilization:
         mock_timesheet_class = MagicMock()
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_ts] * 20
 
-        with patch.dict("sys.modules", {"app.models.finance": MagicMock(Timesheet=MagicMock())}), \
-             patch("app.services.resource_scheduling_ai_service.save_obj"), \
-             patch.object(service, "_ai_analyze_utilization") as mock_ai:
+        with (
+            patch.dict("sys.modules", {"app.models.finance": MagicMock(Timesheet=MagicMock())}),
+            patch("app.services.resource_scheduling_ai_service.save_obj"),
+            patch.object(service, "_ai_analyze_utilization") as mock_ai,
+        ):
             mock_ai.return_value = {"key_insights": ["正常"]}
 
             result = service.analyze_resource_utilization(
@@ -323,9 +339,11 @@ class TestAnalyzeResourceUtilization:
     def test_zero_hours(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.dict("sys.modules", {"app.models.finance": MagicMock(Timesheet=MagicMock())}), \
-             patch("app.services.resource_scheduling_ai_service.save_obj"), \
-             patch.object(service, "_ai_analyze_utilization") as mock_ai:
+        with (
+            patch.dict("sys.modules", {"app.models.finance": MagicMock(Timesheet=MagicMock())}),
+            patch("app.services.resource_scheduling_ai_service.save_obj"),
+            patch.object(service, "_ai_analyze_utilization") as mock_ai,
+        ):
             mock_ai.return_value = {}
 
             result = service.analyze_resource_utilization(

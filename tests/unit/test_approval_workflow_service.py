@@ -1,26 +1,32 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestApprovalWorkflowService:
     def setup_method(self):
         self.db = MagicMock()
         from app.services.approval_workflow_service import ApprovalWorkflowService
+
         self.service = ApprovalWorkflowService(self.db)
 
     @patch("app.services.approval_workflow_service.ApprovalRecordStatusEnum")
     def test_start_approval_returns_existing(self, mock_enum):
         mock_enum.PENDING = "PENDING"
         existing = MagicMock()
-        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing
+        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            existing
+        )
         result = self.service.start_approval("QUOTE", 1, 10)
         assert result == existing
 
     @patch("app.services.approval_workflow_service.ApprovalRecordStatusEnum")
     def test_start_approval_creates_new(self, mock_enum):
         mock_enum.PENDING = "PENDING"
-        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
 
         with patch("app.models.sales.workflow.ApprovalRecord") as MockRecord:
             instance = MagicMock()

@@ -13,17 +13,19 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.ecn import Ecn, EcnSolutionTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.ecn_knowledge_service import EcnKnowledgeService
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
 
-@router.post("/ecns/{ecn_id}/extract-solution", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/ecns/{ecn_id}/extract-solution", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def extract_solution(
     ecn_id: int,
     auto_extract: bool = Body(True, description="是否自动提取"),
@@ -38,25 +40,23 @@ def extract_solution(
         result = service.extract_solution(ecn_id=ecn_id, auto_extract=auto_extract)
 
         # 如果自动提取，更新ECN的解决方案字段
-        if auto_extract and result.get('solution'):
+        if auto_extract and result.get("solution"):
             ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
             if ecn:
-                ecn.solution = result['solution']
-                ecn.solution_source = 'AUTO_EXTRACT'
+                ecn.solution = result["solution"]
+                ecn.solution_source = "AUTO_EXTRACT"
                 db.commit()
 
-        return ResponseModel(
-            code=200,
-            message="解决方案提取成功",
-            data=result
-        )
+        return ResponseModel(code=200, message="解决方案提取成功", data=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"提取失败: {str(e)}")
 
 
-@router.get("/ecns/{ecn_id}/similar-ecns", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/similar-ecns", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_similar_ecns(
     ecn_id: int,
     top_n: int = Query(5, description="返回数量"),
@@ -70,19 +70,13 @@ def get_similar_ecns(
     try:
         service = EcnKnowledgeService(db)
         similar_ecns = service.find_similar_ecns(
-            ecn_id=ecn_id,
-            top_n=top_n,
-            min_similarity=min_similarity
+            ecn_id=ecn_id, top_n=top_n, min_similarity=min_similarity
         )
 
         return ResponseModel(
             code=200,
             message="查找相似ECN成功",
-            data={
-                "ecn_id": ecn_id,
-                "similar_ecns": similar_ecns,
-                "count": len(similar_ecns)
-            }
+            data={"ecn_id": ecn_id, "similar_ecns": similar_ecns, "count": len(similar_ecns)},
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -90,7 +84,11 @@ def get_similar_ecns(
         raise HTTPException(status_code=500, detail=f"查找失败: {str(e)}")
 
 
-@router.get("/ecns/{ecn_id}/recommend-solutions", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/recommend-solutions",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def recommend_solutions(
     ecn_id: int,
     top_n: int = Query(5, description="返回数量"),
@@ -110,8 +108,8 @@ def recommend_solutions(
             data={
                 "ecn_id": ecn_id,
                 "recommendations": recommendations,
-                "count": len(recommendations)
-            }
+                "count": len(recommendations),
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -119,7 +117,11 @@ def recommend_solutions(
         raise HTTPException(status_code=500, detail=f"推荐失败: {str(e)}")
 
 
-@router.post("/ecns/{ecn_id}/create-solution-template", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/ecns/{ecn_id}/create-solution-template",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def create_solution_template(
     ecn_id: int,
     template_data: Dict[str, Any] = Body(..., description="模板数据"),
@@ -132,9 +134,7 @@ def create_solution_template(
     try:
         service = EcnKnowledgeService(db)
         template = service.create_solution_template(
-            ecn_id=ecn_id,
-            template_data=template_data,
-            created_by=current_user.id
+            ecn_id=ecn_id, template_data=template_data, created_by=current_user.id
         )
 
         return ResponseModel(
@@ -143,8 +143,8 @@ def create_solution_template(
             data={
                 "template_id": template.id,
                 "template_code": template.template_code,
-                "template_name": template.template_name
-            }
+                "template_name": template.template_name,
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -152,7 +152,11 @@ def create_solution_template(
         raise HTTPException(status_code=500, detail=f"创建失败: {str(e)}")
 
 
-@router.post("/ecns/{ecn_id}/apply-solution-template", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/ecns/{ecn_id}/apply-solution-template",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def apply_solution_template(
     ecn_id: int,
     template_id: int = Body(..., description="模板ID"),
@@ -166,11 +170,7 @@ def apply_solution_template(
         service = EcnKnowledgeService(db)
         result = service.apply_solution_template(ecn_id=ecn_id, template_id=template_id)
 
-        return ResponseModel(
-            code=200,
-            message="应用解决方案模板成功",
-            data=result
-        )
+        return ResponseModel(code=200, message="应用解决方案模板成功", data=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -189,9 +189,7 @@ def list_solution_templates(
     """
     获取解决方案模板列表
     """
-    query = db.query(EcnSolutionTemplate).filter(
-        EcnSolutionTemplate.is_active == is_active
-    )
+    query = db.query(EcnSolutionTemplate).filter(EcnSolutionTemplate.is_active == is_active)
 
     if ecn_type:
         query = query.filter(EcnSolutionTemplate.ecn_type == ecn_type)
@@ -200,7 +198,9 @@ def list_solution_templates(
         query = query.filter(EcnSolutionTemplate.template_category == category)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(EcnSolutionTemplate.usage_count)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(EcnSolutionTemplate.usage_count)), pagination.offset, pagination.limit
+    ).all()
 
     return ResponseModel(
         code=200,
@@ -217,18 +217,22 @@ def list_solution_templates(
                     "usage_count": t.usage_count or 0,
                     "estimated_cost": float(t.estimated_cost or 0),
                     "estimated_days": t.estimated_days or 0,
-                    "created_at": t.created_at.isoformat() if t.created_at else None
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
                 }
                 for t in templates
             ],
             "total": total,
             "page": pagination.page,
-            "page_size": pagination.page_size
-        }
+            "page_size": pagination.page_size,
+        },
     )
 
 
-@router.get("/ecn-solution-templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecn-solution-templates/{template_id}",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def get_solution_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
@@ -237,9 +241,7 @@ def get_solution_template(
     """
     获取解决方案模板详情
     """
-    template = db.query(EcnSolutionTemplate).filter(
-        EcnSolutionTemplate.id == template_id
-    ).first()
+    template = db.query(EcnSolutionTemplate).filter(EcnSolutionTemplate.id == template_id).first()
 
     if not template:
         raise HTTPException(status_code=404, detail=f"解决方案模板 {template_id} 不存在")
@@ -263,6 +265,6 @@ def get_solution_template(
             "success_rate": float(template.success_rate or 0),
             "usage_count": template.usage_count or 0,
             "source_ecn_id": template.source_ecn_id,
-            "created_at": template.created_at.isoformat() if template.created_at else None
-        }
+            "created_at": template.created_at.isoformat() if template.created_at else None,
+        },
     )

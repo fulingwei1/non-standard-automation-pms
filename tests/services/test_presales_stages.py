@@ -28,9 +28,18 @@ class TestPresalesStages:
             assert stage["category"] == "presales"
 
     def test_required_fields_present(self):
-        required = {"stage_code", "stage_name", "sequence", "category",
-                     "estimated_days", "description", "is_required",
-                     "is_milestone", "is_parallel", "nodes"}
+        required = {
+            "stage_code",
+            "stage_name",
+            "sequence",
+            "category",
+            "estimated_days",
+            "description",
+            "is_required",
+            "is_milestone",
+            "is_parallel",
+            "nodes",
+        }
         for stage in PRESALES_STAGES:
             assert required.issubset(stage.keys()), f"{stage['stage_code']} missing keys"
 
@@ -56,13 +65,23 @@ class TestPresalesStages:
             assert len(stage["nodes"]) > 0
 
     def test_node_required_fields(self):
-        required = {"node_code", "node_name", "node_type", "sequence",
-                     "estimated_days", "completion_method", "is_required",
-                     "description", "owner_role_code", "deliverables"}
+        required = {
+            "node_code",
+            "node_name",
+            "node_type",
+            "sequence",
+            "estimated_days",
+            "completion_method",
+            "is_required",
+            "description",
+            "owner_role_code",
+            "deliverables",
+        }
         for stage in PRESALES_STAGES:
             for node in stage["nodes"]:
-                assert required.issubset(node.keys()), \
-                    f"{node['node_code']} missing keys: {required - node.keys()}"
+                assert required.issubset(
+                    node.keys()
+                ), f"{node['node_code']} missing keys: {required - node.keys()}"
 
     def test_node_codes_unique(self):
         all_codes = []
@@ -75,8 +94,9 @@ class TestPresalesStages:
         for stage in PRESALES_STAGES:
             prefix = stage["stage_code"]
             for node in stage["nodes"]:
-                assert node["node_code"].startswith(prefix), \
-                    f"{node['node_code']} should start with {prefix}"
+                assert node["node_code"].startswith(
+                    prefix
+                ), f"{node['node_code']} should start with {prefix}"
 
     def test_node_sequences_unique_per_stage(self):
         for stage in PRESALES_STAGES:
@@ -107,8 +127,7 @@ class TestPresalesStages:
             for node in stage["nodes"]:
                 deps = node.get("dependency_node_codes", [])
                 for dep in deps:
-                    assert dep in node_codes, \
-                        f"{node['node_code']} depends on {dep} not in stage"
+                    assert dep in node_codes, f"{node['node_code']} depends on {dep} not in stage"
 
     def test_s04_needs_review(self):
         s04 = PRESALES_STAGES[0]

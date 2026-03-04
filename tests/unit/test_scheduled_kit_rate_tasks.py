@@ -21,6 +21,7 @@ def _make_db():
 #  _calculate_kit_rate_for_bom_items (纯逻辑函数)
 # ================================================================
 
+
 class TestCalculateKitRateForBomItems:
 
     def test_empty_bom_returns_zero(self):
@@ -28,6 +29,7 @@ class TestCalculateKitRateForBomItems:
         db = _make_db()
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [])
 
         assert result["kit_rate"] == 0.0
@@ -43,13 +45,14 @@ class TestCalculateKitRateForBomItems:
         item.received_qty = 5
         item.unit_price = 100
         item.material = MagicMock()
-        item.material.current_stock = 10   # stock >= required
+        item.material.current_stock = 10  # stock >= required
         item.material_id = 1
 
         # 无在途订单
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [item])
 
         assert result["kit_rate"] == 100.0
@@ -75,10 +78,11 @@ class TestCalculateKitRateForBomItems:
         item2.received_qty = 0
         item2.unit_price = 50
         item2.material = MagicMock()
-        item2.material.current_stock = 0   # 不足
+        item2.material.current_stock = 0  # 不足
         item2.material_id = 2
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [item1, item2])
 
         assert result["total_items"] == 2
@@ -106,6 +110,7 @@ class TestCalculateKitRateForBomItems:
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = [po_item]
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [item])
 
         assert result["in_transit_items"] == 1
@@ -121,10 +126,11 @@ class TestCalculateKitRateForBomItems:
         item.received_qty = 0
         item.unit_price = 100
         item.material = MagicMock()
-        item.material.current_stock = 5   # 只有一半
+        item.material.current_stock = 5  # 只有一半
         item.material_id = 6
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [item], calculate_by="amount")
 
         # total_amount=1000, shortage_amount=500 → kit_rate=50%
@@ -140,10 +146,11 @@ class TestCalculateKitRateForBomItems:
         item.quantity = 5
         item.received_qty = 0
         item.unit_price = 200
-        item.material = None   # 没有 material
+        item.material = None  # 没有 material
         item.material_id = None
 
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
+
         result = _calculate_kit_rate_for_bom_items(db, [item])
 
         # 库存为0，shortage
@@ -154,6 +161,7 @@ class TestCalculateKitRateForBomItems:
 #  create_kit_rate_snapshot
 # ================================================================
 
+
 class TestCreateKitRateSnapshot:
 
     @patch("app.utils.scheduled_tasks.kit_rate_tasks._calculate_kit_rate_for_bom_items")
@@ -163,6 +171,7 @@ class TestCreateKitRateSnapshot:
         db.query.return_value.filter.return_value.first.return_value = None
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_kit_rate_snapshot
+
         result = create_kit_rate_snapshot(db, project_id=999)
 
         assert result is None
@@ -181,12 +190,13 @@ class TestCreateKitRateSnapshot:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return project     # Project query
+                return project  # Project query
             return existing_snapshot  # KitRateSnapshot query
 
         db.query.return_value.filter.return_value.first.side_effect = first_side_effect
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_kit_rate_snapshot
+
         result = create_kit_rate_snapshot(db, project_id=1, snapshot_type="DAILY")
 
         assert result == existing_snapshot
@@ -238,6 +248,7 @@ class TestCreateKitRateSnapshot:
         db.query.side_effect = q
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_kit_rate_snapshot
+
         result = create_kit_rate_snapshot(db, project_id=1, snapshot_type="MANUAL")
 
         assert db.add.called
@@ -270,6 +281,7 @@ class TestCreateKitRateSnapshot:
         db.query.side_effect = q
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_kit_rate_snapshot
+
         result = create_kit_rate_snapshot(db, project_id=1, snapshot_type="DAILY")
 
         assert result is None
@@ -278,6 +290,7 @@ class TestCreateKitRateSnapshot:
 # ================================================================
 #  daily_kit_rate_snapshot
 # ================================================================
+
 
 class TestDailyKitRateSnapshot:
 
@@ -291,6 +304,7 @@ class TestDailyKitRateSnapshot:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.kit_rate_tasks import daily_kit_rate_snapshot
+
         result = daily_kit_rate_snapshot()
 
         assert result["success"] is True
@@ -315,6 +329,7 @@ class TestDailyKitRateSnapshot:
         mock_create.return_value = new_snap
 
         from app.utils.scheduled_tasks.kit_rate_tasks import daily_kit_rate_snapshot
+
         result = daily_kit_rate_snapshot()
 
         assert result["success"] is True
@@ -334,6 +349,7 @@ class TestDailyKitRateSnapshot:
         mock_create.return_value = None
 
         from app.utils.scheduled_tasks.kit_rate_tasks import daily_kit_rate_snapshot
+
         result = daily_kit_rate_snapshot()
 
         assert result["errors"] == 1
@@ -351,6 +367,7 @@ class TestDailyKitRateSnapshot:
         mock_create.side_effect = Exception("单项目失败")
 
         from app.utils.scheduled_tasks.kit_rate_tasks import daily_kit_rate_snapshot
+
         result = daily_kit_rate_snapshot()
 
         assert result["success"] is True
@@ -362,6 +379,7 @@ class TestDailyKitRateSnapshot:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("session 失败")
 
         from app.utils.scheduled_tasks.kit_rate_tasks import daily_kit_rate_snapshot
+
         result = daily_kit_rate_snapshot()
 
         assert result["success"] is False
@@ -372,6 +390,7 @@ class TestDailyKitRateSnapshot:
 #  create_stage_change_snapshot
 # ================================================================
 
+
 class TestCreateStageChangeSnapshot:
 
     @patch("app.utils.scheduled_tasks.kit_rate_tasks.create_kit_rate_snapshot")
@@ -381,6 +400,7 @@ class TestCreateStageChangeSnapshot:
         mock_create.return_value = MagicMock(id=1)
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_stage_change_snapshot
+
         result = create_stage_change_snapshot(db, project_id=5, from_stage="S1", to_stage="S2")
 
         mock_create.assert_called_once_with(
@@ -398,6 +418,7 @@ class TestCreateStageChangeSnapshot:
         mock_create.return_value = snap
 
         from app.utils.scheduled_tasks.kit_rate_tasks import create_stage_change_snapshot
+
         result = create_stage_change_snapshot(db, project_id=3, from_stage="S2", to_stage="S3")
 
         assert result == snap

@@ -27,7 +27,6 @@ from app.services.project_statistics_service import (
     calculate_status_statistics,
 )
 
-
 # ==============================================================================
 # 测试辅助类和数据构造
 # ==============================================================================
@@ -313,9 +312,7 @@ class TestCalculateCustomerStatistics(unittest.TestCase):
 
     def test_single_customer(self):
         """测试单个客户"""
-        projects = [
-            MockProject(customer_id=1, customer_name="客户A", contract_amount=100000)
-        ]
+        projects = [MockProject(customer_id=1, customer_name="客户A", contract_amount=100000)]
         query = MockQuery(projects)
         result = calculate_customer_statistics(query)
         self.assertEqual(len(result), 1)
@@ -396,12 +393,8 @@ class TestBuildProjectStatistics(unittest.TestCase):
     def test_basic_statistics(self):
         """测试基础统计"""
         projects = [
-            MockProject(
-                status="进行中", stage="开发", health="健康", progress_pct=60.0
-            ),
-            MockProject(
-                status="进行中", stage="测试", health="健康", progress_pct=80.0
-            ),
+            MockProject(status="进行中", stage="开发", health="健康", progress_pct=60.0),
+            MockProject(status="进行中", stage="测试", health="健康", progress_pct=80.0),
         ]
         query = MockQuery(projects)
         db = Mock()
@@ -489,8 +482,8 @@ class TestProjectStatisticsServiceBase(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         # 创建一个带有id属性的mock类
-        MockModel = type('MockModel', (), {'id': 1})
-        
+        MockModel = type("MockModel", (), {"id": 1})
+
         with patch.object(self.service, "get_model", return_value=MockModel):
             result = self.service.build_base_query(1)
             self.assertIsNotNone(result)
@@ -501,9 +494,7 @@ class TestProjectStatisticsServiceBase(unittest.TestCase):
         start_date = date(2024, 1, 1)
         end_date = date(2024, 12, 31)
 
-        result = self.service.apply_date_filter(
-            query, start_date, end_date, "created_at"
-        )
+        result = self.service.apply_date_filter(query, start_date, end_date, "created_at")
 
         # 验证filter被调用
         self.assertIsNotNone(result)
@@ -552,18 +543,10 @@ class TestCostStatisticsService(unittest.TestCase):
         self.assertEqual(field, "project_id")
 
     @patch("app.services.project_statistics_service.CostStatisticsService.get_project")
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.build_base_query"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.apply_date_filter"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.group_by_field"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.calculate_total"
-    )
+    @patch("app.services.project_statistics_service.CostStatisticsService.build_base_query")
+    @patch("app.services.project_statistics_service.CostStatisticsService.apply_date_filter")
+    @patch("app.services.project_statistics_service.CostStatisticsService.group_by_field")
+    @patch("app.services.project_statistics_service.CostStatisticsService.calculate_total")
     def test_get_summary_basic(
         self,
         mock_total,
@@ -596,18 +579,10 @@ class TestCostStatisticsService(unittest.TestCase):
         self.assertIn("by_type", result)
 
     @patch("app.services.project_statistics_service.CostStatisticsService.get_project")
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.build_base_query"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.apply_date_filter"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.group_by_field"
-    )
-    @patch(
-        "app.services.project_statistics_service.CostStatisticsService.calculate_total"
-    )
+    @patch("app.services.project_statistics_service.CostStatisticsService.build_base_query")
+    @patch("app.services.project_statistics_service.CostStatisticsService.apply_date_filter")
+    @patch("app.services.project_statistics_service.CostStatisticsService.group_by_field")
+    @patch("app.services.project_statistics_service.CostStatisticsService.calculate_total")
     def test_get_summary_no_budget(
         self,
         mock_total,
@@ -658,15 +633,9 @@ class TestTimesheetStatisticsService(unittest.TestCase):
         field = self.service.get_project_id_field()
         self.assertEqual(field, "project_id")
 
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.get_project"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.build_base_query"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter"
-    )
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.get_project")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.build_base_query")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter")
     def test_get_summary_with_data(self, mock_filter, mock_query, mock_project):
         """测试工时汇总（有数据）"""
         project = MockProject(id=1, project_name="测试项目")
@@ -674,15 +643,9 @@ class TestTimesheetStatisticsService(unittest.TestCase):
 
         # 创建工时数据
         timesheets = [
-            MockTimesheet(
-                user_id=1, hours=8.0, work_date=date(2024, 1, 1), status="APPROVED"
-            ),
-            MockTimesheet(
-                user_id=1, hours=6.0, work_date=date(2024, 1, 2), status="APPROVED"
-            ),
-            MockTimesheet(
-                user_id=2, hours=8.0, work_date=date(2024, 1, 1), status="APPROVED"
-            ),
+            MockTimesheet(user_id=1, hours=8.0, work_date=date(2024, 1, 1), status="APPROVED"),
+            MockTimesheet(user_id=1, hours=6.0, work_date=date(2024, 1, 2), status="APPROVED"),
+            MockTimesheet(user_id=2, hours=8.0, work_date=date(2024, 1, 1), status="APPROVED"),
         ]
 
         query = MockQuery(timesheets)
@@ -690,12 +653,8 @@ class TestTimesheetStatisticsService(unittest.TestCase):
         mock_filter.return_value = query
 
         # Mock User查询
-        user1 = MockUser(id=1, real_name="用户1",
-        password_hash="test_hash_123"
-    )
-        user2 = MockUser(id=2, real_name="用户2",
-        password_hash="test_hash_123"
-    )
+        user1 = MockUser(id=1, real_name="用户1", password_hash="test_hash_123")
+        user2 = MockUser(id=2, real_name="用户2", password_hash="test_hash_123")
 
         def user_query_side_effect(*args):
             user_query = MockQuery([user1])
@@ -715,15 +674,9 @@ class TestTimesheetStatisticsService(unittest.TestCase):
         self.assertIn("by_date", result)
         self.assertIn("by_work_type", result)
 
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.get_project"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.build_base_query"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter"
-    )
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.get_project")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.build_base_query")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter")
     def test_get_summary_empty(self, mock_filter, mock_query, mock_project):
         """测试工时汇总（无数据）"""
         project = MockProject(id=1, project_name="测试项目")
@@ -739,18 +692,10 @@ class TestTimesheetStatisticsService(unittest.TestCase):
         self.assertEqual(result["total_participants"], 0)
         self.assertEqual(result["by_user"], [])
 
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.get_project"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.build_base_query"
-    )
-    @patch(
-        "app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter"
-    )
-    def test_get_statistics_all_statuses(
-        self, mock_filter, mock_query, mock_project
-    ):
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.get_project")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.build_base_query")
+    @patch("app.services.project_statistics_service.TimesheetStatisticsService.apply_date_filter")
+    def test_get_statistics_all_statuses(self, mock_filter, mock_query, mock_project):
         """测试工时统计（所有状态）"""
         project = MockProject(id=1, project_name="测试项目")
         mock_project.return_value = project
@@ -803,9 +748,7 @@ class TestWorkLogStatisticsService(unittest.TestCase):
         field = self.service.get_project_id_field()
         self.assertEqual(field, "id")
 
-    @patch(
-        "app.services.project_statistics_service.WorkLogStatisticsService.get_project"
-    )
+    @patch("app.services.project_statistics_service.WorkLogStatisticsService.get_project")
     def test_get_summary_with_data(self, mock_project):
         """测试工作日志汇总（有数据）"""
         project = MockProject(id=1, project_name="测试项目")
@@ -831,9 +774,7 @@ class TestWorkLogStatisticsService(unittest.TestCase):
         self.assertEqual(result["log_count"], 10)
         self.assertEqual(result["contributor_count"], 3)
 
-    @patch(
-        "app.services.project_statistics_service.WorkLogStatisticsService.get_project"
-    )
+    @patch("app.services.project_statistics_service.WorkLogStatisticsService.get_project")
     def test_get_summary_no_data(self, mock_project):
         """测试工作日志汇总（无数据）"""
         project = MockProject(id=1, project_name="测试项目")

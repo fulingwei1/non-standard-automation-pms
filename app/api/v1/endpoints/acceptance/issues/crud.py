@@ -22,15 +22,19 @@ from app.schemas.acceptance import (
     AcceptanceIssueResponse,
     AcceptanceIssueUpdate,
 )
+from app.utils.db_helpers import get_or_404
 
 from ..utils import generate_issue_no
 from .utils import build_issue_response
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.get("/acceptance-issues/{issue_id}", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-issues/{issue_id}",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_issue(
     issue_id: int,
     db: Session = Depends(deps.get_db),
@@ -44,7 +48,11 @@ def read_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.get("/acceptance-orders/{order_id}/issues", response_model=List[AcceptanceIssueResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-orders/{order_id}/issues",
+    response_model=List[AcceptanceIssueResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_issues(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -70,7 +78,11 @@ def read_acceptance_issues(
     return items
 
 
-@router.post("/acceptance-orders/{order_id}/issues", response_model=AcceptanceIssueResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-orders/{order_id}/issues",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -88,7 +100,11 @@ def create_acceptance_issue(
 
     # 验证检查项（如果提供）
     if issue_in.order_item_id:
-        item = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.id == issue_in.order_item_id).first()
+        item = (
+            db.query(AcceptanceOrderItem)
+            .filter(AcceptanceOrderItem.id == issue_in.order_item_id)
+            .first()
+        )
         if not item or item.order_id != order_id:
             raise HTTPException(status_code=400, detail="检查项不存在或不属于该验收单")
 
@@ -109,7 +125,7 @@ def create_acceptance_issue(
         assigned_to=issue_in.assigned_to,
         due_date=issue_in.due_date,
         is_blocking=issue_in.is_blocking,
-        attachments=issue_in.attachments
+        attachments=issue_in.attachments,
     )
 
     db.add(issue)
@@ -119,7 +135,11 @@ def create_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.put("/acceptance-issues/{issue_id}", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-issues/{issue_id}",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -148,7 +168,11 @@ def update_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.put("/acceptance-issues/{issue_id}/close", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-issues/{issue_id}/close",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def close_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),

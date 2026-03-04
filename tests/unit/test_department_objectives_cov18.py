@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """第十八批 - 部门目标管理单元测试"""
 import json
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -10,6 +10,7 @@ try:
         create_department_objective,
         get_department_objective,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -37,7 +38,10 @@ class TestCreateDepartmentObjective:
         data.owner_user_id = 5
 
         mock_obj = MagicMock()
-        with patch("app.services.strategy.decomposition.department_objectives.DepartmentObjective", return_value=mock_obj):
+        with patch(
+            "app.services.strategy.decomposition.department_objectives.DepartmentObjective",
+            return_value=mock_obj,
+        ):
             result = create_department_objective(db, data)
 
         db.add.assert_called_once_with(mock_obj)
@@ -59,11 +63,14 @@ class TestCreateDepartmentObjective:
         data.owner_user_id = None
 
         captured = {}
+
         def capture_init(**kwargs):
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("app.services.strategy.decomposition.department_objectives.DepartmentObjective") as MockCls:
+        with patch(
+            "app.services.strategy.decomposition.department_objectives.DepartmentObjective"
+        ) as MockCls:
             MockCls.side_effect = lambda **kw: captured.update(kw) or MagicMock()
             create_department_objective(db, data)
 
@@ -85,7 +92,10 @@ class TestCreateDepartmentObjective:
         data.owner_user_id = None
 
         mock_obj = MagicMock()
-        with patch("app.services.strategy.decomposition.department_objectives.DepartmentObjective", return_value=mock_obj):
+        with patch(
+            "app.services.strategy.decomposition.department_objectives.DepartmentObjective",
+            return_value=mock_obj,
+        ):
             result = create_department_objective(db, data)
         assert result is mock_obj
 

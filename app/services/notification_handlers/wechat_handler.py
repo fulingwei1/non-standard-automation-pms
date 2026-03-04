@@ -14,7 +14,7 @@
 """
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.services.notification_utils import get_alert_icon_url
 
@@ -29,11 +29,11 @@ from app.models.alert import AlertNotification, AlertRecord
 from app.models.enums import AlertLevelEnum
 from app.models.organization import Employee
 from app.models.user import User
-from app.utils.wechat_client import WeChatClient
 from app.services.notification_handlers.unified_adapter import (
     NotificationChannel,
     send_alert_via_unified,
 )
+from app.utils.wechat_client import WeChatClient
 
 if TYPE_CHECKING:
     from app.services.notification_dispatcher import NotificationDispatcher
@@ -66,9 +66,8 @@ class WeChatNotificationHandler:
         """
         if not settings.WECHAT_ENABLED:
             raise ValueError("WeChat channel disabled")
-        target = (
-            getattr(notification, "notify_target", None)
-            or (user.wechat_userid if user else None)
+        target = getattr(notification, "notify_target", None) or (
+            user.wechat_userid if user else None
         )
         if not target and not getattr(notification, "notify_user_id", None):
             raise ValueError("WeChat channel requires recipient")
@@ -123,9 +122,7 @@ class WeChatNotificationHandler:
         alert_level = alert.alert_level
 
         frontend_url = (
-            settings.CORS_ORIGINS[0]
-            if settings.CORS_ORIGINS
-            else "http://localhost:3000"
+            settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
         )
         alert_url = f"{frontend_url}/alerts/{alert.id}"
 
@@ -140,9 +137,7 @@ class WeChatNotificationHandler:
             return None
 
         try:
-            employee = (
-                self.db.query(Employee).filter(Employee.id == user.employee_id).first()
-            )
+            employee = self.db.query(Employee).filter(Employee.id == user.employee_id).first()
             if employee and employee.wechat_userid:
                 return employee.wechat_userid
         except Exception as e:
@@ -187,9 +182,11 @@ class WeChatNotificationHandler:
             "horizontal_content_list": [
                 {
                     "keyname": "触发时间",
-                    "value": alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S")
-                    if alert.triggered_at
-                    else "",
+                    "value": (
+                        alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S")
+                        if alert.triggered_at
+                        else ""
+                    ),
                 },
                 {"keyname": "状态", "value": alert.status},
             ],
@@ -215,9 +212,7 @@ class WeChatNotificationHandler:
         if alert.project:
             message_content += f"\n项目：{alert.project.project_name}"
         if alert.triggered_at:
-            message_content += (
-                f"\n触发时间：{alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S')}"
-            )
+            message_content += f"\n触发时间：{alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
         client = WeChatClient()
         success = client.send_text_message([wechat_userid], message_content)

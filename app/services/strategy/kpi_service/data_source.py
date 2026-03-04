@@ -54,10 +54,11 @@ def get_kpi_data_sources(db: Session, kpi_id: int) -> List[KPIDataSourceResponse
     Returns:
         List[KPIDataSourceResponse]: 数据源配置列表
     """
-    sources = db.query(KPIDataSource).filter(
-        KPIDataSource.kpi_id == kpi_id,
-        KPIDataSource.is_active
-    ).all()
+    sources = (
+        db.query(KPIDataSource)
+        .filter(KPIDataSource.kpi_id == kpi_id, KPIDataSource.is_active)
+        .all()
+    )
 
     return [
         KPIDataSourceResponse(

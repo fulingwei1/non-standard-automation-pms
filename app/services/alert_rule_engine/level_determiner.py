@@ -19,7 +19,7 @@ class LevelDeterminer(AlertRuleEngineBase):
         rule: AlertRule,
         target_data: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
-        engine: Optional[AlertRuleEngineBase] = None
+        engine: Optional[AlertRuleEngineBase] = None,
     ) -> str:
         """
         确定预警级别（子类可重写以实现更复杂的级别判断）

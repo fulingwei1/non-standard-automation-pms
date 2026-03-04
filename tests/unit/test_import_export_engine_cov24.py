@@ -2,8 +2,9 @@
 """第二十四批 - import_export_engine 单元测试"""
 
 import io
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.import_export_engine")
 
@@ -76,6 +77,7 @@ class TestImportExportEngine:
 
     def test_parse_excel_drops_empty_rows(self):
         import pandas
+
         df = MagicMock()
         df.dropna.return_value = df
         with patch.object(pandas, "read_excel", return_value=df):

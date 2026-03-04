@@ -3,9 +3,10 @@
 第四十五批覆盖：resource_allocation_service/workstation.py
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.resource_allocation_service.workstation")
 
@@ -36,7 +37,9 @@ def _make_workstation(ws_id=1, is_active=True, status="IDLE"):
 class TestCheckWorkstationAvailability:
     def test_workstation_not_found(self, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        ok, reason = check_workstation_availability(mock_db, 999, date(2024, 1, 1), date(2024, 1, 7))
+        ok, reason = check_workstation_availability(
+            mock_db, 999, date(2024, 1, 1), date(2024, 1, 7)
+        )
         assert ok is False
         assert "不存在" in reason
 
@@ -72,7 +75,9 @@ class TestCheckWorkstationAvailability:
         conflicting_wo.work_order_no = "WO-001"
 
         mock_db.query.return_value.filter.return_value.first.return_value = ws
-        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = conflicting_wo
+        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = (
+            conflicting_wo
+        )
 
         ok, reason = check_workstation_availability(mock_db, 1, date(2024, 1, 1), date(2024, 1, 7))
         assert ok is False

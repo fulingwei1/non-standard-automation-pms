@@ -14,9 +14,7 @@ from .calculation import calculate_final_score, get_score_level
 
 
 def get_historical_performance(
-    db: Session,
-    employee_id: int,
-    months: int = 3
+    db: Session, employee_id: int, months: int = 3
 ) -> List[Dict[str, Any]]:
     """
     获取员工的历史绩效记录
@@ -33,29 +31,34 @@ def get_historical_performance(
     today = date.today()
     periods = []
     for i in range(months):
-        period_date = today - relativedelta(months=i+1)
+        period_date = today - relativedelta(months=i + 1)
         periods.append(period_date.strftime("%Y-%m"))
 
     # 查询工作总结
-    summaries = db.query(MonthlyWorkSummary).filter(
-        MonthlyWorkSummary.employee_id == employee_id,
-        MonthlyWorkSummary.period.in_(periods),
-        MonthlyWorkSummary.status == 'COMPLETED'
-    ).order_by(MonthlyWorkSummary.period.desc()).all()
+    summaries = (
+        db.query(MonthlyWorkSummary)
+        .filter(
+            MonthlyWorkSummary.employee_id == employee_id,
+            MonthlyWorkSummary.period.in_(periods),
+            MonthlyWorkSummary.status == "COMPLETED",
+        )
+        .order_by(MonthlyWorkSummary.period.desc())
+        .all()
+    )
 
     history = []
     for summary in summaries:
-        score_result = calculate_final_score(
-            db, summary.id, summary.period
-        )
+        score_result = calculate_final_score(db, summary.id, summary.period)
 
         if score_result:
-            history.append({
-                'period': summary.period,
-                'final_score': score_result['final_score'],
-                'level': get_score_level(score_result['final_score']),
-                'dept_score': score_result['dept_score'],
-                'project_score': score_result['project_score']
-            })
+            history.append(
+                {
+                    "period": summary.period,
+                    "final_score": score_result["final_score"],
+                    "level": get_score_level(score_result["final_score"]),
+                    "dept_score": score_result["dept_score"],
+                    "project_score": score_result["project_score"],
+                }
+            )
 
     return history

@@ -9,20 +9,24 @@ from unittest.mock import MagicMock, patch
 
 def make_service():
     db = MagicMock()
-    with patch("app.services.collaboration_rating.base.CollaboratorSelector") as S, \
-         patch("app.services.collaboration_rating.base.RatingManager") as R, \
-         patch("app.services.collaboration_rating.base.RatingStatistics") as St:
+    with (
+        patch("app.services.collaboration_rating.base.CollaboratorSelector") as S,
+        patch("app.services.collaboration_rating.base.RatingManager") as R,
+        patch("app.services.collaboration_rating.base.RatingStatistics") as St,
+    ):
 
         S.return_value = MagicMock()
         R.return_value = MagicMock()
         St.return_value = MagicMock()
 
         from app.services.collaboration_rating.base import CollaborationRatingService
+
         svc = CollaborationRatingService(db)
         return svc, S.return_value, R.return_value, St.return_value
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_service_has_sub_modules():
     svc, selector, ratings, statistics = make_service()
@@ -58,6 +62,7 @@ def test_get_pending_ratings_delegates():
 def test_get_average_collaboration_score_delegates():
     svc, _, _, statistics = make_service()
     from decimal import Decimal
+
     statistics.get_average_collaboration_score.return_value = Decimal("80.0")
     result = svc.get_average_collaboration_score(1, 2)
     statistics.get_average_collaboration_score.assert_called_once_with(1, 2)
@@ -74,6 +79,7 @@ def test_get_rating_statistics_delegates():
 
 def test_job_type_department_map_has_expected_keys():
     from app.services.collaboration_rating.base import CollaborationRatingService
+
     keys = CollaborationRatingService.JOB_TYPE_DEPARTMENT_MAP
     assert "mechanical" in keys
     assert "electrical" in keys

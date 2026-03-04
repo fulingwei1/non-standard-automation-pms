@@ -2,6 +2,12 @@
 """
 完整模型导出 - 销售和合同相关
 """
+# AI方案生成
+from ...presale_ai_solution import (
+    PresaleAIGenerationLog,
+    PresaleAISolution,
+)
+
 # 销售管理
 from ...sales import (
     AIClarification,
@@ -22,6 +28,7 @@ from ...sales import (
     Lead,
     LeadFollowUp,
     LeadRequirementDetail,
+    MaterialCostUpdateReminder,
     OpenItem,
     Opportunity,
     OpportunityRequirement,
@@ -40,13 +47,6 @@ from ...sales import (
     SalesTarget,
     ScoringRule,
     TechnicalAssessment,
-    MaterialCostUpdateReminder,
-)
-
-# AI方案生成
-from ...presale_ai_solution import (
-    PresaleAISolution,
-    PresaleAIGenerationLog,
 )
 
 __all__ = [

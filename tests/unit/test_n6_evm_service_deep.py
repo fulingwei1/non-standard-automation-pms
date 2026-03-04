@@ -12,17 +12,18 @@ Coverage target: app/services/evm_service.py
 - EVMCalculator 边界值: EAC with cpi=0 / negative values / TCPI with EAC
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.evm_service import EVMCalculator, EVMService
+import pytest
 
+from app.services.evm_service import EVMCalculator, EVMService
 
 # ─────────────────────────────────────────────────
 # EVMCalculator 补充边界测试
 # ─────────────────────────────────────────────────
+
 
 class TestEVMCalculatorEdgeCases:
     """未被 I6 覆盖的边界与分支"""
@@ -61,8 +62,7 @@ class TestEVMCalculatorEdgeCases:
         """传入 EAC → 使用方法2 (BAC-EV)/(EAC-AC)"""
         # (1000-500)/(1200-600) = 500/600 ≈ 0.833333
         tcpi = EVMCalculator.calculate_to_complete_performance_index(
-            bac=Decimal("1000"), ev=Decimal("500"), ac=Decimal("600"),
-            eac=Decimal("1200")
+            bac=Decimal("1000"), ev=Decimal("500"), ac=Decimal("600"), eac=Decimal("1200")
         )
         expected = EVMCalculator.round_decimal(Decimal("500") / Decimal("600"), 6)
         assert tcpi == expected
@@ -70,8 +70,10 @@ class TestEVMCalculatorEdgeCases:
     def test_tcpi_eac_equals_ac_returns_none(self):
         """EAC == AC → 分母为 0 → None"""
         tcpi = EVMCalculator.calculate_to_complete_performance_index(
-            bac=Decimal("1000"), ev=Decimal("500"), ac=Decimal("800"),
-            eac=Decimal("800")  # EAC == AC → 0
+            bac=Decimal("1000"),
+            ev=Decimal("500"),
+            ac=Decimal("800"),
+            eac=Decimal("800"),  # EAC == AC → 0
         )
         assert tcpi is None
 
@@ -99,9 +101,7 @@ class TestEVMCalculatorEdgeCases:
         assert spi > Decimal("1.0")
 
     def test_cpi_less_than_1_means_over_budget(self):
-        cpi = EVMCalculator.calculate_cost_performance_index(
-            ev=Decimal("400"), ac=Decimal("500")
-        )
+        cpi = EVMCalculator.calculate_cost_performance_index(ev=Decimal("400"), ac=Decimal("500"))
         assert cpi < Decimal("1.0")
 
     # ── calculate_all_metrics 全量验证 ────────────
@@ -111,7 +111,7 @@ class TestEVMCalculatorEdgeCases:
         result = EVMCalculator.calculate_all_metrics(
             pv=Decimal("800"), ev=Decimal("700"), ac=Decimal("900"), bac=Decimal("1000")
         )
-        assert result["cv"] < Decimal("0")   # 超支
+        assert result["cv"] < Decimal("0")  # 超支
         assert result["cpi"] < Decimal("1")
 
     def test_all_metrics_schedule_behind(self):
@@ -119,21 +119,17 @@ class TestEVMCalculatorEdgeCases:
         result = EVMCalculator.calculate_all_metrics(
             pv=Decimal("800"), ev=Decimal("600"), ac=Decimal("600"), bac=Decimal("1000")
         )
-        assert result["sv"] < Decimal("0")   # 进度落后
+        assert result["sv"] < Decimal("0")  # 进度落后
         assert result["spi"] < Decimal("1")
 
     def test_all_metrics_contains_percentage_keys(self):
-        result = EVMCalculator.calculate_all_metrics(
-            pv=500, ev=500, ac=500, bac=1000
-        )
+        result = EVMCalculator.calculate_all_metrics(pv=500, ev=500, ac=500, bac=1000)
         assert "planned_percent_complete" in result
         assert "actual_percent_complete" in result
         assert result["planned_percent_complete"] == Decimal("50.00")
 
     def test_all_metrics_zero_bac_percent_is_none(self):
-        result = EVMCalculator.calculate_all_metrics(
-            pv=0, ev=0, ac=0, bac=0
-        )
+        result = EVMCalculator.calculate_all_metrics(pv=0, ev=0, ac=0, bac=0)
         assert result["planned_percent_complete"] is None
         assert result["actual_percent_complete"] is None
 
@@ -141,6 +137,7 @@ class TestEVMCalculatorEdgeCases:
 # ─────────────────────────────────────────────────
 # EVMService.analyze_performance — 全状态分支
 # ─────────────────────────────────────────────────
+
 
 class TestAnalyzePerformance:
     """全 4 档 SPI/CPI 状态 + 综合判断"""
@@ -230,12 +227,13 @@ class TestAnalyzePerformance:
 # EVMService._generate_period_label
 # ─────────────────────────────────────────────────
 
+
 class TestGeneratePeriodLabel:
     def setup_method(self):
         self.svc = EVMService(MagicMock())
 
     def test_week_label_format(self):
-        d = date(2026, 2, 16)   # 2026年第7周
+        d = date(2026, 2, 16)  # 2026年第7周
         label = self.svc._generate_period_label("WEEK", d)
         assert label.startswith("2026-W")
         assert "W07" in label or "W" in label
@@ -274,6 +272,7 @@ class TestGeneratePeriodLabel:
 # ─────────────────────────────────────────────────
 # EVMService.create_evm_data
 # ─────────────────────────────────────────────────
+
 
 class TestCreateEvmData:
     def setup_method(self):
@@ -323,7 +322,8 @@ class TestCreateEvmData:
         assert record.schedule_variance == Decimal("-50.0000")  # EV-PV = -50
 
     def test_period_label_set_correctly_for_week(self):
-        project = MagicMock(); project.project_code = "P001"
+        project = MagicMock()
+        project.project_code = "P001"
         self.db.query.return_value.filter.return_value.first.return_value = project
 
         with patch("app.services.evm_service.save_obj"):
@@ -331,21 +331,30 @@ class TestCreateEvmData:
                 project_id=1,
                 period_type="WEEK",
                 period_date=date(2026, 2, 16),
-                pv=Decimal("100"), ev=Decimal("100"), ac=Decimal("100"), bac=Decimal("1000"),
+                pv=Decimal("100"),
+                ev=Decimal("100"),
+                ac=Decimal("100"),
+                bac=Decimal("1000"),
             )
         assert "W" in result.period_label
 
     def test_notes_and_data_source_passed_through(self):
-        project = MagicMock(); project.project_code = "P001"
+        project = MagicMock()
+        project.project_code = "P001"
         self.db.query.return_value.filter.return_value.first.return_value = project
 
         saved = []
-        with patch("app.services.evm_service.save_obj", side_effect=lambda db, obj: saved.append(obj)):
+        with patch(
+            "app.services.evm_service.save_obj", side_effect=lambda db, obj: saved.append(obj)
+        ):
             self.svc.create_evm_data(
                 project_id=1,
                 period_type="MONTH",
                 period_date=date(2026, 1, 31),
-                pv=Decimal("100"), ev=Decimal("100"), ac=Decimal("100"), bac=Decimal("1000"),
+                pv=Decimal("100"),
+                ev=Decimal("100"),
+                ac=Decimal("100"),
+                bac=Decimal("1000"),
                 data_source="AUTO",
                 notes="系统自动导入",
             )
@@ -357,6 +366,7 @@ class TestCreateEvmData:
 # EVMService.get_latest_evm_data / get_evm_trend
 # ─────────────────────────────────────────────────
 
+
 class TestGetLatestEvmData:
     def setup_method(self):
         self.db = MagicMock()
@@ -364,12 +374,16 @@ class TestGetLatestEvmData:
 
     def test_returns_latest_data(self):
         mock_record = MagicMock()
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_record
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_record
+        )
         result = self.svc.get_latest_evm_data(1)
         assert result == mock_record
 
     def test_returns_none_when_no_data(self):
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         result = self.svc.get_latest_evm_data(999)
         assert result is None
 

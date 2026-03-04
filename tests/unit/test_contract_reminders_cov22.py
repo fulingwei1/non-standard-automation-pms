@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十二批：contract_reminders 单元测试"""
 
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.sales_reminder.contract_reminders import (
-        notify_contract_signed,
         notify_contract_expiring,
+        notify_contract_signed,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -93,9 +95,7 @@ class TestNotifyContractExpiring:
 
     def test_contract_not_in_reminder_days_skipped(self, db, mock_contract):
         """不在提醒天数内的合同跳过"""
-        mock_contract.delivery_deadline = date.today().replace(
-            year=date.today().year + 1
-        )
+        mock_contract.delivery_deadline = date.today().replace(year=date.today().year + 1)
         db.query.return_value.filter.return_value.all.return_value = [mock_contract]
         with patch("app.core.config.settings") as mock_settings:
             mock_settings.SALES_CONTRACT_EXPIRE_REMINDER_DAYS = [7, 15, 30]
@@ -105,6 +105,7 @@ class TestNotifyContractExpiring:
     def test_already_notified_today_skipped(self, db, mock_contract):
         """今天已发送过提醒时跳过"""
         from datetime import timedelta
+
         mock_contract.delivery_deadline = date.today() + timedelta(days=7)
         db.query.return_value.filter.return_value.all.return_value = [mock_contract]
 

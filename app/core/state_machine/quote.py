@@ -27,6 +27,7 @@
 """
 
 from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.core.state_machine.base import StateMachine
@@ -39,7 +40,7 @@ class QuoteStateMachine(StateMachine):
 
     def __init__(self, quote: Quote, db: Session):
         """初始化报价状态机"""
-        super().__init__(quote, db, state_field='status')
+        super().__init__(quote, db, state_field="status")
 
     # ==================== 审批流程转换 ====================
 
@@ -63,8 +64,8 @@ class QuoteStateMachine(StateMachine):
             raise ValueError("报价金额为0，无法提交审批")
 
         # 创建审批记录
-        if 'approver_ids' in kwargs:
-            self._create_approval_records(kwargs['approver_ids'])
+        if "approver_ids" in kwargs:
+            self._create_approval_records(kwargs["approver_ids"])
 
     @transition(
         from_state="PENDING_APPROVAL",
@@ -94,8 +95,8 @@ class QuoteStateMachine(StateMachine):
             approval_opinion: 审批意见（可选）
         """
         self.model.approved_at = datetime.now()
-        if 'approval_opinion' in kwargs:
-            self.model.approval_opinion = kwargs['approval_opinion']
+        if "approval_opinion" in kwargs:
+            self.model.approval_opinion = kwargs["approval_opinion"]
 
     @transition(
         from_state="PENDING_APPROVAL",
@@ -113,8 +114,8 @@ class QuoteStateMachine(StateMachine):
             rejection_reason: 拒绝原因
         """
         self.model.rejected_at = datetime.now()
-        if 'rejection_reason' in kwargs:
-            self.model.rejection_reason = kwargs['rejection_reason']
+        if "rejection_reason" in kwargs:
+            self.model.rejection_reason = kwargs["rejection_reason"]
 
     @transition(
         from_state="PENDING_APPROVAL",
@@ -147,8 +148,8 @@ class QuoteStateMachine(StateMachine):
         """
         self.model.approved_at = datetime.now()
         self.model.review_completed_at = datetime.now()
-        if 'approval_opinion' in kwargs:
-            self.model.approval_opinion = kwargs['approval_opinion']
+        if "approval_opinion" in kwargs:
+            self.model.approval_opinion = kwargs["approval_opinion"]
 
     @transition(
         from_state="IN_REVIEW",
@@ -167,8 +168,8 @@ class QuoteStateMachine(StateMachine):
         """
         self.model.rejected_at = datetime.now()
         self.model.review_completed_at = datetime.now()
-        if 'rejection_reason' in kwargs:
-            self.model.rejection_reason = kwargs['rejection_reason']
+        if "rejection_reason" in kwargs:
+            self.model.rejection_reason = kwargs["rejection_reason"]
 
     @transition(
         from_state="IN_REVIEW",
@@ -185,8 +186,8 @@ class QuoteStateMachine(StateMachine):
         Args:
             revision_notes: 修改意见
         """
-        if 'revision_notes' in kwargs:
-            self.model.revision_notes = kwargs['revision_notes']
+        if "revision_notes" in kwargs:
+            self.model.revision_notes = kwargs["revision_notes"]
 
     # ==================== 客户交互转换 ====================
 
@@ -207,10 +208,10 @@ class QuoteStateMachine(StateMachine):
             sent_via: 发送方式（EMAIL/WECHAT/OTHER）
         """
         self.model.sent_at = datetime.now()
-        if 'sent_to' in kwargs:
-            self.model.sent_to = kwargs['sent_to']
-        if 'sent_via' in kwargs:
-            self.model.sent_via = kwargs['sent_via']
+        if "sent_to" in kwargs:
+            self.model.sent_to = kwargs["sent_to"]
+        if "sent_via" in kwargs:
+            self.model.sent_via = kwargs["sent_via"]
 
     @transition(
         from_state="SENT",
@@ -228,8 +229,8 @@ class QuoteStateMachine(StateMachine):
             acceptance_note: 接受说明
         """
         self.model.accepted_at = datetime.now()
-        if 'acceptance_note' in kwargs:
-            self.model.acceptance_note = kwargs['acceptance_note']
+        if "acceptance_note" in kwargs:
+            self.model.acceptance_note = kwargs["acceptance_note"]
 
     @transition(
         from_state="SENT",
@@ -246,8 +247,8 @@ class QuoteStateMachine(StateMachine):
             rejection_reason: 拒绝原因
         """
         self.model.customer_rejected_at = datetime.now()
-        if 'rejection_reason' in kwargs:
-            self.model.rejection_reason = kwargs['rejection_reason']
+        if "rejection_reason" in kwargs:
+            self.model.rejection_reason = kwargs["rejection_reason"]
 
     # ==================== 转换与重启流程 ====================
 
@@ -267,8 +268,8 @@ class QuoteStateMachine(StateMachine):
             contract_id: 合同ID
         """
         self.model.converted_at = datetime.now()
-        if 'contract_id' in kwargs:
-            self.model.contract_id = kwargs['contract_id']
+        if "contract_id" in kwargs:
+            self.model.contract_id = kwargs["contract_id"]
 
         # 业务逻辑：更新商机状态
         self._update_opportunity_status("WON")
@@ -386,6 +387,7 @@ class QuoteStateMachine(StateMachine):
         """创建审批记录"""
         try:
             from app.models.sales.quotes import QuoteApproval
+
             for idx, approver_id in enumerate(approver_ids, 1):
                 approval = QuoteApproval(
                     quote_id=self.model.id,
@@ -397,18 +399,17 @@ class QuoteStateMachine(StateMachine):
             self.db.flush()
         except Exception as e:
             import logging
+
             logging.warning(f"创建审批记录失败：{str(e)}")
 
     def _cancel_pending_approvals(self):
         """取消待处理的审批记录"""
         try:
             from app.models.sales.quotes import QuoteApproval
+
             pending_approvals = (
                 self.db.query(QuoteApproval)
-                .filter(
-                    QuoteApproval.quote_id == self.model.id,
-                    QuoteApproval.status == "PENDING"
-                )
+                .filter(QuoteApproval.quote_id == self.model.id, QuoteApproval.status == "PENDING")
                 .all()
             )
             for approval in pending_approvals:
@@ -416,6 +417,7 @@ class QuoteStateMachine(StateMachine):
             self.db.flush()
         except Exception as e:
             import logging
+
             logging.warning(f"取消审批记录失败：{str(e)}")
 
     def _update_opportunity_status(self, status: str):
@@ -423,6 +425,7 @@ class QuoteStateMachine(StateMachine):
         try:
             if self.model.opportunity_id:
                 from app.models.sales.opportunities import Opportunity
+
                 opportunity = (
                     self.db.query(Opportunity)
                     .filter(Opportunity.id == self.model.opportunity_id)
@@ -433,13 +436,14 @@ class QuoteStateMachine(StateMachine):
                     self.db.flush()
         except Exception as e:
             import logging
+
             logging.warning(f"更新商机状态失败：{str(e)}")
 
     def _handle_cancel(self, **kwargs):
         """处理取消逻辑"""
         self.model.cancelled_at = datetime.now()
-        if 'cancellation_reason' in kwargs:
-            self.model.cancellation_reason = kwargs['cancellation_reason']
+        if "cancellation_reason" in kwargs:
+            self.model.cancellation_reason = kwargs["cancellation_reason"]
 
         # 取消所有待处理的审批
         self._cancel_pending_approvals()

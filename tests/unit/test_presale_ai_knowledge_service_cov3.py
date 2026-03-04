@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - presale_ai_knowledge_service"""
-import pytest
 from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 
 pytest.importorskip("app.services.presale_ai_knowledge_service")
 
@@ -50,9 +51,11 @@ class TestCreateCase:
         case_data.quality_score = 0.8
         case_data.is_public = True
 
-        with patch("app.services.presale_ai_knowledge_service.save_obj"), \
-             patch.object(svc, "_generate_embedding", return_value=np.array([0.1, 0.2, 0.3])), \
-             patch.object(svc, "_serialize_embedding", return_value=b"mock_bytes"):
+        with (
+            patch("app.services.presale_ai_knowledge_service.save_obj"),
+            patch.object(svc, "_generate_embedding", return_value=np.array([0.1, 0.2, 0.3])),
+            patch.object(svc, "_serialize_embedding", return_value=b"mock_bytes"),
+        ):
             result = svc.create_case(case_data)
         assert result is not None
 
@@ -153,8 +156,10 @@ class TestSemanticSearch:
         search_req.max_amount = None
         search_req.top_k = 5
 
-        with patch.object(svc, "_generate_embedding", return_value=np.array([0.1, 0.2])), \
-             patch.object(svc, "_keyword_similarity", return_value=0.7):
+        with (
+            patch.object(svc, "_generate_embedding", return_value=np.array([0.1, 0.2])),
+            patch.object(svc, "_keyword_similarity", return_value=0.7),
+        ):
             cases, total = svc.semantic_search(search_req)
         assert len(cases) == 1
 

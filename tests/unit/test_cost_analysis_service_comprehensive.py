@@ -87,7 +87,9 @@ class TestPredictProjectCost:
             return_value=Decimal("100"),
         ):
             # Mock tasks query separately
-            mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_task]
+            mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+                mock_task
+            ]
 
             service = CostAnalysisService(mock_db)
             result = service.predict_project_cost(project_id=1)
@@ -114,7 +116,9 @@ class TestPredictProjectCost:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_task]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_task
+        ]
 
         service = CostAnalysisService(mock_db)
         result = service.predict_project_cost(project_id=1)
@@ -188,7 +192,9 @@ class TestCheckCostOverrunAlerts:
         mock_project.actual_cost = Decimal("50000")  # 50%
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_project]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_project
+        ]
 
         service = CostAnalysisService(mock_db)
         result = service.check_cost_overrun_alerts()
@@ -209,7 +215,9 @@ class TestCheckCostOverrunAlerts:
         mock_project.actual_cost = Decimal("85000")  # 85%
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_project]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_project
+        ]
 
         with patch.object(CostAnalysisService, "predict_project_cost") as mock_predict:
             mock_predict.return_value = {"predicted_total_cost": 90000}
@@ -235,7 +243,9 @@ class TestCheckCostOverrunAlerts:
         mock_project.actual_cost = Decimal("110000")  # 110%
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_project]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_project
+        ]
 
         with patch.object(CostAnalysisService, "predict_project_cost") as mock_predict:
             mock_predict.return_value = {"predicted_total_cost": 120000}
@@ -258,7 +268,9 @@ class TestCheckCostOverrunAlerts:
         mock_project.actual_cost = Decimal("50000")
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_project]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_project
+        ]
 
         service = CostAnalysisService(mock_db)
         result = service.check_cost_overrun_alerts()
@@ -278,7 +290,9 @@ class TestCheckCostOverrunAlerts:
         mock_project.budget_amount = Decimal("100000")
         mock_project.actual_cost = Decimal("90000")
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_project]
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_project
+        ]
 
         with patch.object(CostAnalysisService, "predict_project_cost") as mock_predict:
             mock_predict.return_value = {"predicted_total_cost": 95000}
@@ -482,7 +496,9 @@ class TestAnalyzeCostTrend:
         mock_project.project_name = "测试项目"
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         service = CostAnalysisService(mock_db)
         result = service.analyze_cost_trend(project_id=1)
@@ -502,7 +518,9 @@ class TestAnalyzeCostTrend:
         mock_project.project_name = "测试项目"
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         service = CostAnalysisService(mock_db)
         result = service.analyze_cost_trend(project_id=1)

@@ -7,9 +7,9 @@ notification_queue 模块综合单元测试
 - dequeue_notification: 出队通知
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -23,7 +23,7 @@ class TestEnqueueNotification:
 
         mock_redis = MagicMock()
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             payload = {
                 "notification_id": 123,
                 "alert_id": 456,
@@ -39,7 +39,7 @@ class TestEnqueueNotification:
         """测试 Redis 未配置时返回 False"""
         from app.services.notification_queue import enqueue_notification
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=None):
+        with patch("app.services.notification_queue.get_redis_client", return_value=None):
             payload = {
                 "notification_id": 123,
                 "alert_id": 456,
@@ -55,7 +55,7 @@ class TestEnqueueNotification:
 
         mock_redis = MagicMock()
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             payload = {
                 "notification_id": 123,
             }
@@ -74,7 +74,7 @@ class TestEnqueueNotification:
         mock_redis = MagicMock()
         existing_time = "2024-01-01T12:00:00+00:00"
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             payload = {
                 "notification_id": 123,
                 "enqueue_at": existing_time,
@@ -93,7 +93,7 @@ class TestEnqueueNotification:
         mock_redis = MagicMock()
         mock_redis.rpush.side_effect = Exception("Redis连接失败")
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             payload = {"notification_id": 123}
 
             result = enqueue_notification(payload)
@@ -102,11 +102,11 @@ class TestEnqueueNotification:
 
     def test_uses_correct_queue_key(self):
         """测试使用正确的队列键"""
-        from app.services.notification_queue import enqueue_notification, QUEUE_KEY
+        from app.services.notification_queue import QUEUE_KEY, enqueue_notification
 
         mock_redis = MagicMock()
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             payload = {"notification_id": 123}
 
             enqueue_notification(payload)
@@ -126,7 +126,7 @@ class TestDequeueNotification:
         payload = {"notification_id": 123, "alert_id": 456}
         mock_redis.blpop.return_value = ("queue_key", json.dumps(payload))
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=True, timeout=5)
 
             assert result == payload
@@ -140,7 +140,7 @@ class TestDequeueNotification:
         payload = {"notification_id": 123}
         mock_redis.lpop.return_value = json.dumps(payload)
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=False)
 
             assert result == payload
@@ -150,7 +150,7 @@ class TestDequeueNotification:
         """测试 Redis 未配置时返回 None"""
         from app.services.notification_queue import dequeue_notification
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=None):
+        with patch("app.services.notification_queue.get_redis_client", return_value=None):
             result = dequeue_notification()
 
             assert result is None
@@ -162,7 +162,7 @@ class TestDequeueNotification:
         mock_redis = MagicMock()
         mock_redis.blpop.return_value = None
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=True, timeout=1)
 
             assert result is None
@@ -174,7 +174,7 @@ class TestDequeueNotification:
         mock_redis = MagicMock()
         mock_redis.lpop.return_value = None
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=False)
 
             assert result is None
@@ -186,19 +186,19 @@ class TestDequeueNotification:
         mock_redis = MagicMock()
         mock_redis.blpop.side_effect = Exception("Redis连接失败")
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=True)
 
             assert result is None
 
     def test_uses_correct_timeout(self):
         """测试使用正确的超时时间"""
-        from app.services.notification_queue import dequeue_notification, QUEUE_KEY
+        from app.services.notification_queue import QUEUE_KEY, dequeue_notification
 
         mock_redis = MagicMock()
         mock_redis.blpop.return_value = None
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             dequeue_notification(block=True, timeout=10)
 
             mock_redis.blpop.assert_called_once_with(QUEUE_KEY, timeout=10)
@@ -212,11 +212,11 @@ class TestDequeueNotification:
             "notification_id": 123,
             "alert_id": 456,
             "notify_channel": "WECHAT",
-            "data": {"key": "value"}
+            "data": {"key": "value"},
         }
         mock_redis.blpop.return_value = ("queue", json.dumps(payload))
 
-        with patch('app.services.notification_queue.get_redis_client', return_value=mock_redis):
+        with patch("app.services.notification_queue.get_redis_client", return_value=mock_redis):
             result = dequeue_notification(block=True)
 
             assert result == payload

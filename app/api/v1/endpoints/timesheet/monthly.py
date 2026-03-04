@@ -68,13 +68,8 @@ def get_month_summary(
         if not dims["is_admin"] and target_user_id not in dims["subordinate_user_ids"]:
             # 检查是否属于我管理的部门
             target_user = db.query(User).filter(User.id == target_user_id).first()
-            if (
-                not target_user
-                or target_user.department_id not in dims["department_ids"]
-            ):
-                raise HTTPException(
-                    status_code=403, detail="无权查看其他用户的工时汇总数据"
-                )
+            if not target_user or target_user.department_id not in dims["department_ids"]:
+                raise HTTPException(status_code=403, detail="无权查看其他用户的工时汇总数据")
 
     # 计算月份的开始和结束日期
     _, last_day = monthrange(year, month)

@@ -2,11 +2,13 @@
 """
 第八批覆盖率测试 - 项目关联关系服务
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services import project_relations_service as prs
+
     HAS_PRS = True
 except Exception:
     HAS_PRS = False
@@ -81,7 +83,7 @@ class TestGetProjectRelations:
         """检查主入口函数是否存在"""
         fn_name = None
         for name in dir(prs):
-            if 'relation' in name.lower() and not name.startswith('_'):
+            if "relation" in name.lower() and not name.startswith("_"):
                 fn_name = name
                 break
         assert fn_name is not None, "project_relations_service 应有关系查询函数"

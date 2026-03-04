@@ -33,9 +33,12 @@ def check_project_documents(project_code: str = None):
             print(f"   项目ID: {project.id}")
 
             # 查询该项目的文档
-            documents = db.query(ProjectDocument).filter(
-                ProjectDocument.project_id == project.id
-            ).order_by(ProjectDocument.created_at.desc()).all()
+            documents = (
+                db.query(ProjectDocument)
+                .filter(ProjectDocument.project_id == project.id)
+                .order_by(ProjectDocument.created_at.desc())
+                .all()
+            )
 
             print(f"\n   文档数量: {len(documents)}")
 
@@ -65,26 +68,32 @@ def check_project_documents(project_code: str = None):
             # 显示前10个有文档的项目
             print("\n   有文档的项目列表:")
             for project in projects_with_docs[:10]:
-                doc_count = db.query(ProjectDocument).filter(
-                    ProjectDocument.project_id == project.id
-                ).count()
+                doc_count = (
+                    db.query(ProjectDocument)
+                    .filter(ProjectDocument.project_id == project.id)
+                    .count()
+                )
                 print(f"   - {project.project_code}: {project.project_name} ({doc_count} 个文档)")
 
             # 检查是否有文档但没有名称
-            docs_without_name = db.query(ProjectDocument).filter(
-                (ProjectDocument.doc_name == None) | (ProjectDocument.doc_name == '')
-            ).count()
+            docs_without_name = (
+                db.query(ProjectDocument)
+                .filter((ProjectDocument.doc_name == None) | (ProjectDocument.doc_name == ""))
+                .count()
+            )
             if docs_without_name > 0:
                 print(f"\n   ⚠️  有 {docs_without_name} 个文档没有名称")
 
             # 检查文档的文件路径是否真实存在
             print("\n   文档文件路径检查:")
-            docs_with_fake_path = db.query(ProjectDocument).filter(
-                ProjectDocument.file_path.like('/documents/%')
-            ).count()
-            docs_with_docs_path = db.query(ProjectDocument).filter(
-                ProjectDocument.file_path.like('/docs/%')
-            ).count()
+            docs_with_fake_path = (
+                db.query(ProjectDocument)
+                .filter(ProjectDocument.file_path.like("/documents/%"))
+                .count()
+            )
+            docs_with_docs_path = (
+                db.query(ProjectDocument).filter(ProjectDocument.file_path.like("/docs/%")).count()
+            )
             print(f"   使用 /documents/ 路径: {docs_with_fake_path} 个")
             print(f"   使用 /docs/ 路径: {docs_with_docs_path} 个")
             print(f"   (这些路径通常是测试数据，不是真实上传的文件)")
@@ -92,6 +101,7 @@ def check_project_documents(project_code: str = None):
     print("\n" + "=" * 60)
     print("检查完成")
     print("=" * 60)
+
 
 if __name__ == "__main__":
     # 检查特定项目（从命令行参数获取）

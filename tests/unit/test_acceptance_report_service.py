@@ -134,13 +134,9 @@ class TestBuildReportContent:
         user.real_name = "测试用户"
         return user
 
-    def test_build_report_content_basic(
-        self, db_session: Session, mock_order, mock_user
-    ):
+    def test_build_report_content_basic(self, db_session: Session, mock_order, mock_user):
         """测试构建基本报告内容"""
-        with patch(
-            "app.services.acceptance_report_service.func"
-        ) as mock_func:
+        with patch("app.services.acceptance_report_service.func") as mock_func:
             # Mock 查询结果
             mock_func.count.return_value.scalar.return_value = 5
 
@@ -159,9 +155,7 @@ class TestBuildReportContent:
             assert "测试项目" in content
             assert "测试设备" in content
 
-    def test_build_report_content_with_missing_project(
-        self, db_session: Session, mock_user
-    ):
+    def test_build_report_content_with_missing_project(self, db_session: Session, mock_user):
         """测试缺少项目信息时的报告内容"""
         order = Mock()
         order.order_no = "AO-TEST-002"
@@ -178,9 +172,7 @@ class TestBuildReportContent:
         order.project = None
         order.machine = None
 
-        with patch(
-            "app.services.acceptance_report_service.func"
-        ) as mock_func:
+        with patch("app.services.acceptance_report_service.func") as mock_func:
             mock_func.count.return_value.scalar.return_value = 0
 
             content = build_report_content(
@@ -252,14 +244,10 @@ class TestSaveReportFile:
 
         report_content = "测试报告内容"
 
-        with patch(
-            "app.services.acceptance_report_service.settings"
-        ) as mock_settings:
+        with patch("app.services.acceptance_report_service.settings") as mock_settings:
             mock_settings.UPLOAD_DIR = str(tmp_path)
 
-            with patch(
-                "app.services.acceptance_report_service.REPORTLAB_AVAILABLE", False
-            ):
+            with patch("app.services.acceptance_report_service.REPORTLAB_AVAILABLE", False):
                 with patch(
                     "app.services.acceptance_report_service.get_report_version",
                     return_value=1,

@@ -12,14 +12,14 @@
 
 from fastapi import APIRouter
 
+from .assignments import router as assignments_router
 from .departments_refactored import router as departments_refactored_router
 from .employee_import import router as import_router
 from .employees import router as employees_router
 from .hr_profiles import router as hr_router
-from .units import router as units_router
-from .positions import router as positions_router
 from .job_levels import router as job_levels_router
-from .assignments import router as assignments_router
+from .positions import router as positions_router
+from .units import router as units_router
 
 router = APIRouter()
 

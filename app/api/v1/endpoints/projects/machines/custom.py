@@ -13,15 +13,15 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.schemas.common import ResponseModel
-from app.schemas.project import MachineResponse, ProjectDocumentResponse
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.utils.db_helpers import get_or_404
+from app.core import security
 from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
+from app.schemas.common import ResponseModel
+from app.schemas.project import MachineResponse, ProjectDocumentResponse
 from app.services.machine_custom import MachineCustomService
+from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -117,10 +117,14 @@ def update_project_machine_progress(
     """
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id,
-    ).first()
+    machine = (
+        db.query(Machine)
+        .filter(
+            Machine.id == machine_id,
+            Machine.project_id == project_id,
+        )
+        .first()
+    )
 
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
@@ -143,10 +147,14 @@ def get_project_machine_bom(
     """
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id,
-    ).first()
+    machine = (
+        db.query(Machine)
+        .filter(
+            Machine.id == machine_id,
+            Machine.project_id == project_id,
+        )
+        .first()
+    )
 
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
@@ -178,10 +186,9 @@ async def upload_machine_document(
     """上传设备文档"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id
-    ).first()
+    machine = (
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
+    )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
@@ -200,9 +207,7 @@ async def upload_machine_document(
     )
 
     return ResponseModel(
-        code=201,
-        message="文档上传成功",
-        data=ProjectDocumentResponse.model_validate(document)
+        code=201, message="文档上传成功", data=ProjectDocumentResponse.model_validate(document)
     )
 
 
@@ -218,26 +223,18 @@ def get_machine_documents(
     """获取设备的所有文档"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id
-    ).first()
+    machine = (
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
+    )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
     service = MachineCustomService(db)
     result = service.get_machine_documents(
-        machine=machine,
-        user=current_user,
-        doc_type=doc_type,
-        group_by_type=group_by_type
+        machine=machine, user=current_user, doc_type=doc_type, group_by_type=group_by_type
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=result
-    )
+    return ResponseModel(code=200, message="success", data=result)
 
 
 @router.get("/{machine_id}/documents/{doc_id}/download")
@@ -251,17 +248,17 @@ def download_machine_document(
     """下载设备文档"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id
-    ).first()
+    machine = (
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
+    )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
-    document = db.query(ProjectDocument).filter(
-        ProjectDocument.id == doc_id,
-        ProjectDocument.machine_id == machine_id
-    ).first()
+    document = (
+        db.query(ProjectDocument)
+        .filter(ProjectDocument.id == doc_id, ProjectDocument.machine_id == machine_id)
+        .first()
+    )
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
 
@@ -269,13 +266,13 @@ def download_machine_document(
     file_path, filename = service.get_document_download_path(document, current_user)
 
     return FileResponse(
-        path=str(file_path),
-        filename=filename,
-        media_type='application/octet-stream'
+        path=str(file_path), filename=filename, media_type="application/octet-stream"
     )
 
 
-@router.get("/{machine_id}/documents/{doc_id}/versions", response_model=List[ProjectDocumentResponse])
+@router.get(
+    "/{machine_id}/documents/{doc_id}/versions", response_model=List[ProjectDocumentResponse]
+)
 def get_machine_document_versions(
     project_id: int = Path(..., description="项目ID"),
     machine_id: int = Path(..., description="机台ID"),
@@ -286,17 +283,17 @@ def get_machine_document_versions(
     """获取设备文档的所有版本"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id
-    ).first()
+    machine = (
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
+    )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
-    document = db.query(ProjectDocument).filter(
-        ProjectDocument.id == doc_id,
-        ProjectDocument.machine_id == machine_id
-    ).first()
+    document = (
+        db.query(ProjectDocument)
+        .filter(ProjectDocument.id == doc_id, ProjectDocument.machine_id == machine_id)
+        .first()
+    )
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
 
@@ -320,22 +317,15 @@ def get_machine_service_history(
     """获取机台服务历史记录"""
     check_project_access_or_raise(db, current_user, project_id)
 
-    machine = db.query(Machine).filter(
-        Machine.id == machine_id,
-        Machine.project_id == project_id
-    ).first()
+    machine = (
+        db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
+    )
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
     service = MachineCustomService(db)
     result = service.get_service_history(
-        machine=machine,
-        page=pagination.page,
-        page_size=pagination.page_size
+        machine=machine, page=pagination.page, page_size=pagination.page_size
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=result
-    )
+    return ResponseModel(code=200, message="success", data=result)

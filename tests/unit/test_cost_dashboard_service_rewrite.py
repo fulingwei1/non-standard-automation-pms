@@ -11,8 +11,9 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock, Mock, patch
+
 from app.services.cost_dashboard_service import CostDashboardService
 
 
@@ -29,7 +30,7 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
         # Mock 项目数量查询
         mock_count_query = MagicMock()
         mock_count_query.filter.return_value.count.return_value = 10
-        
+
         # Mock 预算成本统计查询
         mock_stats_query = MagicMock()
         mock_stats_result = MagicMock()
@@ -37,31 +38,33 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
         mock_stats_result.total_actual_cost = 750000
         mock_stats_result.total_contract_amount = 1200000
         mock_stats_query.filter.return_value.first.return_value = mock_stats_result
-        
+
         # Mock 超支项目查询
         mock_overrun_query = MagicMock()
         mock_overrun_query.filter.return_value.count.return_value = 2
-        
+
         # Mock 正常项目查询
         mock_normal_query = MagicMock()
         mock_normal_query.filter.return_value.count.return_value = 6
-        
+
         # Mock 预警项目查询
         mock_alert_query = MagicMock()
         mock_alert_query.filter.return_value.count.return_value = 2
-        
+
         # Mock 本月成本查询（ProjectCost）
         mock_month_cost_project = MagicMock()
         mock_month_cost_project.total = 80000
         mock_month_project_query = MagicMock()
         mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
-        
+
         # Mock 本月成本查询（FinancialProjectCost）
         mock_month_cost_financial = MagicMock()
         mock_month_cost_financial.total = 20000
         mock_month_financial_query = MagicMock()
-        mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
-        
+        mock_month_financial_query.filter.return_value.first.return_value = (
+            mock_month_cost_financial
+        )
+
         # 设置db.query的返回值序列
         self.mock_db.query.side_effect = [
             mock_count_query,  # 项目数量
@@ -72,10 +75,10 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
             mock_month_project_query,  # 本月ProjectCost
             mock_month_financial_query,  # 本月FinancialProjectCost
         ]
-        
+
         # 执行
         result = self.service.get_cost_overview()
-        
+
         # 验证
         self.assertEqual(result["total_projects"], 10)
         self.assertEqual(result["total_budget"], 1000000.0)
@@ -93,7 +96,7 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
         # Mock 项目数量查询
         mock_count_query = MagicMock()
         mock_count_query.filter.return_value.count.return_value = 5
-        
+
         # Mock 预算成本统计查询（预算为0）
         mock_stats_query = MagicMock()
         mock_stats_result = MagicMock()
@@ -101,27 +104,29 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
         mock_stats_result.total_actual_cost = 0
         mock_stats_result.total_contract_amount = 0
         mock_stats_query.filter.return_value.first.return_value = mock_stats_result
-        
+
         # Mock 其他查询
         mock_overrun_query = MagicMock()
         mock_overrun_query.filter.return_value.count.return_value = 0
-        
+
         mock_normal_query = MagicMock()
         mock_normal_query.filter.return_value.count.return_value = 0
-        
+
         mock_alert_query = MagicMock()
         mock_alert_query.filter.return_value.count.return_value = 0
-        
+
         mock_month_cost_project = MagicMock()
         mock_month_cost_project.total = None
         mock_month_project_query = MagicMock()
         mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
-        
+
         mock_month_cost_financial = MagicMock()
         mock_month_cost_financial.total = None
         mock_month_financial_query = MagicMock()
-        mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
-        
+        mock_month_financial_query.filter.return_value.first.return_value = (
+            mock_month_cost_financial
+        )
+
         self.mock_db.query.side_effect = [
             mock_count_query,
             mock_stats_query,
@@ -131,10 +136,10 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
             mock_month_project_query,
             mock_month_financial_query,
         ]
-        
+
         # 执行
         result = self.service.get_cost_overview()
-        
+
         # 验证：预算为0时，执行率应为0
         self.assertEqual(result["budget_execution_rate"], 0.0)
         self.assertEqual(result["month_budget"], 0.0)
@@ -144,33 +149,35 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
         """测试NULL值处理"""
         mock_count_query = MagicMock()
         mock_count_query.filter.return_value.count.return_value = 3
-        
+
         mock_stats_query = MagicMock()
         mock_stats_result = MagicMock()
         mock_stats_result.total_budget = None
         mock_stats_result.total_actual_cost = None
         mock_stats_result.total_contract_amount = None
         mock_stats_query.filter.return_value.first.return_value = mock_stats_result
-        
+
         mock_overrun_query = MagicMock()
         mock_overrun_query.filter.return_value.count.return_value = 0
-        
+
         mock_normal_query = MagicMock()
         mock_normal_query.filter.return_value.count.return_value = 0
-        
+
         mock_alert_query = MagicMock()
         mock_alert_query.filter.return_value.count.return_value = 0
-        
+
         mock_month_cost_project = MagicMock()
         mock_month_cost_project.total = None
         mock_month_project_query = MagicMock()
         mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
-        
+
         mock_month_cost_financial = MagicMock()
         mock_month_cost_financial.total = None
         mock_month_financial_query = MagicMock()
-        mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
-        
+        mock_month_financial_query.filter.return_value.first.return_value = (
+            mock_month_cost_financial
+        )
+
         self.mock_db.query.side_effect = [
             mock_count_query,
             mock_stats_query,
@@ -180,9 +187,9 @@ class TestCostDashboardServiceCostOverview(unittest.TestCase):
             mock_month_project_query,
             mock_month_financial_query,
         ]
-        
+
         result = self.service.get_cost_overview()
-        
+
         # NULL值应转为0
         self.assertEqual(result["total_budget"], 0.0)
         self.assertEqual(result["total_actual_cost"], 0.0)
@@ -219,35 +226,35 @@ class TestCostDashboardServiceTopProjects(unittest.TestCase):
             self._create_mock_project(1, "P001", "项目A", 100000, 120000, 150000),  # 超支20%
             self._create_mock_project(2, "P002", "项目B", 200000, 180000, 250000),  # 正常，高利润率
             self._create_mock_project(3, "P003", "项目C", 150000, 140000, 160000),  # 正常，低利润率
-            self._create_mock_project(4, "P004", "项目D", 80000, 95000, 100000),   # 超支18.75%
+            self._create_mock_project(4, "P004", "项目D", 80000, 95000, 100000),  # 超支18.75%
             self._create_mock_project(5, "P005", "项目E", 120000, 110000, 140000),  # 正常
         ]
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = projects
         self.mock_db.query.return_value = mock_query
-        
+
         # 执行
         result = self.service.get_top_projects(limit=3)
-        
+
         # 验证 top_cost_projects（按actual_cost降序）
         self.assertEqual(len(result["top_cost_projects"]), 3)
         self.assertEqual(result["top_cost_projects"][0]["project_code"], "P002")  # 180000
         self.assertEqual(result["top_cost_projects"][1]["project_code"], "P003")  # 140000
         self.assertEqual(result["top_cost_projects"][2]["project_code"], "P001")  # 120000
-        
+
         # 验证 top_overrun_projects（超支率降序）
         self.assertEqual(len(result["top_overrun_projects"]), 2)  # 只有2个超支项目
         self.assertEqual(result["top_overrun_projects"][0]["project_code"], "P001")  # 20%超支
         self.assertEqual(result["top_overrun_projects"][1]["project_code"], "P004")  # 18.75%超支
-        
+
         # 验证 top_profit_margin_projects（利润率降序）
         self.assertEqual(len(result["top_profit_margin_projects"]), 3)
         # P002: (250000-180000)/250000 = 28%
         # P005: (140000-110000)/140000 = 21.43%
         # P003: (160000-140000)/160000 = 12.5%
         self.assertEqual(result["top_profit_margin_projects"][0]["project_code"], "P002")
-        
+
         # 验证利润率计算
         p002 = next(p for p in result["top_profit_margin_projects"] if p["project_code"] == "P002")
         self.assertEqual(p002["profit"], 70000.0)  # 250000-180000
@@ -258,9 +265,9 @@ class TestCostDashboardServiceTopProjects(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.mock_db.query.return_value = mock_query
-        
+
         result = self.service.get_top_projects(limit=10)
-        
+
         self.assertEqual(len(result["top_cost_projects"]), 0)
         self.assertEqual(len(result["top_overrun_projects"]), 0)
         self.assertEqual(len(result["top_profit_margin_projects"]), 0)
@@ -272,13 +279,13 @@ class TestCostDashboardServiceTopProjects(unittest.TestCase):
             self._create_mock_project(i, f"P{i:03d}", f"项目{i}", 100000, 90000, 120000)
             for i in range(1, 21)  # 20个项目
         ]
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = projects
         self.mock_db.query.return_value = mock_query
-        
+
         result = self.service.get_top_projects(limit=5)
-        
+
         # 验证每个列表的长度都是5
         self.assertEqual(len(result["top_cost_projects"]), 5)
         self.assertEqual(len(result["top_profit_margin_projects"]), 5)
@@ -289,13 +296,13 @@ class TestCostDashboardServiceTopProjects(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 80000, 0),  # 合同金额为0
         ]
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = projects
         self.mock_db.query.return_value = mock_query
-        
+
         result = self.service.get_top_projects(limit=10)
-        
+
         # 验证利润率为0（不抛异常）
         project_data = result["top_profit_margin_projects"][0]
         self.assertEqual(project_data["profit_margin"], 0.0)
@@ -324,27 +331,27 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 125000),  # 超支25%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         # Mock 本月成本查询（用于异常波动检测）
         mock_month_cost = MagicMock()
         mock_month_cost.total = None
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,  # 项目查询
-            mock_month_query,     # 本月成本查询
+            mock_month_query,  # 本月成本查询
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         self.assertEqual(result["total_alerts"], 1)
         self.assertEqual(result["high_alerts"], 1)
         self.assertEqual(result["medium_alerts"], 0)
-        
+
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_type"], "overrun")
         self.assertEqual(alert["alert_level"], "high")
@@ -355,22 +362,22 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 115000),  # 超支15%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = MagicMock()
         mock_month_cost.total = None
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_level"], "medium")
         self.assertIn("超支", alert["message"])
@@ -380,22 +387,22 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 105000),  # 超支5%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = MagicMock()
         mock_month_cost.total = None
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_level"], "low")
         self.assertIn("轻微超支", alert["message"])
@@ -405,22 +412,22 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 97000),  # 使用97%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = MagicMock()
         mock_month_cost.total = None
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_type"], "budget_critical")
         self.assertEqual(alert["alert_level"], "high")
@@ -431,22 +438,22 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 93000),  # 使用93%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = MagicMock()
         mock_month_cost.total = None
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_level"], "medium")
         self.assertIn("告急", alert["message"])
@@ -456,23 +463,23 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 120000, 60000),  # 平均月成本=5000
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         # Mock 本月成本=12000（是平均月成本5000的2.4倍）
         mock_month_cost = MagicMock()
         mock_month_cost.total = 12000
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         # 应该检测到异常波动
         alert = result["alerts"][0]
         self.assertEqual(alert["alert_type"], "abnormal")
@@ -484,22 +491,22 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
         projects = [
             self._create_mock_project(1, "P001", "项目A", 100000, 50000),  # 使用50%，正常
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         mock_month_cost = MagicMock()
         mock_month_cost.total = 4000  # 平均月成本=4167，本月成本正常
         mock_month_query = MagicMock()
         mock_month_query.filter.return_value.first.return_value = mock_month_cost
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             mock_month_query,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         self.assertEqual(result["total_alerts"], 0)
         self.assertEqual(result["high_alerts"], 0)
 
@@ -510,10 +517,10 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
             self._create_mock_project(2, "P002", "项目B", 100000, 130000),  # 严重超支30%
             self._create_mock_project(3, "P003", "项目C", 100000, 115000),  # 中度超支15%
         ]
-        
+
         mock_projects_query = MagicMock()
         mock_projects_query.filter.return_value.all.return_value = projects
-        
+
         # Mock 本月成本查询（每个项目一次）
         mock_month_queries = []
         for _ in range(3):
@@ -522,14 +529,14 @@ class TestCostDashboardServiceCostAlerts(unittest.TestCase):
             mock_month_query = MagicMock()
             mock_month_query.filter.return_value.first.return_value = mock_month_cost
             mock_month_queries.append(mock_month_query)
-        
+
         self.mock_db.query.side_effect = [
             mock_projects_query,
             *mock_month_queries,
         ]
-        
+
         result = self.service.get_cost_alerts()
-        
+
         # 验证排序：high级别优先，然后按偏差率降序
         self.assertEqual(result["alerts"][0]["project_code"], "P002")  # high, 30%
         self.assertEqual(result["alerts"][1]["project_code"], "P003")  # medium, 15%
@@ -557,24 +564,24 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
     def test_get_project_cost_dashboard_basic(self):
         """测试基本的项目成本仪表盘"""
         project = self._create_mock_project(1, "P001", "项目A", 100000, 80000, 120000)
-        
+
         # Mock 项目查询
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = project
-        
+
         # Mock 成本分类（ProjectCost）
         mock_cost_breakdown_query = MagicMock()
         mock_cost_breakdown_query.filter.return_value.group_by.return_value.all.return_value = [
             ("人力成本", 50000),
             ("设备成本", 20000),
         ]
-        
+
         # Mock 成本分类（FinancialProjectCost）
         mock_financial_breakdown_query = MagicMock()
         mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = [
             ("其他成本", 10000),
         ]
-        
+
         # Mock 月度成本查询（近12个月，每月2次查询：ProjectCost + FinancialProjectCost）
         mock_monthly_queries = []
         for i in range(12):
@@ -582,28 +589,32 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
             mock_month_cost_project = MagicMock()
             mock_month_cost_project.total = 6000 if i < 10 else 8000
             mock_month_project_query = MagicMock()
-            mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
+            mock_month_project_query.filter.return_value.first.return_value = (
+                mock_month_cost_project
+            )
             mock_monthly_queries.append(mock_month_project_query)
-            
+
             # FinancialProjectCost
             mock_month_cost_financial = MagicMock()
             mock_month_cost_financial.total = 1000 if i < 10 else 2000
             mock_month_financial_query = MagicMock()
-            mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
+            mock_month_financial_query.filter.return_value.first.return_value = (
+                mock_month_cost_financial
+            )
             mock_monthly_queries.append(mock_month_financial_query)
-        
+
         # Mock 收款查询
         mock_received_amount = MagicMock()
         mock_received_amount.total = 80000
         mock_received_query = MagicMock()
         mock_received_query.filter.return_value.first.return_value = mock_received_amount
-        
+
         # Mock 开票查询
         mock_invoiced_amount = MagicMock()
         mock_invoiced_amount.total = 90000
         mock_invoiced_query = MagicMock()
         mock_invoiced_query.filter.return_value.first.return_value = mock_invoiced_amount
-        
+
         self.mock_db.query.side_effect = [
             mock_project_query,  # 项目查询
             mock_cost_breakdown_query,  # ProjectCost分类
@@ -612,10 +623,10 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
             mock_received_query,  # 收款查询
             mock_invoiced_query,  # 开票查询
         ]
-        
+
         # 执行
         result = self.service.get_project_cost_dashboard(project_id=1)
-        
+
         # 验证基本信息
         self.assertEqual(result["project_id"], 1)
         self.assertEqual(result["project_code"], "P001")
@@ -623,15 +634,15 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
         self.assertEqual(result["actual_cost"], 80000.0)
         self.assertEqual(result["variance"], -20000.0)
         self.assertEqual(result["variance_pct"], -20.0)
-        
+
         # 验证成本分类
         self.assertEqual(len(result["cost_breakdown"]), 3)
         total_breakdown = sum(item["amount"] for item in result["cost_breakdown"])
         self.assertEqual(total_breakdown, 80000.0)
-        
+
         # 验证月度成本数据
         self.assertEqual(len(result["monthly_costs"]), 12)
-        
+
         # 验证收入与利润
         self.assertEqual(result["received_amount"], 80000.0)
         self.assertEqual(result["invoiced_amount"], 90000.0)
@@ -643,50 +654,56 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_project_query
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.get_project_cost_dashboard(project_id=999)
-        
+
         self.assertIn("不存在", str(context.exception))
 
     def test_get_project_cost_dashboard_zero_contract_amount(self):
         """测试合同金额为0（利润率计算）"""
         project = self._create_mock_project(1, "P001", "项目A", 100000, 80000, 0)
-        
+
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = project
-        
+
         mock_cost_breakdown_query = MagicMock()
         mock_cost_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+
         mock_financial_breakdown_query = MagicMock()
-        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+
         # Mock 月度成本查询
         mock_monthly_queries = []
         for _ in range(12):
             mock_month_cost_project = MagicMock()
             mock_month_cost_project.total = None
             mock_month_project_query = MagicMock()
-            mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
+            mock_month_project_query.filter.return_value.first.return_value = (
+                mock_month_cost_project
+            )
             mock_monthly_queries.append(mock_month_project_query)
-            
+
             mock_month_cost_financial = MagicMock()
             mock_month_cost_financial.total = None
             mock_month_financial_query = MagicMock()
-            mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
+            mock_month_financial_query.filter.return_value.first.return_value = (
+                mock_month_cost_financial
+            )
             mock_monthly_queries.append(mock_month_financial_query)
-        
+
         mock_received_amount = MagicMock()
         mock_received_amount.total = None
         mock_received_query = MagicMock()
         mock_received_query.filter.return_value.first.return_value = mock_received_amount
-        
+
         mock_invoiced_amount = MagicMock()
         mock_invoiced_amount.total = None
         mock_invoiced_query = MagicMock()
         mock_invoiced_query.filter.return_value.first.return_value = mock_invoiced_amount
-        
+
         self.mock_db.query.side_effect = [
             mock_project_query,
             mock_cost_breakdown_query,
@@ -695,50 +712,56 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
             mock_received_query,
             mock_invoiced_query,
         ]
-        
+
         result = self.service.get_project_cost_dashboard(project_id=1)
-        
+
         # 合同金额为0时，利润率应为0
         self.assertEqual(result["profit_margin"], 0.0)
 
     def test_get_project_cost_dashboard_cost_trend(self):
         """测试成本趋势（累计成本）"""
         project = self._create_mock_project(1, "P001", "项目A", 120000, 90000, 150000)
-        
+
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = project
-        
+
         mock_cost_breakdown_query = MagicMock()
         mock_cost_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+
         mock_financial_breakdown_query = MagicMock()
-        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+
         # Mock 月度成本查询（简化：每月固定成本）
         mock_monthly_queries = []
         for _ in range(12):
             mock_month_cost_project = MagicMock()
             mock_month_cost_project.total = 7000
             mock_month_project_query = MagicMock()
-            mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
+            mock_month_project_query.filter.return_value.first.return_value = (
+                mock_month_cost_project
+            )
             mock_monthly_queries.append(mock_month_project_query)
-            
+
             mock_month_cost_financial = MagicMock()
             mock_month_cost_financial.total = 500
             mock_month_financial_query = MagicMock()
-            mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
+            mock_month_financial_query.filter.return_value.first.return_value = (
+                mock_month_cost_financial
+            )
             mock_monthly_queries.append(mock_month_financial_query)
-        
+
         mock_received_amount = MagicMock()
         mock_received_amount.total = None
         mock_received_query = MagicMock()
         mock_received_query.filter.return_value.first.return_value = mock_received_amount
-        
+
         mock_invoiced_amount = MagicMock()
         mock_invoiced_amount.total = None
         mock_invoiced_query = MagicMock()
         mock_invoiced_query.filter.return_value.first.return_value = mock_invoiced_amount
-        
+
         self.mock_db.query.side_effect = [
             mock_project_query,
             mock_cost_breakdown_query,
@@ -747,9 +770,9 @@ class TestCostDashboardServiceProjectCostDashboard(unittest.TestCase):
             mock_received_query,
             mock_invoiced_query,
         ]
-        
+
         result = self.service.get_project_cost_dashboard(project_id=1)
-        
+
         # 验证成本趋势（累计）
         self.assertEqual(len(result["cost_trend"]), 12)
         # 第1个月: 累计=7500
@@ -774,45 +797,51 @@ class TestCostDashboardServiceEdgeCases(unittest.TestCase):
         project.budget_amount = 100000
         project.actual_cost = 80000
         project.contract_amount = 120000
-        
+
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = project
-        
+
         # Mock 成本分类（cost_type为None）
         mock_cost_breakdown_query = MagicMock()
         mock_cost_breakdown_query.filter.return_value.group_by.return_value.all.return_value = [
             (None, 50000),  # cost_type为None
             ("人力成本", 30000),
         ]
-        
+
         mock_financial_breakdown_query = MagicMock()
-        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+
         # Mock 月度成本查询
         mock_monthly_queries = []
         for _ in range(12):
             mock_month_cost_project = MagicMock()
             mock_month_cost_project.total = None
             mock_month_project_query = MagicMock()
-            mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
+            mock_month_project_query.filter.return_value.first.return_value = (
+                mock_month_cost_project
+            )
             mock_monthly_queries.append(mock_month_project_query)
-            
+
             mock_month_cost_financial = MagicMock()
             mock_month_cost_financial.total = None
             mock_month_financial_query = MagicMock()
-            mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
+            mock_month_financial_query.filter.return_value.first.return_value = (
+                mock_month_cost_financial
+            )
             mock_monthly_queries.append(mock_month_financial_query)
-        
+
         mock_received_amount = MagicMock()
         mock_received_amount.total = None
         mock_received_query = MagicMock()
         mock_received_query.filter.return_value.first.return_value = mock_received_amount
-        
+
         mock_invoiced_amount = MagicMock()
         mock_invoiced_amount.total = None
         mock_invoiced_query = MagicMock()
         mock_invoiced_query.filter.return_value.first.return_value = mock_invoiced_amount
-        
+
         self.mock_db.query.side_effect = [
             mock_project_query,
             mock_cost_breakdown_query,
@@ -821,9 +850,9 @@ class TestCostDashboardServiceEdgeCases(unittest.TestCase):
             mock_received_query,
             mock_invoiced_query,
         ]
-        
+
         result = self.service.get_project_cost_dashboard(project_id=1)
-        
+
         # 验证NULL cost_type被转为"其他"
         other_category = next(
             item for item in result["cost_breakdown"] if item["category"] == "其他"
@@ -839,44 +868,50 @@ class TestCostDashboardServiceEdgeCases(unittest.TestCase):
         project.budget_amount = 100000
         project.actual_cost = 100000
         project.contract_amount = 120000
-        
+
         mock_project_query = MagicMock()
         mock_project_query.filter.return_value.first.return_value = project
-        
+
         mock_cost_breakdown_query = MagicMock()
         mock_cost_breakdown_query.filter.return_value.group_by.return_value.all.return_value = [
             ("人力成本", 60000),
             ("设备成本", 40000),
         ]
-        
+
         mock_financial_breakdown_query = MagicMock()
-        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = []
-        
+        mock_financial_breakdown_query.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+
         # Mock 月度成本查询
         mock_monthly_queries = []
         for _ in range(12):
             mock_month_cost_project = MagicMock()
             mock_month_cost_project.total = None
             mock_month_project_query = MagicMock()
-            mock_month_project_query.filter.return_value.first.return_value = mock_month_cost_project
+            mock_month_project_query.filter.return_value.first.return_value = (
+                mock_month_cost_project
+            )
             mock_monthly_queries.append(mock_month_project_query)
-            
+
             mock_month_cost_financial = MagicMock()
             mock_month_cost_financial.total = None
             mock_month_financial_query = MagicMock()
-            mock_month_financial_query.filter.return_value.first.return_value = mock_month_cost_financial
+            mock_month_financial_query.filter.return_value.first.return_value = (
+                mock_month_cost_financial
+            )
             mock_monthly_queries.append(mock_month_financial_query)
-        
+
         mock_received_amount = MagicMock()
         mock_received_amount.total = None
         mock_received_query = MagicMock()
         mock_received_query.filter.return_value.first.return_value = mock_received_amount
-        
+
         mock_invoiced_amount = MagicMock()
         mock_invoiced_amount.total = None
         mock_invoiced_query = MagicMock()
         mock_invoiced_query.filter.return_value.first.return_value = mock_invoiced_amount
-        
+
         self.mock_db.query.side_effect = [
             mock_project_query,
             mock_cost_breakdown_query,
@@ -885,14 +920,18 @@ class TestCostDashboardServiceEdgeCases(unittest.TestCase):
             mock_received_query,
             mock_invoiced_query,
         ]
-        
+
         result = self.service.get_project_cost_dashboard(project_id=1)
-        
+
         # 验证百分比
-        labor_cost = next(item for item in result["cost_breakdown"] if item["category"] == "人力成本")
+        labor_cost = next(
+            item for item in result["cost_breakdown"] if item["category"] == "人力成本"
+        )
         self.assertEqual(labor_cost["percentage"], 60.0)
-        
-        equipment_cost = next(item for item in result["cost_breakdown"] if item["category"] == "设备成本")
+
+        equipment_cost = next(
+            item for item in result["cost_breakdown"] if item["category"] == "设备成本"
+        )
         self.assertEqual(equipment_cost["percentage"], 40.0)
 
 

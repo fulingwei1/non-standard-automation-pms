@@ -5,16 +5,16 @@
 此模块提供 BEM 战略管理相关的所有 Pydantic Schema 类。
 """
 
-# Strategy - 战略主表
-from .strategy import (
-    StrategyCreate,
-    StrategyDetailResponse,
-    StrategyMapCSF,
-    StrategyMapDimension,
-    StrategyMapResponse,
-    StrategyPublishRequest,
-    StrategyResponse,
-    StrategyUpdate,
+# AnnualKeyWork - 年度重点工作
+from .annual_work import (
+    AnnualKeyWorkCreate,
+    AnnualKeyWorkDetailResponse,
+    AnnualKeyWorkProgressUpdate,
+    AnnualKeyWorkResponse,
+    AnnualKeyWorkUpdate,
+    LinkProjectRequest,
+    ProjectLinkItem,
+    UnlinkProjectRequest,
 )
 
 # CSF - 关键成功要素
@@ -28,33 +28,20 @@ from .csf import (
     CSFUpdate,
 )
 
-# KPI - 关键绩效指标
-from .kpi import (
-    KPICollectRequest,
-    KPICollectResponse,
-    KPICreate,
-    KPIDataSourceCreate,
-    KPIDataSourceResponse,
-    KPIDetailResponse,
-    KPIHistoryResponse,
-    KPIResponse,
-    KPITrendData,
-    KPITrendResponse,
-    KPIUpdate,
-    KPIValueUpdate,
-    KPIWithHistoryResponse,
-)
-
-# AnnualKeyWork - 年度重点工作
-from .annual_work import (
-    AnnualKeyWorkCreate,
-    AnnualKeyWorkDetailResponse,
-    AnnualKeyWorkProgressUpdate,
-    AnnualKeyWorkResponse,
-    AnnualKeyWorkUpdate,
-    LinkProjectRequest,
-    ProjectLinkItem,
-    UnlinkProjectRequest,
+# Dashboard & Comparison - 仪表板与同比分析
+from .dashboard import (
+    CSFComparisonItem,
+    DimensionComparisonDetail,
+    ExecutionStatusItem,
+    ExecutionStatusResponse,
+    KPIComparisonItem,
+    MyStrategyDashboardResponse,
+    MyStrategyItem,
+    MyStrategyResponse,
+    StrategyComparisonCreate,
+    StrategyComparisonResponse,
+    StrategyOverviewResponse,
+    YoYReportResponse,
 )
 
 # Decomposition - 目标分解
@@ -74,6 +61,23 @@ from .decomposition import (
     TraceToStrategyResponse,
 )
 
+# KPI - 关键绩效指标
+from .kpi import (
+    KPICollectRequest,
+    KPICollectResponse,
+    KPICreate,
+    KPIDataSourceCreate,
+    KPIDataSourceResponse,
+    KPIDetailResponse,
+    KPIHistoryResponse,
+    KPIResponse,
+    KPITrendData,
+    KPITrendResponse,
+    KPIUpdate,
+    KPIValueUpdate,
+    KPIWithHistoryResponse,
+)
+
 # Review - 战略审视
 from .review import (
     CalendarMonthResponse,
@@ -90,20 +94,16 @@ from .review import (
     StrategyReviewUpdate,
 )
 
-# Dashboard & Comparison - 仪表板与同比分析
-from .dashboard import (
-    CSFComparisonItem,
-    DimensionComparisonDetail,
-    ExecutionStatusItem,
-    ExecutionStatusResponse,
-    KPIComparisonItem,
-    MyStrategyItem,
-    MyStrategyResponse,
-    MyStrategyDashboardResponse,
-    StrategyComparisonCreate,
-    StrategyComparisonResponse,
-    StrategyOverviewResponse,
-    YoYReportResponse,
+# Strategy - 战略主表
+from .strategy import (
+    StrategyCreate,
+    StrategyDetailResponse,
+    StrategyMapCSF,
+    StrategyMapDimension,
+    StrategyMapResponse,
+    StrategyPublishRequest,
+    StrategyResponse,
+    StrategyUpdate,
 )
 
 __all__ = [

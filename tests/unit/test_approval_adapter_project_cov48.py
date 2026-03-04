@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - ProjectApprovalAdapter (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.project import ProjectApprovalAdapter
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False

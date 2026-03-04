@@ -39,17 +39,12 @@ def add_bom_item(
     if item_in.material_id:
         material = db.query(Material).filter(Material.id == item_in.material_id).first()
         if not material:
-            raise HTTPException(
-                status_code=404, detail=f"物料ID {item_in.material_id} 不存在"
-            )
+            raise HTTPException(status_code=404, detail=f"物料ID {item_in.material_id} 不存在")
 
     # 获取当前最大行号
 
     max_item = (
-        db.query(BomItem)
-        .filter(BomItem.bom_id == bom_id)
-        .order_by(desc(BomItem.item_no))
-        .first()
+        db.query(BomItem).filter(BomItem.bom_id == bom_id).order_by(desc(BomItem.item_no)).first()
     )
     item_no = (max_item.item_no + 1) if max_item else 1
 
@@ -111,11 +106,7 @@ def get_bom_items(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取BOM明细列表"""
-    bom = (
-        db.query(BomHeader)
-        .filter(BomHeader.id == bom_id)
-        .first()
-    )
+    bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
     if not bom:
         raise HTTPException(status_code=404, detail="BOM不存在")
 
@@ -164,9 +155,7 @@ def update_bom_item(
     if item_in.material_id:
         material = db.query(Material).filter(Material.id == item_in.material_id).first()
         if not material:
-            raise HTTPException(
-                status_code=404, detail=f"物料ID {item_in.material_id} 不存在"
-            )
+            raise HTTPException(status_code=404, detail=f"物料ID {item_in.material_id} 不存在")
 
     # 计算新金额
     old_amount = item.amount or 0

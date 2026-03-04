@@ -13,11 +13,11 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
-from app.models.sales.invoices import Invoice, InvoiceApproval
 from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.user import User
 from app.models.sales.contracts import Contract
+from app.models.sales.invoices import Invoice, InvoiceApproval
+from app.models.user import User
+from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
 
 
 class TestInvoiceAdapterCore(unittest.TestCase):
@@ -64,7 +64,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             tax_amount=Decimal("1300.00"),
             total_amount=Decimal("11300.00"),
             buyer_name="测试客户",
-            buyer_tax_no="91110000123456789X"
+            buyer_tax_no="91110000123456789X",
         )
 
         self._setup_query_returns(mock_invoice)
@@ -87,10 +87,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         mock_contract = MagicMock(spec=Contract)
         mock_contract.contract_code = "CTR-2024-001"
 
-        mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-002",
-            contract_id=10
-        )
+        mock_invoice = self._create_mock_invoice(invoice_code="INV-2024-002", contract_id=10)
         mock_invoice.contract = mock_contract
 
         self._setup_query_returns(mock_invoice)
@@ -103,10 +100,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_without_contract(self):
         """测试获取没有合同的发票数据"""
-        mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-003",
-            contract_id=None
-        )
+        mock_invoice = self._create_mock_invoice(invoice_code="INV-2024-003", contract_id=None)
         mock_invoice.contract = None
 
         self._setup_query_returns(mock_invoice)
@@ -123,9 +117,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         due_date = datetime(2024, 2, 10)
 
         mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-004",
-            issue_date=issue_date,
-            due_date=due_date
+            invoice_code="INV-2024-004", issue_date=issue_date, due_date=due_date
         )
 
         self._setup_query_returns(mock_invoice)
@@ -139,9 +131,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_get_entity_data_with_null_dates(self):
         """测试日期为空的情况"""
         mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-005",
-            issue_date=None,
-            due_date=None
+            invoice_code="INV-2024-005", issue_date=None, due_date=None
         )
 
         self._setup_query_returns(mock_invoice)
@@ -159,7 +149,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             amount=None,
             tax_rate=None,
             tax_amount=None,
-            total_amount=None
+            total_amount=None,
         )
 
         self._setup_query_returns(mock_invoice)
@@ -274,8 +264,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_get_title_success(self):
         """测试生成发票审批标题"""
         mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-001",
-            buyer_name="测试客户A"
+            invoice_code="INV-2024-001", buyer_name="测试客户A"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -285,10 +274,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
     def test_get_title_without_buyer_name(self):
         """测试生成没有购买方名称的标题"""
-        mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-002",
-            buyer_name=None
-        )
+        mock_invoice = self._create_mock_invoice(invoice_code="INV-2024-002", buyer_name=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
         title = self.adapter.get_title(self.entity_id)
@@ -315,7 +301,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             buyer_name="测试客户A",
             total_amount=Decimal("11300.00"),
             invoice_type="增值税专用发票",
-            contract_id=10
+            contract_id=10,
         )
         mock_invoice.contract = mock_contract
 
@@ -336,7 +322,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             buyer_name=None,
             total_amount=None,
             invoice_type=None,
-            contract_id=None
+            contract_id=None,
         )
         mock_invoice.contract = None
 
@@ -361,9 +347,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_success_from_draft(self):
         """测试从草稿状态成功验证提交"""
         mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=Decimal("10000.00"),
-            buyer_name="测试客户"
+            status="DRAFT", amount=Decimal("10000.00"), buyer_name="测试客户"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -375,9 +359,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_success_from_rejected(self):
         """测试从驳回状态成功验证提交"""
         mock_invoice = self._create_mock_invoice(
-            status="REJECTED",
-            amount=Decimal("5000.00"),
-            buyer_name="测试客户B"
+            status="REJECTED", amount=Decimal("5000.00"), buyer_name="测试客户B"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -408,9 +390,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_zero_amount(self):
         """测试金额为0"""
         mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=Decimal("0"),
-            buyer_name="测试客户"
+            status="DRAFT", amount=Decimal("0"), buyer_name="测试客户"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -422,9 +402,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_negative_amount(self):
         """测试金额为负数"""
         mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=Decimal("-1000.00"),
-            buyer_name="测试客户"
+            status="DRAFT", amount=Decimal("-1000.00"), buyer_name="测试客户"
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -435,11 +413,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
     def test_validate_submit_null_amount(self):
         """测试金额为空"""
-        mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=None,
-            buyer_name="测试客户"
-        )
+        mock_invoice = self._create_mock_invoice(status="DRAFT", amount=None, buyer_name="测试客户")
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
         valid, error = self.adapter.validate_submit(self.entity_id)
@@ -450,9 +424,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_missing_buyer_name(self):
         """测试缺少购买方名称"""
         mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=Decimal("10000.00"),
-            buyer_name=None
+            status="DRAFT", amount=Decimal("10000.00"), buyer_name=None
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -464,9 +436,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def test_validate_submit_empty_buyer_name(self):
         """测试购买方名称为空字符串"""
         mock_invoice = self._create_mock_invoice(
-            status="DRAFT",
-            amount=Decimal("10000.00"),
-            buyer_name=""
+            status="DRAFT", amount=Decimal("10000.00"), buyer_name=""
         )
         self.db.query.return_value.filter.return_value.first.return_value = mock_invoice
 
@@ -483,18 +453,14 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         mock_instance.id = 100
 
         mock_invoice = self._create_mock_invoice(
-            invoice_code="INV-2024-001",
-            approval_instance_id=100
+            invoice_code="INV-2024-001", approval_instance_id=100
         )
 
         # 设置查询返回已存在的实例
         self.db.query.return_value.filter.return_value.first.return_value = mock_instance
 
-        with patch('app.services.approval_engine.adapters.invoice.logger') as mock_logger:
-            result = self.adapter.submit_for_approval(
-                invoice=mock_invoice,
-                initiator_id=1
-            )
+        with patch("app.services.approval_engine.adapters.invoice.logger") as mock_logger:
+            result = self.adapter.submit_for_approval(invoice=mock_invoice, initiator_id=1)
 
             # 验证返回已存在的实例
             self.assertEqual(result, mock_instance)
@@ -513,7 +479,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             amount=Decimal("10000.00"),
             tax_rate=Decimal("0.13"),
             tax_amount=Decimal("1300.00"),
-            total_amount=Decimal("11300.00")
+            total_amount=Decimal("11300.00"),
         )
         mock_invoice.contract = mock_contract
 
@@ -521,7 +487,9 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         mock_instance.id = 200
         mock_instance.status = "PENDING"
 
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as MockWorkflowEngine:
+        with patch(
+            "app.services.approval_engine.workflow_engine.WorkflowEngine"
+        ) as MockWorkflowEngine:
             mock_engine = MagicMock()
             mock_engine.create_instance.return_value = mock_instance
             MockWorkflowEngine.return_value = mock_engine
@@ -532,7 +500,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
                 title="测试审批",
                 summary="测试摘要",
                 urgency="HIGH",
-                cc_user_ids=[2, 3]
+                cc_user_ids=[2, 3],
             )
 
             # 验证返回新实例
@@ -541,10 +509,10 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             # 验证调用了WorkflowEngine.create_instance
             mock_engine.create_instance.assert_called_once()
             call_kwargs = mock_engine.create_instance.call_args[1]
-            self.assertEqual(call_kwargs['flow_code'], "SALES_INVOICE")
-            self.assertEqual(call_kwargs['business_type'], "SALES_INVOICE")
-            self.assertEqual(call_kwargs['business_id'], mock_invoice.id)
-            self.assertEqual(call_kwargs['submitted_by'], 1)
+            self.assertEqual(call_kwargs["flow_code"], "SALES_INVOICE")
+            self.assertEqual(call_kwargs["business_type"], "SALES_INVOICE")
+            self.assertEqual(call_kwargs["business_id"], mock_invoice.id)
+            self.assertEqual(call_kwargs["submitted_by"], 1)
 
             # 验证更新了发票
             self.assertEqual(mock_invoice.approval_instance_id, 200)
@@ -603,7 +571,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         # 验证添加了新记录
         self.db.add.assert_called_once()
         added_approval = self.db.add.call_args[0][0]
-        
+
         self.assertEqual(added_approval.invoice_id, 1)
         self.assertEqual(added_approval.approval_level, 2)
         self.assertEqual(added_approval.approval_role, "财务审批")
@@ -634,7 +602,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
         self.db.query.side_effect = query_side_effect
 
-        with patch('app.services.approval_engine.adapters.invoice.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.invoice.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 10, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
@@ -688,14 +656,12 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_approval
 
-        with patch('app.services.approval_engine.adapters.invoice.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.invoice.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
             result = self.adapter.update_invoice_approval_from_action(
-                task=mock_task,
-                action="APPROVE",
-                comment="同意通过"
+                task=mock_task, action="APPROVE", comment="同意通过"
             )
 
             # 验证更新了审批结果
@@ -703,7 +669,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             self.assertEqual(mock_approval.approval_opinion, "同意通过")
             self.assertEqual(mock_approval.status, "APPROVED")
             self.assertEqual(mock_approval.approved_at, mock_now)
-            
+
             self.db.add.assert_called_once_with(mock_approval)
             self.db.commit.assert_called_once()
 
@@ -719,14 +685,12 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_approval
 
-        with patch('app.services.approval_engine.adapters.invoice.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.invoice.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 11, 0, 0)
             mock_datetime.now.return_value = mock_now
 
             result = self.adapter.update_invoice_approval_from_action(
-                task=mock_task,
-                action="REJECT",
-                comment="金额有误"
+                task=mock_task, action="REJECT", comment="金额有误"
             )
 
             # 验证更新了驳回结果
@@ -734,7 +698,7 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             self.assertEqual(mock_approval.approval_opinion, "金额有误")
             self.assertEqual(mock_approval.status, "REJECTED")
             self.assertEqual(mock_approval.approved_at, mock_now)
-            
+
             self.db.add.assert_called_once_with(mock_approval)
             self.db.commit.assert_called_once()
 
@@ -746,11 +710,9 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch('app.services.approval_engine.adapters.invoice.logger') as mock_logger:
+        with patch("app.services.approval_engine.adapters.invoice.logger") as mock_logger:
             result = self.adapter.update_invoice_approval_from_action(
-                task=mock_task,
-                action="APPROVE",
-                comment="同意"
+                task=mock_task, action="APPROVE", comment="同意"
             )
 
             # 验证返回None
@@ -770,13 +732,11 @@ class TestInvoiceAdapterCore(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_approval
 
-        with patch('app.services.approval_engine.adapters.invoice.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.invoice.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 15, 10, 0, 0)
 
             result = self.adapter.update_invoice_approval_from_action(
-                task=mock_task,
-                action="APPROVE",
-                comment=None
+                task=mock_task, action="APPROVE", comment=None
             )
 
             # 验证审批意见为None
@@ -787,38 +747,38 @@ class TestInvoiceAdapterCore(unittest.TestCase):
     def _create_mock_invoice(self, **kwargs):
         """创建模拟发票对象"""
         mock_invoice = MagicMock(spec=Invoice)
-        
+
         # 设置默认值
         defaults = {
-            'id': self.entity_id,
-            'invoice_code': 'INV-TEST-001',
-            'status': 'DRAFT',
-            'invoice_type': '增值税专用发票',
-            'amount': Decimal("10000.00"),
-            'tax_rate': Decimal("0.13"),
-            'tax_amount': Decimal("1300.00"),
-            'total_amount': Decimal("11300.00"),
-            'contract_id': None,
-            'project_id': None,
-            'buyer_name': '测试客户',
-            'buyer_tax_no': '91110000123456789X',
-            'issue_date': None,
-            'due_date': None,
-            'approval_instance_id': None,
-            'approval_status': None,
+            "id": self.entity_id,
+            "invoice_code": "INV-TEST-001",
+            "status": "DRAFT",
+            "invoice_type": "增值税专用发票",
+            "amount": Decimal("10000.00"),
+            "tax_rate": Decimal("0.13"),
+            "tax_amount": Decimal("1300.00"),
+            "total_amount": Decimal("11300.00"),
+            "contract_id": None,
+            "project_id": None,
+            "buyer_name": "测试客户",
+            "buyer_tax_no": "91110000123456789X",
+            "issue_date": None,
+            "due_date": None,
+            "approval_instance_id": None,
+            "approval_status": None,
         }
-        
+
         # 合并自定义值
         defaults.update(kwargs)
-        
+
         # 设置属性
         for key, value in defaults.items():
             setattr(mock_invoice, key, value)
-        
+
         # 默认没有合同
-        if 'contract' not in kwargs:
+        if "contract" not in kwargs:
             mock_invoice.contract = None
-        
+
         return mock_invoice
 
     def _setup_query_returns(self, mock_invoice):
@@ -834,5 +794,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(InvoiceApprovalAdapter.entity_type, "INVOICE")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

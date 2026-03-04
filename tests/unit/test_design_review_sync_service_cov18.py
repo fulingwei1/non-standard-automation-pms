@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.design_review_sync_service import DesignReviewSyncService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -24,8 +25,9 @@ def service(db):
     return DesignReviewSyncService(db)
 
 
-def make_tech_review(status="COMPLETED", conclusion="PASS", presenter_id=10,
-                     host_id=20, project_id=5, review_id=1):
+def make_tech_review(
+    status="COMPLETED", conclusion="PASS", presenter_id=10, host_id=20, project_id=5, review_id=1
+):
     tr = MagicMock()
     tr.id = review_id
     tr.status = status
@@ -66,6 +68,7 @@ class TestSyncFromTechnicalReview:
     def test_returns_none_if_no_presenter(self, db, service):
         tr = make_tech_review(presenter_id=None)
         call_idx = [0]
+
         def query_side(model):
             call_idx[0] += 1
             m = MagicMock()
@@ -74,6 +77,7 @@ class TestSyncFromTechnicalReview:
             else:
                 m.filter.return_value.first.return_value = None
             return m
+
         db.query.side_effect = query_side
         result = service.sync_from_technical_review(1)
         assert result is None
@@ -83,6 +87,7 @@ class TestSyncFromTechnicalReview:
         existing = MagicMock()
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             m = MagicMock()
@@ -99,6 +104,7 @@ class TestSyncFromTechnicalReview:
     def test_returns_none_for_unknown_conclusion(self, db, service):
         tr = make_tech_review(conclusion="UNKNOWN")
         existing_call = [0]
+
         def query_side(model):
             existing_call[0] += 1
             m = MagicMock()

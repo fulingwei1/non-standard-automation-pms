@@ -103,7 +103,9 @@ class TestExtractSolutionSteps:
         task = MagicMock()
         task.task_name = "任务1"
         task.task_description = "描述1"
-        service.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [task]
+        service.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            task
+        ]
         ecn = _make_ecn()
         steps = _extract_solution_steps(service, ecn, "")
         assert len(steps) == 1
@@ -117,7 +119,10 @@ class TestExtractSolution:
         # mock _extract_keywords via service.db
         service.db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
 
-        with patch("app.services.ecn_knowledge_service.solution_extraction._extract_solution_steps", return_value=[]):
+        with patch(
+            "app.services.ecn_knowledge_service.solution_extraction._extract_solution_steps",
+            return_value=[],
+        ):
             result = extract_solution(service, 1)
 
         assert result["ecn_id"] == 1

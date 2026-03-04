@@ -37,6 +37,6 @@ def notify_invoice_issued(db: Session, invoice_id: int) -> Optional[Notification
         extra_data={
             "invoice_code": invoice.invoice_code,
             "invoice_amount": float(invoice.total_amount) if invoice.total_amount else 0,
-            "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None
-        }
+            "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
+        },
     )

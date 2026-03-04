@@ -4,15 +4,17 @@
 （注意：生产代码中存在 schema/model 字段名版本差异，测试均通过 mock 覆盖）
 """
 
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.strategy.review.routine_management import (
-        get_routine_management_cycle,
         generate_routine_events,
+        get_routine_management_cycle,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -38,8 +40,10 @@ class TestGetRoutineManagementCycle:
         mock_response = MagicMock()
         mock_response.strategy_id = 42
 
-        with patch(f"{MODULE}.RoutineManagementCycleItem", return_value=mock_item), \
-             patch(f"{MODULE}.RoutineManagementCycleResponse", return_value=mock_response):
+        with (
+            patch(f"{MODULE}.RoutineManagementCycleItem", return_value=mock_item),
+            patch(f"{MODULE}.RoutineManagementCycleResponse", return_value=mock_response),
+        ):
             resp = get_routine_management_cycle(mock_db, strategy_id=42)
         assert resp.strategy_id == 42
 
@@ -52,8 +56,10 @@ class TestGetRoutineManagementCycle:
             created_items.append(item)
             return item
 
-        with patch(f"{MODULE}.RoutineManagementCycleItem", side_effect=track), \
-             patch(f"{MODULE}.RoutineManagementCycleResponse", return_value=mock_response):
+        with (
+            patch(f"{MODULE}.RoutineManagementCycleItem", side_effect=track),
+            patch(f"{MODULE}.RoutineManagementCycleResponse", return_value=mock_response),
+        ):
             get_routine_management_cycle(mock_db, strategy_id=1)
         assert len(created_items) >= 3
 
@@ -71,8 +77,10 @@ class TestGetRoutineManagementCycle:
             call_count[0] += 1
             return r
 
-        with patch(f"{MODULE}.RoutineManagementCycleItem", return_value=MagicMock()), \
-             patch(f"{MODULE}.RoutineManagementCycleResponse", side_effect=make_response):
+        with (
+            patch(f"{MODULE}.RoutineManagementCycleItem", return_value=MagicMock()),
+            patch(f"{MODULE}.RoutineManagementCycleResponse", side_effect=make_response),
+        ):
             r1 = get_routine_management_cycle(mock_db, strategy_id=10)
             r2 = get_routine_management_cycle(mock_db, strategy_id=20)
         assert r1.strategy_id == 10

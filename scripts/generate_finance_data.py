@@ -207,24 +207,36 @@ FUNDING_ROUNDS_CONFIG = [
 
 # 融资用途分类
 USAGE_CATEGORIES = [
-    {"category": "R&D", "items": [
-        {"item": "研发团队扩充", "percentage": 35},
-        {"item": "核心技术研发", "percentage": 20},
-        {"item": "产品迭代升级", "percentage": 10},
-    ]},
-    {"category": "MARKETING", "items": [
-        {"item": "品牌推广", "percentage": 15},
-        {"item": "市场拓展", "percentage": 8},
-        {"item": "渠道建设", "percentage": 5},
-    ]},
-    {"category": "OPERATIONS", "items": [
-        {"item": "运营团队", "percentage": 4},
-        {"item": "日常运营", "percentage": 2},
-    ]},
-    {"category": "EQUIPMENT", "items": [
-        {"item": "生产设备采购", "percentage": 3},
-        {"item": "测试设备", "percentage": 1},
-    ]},
+    {
+        "category": "R&D",
+        "items": [
+            {"item": "研发团队扩充", "percentage": 35},
+            {"item": "核心技术研发", "percentage": 20},
+            {"item": "产品迭代升级", "percentage": 10},
+        ],
+    },
+    {
+        "category": "MARKETING",
+        "items": [
+            {"item": "品牌推广", "percentage": 15},
+            {"item": "市场拓展", "percentage": 8},
+            {"item": "渠道建设", "percentage": 5},
+        ],
+    },
+    {
+        "category": "OPERATIONS",
+        "items": [
+            {"item": "运营团队", "percentage": 4},
+            {"item": "日常运营", "percentage": 2},
+        ],
+    },
+    {
+        "category": "EQUIPMENT",
+        "items": [
+            {"item": "生产设备采购", "percentage": 3},
+            {"item": "测试设备", "percentage": 1},
+        ],
+    },
 ]
 
 
@@ -272,7 +284,11 @@ def generate_funding_rounds(db, investors, users):
     funding_rounds = []
 
     # 获取财务或高管用户作为负责人
-    finance_users = [u for u in users if u.real_name and ("财务" in u.real_name or "总" in u.real_name or "CEO" in u.real_name)]
+    finance_users = [
+        u
+        for u in users
+        if u.real_name and ("财务" in u.real_name or "总" in u.real_name or "CEO" in u.real_name)
+    ]
     if not finance_users:
         finance_users = users[:3]
 
@@ -284,15 +300,40 @@ def generate_funding_rounds(db, investors, users):
             continue
         # 选择领投方
         if config["type"] == "SEED":
-            lead_investor = next((inv for inv in investors if inv.investor_type == "ANGEL"), investors[0])
+            lead_investor = next(
+                (inv for inv in investors if inv.investor_type == "ANGEL"), investors[0]
+            )
         elif config["type"] == "A":
-            lead_investor = next((inv for inv in investors if inv.investor_type == "VC" and "真格" in inv.investor_name), investors[1])
+            lead_investor = next(
+                (
+                    inv
+                    for inv in investors
+                    if inv.investor_type == "VC" and "真格" in inv.investor_name
+                ),
+                investors[1],
+            )
         elif config["type"] == "B":
-            lead_investor = next((inv for inv in investors if inv.investor_type == "VC" and "深创投" in inv.investor_name), investors[2])
+            lead_investor = next(
+                (
+                    inv
+                    for inv in investors
+                    if inv.investor_type == "VC" and "深创投" in inv.investor_name
+                ),
+                investors[2],
+            )
         elif config["type"] == "C":
-            lead_investor = next((inv for inv in investors if inv.investor_type == "PE"), investors[5])
+            lead_investor = next(
+                (inv for inv in investors if inv.investor_type == "PE"), investors[5]
+            )
         else:
-            lead_investor = next((inv for inv in investors if inv.investor_type == "PE" and "高瓴" in inv.investor_name), investors[5])
+            lead_investor = next(
+                (
+                    inv
+                    for inv in investors
+                    if inv.investor_type == "PE" and "高瓴" in inv.investor_name
+                ),
+                investors[5],
+            )
 
         responsible_person = finance_users[i % len(finance_users)]
 
@@ -337,7 +378,9 @@ def generate_funding_records(db, funding_rounds, investors):
         # 选择投资方（包括领投方）
         selected_investors = [round_obj.lead_investor]
         available_investors = [inv for inv in investors if inv.id != round_obj.lead_investor_id]
-        selected_investors.extend(random.sample(available_investors, min(num_investors - 1, len(available_investors))))
+        selected_investors.extend(
+            random.sample(available_investors, min(num_investors - 1, len(available_investors)))
+        )
 
         # 计算总金额和分配
         total_amount = float(round_obj.actual_amount)
@@ -352,7 +395,9 @@ def generate_funding_records(db, funding_rounds, investors):
 
             # 计算持股比例（简化计算）
             if round_obj.valuation_post > 0:
-                share_percentage = Decimal(str((float(amount) / float(round_obj.valuation_post)) * 100))
+                share_percentage = Decimal(
+                    str((float(amount) / float(round_obj.valuation_post)) * 100)
+                )
             else:
                 share_percentage = Decimal("0")
 
@@ -385,7 +430,11 @@ def generate_funding_records(db, funding_rounds, investors):
                 paid_amount=amount if round_obj.status == "CLOSED" else Decimal("0"),
                 remaining_amount=Decimal("0") if round_obj.status == "CLOSED" else amount,
                 contract_no=f"CONTRACT-{round_obj.round_code}-{investor.investor_code}",
-                contract_date=round_obj.launch_date + timedelta(days=random.randint(10, 30)) if round_obj.launch_date else None,
+                contract_date=(
+                    round_obj.launch_date + timedelta(days=random.randint(10, 30))
+                    if round_obj.launch_date
+                    else None
+                ),
                 status="PAID" if round_obj.status == "CLOSED" else "COMMITTED",
                 description=f"{investor.investor_name}参与{round_obj.round_name}投资",
             )
@@ -412,12 +461,14 @@ def generate_equity_structures(db, funding_rounds, investors):
 
     for round_obj in funding_rounds:
         # 获取该轮次的所有投资方记录
-        round_records = db.query(FundingRecord).filter(
-            FundingRecord.funding_round_id == round_obj.id
-        ).all()
+        round_records = (
+            db.query(FundingRecord).filter(FundingRecord.funding_round_id == round_obj.id).all()
+        )
 
         # 计算投资方总持股比例
-        investor_total_percentage = sum(float(record.share_percentage or 0) for record in round_records)
+        investor_total_percentage = sum(
+            float(record.share_percentage or 0) for record in round_records
+        )
 
         # 创始人剩余股权（按比例稀释）
         remaining_founder_share = 100.0 - investor_total_percentage
@@ -504,14 +555,22 @@ def generate_funding_usages(db, funding_rounds, users):
 
                 # 时间安排
                 if round_obj.closing_date:
-                    planned_start_date = round_obj.closing_date + timedelta(days=random.randint(0, 30))
+                    planned_start_date = round_obj.closing_date + timedelta(
+                        days=random.randint(0, 30)
+                    )
                     planned_end_date = planned_start_date + timedelta(days=random.randint(90, 365))
 
                     if status == "COMPLETED":
-                        actual_start_date = planned_start_date + timedelta(days=random.randint(0, 15))
-                        actual_end_date = actual_start_date + timedelta(days=random.randint(60, 300))
+                        actual_start_date = planned_start_date + timedelta(
+                            days=random.randint(0, 15)
+                        )
+                        actual_end_date = actual_start_date + timedelta(
+                            days=random.randint(60, 300)
+                        )
                     else:
-                        actual_start_date = planned_start_date + timedelta(days=random.randint(0, 15))
+                        actual_start_date = planned_start_date + timedelta(
+                            days=random.randint(0, 15)
+                        )
                         actual_end_date = None
                 else:
                     planned_start_date = None
@@ -534,7 +593,8 @@ def generate_funding_usages(db, funding_rounds, users):
                     actual_end_date=actual_end_date,
                     status=status,
                     responsible_person_id=responsible_person.id,
-                    responsible_person_name=responsible_person.real_name or responsible_person.username,
+                    responsible_person_name=responsible_person.real_name
+                    or responsible_person.username,
                     description=f"{round_obj.round_name}资金用于{item_config['item']}",
                 )
                 db.add(usage)

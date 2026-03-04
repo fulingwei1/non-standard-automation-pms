@@ -13,8 +13,9 @@
 实际路由前缀: "" (api.py prefix="")
 """
 
-import pytest
 from datetime import date, timedelta
+
+import pytest
 
 from tests.integration.api_test_helper import APITestHelper, TestDataGenerator
 
@@ -40,9 +41,7 @@ class TestProductionWorkshopsAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/workshops", params=params, resource_type="workshops_list"
-        )
+        response = self.helper.get("/workshops", params=params, resource_type="workshops_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -63,9 +62,7 @@ class TestProductionWorkshopsAPI:
             "description": "主要进行机架、面板等机械件加工",
         }
 
-        response = self.helper.post(
-            "/workshops", workshop_data, resource_type="workshop"
-        )
+        response = self.helper.post("/workshops", workshop_data, resource_type="workshop")
 
         result = self.helper.assert_success(response)
         if result:
@@ -239,9 +236,7 @@ class TestProductionWorkOrdersAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/work-orders", params=params, resource_type="work_orders_list"
-        )
+        response = self.helper.get("/work-orders", params=params, resource_type="work_orders_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -266,9 +261,7 @@ class TestProductionWorkOrdersAPI:
             "priority": "HIGH",
         }
 
-        response = self.helper.post(
-            "/work-orders", work_order_data, resource_type="work_order"
-        )
+        response = self.helper.post("/work-orders", work_order_data, resource_type="work_order")
 
         status_code = response.get("status_code") if isinstance(response, dict) else None
         if status_code and 200 <= status_code < 300:
@@ -373,9 +366,7 @@ class TestProductionDashboardAPI:
         """测试获取生产仪表板数据"""
         self.helper.print_info("测试获取生产仪表板数据...")
 
-        response = self.helper.get(
-            "/production/dashboard", resource_type="production_dashboard"
-        )
+        response = self.helper.get("/production/dashboard", resource_type="production_dashboard")
 
         if self.helper.assert_success(response):
             self.helper.print_success("生产仪表板数据获取成功")

@@ -3,9 +3,10 @@
 tests/unit/test_ra_workstation_cov51.py
 Unit tests for app/services/resource_allocation_service/workstation.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.resource_allocation_service.workstation import (
@@ -33,6 +34,7 @@ def _make_workstation(ws_id=1, is_active=True, status="IDLE"):
 
 
 # ─── check_workstation_availability ───────────────────────────────────────────
+
 
 def test_workstation_not_found():
     db = MagicMock()
@@ -67,7 +69,8 @@ def test_workstation_wrong_status():
 
 
 def test_workstation_available_no_conflicts():
-    from app.models import WorkOrder, Workstation as WsModel
+    from app.models import WorkOrder
+    from app.models import Workstation as WsModel
 
     db = MagicMock()
     ws = _make_workstation()
@@ -113,7 +116,9 @@ def test_workstation_conflict():
         return conflict_wo
 
     db.query.return_value.filter.return_value.first.side_effect = first_side_effect
-    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = conflict_wo
+    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+        conflict_wo
+    )
 
     ok, reason = check_workstation_availability(db, 1, START, END)
 
@@ -122,6 +127,7 @@ def test_workstation_conflict():
 
 
 # ─── find_available_workstations ──────────────────────────────────────────────
+
 
 def test_find_available_workstations_empty():
     db = MagicMock()

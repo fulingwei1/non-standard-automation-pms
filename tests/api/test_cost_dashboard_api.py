@@ -3,17 +3,16 @@
 成本仪表盘API测试
 """
 
+import uuid
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 from app.main import app
 from app.models.user import User
 
-import uuid
-
 _P001 = f"P001-{uuid.uuid4().hex[:8]}"
-
 
 
 @pytest.fixture
@@ -47,8 +46,10 @@ class TestCostOverviewAPI:
     def test_get_cost_overview_success(self, mock_auth, mock_db, client, mock_user):
         """测试成功获取成本总览"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
                 "total_projects": 10,
@@ -65,9 +66,9 @@ class TestCostOverviewAPI:
                 "month_variance_pct": -16.0,
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/overview")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["code"] == 200
@@ -78,10 +79,11 @@ class TestCostOverviewAPI:
     def test_get_cost_overview_unauthorized(self, mock_auth, client):
         """测试未授权访问"""
         from fastapi import HTTPException
+
         mock_auth.side_effect = HTTPException(status_code=403, detail="权限不足")
-        
+
         response = client.get("/api/v1/dashboard/cost/overview")
-        
+
         assert response.status_code == 403
 
 
@@ -93,8 +95,10 @@ class TestTopProjectsAPI:
     def test_get_top_projects_success(self, mock_auth, mock_db, client, mock_user):
         """测试成功获取TOP项目"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
                 "top_cost_projects": [
@@ -115,9 +119,9 @@ class TestTopProjectsAPI:
                 "bottom_profit_margin_projects": [],
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/top-projects?limit=10")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["code"] == 200
@@ -128,8 +132,10 @@ class TestTopProjectsAPI:
     def test_get_top_projects_custom_limit(self, mock_auth, mock_db, client, mock_user):
         """测试自定义返回数量"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
                 "top_cost_projects": [],
@@ -138,9 +144,9 @@ class TestTopProjectsAPI:
                 "bottom_profit_margin_projects": [],
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/top-projects?limit=5")
-            
+
             assert response.status_code == 200
             mock_service.get_top_projects.assert_called_once_with(limit=5)
 
@@ -153,8 +159,10 @@ class TestCostAlertsAPI:
     def test_get_cost_alerts_success(self, mock_auth, mock_db, client, mock_user):
         """测试成功获取成本预警"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_alerts.return_value = {
                 "total_alerts": 3,
@@ -177,9 +185,9 @@ class TestCostAlertsAPI:
                 ],
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/alerts")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["code"] == 200
@@ -195,8 +203,10 @@ class TestProjectDashboardAPI:
     def test_get_project_dashboard_success(self, mock_auth, mock_db, client, mock_user):
         """测试成功获取项目仪表盘"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.return_value = {
                 "project_id": 1,
@@ -216,9 +226,9 @@ class TestProjectDashboardAPI:
                 "profit_margin": 33.33,
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/1")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["code"] == 200
@@ -229,14 +239,16 @@ class TestProjectDashboardAPI:
     def test_get_project_dashboard_not_found(self, mock_auth, mock_db, client, mock_user):
         """测试项目不存在"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.side_effect = ValueError("项目 999 不存在")
             mock_service_class.return_value = mock_service
-            
+
             response = client.get("/api/v1/dashboard/cost/999")
-            
+
             assert response.status_code == 404
 
 
@@ -248,8 +260,10 @@ class TestExportAPI:
     def test_export_cost_overview(self, mock_auth, mock_db, client, mock_user):
         """测试导出成本总览"""
         mock_auth.return_value = mock_user
-        
-        with patch("app.services.cost_dashboard_service.CostDashboardService") as mock_service_class:
+
+        with patch(
+            "app.services.cost_dashboard_service.CostDashboardService"
+        ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
                 "total_projects": 10,
@@ -257,15 +271,15 @@ class TestExportAPI:
                 "total_actual_cost": 800000,
             }
             mock_service_class.return_value = mock_service
-            
+
             response = client.post(
                 "/api/v1/dashboard/cost/export",
                 json={
                     "export_type": "csv",
                     "data_type": "cost_overview",
-                }
+                },
             )
-            
+
             assert response.status_code == 200
             assert response.headers["content-type"] == "text/csv; charset=utf-8"
 
@@ -274,15 +288,15 @@ class TestExportAPI:
     def test_export_invalid_type(self, mock_auth, mock_db, client, mock_user):
         """测试无效的导出类型"""
         mock_auth.return_value = mock_user
-        
+
         response = client.post(
             "/api/v1/dashboard/cost/export",
             json={
                 "export_type": "csv",
                 "data_type": "invalid_type",
-            }
+            },
         )
-        
+
         assert response.status_code == 400
 
 
@@ -293,14 +307,14 @@ class TestCacheAPI:
     def test_clear_cache_success(self, mock_auth, client, mock_user):
         """测试清除缓存"""
         mock_auth.return_value = mock_user
-        
+
         with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.clear_pattern.return_value = 5
             mock_cache.return_value = mock_cache_instance
-            
+
             response = client.delete("/api/v1/dashboard/cost/cache")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["data"]["deleted_count"] == 5
@@ -309,14 +323,14 @@ class TestCacheAPI:
     def test_clear_cache_custom_pattern(self, mock_auth, client, mock_user):
         """测试自定义缓存模式"""
         mock_auth.return_value = mock_user
-        
+
         with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.clear_pattern.return_value = 3
             mock_cache.return_value = mock_cache_instance
-            
+
             response = client.delete("/api/v1/dashboard/cost/cache?pattern=dashboard:cost:overview")
-            
+
             assert response.status_code == 200
             mock_cache_instance.clear_pattern.assert_called_once_with("dashboard:cost:overview")
 
@@ -329,14 +343,14 @@ class TestForceRefresh:
     def test_force_refresh_overview(self, mock_auth, mock_db, client, mock_user):
         """测试强制刷新成本总览"""
         mock_auth.return_value = mock_user
-        
+
         with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.get_or_set.return_value = {"total_projects": 10}
             mock_cache.return_value = mock_cache_instance
-            
+
             response = client.get("/api/v1/dashboard/cost/overview?force_refresh=true")
-            
+
             assert response.status_code == 200
             # 验证force_refresh参数被传递
             call_args = mock_cache_instance.get_or_set.call_args

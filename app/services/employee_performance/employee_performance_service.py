@@ -34,9 +34,7 @@ class EmployeePerformanceService:
         """
         self.db = db
 
-    def check_performance_view_permission(
-        self, current_user: User, target_user_id: int
-    ) -> bool:
+    def check_performance_view_permission(self, current_user: User, target_user_id: int) -> bool:
         """
         检查用户是否有权限查看指定用户的绩效
 
@@ -80,12 +78,8 @@ class EmployeePerformanceService:
 
         has_manager_role = False
         for user_role in current_user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
             if role_code in manager_roles or role_name in manager_roles:
                 has_manager_role = True
                 break
@@ -94,21 +88,14 @@ class EmployeePerformanceService:
             return False
 
         # 检查是否是同一部门
-        if (
-            target_user.department_id
-            and current_user.department_id == target_user.department_id
-        ):
+        if target_user.department_id and current_user.department_id == target_user.department_id:
             return True
 
         # 检查是否管理同一项目
-        user_projects = (
-            self.db.query(Project).filter(Project.pm_id == current_user.id).all()
-        )
+        user_projects = self.db.query(Project).filter(Project.pm_id == current_user.id).all()
         project_ids = [p.id for p in user_projects]
 
-        target_projects = (
-            self.db.query(Project).filter(Project.id.in_(project_ids)).all()
-        )
+        target_projects = self.db.query(Project).filter(Project.id.in_(project_ids)).all()
         for project in target_projects:
             # 检查目标用户是否是项目成员
             from app.models.progress import Task
@@ -134,11 +121,7 @@ class EmployeePerformanceService:
             List[int]: 成员ID列表
         """
         # 临时使用部门作为团队
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == team_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == team_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_department_members(self, dept_id: int) -> List[int]:
@@ -151,11 +134,7 @@ class EmployeePerformanceService:
         Returns:
             List[int]: 成员ID列表
         """
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == dept_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == dept_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_evaluator_type(self, user: User) -> str:
@@ -172,12 +151,8 @@ class EmployeePerformanceService:
         is_project_manager = False
 
         for user_role in user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
             if role_code in ["dept_manager", "department_manager", "部门经理"] or role_name in [
                 "dept_manager",
@@ -431,14 +406,10 @@ class EmployeePerformanceService:
             dept_evaluation_status = {
                 "status": dept_eval.status if dept_eval else "PENDING",
                 "evaluator": (
-                    dept_eval.evaluator.real_name
-                    if dept_eval and dept_eval.evaluator
-                    else "未知"
+                    dept_eval.evaluator.real_name if dept_eval and dept_eval.evaluator else "未知"
                 ),
                 "score": (
-                    dept_eval.score
-                    if dept_eval and dept_eval.status == "COMPLETED"
-                    else None
+                    dept_eval.score if dept_eval and dept_eval.status == "COMPLETED" else None
                 ),
             }
 
@@ -457,19 +428,13 @@ class EmployeePerformanceService:
                 project_evaluations_status.append(
                     {
                         "project_name": (
-                            proj_eval.project.project_name
-                            if proj_eval.project
-                            else "未知项目"
+                            proj_eval.project.project_name if proj_eval.project else "未知项目"
                         ),
                         "status": proj_eval.status,
                         "evaluator": (
-                            proj_eval.evaluator.real_name
-                            if proj_eval.evaluator
-                            else "未知"
+                            proj_eval.evaluator.real_name if proj_eval.evaluator else "未知"
                         ),
-                        "score": (
-                            proj_eval.score if proj_eval.status == "COMPLETED" else None
-                        ),
+                        "score": (proj_eval.score if proj_eval.status == "COMPLETED" else None),
                         "weight": proj_eval.project_weight,
                     }
                 )
@@ -498,9 +463,7 @@ class EmployeePerformanceService:
                 latest_result = {
                     "period": current_summary.period,
                     "final_score": score_result["final_score"],
-                    "level": PerformanceService.get_score_level(
-                        score_result["final_score"]
-                    ),
+                    "level": PerformanceService.get_score_level(score_result["final_score"]),
                     "dept_score": score_result["dept_score"],
                     "project_score": score_result["project_score"],
                 }
@@ -529,9 +492,7 @@ class EmployeePerformanceService:
                     )
 
         # 历史记录（最近3个月）
-        history = PerformanceService.get_historical_performance(
-            self.db, current_user.id, 3
-        )
+        history = PerformanceService.get_historical_performance(self.db, current_user.id, 3)
 
         return {
             "current_status": current_status,

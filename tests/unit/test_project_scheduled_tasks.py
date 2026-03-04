@@ -6,14 +6,14 @@ J1组单元测试 - project_scheduled_tasks.py
       calculate_project_health, daily_health_snapshot
 """
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
-
 
 # ============================================================================
 # 辅助函数：构造 mock db session 上下文
 # ============================================================================
+
 
 def make_mock_db_ctx():
     """返回 (mock_ctx, mock_session) 对"""
@@ -62,6 +62,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -77,6 +78,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         project = make_mock_project(planned_end_date=date.today() + timedelta(days=5))
         mock_ctx, mock_session = make_mock_db_ctx()
 
@@ -98,6 +100,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         project = make_mock_project(planned_end_date=date.today() + timedelta(days=3))
         existing_alert = MagicMock()
 
@@ -117,6 +120,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         project = make_mock_project(planned_end_date=date.today() + timedelta(days=2))
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -135,6 +139,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         project = make_mock_project(planned_end_date=date.today() + timedelta(days=6))
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -152,6 +157,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         p1 = make_mock_project(project_id=1, planned_end_date=date.today() + timedelta(days=3))
         p2 = make_mock_project(project_id=2, planned_end_date=date.today() + timedelta(days=7))
 
@@ -160,7 +166,7 @@ class TestCheckProjectDeadlineAlerts:
         # p1 已有 alert，p2 没有
         mock_session.query.return_value.filter.return_value.first.side_effect = [
             MagicMock(),  # p1 → existing alert
-            None,         # p2 → no alert
+            None,  # p2 → no alert
         ]
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -174,6 +180,7 @@ class TestCheckProjectDeadlineAlerts:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_deadline_alerts,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("DB connection failed")
             result = check_project_deadline_alerts()
@@ -196,6 +203,7 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -210,6 +218,7 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=100000.0)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -227,11 +236,14 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=100000.0)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
         mock_session.query.return_value.filter.return_value.scalar.return_value = 115000.0
-        mock_session.query.return_value.filter.return_value.first.return_value = None  # 无已存在 alert
+        mock_session.query.return_value.filter.return_value.first.return_value = (
+            None  # 无已存在 alert
+        )
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             result = check_project_cost_overrun()
@@ -244,10 +256,13 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=100000.0)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
-        mock_session.query.return_value.filter.return_value.scalar.return_value = 125000.0  # 25% overrun
+        mock_session.query.return_value.filter.return_value.scalar.return_value = (
+            125000.0  # 25% overrun
+        )
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -262,10 +277,13 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=100000.0)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
-        mock_session.query.return_value.filter.return_value.scalar.return_value = 115000.0  # 15% overrun
+        mock_session.query.return_value.filter.return_value.scalar.return_value = (
+            115000.0  # 15% overrun
+        )
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -280,6 +298,7 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=100000.0)
         existing_alert = MagicMock()
         mock_ctx, mock_session = make_mock_db_ctx()
@@ -298,6 +317,7 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         project = make_mock_project(budget_amount=None)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -313,6 +333,7 @@ class TestCheckProjectCostOverrun:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             check_project_cost_overrun,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = RuntimeError("Connection reset")
             result = check_project_cost_overrun()
@@ -335,6 +356,7 @@ class TestCalculateProgressSummary:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_progress_summary,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -349,6 +371,7 @@ class TestCalculateProgressSummary:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_progress_summary,
         )
+
         project = make_mock_project()
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -365,7 +388,8 @@ class TestCalculateProgressSummary:
         milestone_summary.completed_milestones = 3
 
         mock_session.query.return_value.filter.return_value.first.side_effect = [
-            task_summary, milestone_summary
+            task_summary,
+            milestone_summary,
         ]
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -379,6 +403,7 @@ class TestCalculateProgressSummary:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_progress_summary,
         )
+
         project = make_mock_project()
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -393,7 +418,8 @@ class TestCalculateProgressSummary:
         milestone_summary.completed_milestones = 0
 
         mock_session.query.return_value.filter.return_value.first.side_effect = [
-            task_summary, milestone_summary
+            task_summary,
+            milestone_summary,
         ]
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -406,6 +432,7 @@ class TestCalculateProgressSummary:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_progress_summary,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Query failed")
             result = calculate_progress_summary()
@@ -417,6 +444,7 @@ class TestCalculateProgressSummary:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_progress_summary,
         )
+
         p1 = make_mock_project(project_id=1)
         p2 = make_mock_project(project_id=2)
 
@@ -437,8 +465,10 @@ class TestCalculateProgressSummary:
             return s
 
         mock_session.query.return_value.filter.return_value.first.side_effect = [
-            make_task_summary(5, 3), make_ms_summary(2, 1),
-            make_task_summary(8, 4), make_ms_summary(4, 2),
+            make_task_summary(5, 3),
+            make_ms_summary(2, 1),
+            make_task_summary(8, 4),
+            make_ms_summary(4, 2),
         ]
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -461,6 +491,7 @@ class TestDailySpecMatchCheck:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_spec_match_check,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -477,6 +508,7 @@ class TestDailySpecMatchCheck:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_spec_match_check,
         )
+
         mock_ctx = MagicMock()
         mock_ctx.__enter__ = MagicMock(side_effect=Exception("DB error"))
         mock_ctx.__exit__ = MagicMock(return_value=False)
@@ -491,13 +523,14 @@ class TestDailySpecMatchCheck:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_spec_match_check,
         )
+
         project = make_mock_project()
         mock_ctx, mock_session = make_mock_db_ctx()
         # 第一次 all() 返回 projects，后续全空
         mock_session.query.return_value.filter.return_value.all.side_effect = [
             [project],  # active projects
-            [],         # purchase_orders for project
-            [],         # bom_headers for project
+            [],  # purchase_orders for project
+            [],  # bom_headers for project
         ]
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
@@ -512,6 +545,7 @@ class TestDailySpecMatchCheck:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_spec_match_check,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -538,15 +572,15 @@ class TestCalculateProjectHealthInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_project_health,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_calculator = MagicMock()
-        mock_calculator.batch_calculate.return_value = {
-            "total": 5, "updated": 3, "unchanged": 2
-        }
+        mock_calculator.batch_calculate.return_value = {"total": 5, "updated": 3, "unchanged": 2}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator",
-                       return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = calculate_project_health()
 
         assert result["total"] == 5
@@ -557,6 +591,7 @@ class TestCalculateProjectHealthInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             calculate_project_health,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Health calc failed")
             result = calculate_project_health()
@@ -578,13 +613,15 @@ class TestDailyHealthSnapshotInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_health_snapshot,
         )
+
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = []
         mock_calculator = MagicMock()
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator",
-                       return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 0
@@ -594,6 +631,7 @@ class TestDailyHealthSnapshotInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_health_snapshot,
         )
+
         p1 = make_mock_project(project_id=1)
         p2 = make_mock_project(project_id=2)
         mock_ctx, mock_session = make_mock_db_ctx()
@@ -603,8 +641,9 @@ class TestDailyHealthSnapshotInProjectScheduled:
         mock_calculator.calculate_and_update.return_value = {"new_health": "H1"}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator",
-                       return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 2
@@ -616,6 +655,7 @@ class TestDailyHealthSnapshotInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_health_snapshot,
         )
+
         with patch(f"{MODULE}.get_db_session") as mock_db:
             mock_db.side_effect = Exception("Snapshot error")
             result = daily_health_snapshot()
@@ -627,6 +667,7 @@ class TestDailyHealthSnapshotInProjectScheduled:
         from app.utils.scheduled_tasks.project_scheduled_tasks import (
             daily_health_snapshot,
         )
+
         project = make_mock_project(project_id=1)
         mock_ctx, mock_session = make_mock_db_ctx()
         mock_session.query.return_value.filter.return_value.all.return_value = [project]
@@ -635,8 +676,9 @@ class TestDailyHealthSnapshotInProjectScheduled:
         mock_calculator.calculate_and_update.return_value = {"new_health": "H2"}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator",
-                       return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 1

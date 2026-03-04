@@ -13,10 +13,7 @@ from .registry import register_collector
 
 @register_collector("PROJECT")
 def collect_project_metrics(
-    db: Session,
-    metric: str,
-    filters: Optional[Dict] = None,
-    aggregation: str = "COUNT"
+    db: Session, metric: str, filters: Optional[Dict] = None, aggregation: str = "COUNT"
 ) -> Optional[Decimal]:
     """
     采集项目模块指标
@@ -61,8 +58,11 @@ def collect_project_metrics(
         completed = query.filter(Project.status == "COMPLETED").all()
         if not completed:
             return Decimal(0)
-        on_time = sum(1 for p in completed if p.actual_end_date and p.planned_end_date
-                      and p.actual_end_date <= p.planned_end_date)
+        on_time = sum(
+            1
+            for p in completed
+            if p.actual_end_date and p.planned_end_date and p.actual_end_date <= p.planned_end_date
+        )
         return Decimal(str(on_time / len(completed) * 100))
 
     elif metric == "PROJECT_HEALTH_RATE":
@@ -83,10 +83,7 @@ def collect_project_metrics(
 
 @register_collector("FINANCE")
 def collect_finance_metrics(
-    db: Session,
-    metric: str,
-    filters: Optional[Dict] = None,
-    aggregation: str = "SUM"
+    db: Session, metric: str, filters: Optional[Dict] = None, aggregation: str = "SUM"
 ) -> Optional[Decimal]:
     """
     采集财务模块指标
@@ -109,8 +106,9 @@ def collect_finance_metrics(
         Optional[Decimal]: 采集到的值
     """
     from datetime import date
-    from app.models.sales.contracts import Contract
+
     from app.models.project.financial import ProjectCost, ProjectPaymentPlan
+    from app.models.sales.contracts import Contract
 
     filters = filters or {}
 
@@ -147,6 +145,7 @@ def collect_finance_metrics(
     elif metric == "PROJECT_PROFIT_MARGIN":
         # 项目利润率 = (合同金额 - 成本) / 合同金额 * 100
         from app.models.project import Project
+
         project_id = filters.get("project_id")
         if not project_id:
             return None
@@ -155,9 +154,12 @@ def collect_finance_metrics(
             return None
         if not project.contract_amount or project.contract_amount == 0:
             return Decimal(0)
-        total_cost = db.query(func.sum(ProjectCost.amount)).filter(
-            ProjectCost.project_id == project_id
-        ).scalar() or 0
+        total_cost = (
+            db.query(func.sum(ProjectCost.amount))
+            .filter(ProjectCost.project_id == project_id)
+            .scalar()
+            or 0
+        )
         contract_amount = float(project.contract_amount)
         profit_margin = (contract_amount - float(total_cost)) / contract_amount * 100
         return Decimal(str(round(profit_margin, 2)))
@@ -169,7 +171,7 @@ def collect_finance_metrics(
             func.sum(ProjectPaymentPlan.planned_amount - ProjectPaymentPlan.actual_amount)
         ).filter(
             ProjectPaymentPlan.planned_date < today,
-            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"])
+            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"]),
         )
         if "project_id" in filters:
             query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
@@ -181,7 +183,7 @@ def collect_finance_metrics(
         today = date.today()
         query = db.query(func.count(ProjectPaymentPlan.id)).filter(
             ProjectPaymentPlan.planned_date < today,
-            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"])
+            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"]),
         )
         if "project_id" in filters:
             query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
@@ -193,10 +195,7 @@ def collect_finance_metrics(
 
 @register_collector("PURCHASE")
 def collect_purchase_metrics(
-    db: Session,
-    metric: str,
-    filters: Optional[Dict] = None,
-    aggregation: str = "SUM"
+    db: Session, metric: str, filters: Optional[Dict] = None, aggregation: str = "SUM"
 ) -> Optional[Decimal]:
     """
     采集采购模块指标
@@ -236,8 +235,13 @@ def collect_purchase_metrics(
         delivered = query.filter(PurchaseOrder.status == "DELIVERED").all()
         if not delivered:
             return Decimal(0)
-        on_time = sum(1 for po in delivered if po.actual_delivery_date and po.expected_delivery_date
-                      and po.actual_delivery_date <= po.expected_delivery_date)
+        on_time = sum(
+            1
+            for po in delivered
+            if po.actual_delivery_date
+            and po.expected_delivery_date
+            and po.actual_delivery_date <= po.expected_delivery_date
+        )
         return Decimal(str(on_time / len(delivered) * 100))
 
     return None
@@ -245,10 +249,7 @@ def collect_purchase_metrics(
 
 @register_collector("HR")
 def collect_hr_metrics(
-    db: Session,
-    metric: str,
-    filters: Optional[Dict] = None,
-    aggregation: str = "COUNT"
+    db: Session, metric: str, filters: Optional[Dict] = None, aggregation: str = "COUNT"
 ) -> Optional[Decimal]:
     """
     采集人力资源模块指标
@@ -270,8 +271,8 @@ def collect_hr_metrics(
     Returns:
         Optional[Decimal]: 采集到的值
     """
-    from app.models.user import User
     from app.models.organization import Employee, EmployeeHrProfile
+    from app.models.user import User
 
     filters = filters or {}
 
@@ -287,9 +288,7 @@ def collect_hr_metrics(
 
     elif metric == "EMPLOYEE_ACTIVE_COUNT":
         # 在职员工数
-        query = db.query(func.count(Employee.id)).filter(
-            Employee.employment_status == "active"
-        )
+        query = db.query(func.count(Employee.id)).filter(Employee.employment_status == "active")
         if "department_id" in filters:
             query = query.join(User, User.employee_id == Employee.id).filter(
                 User.department_id == filters["department_id"]
@@ -299,9 +298,7 @@ def collect_hr_metrics(
 
     elif metric == "EMPLOYEE_RESIGNED_COUNT":
         # 离职员工数
-        query = db.query(func.count(Employee.id)).filter(
-            Employee.employment_status == "resigned"
-        )
+        query = db.query(func.count(Employee.id)).filter(Employee.employment_status == "resigned")
         if "year" in filters:
             query = query.join(
                 EmployeeHrProfile, EmployeeHrProfile.employee_id == Employee.id
@@ -335,23 +332,29 @@ def collect_hr_metrics(
     elif metric == "EMPLOYEE_PROBATION_COUNT":
         # 试用期员工数
         query = db.query(func.count(Employee.id)).filter(
-            Employee.employment_type == "probation",
-            Employee.employment_status == "active"
+            Employee.employment_type == "probation", Employee.employment_status == "active"
         )
         result = query.scalar()
         return Decimal(result or 0)
 
     elif metric == "EMPLOYEE_CONFIRMATION_RATE":
         # 转正率 = 已转正人数 / (已转正 + 试用期离职) * 100
-        confirmed = db.query(func.count(EmployeeHrProfile.id)).filter(
-            EmployeeHrProfile.is_confirmed
-        ).scalar() or 0
+        confirmed = (
+            db.query(func.count(EmployeeHrProfile.id))
+            .filter(EmployeeHrProfile.is_confirmed)
+            .scalar()
+            or 0
+        )
 
         # 试用期离职（简化：employment_type仍为probation且状态为resigned）
-        probation_resigned = db.query(func.count(Employee.id)).filter(
-            Employee.employment_type == "probation",
-            Employee.employment_status == "resigned"
-        ).scalar() or 0
+        probation_resigned = (
+            db.query(func.count(Employee.id))
+            .filter(
+                Employee.employment_type == "probation", Employee.employment_status == "resigned"
+            )
+            .scalar()
+            or 0
+        )
 
         total = confirmed + probation_resigned
         if total == 0:

@@ -26,9 +26,7 @@ class KnowledgeAutoIdentificationService:
         self.db = db
 
     def identify_from_service_ticket(
-        self,
-        ticket_id: int,
-        auto_publish: bool = True
+        self, ticket_id: int, auto_publish: bool = True
     ) -> Optional[KnowledgeContribution]:
         """
         从服务工单自动识别知识贡献
@@ -41,15 +39,13 @@ class KnowledgeAutoIdentificationService:
             创建的知识贡献记录
         """
         # 获取工单
-        ticket = self.db.query(ServiceTicket).filter(
-            ServiceTicket.id == ticket_id
-        ).first()
+        ticket = self.db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
 
         if not ticket:
             return None
 
         # 只处理已关闭且有解决方案的工单
-        if ticket.status != 'CLOSED' or not ticket.solution:
+        if ticket.status != "CLOSED" or not ticket.solution:
             return None
 
         # 检查是否已创建知识贡献
@@ -70,25 +66,23 @@ class KnowledgeAutoIdentificationService:
 
         # 使用现有的知识提取服务创建知识库文章
         knowledge_article = auto_extract_knowledge_from_ticket(
-            db=self.db,
-            ticket=ticket,
-            auto_publish=auto_publish
+            db=self.db, ticket=ticket, auto_publish=auto_publish
         )
 
         if not knowledge_article:
             return None
 
         # 确定贡献类型
-        contribution_type = 'troubleshooting'  # 故障排查案例
+        contribution_type = "troubleshooting"  # 故障排查案例
 
         # 确定岗位类型（从工单问题类型推断）
         job_type = None
-        if ticket.problem_type == 'MECHANICAL':
-            job_type = 'MECHANICAL'
-        elif ticket.problem_type == 'ELECTRICAL':
-            job_type = 'ELECTRICAL'
-        elif ticket.problem_type == 'SOFTWARE':
-            job_type = 'TEST'
+        if ticket.problem_type == "MECHANICAL":
+            job_type = "MECHANICAL"
+        elif ticket.problem_type == "ELECTRICAL":
+            job_type = "ELECTRICAL"
+        elif ticket.problem_type == "SOFTWARE":
+            job_type = "TEST"
 
         # 创建知识贡献记录
         contribution = KnowledgeContribution(
@@ -98,10 +92,10 @@ class KnowledgeAutoIdentificationService:
             title=f"故障排查：{ticket.problem_type} - {ticket.ticket_no}",
             description=f"从服务工单 {ticket.ticket_no} 提取的故障排查案例",
             file_path=None,  # 可以关联到知识库文章
-            tags=[ticket.problem_type, ticket.urgency, 'auto_extracted'],
-            status='approved' if auto_publish else 'draft',
+            tags=[ticket.problem_type, ticket.urgency, "auto_extracted"],
+            status="approved" if auto_publish else "draft",
             approved_by=ticket.resolver_id if auto_publish else None,
-            approved_at=datetime.now() if auto_publish else None
+            approved_at=datetime.now() if auto_publish else None,
         )
 
         save_obj(self.db, contribution)
@@ -109,9 +103,7 @@ class KnowledgeAutoIdentificationService:
         return contribution
 
     def identify_from_knowledge_base(
-        self,
-        article_id: int,
-        contributor_id: Optional[int] = None
+        self, article_id: int, contributor_id: Optional[int] = None
     ) -> Optional[KnowledgeContribution]:
         """
         从知识库文章识别知识贡献
@@ -124,17 +116,17 @@ class KnowledgeAutoIdentificationService:
             创建的知识贡献记录
         """
         # 获取知识库文章
-        article = self.db.query(KnowledgeBase).filter(
-            KnowledgeBase.id == article_id
-        ).first()
+        article = self.db.query(KnowledgeBase).filter(KnowledgeBase.id == article_id).first()
 
         if not article:
             return None
 
         # 检查是否已创建知识贡献
-        existing = self.db.query(KnowledgeContribution).filter(
-            KnowledgeContribution.title == article.title
-        ).first()
+        existing = (
+            self.db.query(KnowledgeContribution)
+            .filter(KnowledgeContribution.title == article.title)
+            .first()
+        )
 
         if existing:
             return existing
@@ -148,13 +140,13 @@ class KnowledgeAutoIdentificationService:
 
         # 确定贡献类型（从分类推断）
         contribution_type_map = {
-            '软件问题': 'technical_solution',
-            '机械问题': 'technical_solution',
-            '电气问题': 'technical_solution',
-            '操作问题': 'process_standard',
-            '其他问题': 'other'
+            "软件问题": "technical_solution",
+            "机械问题": "technical_solution",
+            "电气问题": "technical_solution",
+            "操作问题": "process_standard",
+            "其他问题": "other",
         }
-        contribution_type = contribution_type_map.get(article.category, 'other')
+        contribution_type = contribution_type_map.get(article.category, "other")
 
         # 创建知识贡献记录
         contribution = KnowledgeContribution(
@@ -164,10 +156,10 @@ class KnowledgeAutoIdentificationService:
             title=article.title,
             description=article.content[:200] if article.content else None,  # 截取前200字
             file_path=None,
-            tags=['knowledge_base', 'auto_identified'],
-            status='approved',  # 知识库文章已审核通过
+            tags=["knowledge_base", "auto_identified"],
+            status="approved",  # 知识库文章已审核通过
             approved_by=article.approved_by,
-            approved_at=article.approved_at
+            approved_at=article.approved_at,
         )
 
         save_obj(self.db, contribution)
@@ -180,7 +172,7 @@ class KnowledgeAutoIdentificationService:
         author_id: int,
         file_path: str,
         description: str,
-        project_id: Optional[int] = None
+        project_id: Optional[int] = None,
     ) -> Optional[CodeModule]:
         """
         识别代码模块（从Git提交记录）
@@ -196,10 +188,11 @@ class KnowledgeAutoIdentificationService:
             创建的代码模块记录
         """
         # 检查是否已存在
-        existing = self.db.query(CodeModule).filter(
-            CodeModule.module_name == module_name,
-            CodeModule.author_id == author_id
-        ).first()
+        existing = (
+            self.db.query(CodeModule)
+            .filter(CodeModule.module_name == module_name, CodeModule.author_id == author_id)
+            .first()
+        )
 
         if existing:
             return existing
@@ -211,9 +204,9 @@ class KnowledgeAutoIdentificationService:
             file_path=file_path,
             description=description,
             project_id=project_id,
-            language='python',  # 默认Python，可以从文件路径推断
-            version='1.0.0',
-            status='active'
+            language="python",  # 默认Python，可以从文件路径推断
+            version="1.0.0",
+            status="active",
         )
 
         save_obj(self.db, code_module)
@@ -221,9 +214,7 @@ class KnowledgeAutoIdentificationService:
         return code_module
 
     def batch_identify_from_service_tickets(
-        self,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """
         批量从服务工单识别知识贡献
@@ -236,48 +227,47 @@ class KnowledgeAutoIdentificationService:
             识别统计信息
         """
         stats = {
-            'total_tickets': 0,
-            'identified_count': 0,
-            'skipped_count': 0,
-            'error_count': 0,
-            'errors': []
+            "total_tickets": 0,
+            "identified_count": 0,
+            "skipped_count": 0,
+            "error_count": 0,
+            "errors": [],
         }
 
         # 查询已关闭且有解决方案的工单
         query = self.db.query(ServiceTicket).filter(
-            ServiceTicket.status == 'CLOSED',
-            ServiceTicket.solution.isnot(None)
+            ServiceTicket.status == "CLOSED", ServiceTicket.solution.isnot(None)
         )
 
         if start_date:
-            query = query.filter(ServiceTicket.resolved_time >= datetime.combine(start_date, datetime.min.time()))
+            query = query.filter(
+                ServiceTicket.resolved_time >= datetime.combine(start_date, datetime.min.time())
+            )
         if end_date:
-            query = query.filter(ServiceTicket.resolved_time <= datetime.combine(end_date, datetime.max.time()))
+            query = query.filter(
+                ServiceTicket.resolved_time <= datetime.combine(end_date, datetime.max.time())
+            )
 
         tickets = query.all()
-        stats['total_tickets'] = len(tickets)
+        stats["total_tickets"] = len(tickets)
 
         for ticket in tickets:
             try:
                 contribution = self.identify_from_service_ticket(ticket.id)
                 if contribution:
-                    stats['identified_count'] += 1
+                    stats["identified_count"] += 1
                 else:
-                    stats['skipped_count'] += 1
+                    stats["skipped_count"] += 1
             except Exception as e:
-                stats['error_count'] += 1
-                stats['errors'].append({
-                    'ticket_id': ticket.id,
-                    'ticket_no': ticket.ticket_no,
-                    'error': str(e)
-                })
+                stats["error_count"] += 1
+                stats["errors"].append(
+                    {"ticket_id": ticket.id, "ticket_no": ticket.ticket_no, "error": str(e)}
+                )
 
         return stats
 
     def batch_identify_from_knowledge_base(
-        self,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """
         批量从知识库识别知识贡献
@@ -290,39 +280,39 @@ class KnowledgeAutoIdentificationService:
             识别统计信息
         """
         stats = {
-            'total_articles': 0,
-            'identified_count': 0,
-            'skipped_count': 0,
-            'error_count': 0,
-            'errors': []
+            "total_articles": 0,
+            "identified_count": 0,
+            "skipped_count": 0,
+            "error_count": 0,
+            "errors": [],
         }
 
         # 查询知识库文章
-        query = self.db.query(KnowledgeBase).filter(
-            KnowledgeBase.status == 'PUBLISHED'
-        )
+        query = self.db.query(KnowledgeBase).filter(KnowledgeBase.status == "PUBLISHED")
 
         if start_date:
-            query = query.filter(KnowledgeBase.created_at >= datetime.combine(start_date, datetime.min.time()))
+            query = query.filter(
+                KnowledgeBase.created_at >= datetime.combine(start_date, datetime.min.time())
+            )
         if end_date:
-            query = query.filter(KnowledgeBase.created_at <= datetime.combine(end_date, datetime.max.time()))
+            query = query.filter(
+                KnowledgeBase.created_at <= datetime.combine(end_date, datetime.max.time())
+            )
 
         articles = query.all()
-        stats['total_articles'] = len(articles)
+        stats["total_articles"] = len(articles)
 
         for article in articles:
             try:
                 contribution = self.identify_from_knowledge_base(article.id)
                 if contribution:
-                    stats['identified_count'] += 1
+                    stats["identified_count"] += 1
                 else:
-                    stats['skipped_count'] += 1
+                    stats["skipped_count"] += 1
             except Exception as e:
-                stats['error_count'] += 1
-                stats['errors'].append({
-                    'article_id': article.id,
-                    'article_no': article.article_no,
-                    'error': str(e)
-                })
+                stats["error_count"] += 1
+                stats["errors"].append(
+                    {"article_id": article.id, "article_no": article.article_no, "error": str(e)}
+                )
 
         return stats

@@ -6,18 +6,18 @@ import pytest
 
 pytest.importorskip("app.services.labor_cost.utils")
 
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from app.services.labor_cost.utils import (
-    query_approved_timesheets,
-    delete_existing_costs,
-    group_timesheets_by_user,
-    find_existing_cost,
-    update_existing_cost,
-    create_new_cost,
     check_budget_alert,
+    create_new_cost,
+    delete_existing_costs,
+    find_existing_cost,
+    group_timesheets_by_user,
+    query_approved_timesheets,
+    update_existing_cost,
 )
 
 

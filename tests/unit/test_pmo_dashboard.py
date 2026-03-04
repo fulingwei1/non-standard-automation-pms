@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """PmoDashboardAdapter 单元测试"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.dashboard_adapters.pmo import PmoDashboardAdapter
@@ -31,8 +32,10 @@ class TestPmoDashboardAdapter:
     @patch("app.services.data_scope_service.DataScopeService.apply_data_scope")
     def test_get_stats(self, mock_apply):
         adapter = self._make_adapter()
-        p1 = MagicMock(); p1.health = "H1"
-        p2 = MagicMock(); p2.health = "H2"
+        p1 = MagicMock()
+        p1.health = "H1"
+        p2 = MagicMock()
+        p2.health = "H2"
         mock_apply.return_value = adapter.db.query.return_value.filter.return_value
         mock_apply.return_value.all.return_value = [p1, p2]
 

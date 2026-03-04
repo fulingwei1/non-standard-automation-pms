@@ -6,6 +6,7 @@
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
 
@@ -18,8 +19,8 @@ from app.schemas.resource_plan import (
     StageResourceSummary,
 )
 from app.services.resource_plan_service import ResourcePlanService
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -45,33 +46,31 @@ def get_resource_plan_summary(
 ) -> Any:
     """获取项目资源计划汇总"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     project = get_or_404(db, Project, project_id, detail="项目不存在")
-    
+
     # 获取所有资源计划
     all_plans = ResourcePlanService.get_project_resource_plans(db, project_id)
-    
+
     # 按阶段分组
     stages_dict = {}
     for plan in all_plans:
         if plan.stage_code not in stages_dict:
             stages_dict[plan.stage_code] = []
         stages_dict[plan.stage_code].append(plan)
-    
+
     # 构建各阶段汇总
     stages = []
     for stage_code in sorted(stages_dict.keys()):
         requirements = stages_dict[stage_code]
         total_headcount = sum(r.headcount for r in requirements)
-        filled_count = sum(
-            r.headcount for r in requirements if r.assignment_status == "ASSIGNED"
-        )
+        filled_count = sum(r.headcount for r in requirements if r.assignment_status == "ASSIGNED")
         fill_rate = ResourcePlanService.calculate_fill_rate(requirements)
-        
+
         # 获取阶段的时间范围
         planned_starts = [r.planned_start for r in requirements if r.planned_start]
         planned_ends = [r.planned_end for r in requirements if r.planned_end]
-        
+
         stages.append(
             StageResourceSummary(
                 stage_code=stage_code,
@@ -84,10 +83,10 @@ def get_resource_plan_summary(
                 fill_rate=fill_rate,
             )
         )
-    
+
     # 计算总体填充率
     overall_fill_rate = ResourcePlanService.calculate_fill_rate(all_plans)
-    
+
     return ProjectResourcePlanSummary(
         project_id=project_id,
         project_name=project.project_name,

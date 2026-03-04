@@ -11,7 +11,7 @@
 import logging
 from typing import List
 
-from fastapi import Request, HTTPException, status
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -39,11 +39,9 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         # 认证相关
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",
-
         # 系统接口
         "/health",
         "/",
-
         # API文档 - 仅在 _is_whitelisted 中通过 DEBUG 条件放行
         # "/docs",
         # "/redoc",
@@ -65,7 +63,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # 开发环境可以通过配置临时禁用全局认证
-        if hasattr(settings, 'ENABLE_GLOBAL_AUTH') and not settings.ENABLE_GLOBAL_AUTH:
+        if hasattr(settings, "ENABLE_GLOBAL_AUTH") and not settings.ENABLE_GLOBAL_AUTH:
             logger.warning("全局认证已禁用（仅开发环境）")
             return await call_next(request)
 
@@ -91,10 +89,10 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
 
         # 验证token并获取用户（只在认证过程捕获异常）
         # 获取数据库会话
-        from app.models.base import get_session
         # Delayed import to avoid circular dependency
         from app.core.auth import verify_token_and_get_user
-        
+        from app.models.base import get_session
+
         db = get_session()
         try:
             try:
@@ -106,8 +104,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
 
                 # 记录访问日志（可选）
                 logger.debug(
-                    f"API访问: {request.method} {path} | "
-                    f"用户: {user.username} (ID: {user.id})"
+                    f"API访问: {request.method} {path} | " f"用户: {user.username} (ID: {user.id})"
                 )
 
             except HTTPException as e:
@@ -117,7 +114,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
                     content={
                         "code": e.status_code,
                         "message": str(e.detail),
-                        "error_code": "AUTH_FAILED"
+                        "error_code": "AUTH_FAILED",
                     },
                     headers=e.headers or {},
                 )
@@ -129,7 +126,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
                         "code": 500,
                         "message": "认证服务异常，请稍后重试",
                         "error_code": "AUTH_ERROR",
-                        "detail": str(e) if settings.DEBUG else None  # 仅在调试模式下显示详细错误
+                        "detail": str(e) if settings.DEBUG else None,  # 仅在调试模式下显示详细错误
                     },
                 )
         finally:
@@ -179,11 +176,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         """
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={
-                "code": 401,
-                "message": message,
-                "error_code": error_code
-            },
+            content={"code": 401, "message": message, "error_code": error_code},
             headers={"WWW-Authenticate": "Bearer"},
         )
 

@@ -4,9 +4,9 @@
 包含：项目模板 + WBS模板 + WBS任务 + 里程碑模板
 """
 
-import sqlite3
-import os
 import json
+import os
+import sqlite3
 from datetime import datetime
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "app.db")
@@ -49,9 +49,30 @@ PROJECT_TEMPLATES = [
 # WBS 模板定义
 # ============================================================================
 WBS_TEMPLATES = [
-    {"id": 1, "template_code": "WBS-ICT", "template_name": "ICT设备标准WBS", "project_type": "standard", "equipment_type": "ICT", "version_no": "1.0"},
-    {"id": 2, "template_code": "WBS-FCT", "template_name": "FCT设备标准WBS", "project_type": "standard", "equipment_type": "FCT", "version_no": "1.0"},
-    {"id": 3, "template_code": "WBS-EOL", "template_name": "EOL设备标准WBS", "project_type": "standard", "equipment_type": "EOL", "version_no": "1.0"},
+    {
+        "id": 1,
+        "template_code": "WBS-ICT",
+        "template_name": "ICT设备标准WBS",
+        "project_type": "standard",
+        "equipment_type": "ICT",
+        "version_no": "1.0",
+    },
+    {
+        "id": 2,
+        "template_code": "WBS-FCT",
+        "template_name": "FCT设备标准WBS",
+        "project_type": "standard",
+        "equipment_type": "FCT",
+        "version_no": "1.0",
+    },
+    {
+        "id": 3,
+        "template_code": "WBS-EOL",
+        "template_name": "EOL设备标准WBS",
+        "project_type": "standard",
+        "equipment_type": "EOL",
+        "version_no": "1.0",
+    },
 ]
 
 # ============================================================================
@@ -183,29 +204,52 @@ def main():
     # Insert project templates
     for t in PROJECT_TEMPLATES:
         config = {
-            "default_stages": ["S1","S2","S3","S4","S5","S6","S7","S8","S9"],
+            "default_stages": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"],
             "wbs_template_code": f"WBS-{t['product_category']}",
             "milestones": TEMPLATE_MILESTONES[t["id"]],
         }
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO project_templates 
             (id, template_code, template_name, description, project_type, product_category, 
              industry, default_stage, default_status, default_health, template_config, 
              is_active, usage_count, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'S1', 'ST01', 'H1', ?, 1, 0, ?, ?)
-        """, (t["id"], t["template_code"], t["template_name"], t["description"],
-              t["project_type"], t["product_category"], t["industry"],
-              json.dumps(config, ensure_ascii=False), NOW, NOW))
+        """,
+            (
+                t["id"],
+                t["template_code"],
+                t["template_name"],
+                t["description"],
+                t["project_type"],
+                t["product_category"],
+                t["industry"],
+                json.dumps(config, ensure_ascii=False),
+                NOW,
+                NOW,
+            ),
+        )
     print(f"✅ 插入 {len(PROJECT_TEMPLATES)} 个项目模板")
 
     # Insert WBS templates
     for w in WBS_TEMPLATES:
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO wbs_templates 
             (id, template_code, template_name, project_type, equipment_type, version_no, is_active, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
-        """, (w["id"], w["template_code"], w["template_name"], w["project_type"],
-              w["equipment_type"], w["version_no"], NOW, NOW))
+        """,
+            (
+                w["id"],
+                w["template_code"],
+                w["template_name"],
+                w["project_type"],
+                w["equipment_type"],
+                w["version_no"],
+                NOW,
+                NOW,
+            ),
+        )
     print(f"✅ 插入 {len(WBS_TEMPLATES)} 个WBS模板")
 
     # Insert WBS template tasks
@@ -213,11 +257,14 @@ def main():
     total_tasks = 0
     for template_id, tasks in TEMPLATE_TASKS.items():
         for i, (name, stage, role, days, weight) in enumerate(tasks):
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO wbs_template_tasks 
                 (id, template_id, task_name, stage, default_owner_role, plan_days, weight, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (task_id, template_id, name, stage, role, days, weight, NOW, NOW))
+            """,
+                (task_id, template_id, name, stage, role, days, weight, NOW, NOW),
+            )
             task_id += 1
             total_tasks += 1
     print(f"✅ 插入 {total_tasks} 个WBS模板任务")

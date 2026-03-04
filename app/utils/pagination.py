@@ -25,7 +25,7 @@ from sqlalchemy.orm import Query as SQLQuery
 from app.core.config import settings
 from app.schemas.common import PaginatedResponse
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PaginationParams:
@@ -45,7 +45,7 @@ class PaginationParams:
             default=settings.DEFAULT_PAGE_SIZE,
             ge=1,
             le=settings.MAX_PAGE_SIZE,
-            description="每页数量"
+            description="每页数量",
         ),
     ):
         self.page = page
@@ -67,9 +67,7 @@ class PaginationParams:
 
 
 def paginate_query(
-    query: SQLQuery,
-    pagination: PaginationParams,
-    count_query: SQLQuery = None
+    query: SQLQuery, pagination: PaginationParams, count_query: SQLQuery = None
 ) -> Tuple[int, List[Any]]:
     """
     对查询应用分页
@@ -122,14 +120,12 @@ def create_paginated_response(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.calculate_pages(total)
+        pages=pagination.calculate_pages(total),
     )
 
 
 def paginate(
-    query: SQLQuery,
-    pagination: PaginationParams,
-    count_query: SQLQuery = None
+    query: SQLQuery, pagination: PaginationParams, count_query: SQLQuery = None
 ) -> PaginatedResponse:
     """
     一步完成分页查询和响应生成
@@ -151,8 +147,8 @@ def paginate(
 
 
 __all__ = [
-    'PaginationParams',
-    'paginate_query',
-    'create_paginated_response',
-    'paginate',
+    "PaginationParams",
+    "paginate_query",
+    "create_paginated_response",
+    "paginate",
 ]

@@ -16,11 +16,12 @@ from pydantic import BaseModel, Field
 
 from ..common import TimestampSchema
 
-
 # ==================== 生产报表 ====================
+
 
 class ProductionDailyReportCreate(BaseModel):
     """创建生产日报"""
+
     report_date: date = Field(description="报告日期")
     workshop_id: Optional[int] = Field(default=None, description="车间ID(空表示全厂)")
     plan_qty: int = Field(default=0, description="计划数量")
@@ -40,6 +41,7 @@ class ProductionDailyReportCreate(BaseModel):
 
 class ProductionDailyReportResponse(TimestampSchema):
     """生产日报响应"""
+
     id: int
     report_date: date
     workshop_id: Optional[int] = None
@@ -65,6 +67,7 @@ class ProductionDailyReportResponse(TimestampSchema):
 
 class ProductionDashboardResponse(BaseModel):
     """生产驾驶舱响应"""
+
     # 总体统计
     total_workshops: int = 0
     total_workstations: int = 0
@@ -103,6 +106,7 @@ class ProductionDashboardResponse(BaseModel):
 
 class WorkshopTaskBoardResponse(BaseModel):
     """车间任务看板响应"""
+
     workshop_id: int
     workshop_name: str
     workstations: List[Dict[str, Any]] = []
@@ -112,6 +116,7 @@ class WorkshopTaskBoardResponse(BaseModel):
 
 class ProductionEfficiencyReportResponse(BaseModel):
     """生产效率报表响应"""
+
     report_date: date
     workshop_id: Optional[int] = None
     workshop_name: Optional[str] = None
@@ -127,6 +132,7 @@ class ProductionEfficiencyReportResponse(BaseModel):
 
 class CapacityUtilizationResponse(BaseModel):
     """产能利用率响应"""
+
     workshop_id: int
     workshop_name: str
     date: date
@@ -139,6 +145,7 @@ class CapacityUtilizationResponse(BaseModel):
 
 class WorkerPerformanceReportResponse(BaseModel):
     """人员绩效报表响应"""
+
     worker_id: int
     worker_code: str
     worker_name: str
@@ -156,6 +163,7 @@ class WorkerPerformanceReportResponse(BaseModel):
 
 class WorkerRankingResponse(BaseModel):
     """人员绩效排名响应"""
+
     rank: int
     worker_id: int
     worker_name: str
@@ -165,4 +173,3 @@ class WorkerRankingResponse(BaseModel):
     quality_rate: float = 0.0
     total_hours: float = 0.0
     score: float = 0.0
-

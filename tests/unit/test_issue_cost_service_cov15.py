@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.issue_cost_service")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 from app.services.issue_cost_service import IssueCostService
 
 
@@ -68,19 +69,21 @@ def test_get_issue_related_hours_no_timesheets():
 
 def test_get_issue_cost_summary():
     db = MagicMock()
-    with patch.object(
-        IssueCostService, "get_issue_related_costs",
-        return_value={
-            "inventory_loss": Decimal("300"),
-            "total_cost": Decimal("800"),
-            "costs": [MagicMock(), MagicMock()]
-        }
-    ), patch.object(
-        IssueCostService, "get_issue_related_hours",
-        return_value={
-            "total_hours": Decimal("12"),
-            "timesheets": [MagicMock()]
-        }
+    with (
+        patch.object(
+            IssueCostService,
+            "get_issue_related_costs",
+            return_value={
+                "inventory_loss": Decimal("300"),
+                "total_cost": Decimal("800"),
+                "costs": [MagicMock(), MagicMock()],
+            },
+        ),
+        patch.object(
+            IssueCostService,
+            "get_issue_related_hours",
+            return_value={"total_hours": Decimal("12"), "timesheets": [MagicMock()]},
+        ),
     ):
         result = IssueCostService.get_issue_cost_summary(db, "IS-003")
         assert result["issue_no"] == "IS-003"

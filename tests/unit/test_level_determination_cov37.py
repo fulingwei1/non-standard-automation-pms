@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 等级确定模块
 tests/unit/test_level_determination_cov37.py
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.lead_priority_scoring.level_determination")
 

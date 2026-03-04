@@ -34,25 +34,30 @@ def get_lead_follow_ups(
     """
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    follow_ups = db.query(LeadFollowUp).filter(
-        LeadFollowUp.lead_id == lead_id
-    ).order_by(desc(LeadFollowUp.created_at)).all()
+    follow_ups = (
+        db.query(LeadFollowUp)
+        .filter(LeadFollowUp.lead_id == lead_id)
+        .order_by(desc(LeadFollowUp.created_at))
+        .all()
+    )
 
     result = []
     for follow_up in follow_ups:
-        result.append({
-            "id": follow_up.id,
-            "lead_id": follow_up.lead_id,
-            "follow_up_type": follow_up.follow_up_type,
-            "content": follow_up.content,
-            "next_action": follow_up.next_action,
-            "next_action_at": follow_up.next_action_at,
-            "created_by": follow_up.created_by,
-            "attachments": follow_up.attachments,
-            "created_at": follow_up.created_at,
-            "updated_at": follow_up.updated_at,
-            "creator_name": follow_up.creator.real_name if follow_up.creator else None,
-        })
+        result.append(
+            {
+                "id": follow_up.id,
+                "lead_id": follow_up.lead_id,
+                "follow_up_type": follow_up.follow_up_type,
+                "content": follow_up.content,
+                "next_action": follow_up.next_action,
+                "next_action_at": follow_up.next_action_at,
+                "created_by": follow_up.created_by,
+                "attachments": follow_up.attachments,
+                "created_at": follow_up.created_at,
+                "updated_at": follow_up.updated_at,
+                "creator_name": follow_up.creator.real_name if follow_up.creator else None,
+            }
+        )
 
     return result
 

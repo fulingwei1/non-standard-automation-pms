@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 from app.services.strategy.comparison_service import (
     create_strategy_comparison,
+    delete_strategy_comparison,
     get_strategy_comparison,
     list_strategy_comparisons,
-    delete_strategy_comparison,
 )
 
 
@@ -64,9 +64,7 @@ class TestComparisonServiceG4:
 
     def test_create_comparison_patches_model(self):
         """patch StrategyComparison 避免属性校验，确保 db.add/commit 被调用"""
-        with patch(
-            "app.services.strategy.comparison_service.StrategyComparison"
-        ) as MockComp:
+        with patch("app.services.strategy.comparison_service.StrategyComparison") as MockComp:
             mock_instance = MagicMock()
             MockComp.return_value = mock_instance
 
@@ -88,9 +86,7 @@ class TestComparisonServiceG4:
 
     def test_create_comparison_sets_created_by(self):
         """创建时传入正确的 created_by"""
-        with patch(
-            "app.services.strategy.comparison_service.StrategyComparison"
-        ) as MockComp:
+        with patch("app.services.strategy.comparison_service.StrategyComparison") as MockComp:
             MockComp.return_value = MagicMock()
             data = MagicMock()
             data.base_strategy_id = 3
@@ -116,7 +112,7 @@ class TestComparisonServiceG4:
         # apply_pagination 返回 q，q.all() 返回 items
         with patch(
             "app.services.strategy.comparison_service.apply_pagination",
-            return_value=MagicMock(all=MagicMock(return_value=mock_items))
+            return_value=MagicMock(all=MagicMock(return_value=mock_items)),
         ):
             self.db.query.return_value = q
             items, total = list_strategy_comparisons(self.db)
@@ -131,7 +127,7 @@ class TestComparisonServiceG4:
         q.order_by.return_value = q
         with patch(
             "app.services.strategy.comparison_service.apply_pagination",
-            return_value=MagicMock(all=MagicMock(return_value=[MagicMock()]))
+            return_value=MagicMock(all=MagicMock(return_value=[MagicMock()])),
         ):
             self.db.query.return_value = q
             items, total = list_strategy_comparisons(self.db, base_strategy_id=5)
@@ -147,7 +143,7 @@ class TestComparisonServiceG4:
         q.order_by.return_value = q
         with patch(
             "app.services.strategy.comparison_service.apply_pagination",
-            return_value=MagicMock(all=MagicMock(return_value=[]))
+            return_value=MagicMock(all=MagicMock(return_value=[])),
         ):
             self.db.query.return_value = q
             items, total = list_strategy_comparisons(self.db)
@@ -159,6 +155,7 @@ class TestComparisonServiceG4:
     def test_generate_yoy_report_missing_strategies(self):
         """当年度战略不存在时返回空维度列表"""
         from app.services.strategy.comparison_service import generate_yoy_report
+
         q = MagicMock()
         q.filter.return_value = q
         q.first.return_value = None  # 两个战略都不存在
@@ -173,6 +170,7 @@ class TestComparisonServiceG4:
     def test_generate_yoy_report_default_previous_year(self):
         """未传 previous_year 时默认为 current_year - 1"""
         from app.services.strategy.comparison_service import generate_yoy_report
+
         q = MagicMock()
         q.filter.return_value = q
         q.first.return_value = None

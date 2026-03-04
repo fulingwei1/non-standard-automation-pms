@@ -7,8 +7,8 @@
 - filters: 自定义过滤器
 """
 
-from app.services.report_framework.expressions.parser import ExpressionParser, ExpressionError
 from app.services.report_framework.expressions.filters import register_filters
+from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
 
 __all__ = [
     "ExpressionParser",

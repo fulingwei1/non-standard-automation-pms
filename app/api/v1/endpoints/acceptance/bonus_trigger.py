@@ -23,7 +23,11 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/acceptance-orders/{order_id}/trigger-bonus-calculation", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-orders/{order_id}/trigger-bonus-calculation",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def trigger_bonus_calculation_endpoint(
     *,
     db: Session = Depends(deps.get_db),
@@ -39,7 +43,9 @@ def trigger_bonus_calculation_endpoint(
 
     # 验证验收单状态
     if not order.is_officially_completed:
-        raise HTTPException(status_code=400, detail="只有正式完成的验收单（已上传客户签署文件）才能触发奖金计算")
+        raise HTTPException(
+            status_code=400, detail="只有正式完成的验收单（已上传客户签署文件）才能触发奖金计算"
+        )
 
     if order.overall_result != "PASSED":
         raise HTTPException(status_code=400, detail="只有验收通过的验收单才能触发奖金计算")
@@ -51,6 +57,7 @@ def trigger_bonus_calculation_endpoint(
 
     try:
         from app.services.bonus import BonusCalculator
+
         calculator = BonusCalculator(db)
 
         # 触发奖金计算
@@ -67,17 +74,23 @@ def trigger_bonus_calculation_endpoint(
                 "project_id": project.id,
                 "project_name": project.project_name,
                 "calculations_count": len(calculations),
-                "calculations": [
-                    {
-                        "id": calc.id,
-                        "calculation_code": calc.calculation_code,
-                        "user_id": calc.user_id,
-                        "calculated_amount": float(calc.calculated_amount) if calc.calculated_amount else 0,
-                        "status": calc.status,
-                    }
-                    for calc in calculations
-                ] if calculations else []
-            }
+                "calculations": (
+                    [
+                        {
+                            "id": calc.id,
+                            "calculation_code": calc.calculation_code,
+                            "user_id": calc.user_id,
+                            "calculated_amount": (
+                                float(calc.calculated_amount) if calc.calculated_amount else 0
+                            ),
+                            "status": calc.status,
+                        }
+                        for calc in calculations
+                    ]
+                    if calculations
+                    else []
+                ),
+            },
         )
     except Exception as e:
         db.rollback()

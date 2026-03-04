@@ -40,7 +40,9 @@ class LaborCostService:
         self.db = db
 
     @staticmethod
-    def get_user_hourly_rate(db: Session, user_id: int, work_date: Optional[date] = None) -> Decimal:
+    def get_user_hourly_rate(
+        db: Session, user_id: int, work_date: Optional[date] = None
+    ) -> Decimal:
         """
         获取用户时薪（从时薪配置服务读取）
 
@@ -53,6 +55,7 @@ class LaborCostService:
             时薪（元/小时）
         """
         from app.services.hourly_rate_service import HourlyRateService
+
         return HourlyRateService.get_user_hourly_rate(db, user_id, work_date)
 
     @staticmethod
@@ -61,7 +64,7 @@ class LaborCostService:
         project_id: int,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        recalculate: bool = False
+        recalculate: bool = False,
     ) -> Dict:
         """
         计算项目人工成本
@@ -85,10 +88,7 @@ class LaborCostService:
 
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
-            return {
-                "success": False,
-                "message": "项目不存在"
-            }
+            return {"success": False, "message": "项目不存在"}
 
         # 查询已审批的工时记录
         timesheets = query_approved_timesheets(db, project_id, start_date, end_date)
@@ -98,7 +98,7 @@ class LaborCostService:
                 "success": True,
                 "message": "没有已审批的工时记录",
                 "cost_count": 0,
-                "total_cost": 0
+                "total_cost": 0,
             }
 
         # 如果重新计算，删除现有的工时成本记录
@@ -121,8 +121,10 @@ class LaborCostService:
             "message": f"成功计算{len(created_costs)}条人工成本记录",
             "cost_count": len(created_costs),
             "total_cost": float(total_cost),
-            "total_hours": float(sum([user_data["total_hours"] for user_data in user_costs.values()])),
-            "user_count": len(user_costs)
+            "total_hours": float(
+                sum([user_data["total_hours"] for user_data in user_costs.values()])
+            ),
+            "user_count": len(user_costs),
         }
 
     @staticmethod
@@ -130,7 +132,7 @@ class LaborCostService:
         db: Session,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        project_ids: Optional[List[int]] = None
+        project_ids: Optional[List[int]] = None,
     ) -> Dict:
         """
         批量计算所有项目的人工成本
@@ -145,9 +147,7 @@ class LaborCostService:
             批量计算结果
         """
         # 查询有工时记录的项目
-        query = db.query(Timesheet.project_id).filter(
-            Timesheet.status == "APPROVED"
-        ).distinct()
+        query = db.query(Timesheet.project_id).filter(Timesheet.status == "APPROVED").distinct()
 
         if start_date:
             query = query.filter(Timesheet.work_date >= start_date)
@@ -168,20 +168,13 @@ class LaborCostService:
                 result = LaborCostService.calculate_project_labor_cost(
                     db, project_id, start_date, end_date, recalculate=True
                 )
-                results.append({
-                    "project_id": project_id,
-                    **result
-                })
+                results.append({"project_id": project_id, **result})
                 if result.get("success"):
                     success_count += 1
                 else:
                     fail_count += 1
             except Exception as e:
-                results.append({
-                    "project_id": project_id,
-                    "success": False,
-                    "message": str(e)
-                })
+                results.append({"project_id": project_id, "success": False, "message": str(e)})
                 fail_count += 1
 
         return {
@@ -190,15 +183,12 @@ class LaborCostService:
             "total_projects": len(project_ids_with_timesheets),
             "success_count": success_count,
             "fail_count": fail_count,
-            "results": results
+            "results": results,
         }
 
     @staticmethod
     def calculate_monthly_labor_cost(
-        db: Session,
-        year: int,
-        month: int,
-        project_ids: Optional[List[int]] = None
+        db: Session, year: int, month: int, project_ids: Optional[List[int]] = None
     ) -> Dict:
         """
         计算指定月份的项目人工成本
@@ -250,11 +240,16 @@ class LaborCostCalculationService:
         start_date, end_date = get_month_range_by_ym(year, month)
 
         # 查询有工时记录的项目
-        project_ids = self.db.query(Timesheet.project_id).filter(
-            Timesheet.work_date >= start_date,
-            Timesheet.work_date <= end_date,
-            Timesheet.status == "APPROVED"
-        ).distinct().all()
+        project_ids = (
+            self.db.query(Timesheet.project_id)
+            .filter(
+                Timesheet.work_date >= start_date,
+                Timesheet.work_date <= end_date,
+                Timesheet.status == "APPROVED",
+            )
+            .distinct()
+            .all()
+        )
 
         projects_processed = 0
         total_cost = Decimal("0")
@@ -296,12 +291,13 @@ class LaborCostCalculationService:
             "month": month,
             "projects_processed": projects_processed,
             "total_cost": float(total_cost),
-            "errors": errors
+            "errors": errors,
         }
 
 
 class PresaleExpense:
     """售前费用模型（临时，后续会创建ORM模型）"""
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -316,13 +312,14 @@ class LaborCostExpenseService:
     def __init__(self, db: Session):
         self.db = db
         from app.services.hourly_rate_service import HourlyRateService
+
         self.hourly_rate_service = HourlyRateService()
 
     def identify_lost_projects(
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        include_abandoned: bool = True
+        include_abandoned: bool = True,
     ) -> List[Dict[str, Any]]:
         """识别未中标项目
 
@@ -338,9 +335,7 @@ class LaborCostExpenseService:
         if include_abandoned:
             outcomes.append(LeadOutcomeEnum.ABANDONED.value)
 
-        query = self.db.query(Project).filter(
-            Project.outcome.in_(outcomes)
-        )
+        query = self.db.query(Project).filter(Project.outcome.in_(outcomes))
 
         if start_date:
             query = query.filter(Project.created_at >= start_date)
@@ -358,19 +353,21 @@ class LaborCostExpenseService:
             hours = self._get_project_hours(project.id)
             cost = self._calculate_project_cost(project.id)
 
-            result.append({
-                'project_id': project.id,
-                'project_code': project.project_code,
-                'project_name': project.project_name,
-                'outcome': project.outcome,
-                'loss_reason': project.loss_reason,
-                'has_detailed_design': has_detailed_design,
-                'total_hours': hours,
-                'total_cost': float(cost),
-                'salesperson_id': project.salesperson_id,
-                'source_lead_id': project.source_lead_id,
-                'opportunity_id': project.opportunity_id
-            })
+            result.append(
+                {
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "outcome": project.outcome,
+                    "loss_reason": project.loss_reason,
+                    "has_detailed_design": has_detailed_design,
+                    "total_hours": hours,
+                    "total_cost": float(cost),
+                    "salesperson_id": project.salesperson_id,
+                    "source_lead_id": project.source_lead_id,
+                    "opportunity_id": project.opportunity_id,
+                }
+            )
 
         return result
 
@@ -379,7 +376,7 @@ class LaborCostExpenseService:
         project_ids: Optional[List[int]] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        created_by: int = None
+        created_by: int = None,
     ) -> Dict[str, Any]:
         """将未中标项目工时费用化
 
@@ -394,10 +391,16 @@ class LaborCostExpenseService:
         """
         # 识别未中标项目
         if project_ids:
-            projects = self.db.query(Project).filter(
-                Project.id.in_(project_ids),
-                Project.outcome.in_([LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value])
-            ).all()
+            projects = (
+                self.db.query(Project)
+                .filter(
+                    Project.id.in_(project_ids),
+                    Project.outcome.in_(
+                        [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]
+                    ),
+                )
+                .all()
+            )
         else:
             outcomes = [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]
             query = self.db.query(Project).filter(Project.outcome.in_(outcomes))
@@ -408,14 +411,12 @@ class LaborCostExpenseService:
             projects = query.all()
 
         expenses = []
-        total_amount = Decimal('0')
+        total_amount = Decimal("0")
         total_hours = 0.0
 
         for project in projects:
             # 获取工时记录
-            timesheets = self.db.query(Timesheet).filter(
-                Timesheet.project_id == project.id
-            ).all()
+            timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project.id).all()
 
             # 按人员分组计算费用（不可变模式，使用 dict.get 累加）
             person_expenses: Dict[int, Dict[str, Any]] = {}
@@ -423,13 +424,15 @@ class LaborCostExpenseService:
             for ts in timesheets:
                 user = self.db.query(User).filter(User.id == ts.user_id).first()
                 if user:
-                    hourly_rate = self.hourly_rate_service.get_user_hourly_rate(self.db, user.id, ts.work_date)
+                    hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
+                        self.db, user.id, ts.work_date
+                    )
                     hours = float(ts.hours or 0)
                     cost = Decimal(str(hours)) * hourly_rate
-                    prev = person_expenses.get(ts.user_id, {'hours': 0.0, 'cost': Decimal('0')})
+                    prev = person_expenses.get(ts.user_id, {"hours": 0.0, "cost": Decimal("0")})
                     person_expenses[ts.user_id] = {
-                        'hours': prev['hours'] + hours,
-                        'cost': prev['cost'] + cost,
+                        "hours": prev["hours"] + hours,
+                        "cost": prev["cost"] + cost,
                     }
 
             # 创建费用记录
@@ -438,40 +441,48 @@ class LaborCostExpenseService:
                 # 从Timesheet获取部门信息
                 user_ts = next((ts for ts in timesheets if ts.user_id == user_id), None)
                 department_id = user_ts.department_id if user_ts else None
-                department_name = user_ts.department_name if user_ts else (user.department if user else None)
+                department_name = (
+                    user_ts.department_name if user_ts else (user.department if user else None)
+                )
 
                 expense = {
-                    'project_id': project.id,
-                    'project_code': project.project_code,
-                    'project_name': project.project_name,
-                    'lead_id': self._get_lead_id_from_project(project),
-                    'opportunity_id': project.opportunity_id,
-                    'expense_type': 'LABOR_COST',
-                    'expense_category': 'LOST_BID' if project.outcome == LeadOutcomeEnum.LOST.value else 'ABANDONED',
-                    'amount': float(stats['cost']),
-                    'labor_hours': stats['hours'],
-                    'hourly_rate': float(self.hourly_rate_service.get_user_hourly_rate(self.db, user_id)),
-                    'expense_date': project.updated_at.date() if project.updated_at else date.today(),
-                    'description': f'未中标项目工时费用：{project.project_name}',
-                    'user_id': user_id,
-                    'user_name': user.real_name if user else f'User_{user_id}',
-                    'department_id': department_id,
-                    'department_name': department_name,
-                    'salesperson_id': project.salesperson_id,
-                    'salesperson_name': self._get_user_name(project.salesperson_id),
-                    'loss_reason': project.loss_reason,
-                    'created_by': created_by
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "lead_id": self._get_lead_id_from_project(project),
+                    "opportunity_id": project.opportunity_id,
+                    "expense_type": "LABOR_COST",
+                    "expense_category": (
+                        "LOST_BID" if project.outcome == LeadOutcomeEnum.LOST.value else "ABANDONED"
+                    ),
+                    "amount": float(stats["cost"]),
+                    "labor_hours": stats["hours"],
+                    "hourly_rate": float(
+                        self.hourly_rate_service.get_user_hourly_rate(self.db, user_id)
+                    ),
+                    "expense_date": (
+                        project.updated_at.date() if project.updated_at else date.today()
+                    ),
+                    "description": f"未中标项目工时费用：{project.project_name}",
+                    "user_id": user_id,
+                    "user_name": user.real_name if user else f"User_{user_id}",
+                    "department_id": department_id,
+                    "department_name": department_name,
+                    "salesperson_id": project.salesperson_id,
+                    "salesperson_name": self._get_user_name(project.salesperson_id),
+                    "loss_reason": project.loss_reason,
+                    "created_by": created_by,
                 }
                 expenses.append(expense)
-                total_amount += stats['cost']
-                total_hours += stats['hours']
+                total_amount += stats["cost"]
+                total_hours += stats["hours"]
 
         return {
-            'total_projects': len(projects),
-            'total_expenses': len(expenses),
-            'total_amount': float(total_amount),
-            'total_hours': round(total_hours, 1),
-            'expenses': expenses
+            "total_projects": len(projects),
+            "total_expenses": len(expenses),
+            "total_amount": float(total_amount),
+            "total_hours": round(total_hours, 1),
+            "expenses": expenses,
         }
 
     def get_lost_project_expenses(
@@ -479,7 +490,7 @@ class LaborCostExpenseService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         salesperson_id: Optional[int] = None,
-        department_id: Optional[int] = None
+        department_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """获取未中标项目费用列表
 
@@ -505,31 +516,39 @@ class LaborCostExpenseService:
             hours = self._get_project_hours(project.id)
             cost = self._calculate_project_cost(project.id)
 
-            expenses.append({
-                'project_id': project.id,
-                'project_code': project.project_code,
-                'project_name': project.project_name,
-                'expense_category': 'LOST_BID' if project.outcome == LeadOutcomeEnum.LOST.value else 'ABANDONED',
-                'labor_hours': hours,
-                'amount': float(cost),
-                'expense_date': project.updated_at.date() if project.updated_at else project.created_at.date() if project.created_at else date.today(),
-                'salesperson_id': project.salesperson_id,
-                'salesperson_name': self._get_user_name(project.salesperson_id),
-                'loss_reason': project.loss_reason
-            })
+            expenses.append(
+                {
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "expense_category": (
+                        "LOST_BID" if project.outcome == LeadOutcomeEnum.LOST.value else "ABANDONED"
+                    ),
+                    "labor_hours": hours,
+                    "amount": float(cost),
+                    "expense_date": (
+                        project.updated_at.date()
+                        if project.updated_at
+                        else project.created_at.date() if project.created_at else date.today()
+                    ),
+                    "salesperson_id": project.salesperson_id,
+                    "salesperson_name": self._get_user_name(project.salesperson_id),
+                    "loss_reason": project.loss_reason,
+                }
+            )
 
         return {
-            'total_expenses': len(expenses),
-            'total_amount': sum(e['amount'] for e in expenses),
-            'total_hours': sum(e['labor_hours'] for e in expenses),
-            'expenses': expenses
+            "total_expenses": len(expenses),
+            "total_amount": sum(e["amount"] for e in expenses),
+            "total_hours": sum(e["labor_hours"] for e in expenses),
+            "expenses": expenses,
         }
 
     def get_expense_statistics(
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        group_by: str = 'person'
+        group_by: str = "person",
     ) -> Dict[str, Any]:
         """获取费用统计
 
@@ -543,50 +562,52 @@ class LaborCostExpenseService:
         """
         # 获取未中标项目费用
         expenses_data = self.get_lost_project_expenses(start_date, end_date)
-        expenses = expenses_data['expenses']
+        expenses = expenses_data["expenses"]
 
-        if group_by == 'person':
+        if group_by == "person":
             result = self._statistics_by_person(expenses)
-        elif group_by == 'department':
+        elif group_by == "department":
             result = self._statistics_by_department(expenses)
         else:
             result = self._statistics_by_time(expenses)
 
         return {
-            'group_by': group_by,
-            'statistics': result,
-            'summary': {
-                'total_amount': expenses_data['total_amount'],
-                'total_hours': expenses_data['total_hours'],
-                'total_projects': expenses_data['total_expenses']
-            }
+            "group_by": group_by,
+            "statistics": result,
+            "summary": {
+                "total_amount": expenses_data["total_amount"],
+                "total_hours": expenses_data["total_hours"],
+                "total_projects": expenses_data["total_expenses"],
+            },
         }
 
     def _statistics_by_person(self, expenses: List[Dict]) -> List[Dict]:
         """按人员统计费用（使用不可变累加模式）"""
         person_stats: Dict[int, Dict[str, Any]] = {}
         for exp in expenses:
-            person_id = exp['salesperson_id']
+            person_id = exp["salesperson_id"]
             if person_id:
-                prev = person_stats.get(person_id, {'amount': 0.0, 'hours': 0.0, 'count': 0})
+                prev = person_stats.get(person_id, {"amount": 0.0, "hours": 0.0, "count": 0})
                 person_stats[person_id] = {
-                    'amount': prev['amount'] + exp['amount'],
-                    'hours': prev['hours'] + exp['labor_hours'],
-                    'count': prev['count'] + 1,
+                    "amount": prev["amount"] + exp["amount"],
+                    "hours": prev["hours"] + exp["labor_hours"],
+                    "count": prev["count"] + 1,
                 }
 
         result = []
         for person_id, stats in person_stats.items():
             person = self.db.query(User).filter(User.id == person_id).first()
-            result.append({
-                'person_id': person_id,
-                'person_name': person.name if person else f'User_{person_id}',
-                'department': person.department_name if person else None,
-                'total_amount': round(stats['amount'], 2),
-                'total_hours': round(stats['hours'], 1),
-                'project_count': stats['count']
-            })
-        result.sort(key=lambda x: x['total_amount'], reverse=True)
+            result.append(
+                {
+                    "person_id": person_id,
+                    "person_name": person.name if person else f"User_{person_id}",
+                    "department": person.department_name if person else None,
+                    "total_amount": round(stats["amount"], 2),
+                    "total_hours": round(stats["hours"], 1),
+                    "project_count": stats["count"],
+                }
+            )
+        result.sort(key=lambda x: x["total_amount"], reverse=True)
         return result
 
     def _statistics_by_department(self, expenses: List[Dict]) -> List[Dict]:
@@ -595,19 +616,19 @@ class LaborCostExpenseService:
 
         dept_stats: Dict[int, Dict[str, Any]] = {}
         for exp in expenses:
-            project_id = exp['project_id']
+            project_id = exp["project_id"]
             # 从项目的工时记录中获取部门信息
-            timesheets = self.db.query(Timesheet).filter(
-                Timesheet.project_id == project_id
-            ).all()
+            timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
             for ts in timesheets:
                 if ts.department_id:
-                    share = exp['amount'] / len(timesheets) if timesheets else exp['amount']
-                    prev = dept_stats.get(ts.department_id, {'amount': 0.0, 'hours': 0.0, 'count': 0})
+                    share = exp["amount"] / len(timesheets) if timesheets else exp["amount"]
+                    prev = dept_stats.get(
+                        ts.department_id, {"amount": 0.0, "hours": 0.0, "count": 0}
+                    )
                     dept_stats[ts.department_id] = {
-                        'amount': prev['amount'] + share,
-                        'hours': prev['hours'] + float(ts.hours or 0),
-                        'count': 1, # 每个项目只计数一次
+                        "amount": prev["amount"] + share,
+                        "hours": prev["hours"] + float(ts.hours or 0),
+                        "count": 1,  # 每个项目只计数一次
                     }
 
         result = []
@@ -616,37 +637,39 @@ class LaborCostExpenseService:
             dept_name = dept.dept_name if dept else None
             if not dept_name:
                 ts = self.db.query(Timesheet).filter(Timesheet.department_id == dept_id).first()
-                dept_name = ts.department_name if ts and ts.department_name else f'Dept_{dept_id}'
+                dept_name = ts.department_name if ts and ts.department_name else f"Dept_{dept_id}"
 
-            result.append({
-                'department_id': dept_id,
-                'department_name': dept_name,
-                'total_amount': round(stats['amount'], 2),
-                'total_hours': round(stats['hours'], 1),
-                'project_count': stats['count']
-            })
-        result.sort(key=lambda x: x['total_amount'], reverse=True)
+            result.append(
+                {
+                    "department_id": dept_id,
+                    "department_name": dept_name,
+                    "total_amount": round(stats["amount"], 2),
+                    "total_hours": round(stats["hours"], 1),
+                    "project_count": stats["count"],
+                }
+            )
+        result.sort(key=lambda x: x["total_amount"], reverse=True)
         return result
 
     def _statistics_by_time(self, expenses: List[Dict]) -> List[Dict]:
         """按时间统计费用（使用不可变累加模式）"""
         time_stats: Dict[str, Dict[str, Any]] = {}
         for exp in expenses:
-            expense_date = exp['expense_date']
-            month_key = expense_date.strftime('%Y-%m')
-            prev = time_stats.get(month_key, {'amount': 0.0, 'hours': 0.0, 'count': 0})
+            expense_date = exp["expense_date"]
+            month_key = expense_date.strftime("%Y-%m")
+            prev = time_stats.get(month_key, {"amount": 0.0, "hours": 0.0, "count": 0})
             time_stats[month_key] = {
-                'amount': prev['amount'] + exp['amount'],
-                'hours': prev['hours'] + exp['labor_hours'],
-                'count': prev['count'] + 1,
+                "amount": prev["amount"] + exp["amount"],
+                "hours": prev["hours"] + exp["labor_hours"],
+                "count": prev["count"] + 1,
             }
 
         return [
             {
-                'month': month,
-                'total_amount': round(stats['amount'], 2),
-                'total_hours': round(stats['hours'], 1),
-                'project_count': stats['count']
+                "month": month,
+                "total_amount": round(stats["amount"], 2),
+                "total_hours": round(stats["hours"], 1),
+                "project_count": stats["count"],
             }
             for month, stats in sorted(time_stats.items())
         ]
@@ -655,10 +678,10 @@ class LaborCostExpenseService:
         """判断项目是否投入了详细设计"""
         # 通过项目阶段判断
         if project.stage:
-            stage_order = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
+            stage_order = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
             try:
                 current_index = stage_order.index(project.stage)
-                if current_index >= 3: # S4及以后
+                if current_index >= 3:  # S4及以后
                     return True
             except ValueError:
                 pass
@@ -669,25 +692,28 @@ class LaborCostExpenseService:
 
     def _get_project_hours(self, project_id: int) -> float:
         """获取项目总工时"""
-        timesheet_hours = self.db.query(func.sum(Timesheet.hours)).filter(
-            Timesheet.project_id == project_id
-        ).scalar() or 0
+        timesheet_hours = (
+            self.db.query(func.sum(Timesheet.hours))
+            .filter(Timesheet.project_id == project_id)
+            .scalar()
+            or 0
+        )
         return float(timesheet_hours)
 
     def _calculate_project_cost(self, project_id: int) -> Decimal:
         """计算项目成本"""
-        timesheets = self.db.query(Timesheet).filter(
-            Timesheet.project_id == project_id
-        ).all()
+        timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
 
-        total_cost = Decimal('0')
+        total_cost = Decimal("0")
         for ts in timesheets:
             user = self.db.query(User).filter(User.id == ts.user_id).first()
             if user:
-                hourly_rate = self.hourly_rate_service.get_user_hourly_rate(self.db, user.id, ts.work_date)
+                hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
+                    self.db, user.id, ts.work_date
+                )
                 total_cost += Decimal(str(ts.hours or 0)) * hourly_rate
             else:
-                total_cost += Decimal(str(ts.hours or 0)) * Decimal('300')
+                total_cost += Decimal(str(ts.hours or 0)) * Decimal("300")
 
         return total_cost
 
@@ -696,6 +722,7 @@ class LaborCostExpenseService:
         if project.source_lead_id:
             # source_lead_id是字符串，需要查询leads表
             from app.models.sales import Lead
+
             lead = self.db.query(Lead).filter(Lead.lead_code == project.source_lead_id).first()
             return lead.id if lead else None
         return None
@@ -706,4 +733,3 @@ class LaborCostExpenseService:
             user = self.db.query(User).filter(User.id == user_id).first()
             return user.real_name if user and user.real_name else (user.username if user else None)
         return None
-

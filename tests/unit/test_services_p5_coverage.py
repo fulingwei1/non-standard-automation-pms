@@ -4,11 +4,12 @@ P5 组 - 剩余低覆盖率 service 文件测试（排名 81-123）
 覆盖 43 个服务文件，每个文件 3-6 个测试用例
 """
 
-import pytest
+from contextlib import contextmanager
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
-from contextlib import contextmanager
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ class TestProjectWorkspaceService:
 
     def test_build_project_basic_info(self):
         from app.services.project_workspace_service import build_project_basic_info
+
         proj = self._make_project()
         result = build_project_basic_info(proj)
         assert result["project_code"] == "P001"
@@ -39,6 +41,7 @@ class TestProjectWorkspaceService:
 
     def test_build_project_basic_info_zero_values(self):
         from app.services.project_workspace_service import build_project_basic_info
+
         proj = self._make_project(progress_pct=None, contract_amount=None)
         result = build_project_basic_info(proj)
         assert result["progress_pct"] == 0.0
@@ -46,6 +49,7 @@ class TestProjectWorkspaceService:
 
     def test_build_team_info_empty(self):
         from app.services.project_workspace_service import build_team_info
+
         db = MagicMock()
         db.query.return_value.options.return_value.filter.return_value.all.return_value = []
         result = build_team_info(db, 1)
@@ -53,6 +57,7 @@ class TestProjectWorkspaceService:
 
     def test_build_team_info_with_member(self):
         from app.services.project_workspace_service import build_team_info
+
         db = MagicMock()
         member = MagicMock()
         member.user_id = 1
@@ -71,17 +76,25 @@ class TestProjectWorkspaceService:
 
     def test_build_bonus_info_exception(self):
         from app.services.project_workspace_service import build_bonus_info
+
         db = MagicMock()
         # Force exception
-        with patch("app.services.project_workspace_service.ProjectBonusService", side_effect=Exception("db error")):
+        with patch(
+            "app.services.project_workspace_service.ProjectBonusService",
+            side_effect=Exception("db error"),
+        ):
             result = build_bonus_info(db, 1)
         assert result["rules"] == []
         assert result["calculations"] == []
 
     def test_build_meeting_info_exception(self):
         from app.services.project_workspace_service import build_meeting_info
+
         db = MagicMock()
-        with patch("app.services.project_workspace_service.ProjectMeetingService", side_effect=Exception("fail")):
+        with patch(
+            "app.services.project_workspace_service.ProjectMeetingService",
+            side_effect=Exception("fail"),
+        ):
             result = build_meeting_info(db, 1)
         assert result["meetings"] == []
         assert result["statistics"] == {}
@@ -93,6 +106,7 @@ class TestProjectWorkspaceService:
 class TestRemindersMixin:
     def _make_mixin(self, db):
         from app.services.data_integrity.reminders import RemindersMixin
+
         obj = RemindersMixin.__new__(RemindersMixin)
         obj.db = db
         return obj
@@ -123,12 +137,14 @@ class TestRemindersMixin:
 class TestAdvantageProductImportService:
     def test_column_category_map_structure(self):
         from app.services.advantage_product_import_service import COLUMN_CATEGORY_MAP
+
         assert 0 in COLUMN_CATEGORY_MAP
         assert COLUMN_CATEGORY_MAP[0]["code"] == "HOME_APPLIANCE"
         assert len(COLUMN_CATEGORY_MAP) == 8
 
     def test_clear_existing_data(self):
         from app.services.advantage_product_import_service import clear_existing_data
+
         db = MagicMock()
         db.query.return_value.delete.return_value = 5
         clear_existing_data(db)
@@ -136,6 +152,7 @@ class TestAdvantageProductImportService:
 
     def test_ensure_categories_exist_no_clear(self):
         from app.services.advantage_product_import_service import ensure_categories_exist
+
         db = MagicMock()
         existing_cat = MagicMock()
         existing_cat.code = "HOME_APPLIANCE"
@@ -155,6 +172,7 @@ class TestAdvantageProductImportService:
 class TestProjectTimelineService:
     def test_collect_status_change_events_empty(self):
         from app.services.project_timeline_service import collect_status_change_events
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         events = collect_status_change_events(db, project_id=1)
@@ -162,6 +180,7 @@ class TestProjectTimelineService:
 
     def test_collect_status_change_events_with_log(self):
         from app.services.project_timeline_service import collect_status_change_events
+
         db = MagicMock()
         log = MagicMock()
         log.change_type = "STAGE_CHANGE"
@@ -179,6 +198,7 @@ class TestProjectTimelineService:
 
     def test_collect_milestone_events_empty(self):
         from app.services.project_timeline_service import collect_milestone_events
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         events = collect_milestone_events(db, project_id=1)
@@ -191,16 +211,20 @@ class TestProjectTimelineService:
 class TestAnnualWorkProgress:
     def test_update_progress_work_not_found(self):
         from app.services.strategy.annual_work_service.progress import update_progress
+
         db = MagicMock()
         data = MagicMock()
         data.progress_percent = 50
         data.progress_description = "half done"
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work", return_value=None):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=None
+        ):
             result = update_progress(db, work_id=999, data=data)
         assert result is None
 
     def test_update_progress_completed(self):
         from app.services.strategy.annual_work_service.progress import update_progress
+
         db = MagicMock()
         work = MagicMock()
         work.status = "IN_PROGRESS"
@@ -208,20 +232,25 @@ class TestAnnualWorkProgress:
         data.progress_percent = 100
         data.progress_description = "Done"
         db.refresh.side_effect = lambda x: None
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work
+        ):
             result = update_progress(db, work_id=1, data=data)
         assert work.status == "COMPLETED"
         assert result == work
 
     def test_update_progress_in_progress(self):
         from app.services.strategy.annual_work_service.progress import update_progress
+
         db = MagicMock()
         work = MagicMock()
         data = MagicMock()
         data.progress_percent = 50
         data.progress_description = ""
         db.refresh.side_effect = lambda x: None
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work
+        ):
             result = update_progress(db, work_id=1, data=data)
         assert work.status == "IN_PROGRESS"
 
@@ -232,17 +261,17 @@ class TestAnnualWorkProgress:
 class TestProjectReportMixin:
     def test_generate_project_weekly_report_not_found(self):
         from app.services.report_data_generation.project_reports import ProjectReportMixin
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = ProjectReportMixin.generate_project_weekly_report(
-            db, project_id=999,
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 1, 7)
+            db, project_id=999, start_date=date(2025, 1, 1), end_date=date(2025, 1, 7)
         )
         assert "error" in result
 
     def test_generate_project_weekly_report_found(self):
         from app.services.report_data_generation.project_reports import ProjectReportMixin
+
         db = MagicMock()
         proj = MagicMock()
         proj.project_code = "P001"
@@ -255,11 +284,11 @@ class TestProjectReportMixin:
         db.query.return_value.filter.return_value.first.return_value = proj
         db.query.return_value.filter.return_value.between.return_value.all.return_value = []
         db.query.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.between.return_value.between.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.between.return_value.between.return_value.all.return_value = (
+            []
+        )
         result = ProjectReportMixin.generate_project_weekly_report(
-            db, project_id=1,
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 1, 7)
+            db, project_id=1, start_date=date(2025, 1, 1), end_date=date(2025, 1, 7)
         )
         assert "summary" in result or "project_code" in str(result)
 
@@ -270,6 +299,7 @@ class TestProjectReportMixin:
 class TestSpecMatchService:
     def test_get_project_requirements_empty(self):
         from app.services.spec_match_service import get_project_requirements
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = get_project_requirements(db, project_id=1)
@@ -277,6 +307,7 @@ class TestSpecMatchService:
 
     def test_get_project_requirements_with_data(self):
         from app.services.spec_match_service import get_project_requirements
+
         db = MagicMock()
         req = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = [req]
@@ -290,6 +321,7 @@ class TestSpecMatchService:
 class TestDataCheckMixin:
     def _make_mixin(self, db):
         from app.services.data_integrity.check import DataCheckMixin
+
         obj = DataCheckMixin.__new__(DataCheckMixin)
         obj.db = db
         return obj
@@ -320,6 +352,7 @@ class TestDataCheckMixin:
 class TestFailurePatternsMixin:
     def _make_mixin(self, db):
         from app.services.resource_waste_analysis.failure_patterns import FailurePatternsMixin
+
         obj = FailurePatternsMixin.__new__(FailurePatternsMixin)
         obj.db = db
         return obj
@@ -335,11 +368,12 @@ class TestFailurePatternsMixin:
 
     def test_analyze_failure_patterns_with_date_filter(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         mixin = self._make_mixin(db)
         result = mixin.analyze_failure_patterns(
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 12, 31)
+            start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
         assert "loss_reason_distribution" in result
 
@@ -350,6 +384,7 @@ class TestFailurePatternsMixin:
 class TestPurchaseRequestFromBomService:
     def test_determine_supplier_default(self):
         from app.services.purchase_request_from_bom_service import determine_supplier_for_item
+
         db = MagicMock()
         item = MagicMock()
         item.supplier_id = None
@@ -359,6 +394,7 @@ class TestPurchaseRequestFromBomService:
 
     def test_determine_supplier_from_item(self):
         from app.services.purchase_request_from_bom_service import determine_supplier_for_item
+
         db = MagicMock()
         item = MagicMock()
         item.supplier_id = 7
@@ -368,6 +404,7 @@ class TestPurchaseRequestFromBomService:
 
     def test_determine_supplier_zero_when_none(self):
         from app.services.purchase_request_from_bom_service import determine_supplier_for_item
+
         db = MagicMock()
         item = MagicMock()
         item.supplier_id = None
@@ -377,6 +414,7 @@ class TestPurchaseRequestFromBomService:
 
     def test_group_items_by_supplier(self):
         from app.services.purchase_request_from_bom_service import group_items_by_supplier
+
         db = MagicMock()
         item1 = MagicMock()
         item1.supplier_id = 1
@@ -395,9 +433,12 @@ class TestPurchaseRequestFromBomService:
 class TestRankingService:
     def test_get_ranking_returns_empty(self):
         from app.services.engineer_performance.ranking_service import RankingService
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         svc = RankingService(db)
         items, total = svc.get_ranking(period_id=1)
         assert total == 0
@@ -405,6 +446,7 @@ class TestRankingService:
 
     def test_get_company_summary_no_results(self):
         from app.services.engineer_performance.ranking_service import RankingService
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
         svc = RankingService(db)
@@ -413,9 +455,14 @@ class TestRankingService:
 
     def test_get_ranking_with_filters(self):
         from app.services.engineer_performance.ranking_service import RankingService
+
         db = MagicMock()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 1
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            1
+        )
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         svc = RankingService(db)
         items, total = svc.get_ranking(period_id=1, job_type="PM", department_id=2)
         assert isinstance(total, int)
@@ -427,6 +474,7 @@ class TestRankingService:
 class TestSalesBonusCalculator:
     def test_calculate_no_owner(self):
         from app.services.bonus.sales import SalesBonusCalculator
+
         db = MagicMock()
         calc = SalesBonusCalculator(db)
         contract = MagicMock()
@@ -438,6 +486,7 @@ class TestSalesBonusCalculator:
 
     def test_calculate_contract_based(self):
         from app.services.bonus.sales import SalesBonusCalculator
+
         db = MagicMock()
         db.add.return_value = None
         db.commit.return_value = None
@@ -462,6 +511,7 @@ class TestSalesBonusCalculator:
 class TestKpiServiceCrud:
     def test_get_kpi_returns_none(self):
         from app.services.strategy.kpi_service.crud import get_kpi
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.first.return_value = None
         result = get_kpi(db, kpi_id=999)
@@ -469,6 +519,7 @@ class TestKpiServiceCrud:
 
     def test_get_kpi_returns_value(self):
         from app.services.strategy.kpi_service.crud import get_kpi
+
         db = MagicMock()
         kpi = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.first.return_value = kpi
@@ -477,6 +528,7 @@ class TestKpiServiceCrud:
 
     def test_create_kpi(self):
         from app.services.strategy.kpi_service.crud import create_kpi
+
         db = MagicMock()
         db.refresh.side_effect = lambda x: None
         data = MagicMock()
@@ -508,12 +560,14 @@ class TestKpiServiceCrud:
 class TestSalesReportAdapter:
     def test_get_report_code(self):
         from app.services.report_framework.adapters.sales import SalesReportAdapter
+
         db = MagicMock()
         adapter = SalesReportAdapter(db)
         assert adapter.get_report_code() == "SALES_MONTHLY"
 
     def test_generate_data_invalid_month_format(self):
         from app.services.report_framework.adapters.sales import SalesReportAdapter
+
         db = MagicMock()
         adapter = SalesReportAdapter(db)
         with pytest.raises((ValueError, Exception)):
@@ -526,6 +580,7 @@ class TestSalesReportAdapter:
 class TestWinRateAnalysis:
     def test_get_win_rate_distribution_empty(self):
         from app.services.win_rate_prediction_service.analysis import get_win_rate_distribution
+
         service = MagicMock()
         service.db.query.return_value.filter.return_value.all.return_value = []
         result = get_win_rate_distribution(service)
@@ -535,8 +590,9 @@ class TestWinRateAnalysis:
             assert level_data["count"] == 0
 
     def test_get_win_rate_distribution_with_projects(self):
-        from app.services.win_rate_prediction_service.analysis import get_win_rate_distribution
         from app.models.enums import LeadOutcomeEnum
+        from app.services.win_rate_prediction_service.analysis import get_win_rate_distribution
+
         service = MagicMock()
         p1 = MagicMock()
         p1.predicted_win_rate = 0.85
@@ -555,12 +611,14 @@ class TestWinRateAnalysis:
 class TestTicketAssignmentService:
     def test_get_project_members_empty_project_ids(self):
         from app.services.ticket_assignment_service import get_project_members_for_ticket
+
         db = MagicMock()
         result = get_project_members_for_ticket(db, project_ids=[])
         assert result == []
 
     def test_get_project_members_no_members(self):
         from app.services.ticket_assignment_service import get_project_members_for_ticket
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = get_project_members_for_ticket(db, project_ids=[1, 2])
@@ -568,6 +626,7 @@ class TestTicketAssignmentService:
 
     def test_get_project_members_with_exclude(self):
         from app.services.ticket_assignment_service import get_project_members_for_ticket
+
         db = MagicMock()
         member = MagicMock()
         member.user_id = 5
@@ -575,7 +634,9 @@ class TestTicketAssignmentService:
         member.user.username = "alice"
         member.user.real_name = "Alice"
         member.role_code = "PM"
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [member]
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            member
+        ]
         result = get_project_members_for_ticket(db, project_ids=[1], exclude_user_id=10)
         assert isinstance(result, list)
 
@@ -586,6 +647,7 @@ class TestTicketAssignmentService:
 class TestPresaleAITemplateService:
     def test_get_template_not_found(self):
         from app.services.presale_ai_template_service import PresaleAITemplateService
+
         db = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = None
         svc = PresaleAITemplateService(db)
@@ -594,6 +656,7 @@ class TestPresaleAITemplateService:
 
     def test_delete_template_not_found(self):
         from app.services.presale_ai_template_service import PresaleAITemplateService
+
         db = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = None
         svc = PresaleAITemplateService(db)
@@ -602,6 +665,7 @@ class TestPresaleAITemplateService:
 
     def test_delete_template_success(self):
         from app.services.presale_ai_template_service import PresaleAITemplateService
+
         db = MagicMock()
         template = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = template
@@ -612,6 +676,7 @@ class TestPresaleAITemplateService:
 
     def test_update_template_not_found(self):
         from app.services.presale_ai_template_service import PresaleAITemplateService
+
         db = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = None
         svc = PresaleAITemplateService(db)
@@ -625,18 +690,21 @@ class TestPresaleAITemplateService:
 class TestProjectReportAdapter:
     def test_get_report_code_weekly(self):
         from app.services.report_framework.adapters.project import ProjectReportAdapter
+
         db = MagicMock()
         adapter = ProjectReportAdapter(db, report_type="weekly")
         assert adapter.get_report_code() == "PROJECT_WEEKLY"
 
     def test_get_report_code_monthly(self):
         from app.services.report_framework.adapters.project import ProjectReportAdapter
+
         db = MagicMock()
         adapter = ProjectReportAdapter(db, report_type="monthly")
         assert adapter.get_report_code() == "PROJECT_MONTHLY"
 
     def test_generate_data_no_project_id(self):
         from app.services.report_framework.adapters.project import ProjectReportAdapter
+
         db = MagicMock()
         adapter = ProjectReportAdapter(db)
         with pytest.raises(ValueError, match="project_id"):
@@ -649,18 +717,21 @@ class TestProjectReportAdapter:
 class TestDeptReportAdapter:
     def test_get_report_code_weekly(self):
         from app.services.report_framework.adapters.department import DeptReportAdapter
+
         db = MagicMock()
         adapter = DeptReportAdapter(db, report_type="weekly")
         assert adapter.get_report_code() == "DEPT_WEEKLY"
 
     def test_get_report_code_monthly(self):
         from app.services.report_framework.adapters.department import DeptReportAdapter
+
         db = MagicMock()
         adapter = DeptReportAdapter(db, report_type="monthly")
         assert adapter.get_report_code() == "DEPT_MONTHLY"
 
     def test_generate_data_no_dept_id(self):
         from app.services.report_framework.adapters.department import DeptReportAdapter
+
         db = MagicMock()
         adapter = DeptReportAdapter(db)
         with pytest.raises(ValueError, match="department_id"):
@@ -673,6 +744,7 @@ class TestDeptReportAdapter:
 class TestExportMixin:
     def _make_mixin(self, db):
         from app.services.data_integrity.export import ExportMixin
+
         obj = ExportMixin.__new__(ExportMixin)
         obj.db = db
         return obj
@@ -701,6 +773,7 @@ class TestExportMixin:
 class TestAnnualWorkCrud:
     def test_get_annual_work_not_found(self):
         from app.services.strategy.annual_work_service.crud import get_annual_work
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.first.return_value = None
         result = get_annual_work(db, work_id=999)
@@ -708,6 +781,7 @@ class TestAnnualWorkCrud:
 
     def test_get_annual_work_found(self):
         from app.services.strategy.annual_work_service.crud import get_annual_work
+
         db = MagicMock()
         work = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.first.return_value = work
@@ -716,6 +790,7 @@ class TestAnnualWorkCrud:
 
     def test_create_annual_work(self):
         from app.services.strategy.annual_work_service.crud import create_annual_work
+
         db = MagicMock()
         db.refresh.side_effect = lambda x: None
         data = MagicMock()
@@ -742,18 +817,21 @@ class TestAnnualWorkCrud:
 class TestEcnNotificationUtils:
     def test_find_users_by_department_empty_name(self):
         from app.services.ecn_notification.utils import find_users_by_department
+
         db = MagicMock()
         result = find_users_by_department(db, department_name="")
         assert result == []
 
     def test_find_users_by_role_empty_code(self):
         from app.services.ecn_notification.utils import find_users_by_role
+
         db = MagicMock()
         result = find_users_by_role(db, role_code="")
         assert result == []
 
     def test_find_users_by_department_no_dept(self):
         from app.services.ecn_notification.utils import find_users_by_department
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
@@ -767,6 +845,7 @@ class TestEcnNotificationUtils:
 class TestDataReportMixin:
     def _make_mixin(self, db):
         from app.services.data_integrity.report import DataReportMixin
+
         obj = DataReportMixin.__new__(DataReportMixin)
         obj.db = db
         return obj
@@ -794,16 +873,18 @@ class TestDataReportMixin:
 class TestExcelTemplateService:
     def test_create_template_excel_returns_streaming(self):
         from app.services.excel_template_service import create_template_excel
+
         template_data = {"列A": ["示例1"], "列B": ["示例2"]}
         result = create_template_excel(
             template_data=template_data,
             sheet_name="Sheet1",
             column_widths={"A": 20, "B": 30},
             instructions="请按照模板填写",
-            filename_prefix="test_template"
+            filename_prefix="test_template",
         )
         # Should return a StreamingResponse
         from fastapi.responses import StreamingResponse
+
         assert isinstance(result, StreamingResponse)
 
 
@@ -813,31 +894,37 @@ class TestExcelTemplateService:
 class TestDeptReportMixin:
     def test_generate_dept_weekly_dept_not_found(self):
         from app.services.template_report.dept_reports import DeptReportMixin
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = DeptReportMixin._generate_dept_weekly(
-            db, department_id=999,
+            db,
+            department_id=999,
             start_date=date(2025, 1, 1),
             end_date=date(2025, 1, 7),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert "error" in result
 
     def test_generate_dept_weekly_empty_users(self):
         from app.services.template_report.dept_reports import DeptReportMixin
+
         db = MagicMock()
         dept = MagicMock()
         dept.name = "Engineering"
         db.query.return_value.filter.return_value.first.return_value = dept
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         result = DeptReportMixin._generate_dept_weekly(
-            db, department_id=1,
+            db,
+            department_id=1,
             start_date=date(2025, 1, 1),
             end_date=date(2025, 1, 7),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert isinstance(result, dict)
 
@@ -848,12 +935,14 @@ class TestDeptReportMixin:
 class TestWorkloadAnalysisAdapter:
     def test_get_report_code(self):
         from app.services.report_framework.adapters.analysis import WorkloadAnalysisAdapter
+
         db = MagicMock()
         adapter = WorkloadAnalysisAdapter(db)
         assert adapter.get_report_code() == "WORKLOAD_ANALYSIS"
 
     def test_cost_analysis_adapter_code(self):
         from app.services.report_framework.adapters.analysis import CostAnalysisAdapter
+
         db = MagicMock()
         adapter = CostAnalysisAdapter(db)
         assert adapter.get_report_code() == "COST_ANALYSIS"
@@ -864,21 +953,36 @@ class TestWorkloadAnalysisAdapter:
 # ─────────────────────────────────────────────────────────────────
 class TestReportDataGenerationAdapter:
     def test_get_report_code_known(self):
-        from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
+        from app.services.report_framework.adapters.report_data_generation import (
+            ReportDataGenerationAdapter,
+        )
+
         db = MagicMock()
         adapter = ReportDataGenerationAdapter(db, report_type="PROJECT_WEEKLY")
         assert adapter.get_report_code() == "PROJECT_WEEKLY"
 
     def test_get_report_code_unknown(self):
-        from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
+        from app.services.report_framework.adapters.report_data_generation import (
+            ReportDataGenerationAdapter,
+        )
+
         db = MagicMock()
         adapter = ReportDataGenerationAdapter(db, report_type="CUSTOM_TYPE")
         assert adapter.get_report_code() == "CUSTOM_TYPE"
 
     def test_report_type_map_has_all_types(self):
-        from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
-        expected = {"PROJECT_WEEKLY", "PROJECT_MONTHLY", "DEPT_WEEKLY", "DEPT_MONTHLY",
-                    "WORKLOAD_ANALYSIS", "COST_ANALYSIS"}
+        from app.services.report_framework.adapters.report_data_generation import (
+            ReportDataGenerationAdapter,
+        )
+
+        expected = {
+            "PROJECT_WEEKLY",
+            "PROJECT_MONTHLY",
+            "DEPT_WEEKLY",
+            "DEPT_MONTHLY",
+            "WORKLOAD_ANALYSIS",
+            "COST_ANALYSIS",
+        }
         actual = set(ReportDataGenerationAdapter.REPORT_TYPE_MAP.keys())
         assert expected == actual
 
@@ -889,6 +993,7 @@ class TestReportDataGenerationAdapter:
 class TestRoutineManagement:
     def test_get_routine_management_cycle_structure(self):
         from app.services.strategy.review.routine_management import get_routine_management_cycle
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = get_routine_management_cycle(db, strategy_id=1)
@@ -907,6 +1012,7 @@ class TestRoutineManagement:
 class TestHelpersMixin:
     def _make_mixin(self, db):
         from app.services.stage_template.helpers import HelpersMixin
+
         obj = HelpersMixin.__new__(HelpersMixin)
         obj.db = db
         return obj
@@ -925,9 +1031,7 @@ class TestHelpersMixin:
         db.query.return_value.filter.return_value.first.return_value = node
         mixin = self._make_mixin(db)
         result = mixin._has_circular_dependency(
-            node_id=1,
-            new_dependency_ids=[2, 3],
-            template_id=10
+            node_id=1, new_dependency_ids=[2, 3], template_id=10
         )
         assert result is False
 
@@ -947,6 +1051,7 @@ class TestHelpersMixin:
 class TestTemplateReportCore:
     def test_generate_from_template_sets_defaults(self):
         from app.services.template_report.core import TemplateReportCore
+
         db = MagicMock()
         template = MagicMock()
         template.id = 1
@@ -956,13 +1061,13 @@ class TestTemplateReportCore:
         template.sections = {}
         template.metrics_config = {}
 
-        with patch("app.services.template_report.core.ProjectReportMixin") as MockPRM, \
-             patch("app.services.template_report.core.DeptReportMixin") as MockDRM, \
-             patch("app.services.template_report.core.AnalysisReportMixin") as MockARM:
+        with (
+            patch("app.services.template_report.core.ProjectReportMixin") as MockPRM,
+            patch("app.services.template_report.core.DeptReportMixin") as MockDRM,
+            patch("app.services.template_report.core.AnalysisReportMixin") as MockARM,
+        ):
             result = TemplateReportCore.generate_from_template(
-                db, template,
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 1, 7)
+                db, template, start_date=date(2025, 1, 1), end_date=date(2025, 1, 7)
             )
         assert result["template_id"] == 1
         assert result["template_code"] == "T001"
@@ -974,18 +1079,26 @@ class TestTemplateReportCore:
 # ─────────────────────────────────────────────────────────────────
 class TestWinRateHistory:
     def test_get_salesperson_historical_win_rate_no_data(self):
-        from app.services.win_rate_prediction_service.history import get_salesperson_historical_win_rate
+        from app.services.win_rate_prediction_service.history import (
+            get_salesperson_historical_win_rate,
+        )
+
         service = MagicMock()
         stats = MagicMock()
         stats.total = 0
         stats.won = 0
-        service.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = stats
+        service.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            stats
+        )
         win_rate, count = get_salesperson_historical_win_rate(service, salesperson_id=1)
         assert win_rate == 0.20  # industry average
         assert count == 0
 
     def test_get_customer_cooperation_history_by_id(self):
-        from app.services.win_rate_prediction_service.history import get_customer_cooperation_history
+        from app.services.win_rate_prediction_service.history import (
+            get_customer_cooperation_history,
+        )
+
         service = MagicMock()
         service.db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
         total, won = get_customer_cooperation_history(service, customer_id=1)
@@ -999,18 +1112,21 @@ class TestWinRateHistory:
 class TestReportRouterMixin:
     def test_generate_report_project_weekly_no_id(self):
         from app.services.report_data_generation.router import ReportRouterMixin
+
         db = MagicMock()
         result = ReportRouterMixin.generate_report_by_type(db, report_type="PROJECT_WEEKLY")
         assert "error" in result
 
     def test_generate_report_dept_weekly_no_id(self):
         from app.services.report_data_generation.router import ReportRouterMixin
+
         db = MagicMock()
         result = ReportRouterMixin.generate_report_by_type(db, report_type="DEPT_WEEKLY")
         assert "error" in result
 
     def test_generate_report_unknown_type(self):
         from app.services.report_data_generation.router import ReportRouterMixin
+
         db = MagicMock()
         result = ReportRouterMixin.generate_report_by_type(db, report_type="UNKNOWN_TYPE")
         assert "error" in result or isinstance(result, dict)
@@ -1022,6 +1138,7 @@ class TestReportRouterMixin:
 class TestTeamBonusCalculator:
     def test_calculate_zero_coefficient(self):
         from app.services.bonus.team import TeamBonusCalculator
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         db.add.return_value = None
@@ -1039,6 +1156,7 @@ class TestTeamBonusCalculator:
 
     def test_calculate_with_contributions(self):
         from app.services.bonus.team import TeamBonusCalculator
+
         db = MagicMock()
         contrib = MagicMock()
         contrib.user_id = 1
@@ -1064,6 +1182,7 @@ class TestTeamBonusCalculator:
 class TestPresaleAIExportService:
     def test_export_to_pdf_not_found(self):
         from app.services.presale_ai_export_service import PresaleAIExportService
+
         db = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = None
         svc = PresaleAIExportService(db)
@@ -1072,6 +1191,7 @@ class TestPresaleAIExportService:
 
     def test_export_to_pdf_success(self, tmp_path):
         from app.services.presale_ai_export_service import PresaleAIExportService
+
         db = MagicMock()
         solution = MagicMock()
         solution.solution_description = "Test solution"
@@ -1083,6 +1203,7 @@ class TestPresaleAIExportService:
         filepath = svc.export_to_pdf(solution_id=1)
         assert filepath.endswith(".pdf")
         import os
+
         assert os.path.exists(filepath)
 
 
@@ -1092,6 +1213,7 @@ class TestPresaleAIExportService:
 class TestLeadPriorityRanking:
     def _make_mixin(self, db):
         from app.services.lead_priority_scoring.ranking import RankingMixin
+
         obj = RankingMixin.__new__(RankingMixin)
         obj.db = db
         return obj
@@ -1117,18 +1239,21 @@ class TestLeadPriorityRanking:
 class TestSalesReminderBase:
     def test_find_users_by_role_empty(self):
         from app.services.sales_reminder.base import find_users_by_role
+
         db = MagicMock()
         result = find_users_by_role(db, role_name="")
         assert result == []
 
     def test_find_users_by_department_empty(self):
         from app.services.sales_reminder.base import find_users_by_department
+
         db = MagicMock()
         result = find_users_by_department(db, dept_name="")
         assert result == []
 
     def test_find_users_by_role_no_roles(self):
         from app.services.sales_reminder.base import find_users_by_role
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = find_users_by_role(db, role_name="SALES_MANAGER")
@@ -1141,6 +1266,7 @@ class TestSalesReminderBase:
 class TestInvestmentAnalysisMixin:
     def _make_mixin(self, db):
         from app.services.resource_waste_analysis.investment import InvestmentAnalysisMixin
+
         obj = InvestmentAnalysisMixin.__new__(InvestmentAnalysisMixin)
         obj.db = db
         obj.hourly_rate = Decimal("100")
@@ -1177,17 +1303,20 @@ class TestInvestmentAnalysisMixin:
 class TestReportDataGenerationCore:
     def test_get_allowed_reports_known_role(self):
         from app.services.report_data_generation.core import ReportDataGenerationCore
+
         reports = ReportDataGenerationCore.get_allowed_reports("PROJECT_MANAGER")
         assert "PROJECT_WEEKLY" in reports
         assert "PROJECT_MONTHLY" in reports
 
     def test_get_allowed_reports_unknown_role(self):
         from app.services.report_data_generation.core import ReportDataGenerationCore
+
         reports = ReportDataGenerationCore.get_allowed_reports("UNKNOWN_ROLE")
         assert reports == []
 
     def test_check_permission_superuser(self):
         from app.services.report_data_generation.core import ReportDataGenerationCore
+
         db = MagicMock()
         user = MagicMock()
         user.is_superuser = True
@@ -1196,11 +1325,14 @@ class TestReportDataGenerationCore:
 
     def test_check_permission_no_roles(self):
         from app.services.report_data_generation.core import ReportDataGenerationCore
+
         db = MagicMock()
         user = MagicMock()
         user.is_superuser = False
         user.id = 1
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         result = ReportDataGenerationCore.check_permission(db, user, "PROJECT_WEEKLY")
         assert result is False
 
@@ -1211,6 +1343,7 @@ class TestReportDataGenerationCore:
 class TestGlmServiceWrapper:
     def test_get_glm_service_singleton(self):
         from app.services import glm_service as glm_module
+
         glm_module._glm_service = None  # Reset singleton
         with patch("app.services.glm_service.GLMService") as MockGLM:
             mock_instance = MagicMock()
@@ -1222,6 +1355,7 @@ class TestGlmServiceWrapper:
     @pytest.mark.asyncio
     async def test_call_glm_api_unavailable(self):
         from app.services import glm_service as glm_module
+
         glm_module._glm_service = None
         with patch("app.services.glm_service.GLMService") as MockGLM:
             mock_svc = MagicMock()
@@ -1238,30 +1372,46 @@ class TestGlmServiceWrapper:
 class TestResourceAllocation:
     def test_allocate_resources_with_conflicts(self):
         from app.services.resource_allocation_service.allocation import allocate_resources
-        with patch("app.services.resource_allocation_service.allocation.detect_resource_conflicts",
-                   return_value=[{"type": "overlap"}]):
+
+        with patch(
+            "app.services.resource_allocation_service.allocation.detect_resource_conflicts",
+            return_value=[{"type": "overlap"}],
+        ):
             db = MagicMock()
             result = allocate_resources(
-                db, project_id=1, machine_id=None,
+                db,
+                project_id=1,
+                machine_id=None,
                 suggested_start_date=date(2025, 3, 1),
-                suggested_end_date=date(2025, 3, 31)
+                suggested_end_date=date(2025, 3, 31),
             )
         assert result["can_allocate"] is False
         assert len(result["conflicts"]) > 0
 
     def test_allocate_resources_no_conflicts(self):
         from app.services.resource_allocation_service.allocation import allocate_resources
-        with patch("app.services.resource_allocation_service.allocation.detect_resource_conflicts",
-                   return_value=[]), \
-             patch("app.services.resource_allocation_service.allocation.find_available_workstations",
-                   return_value=[{"id": 1}]), \
-             patch("app.services.resource_allocation_service.allocation.find_available_workers",
-                   return_value=[{"id": 10}]):
+
+        with (
+            patch(
+                "app.services.resource_allocation_service.allocation.detect_resource_conflicts",
+                return_value=[],
+            ),
+            patch(
+                "app.services.resource_allocation_service.allocation.find_available_workstations",
+                return_value=[{"id": 1}],
+            ),
+            patch(
+                "app.services.resource_allocation_service.allocation.find_available_workers",
+                return_value=[{"id": 10}],
+            ),
+        ):
             db = MagicMock()
             result = allocate_resources(
-                db, project_id=1, machine_id=None,
+                db,
+                project_id=1,
+                machine_id=None,
                 suggested_start_date=date(2025, 3, 1),
-                suggested_end_date=date(2025, 3, 31)
+                suggested_end_date=date(2025, 3, 31),
             )
         assert result["can_allocate"] is True
         assert len(result["workstations"]) == 1
@@ -1273,31 +1423,37 @@ class TestResourceAllocation:
 class TestAcceptanceBonusTrigger:
     def test_trigger_calculation_empty_rules(self):
         from app.services.bonus.acceptance import AcceptanceBonusTrigger
+
         db = MagicMock()
         trigger = AcceptanceBonusTrigger(db)
         project = MagicMock()
         project.id = 1
         acceptance_order = MagicMock()
-        with patch("app.services.bonus.acceptance.get_active_rules", return_value=[]), \
-             patch("app.services.bonus.acceptance.calculate_sales_bonus", return_value=None), \
-             patch("app.services.bonus.acceptance.calculate_presale_bonus", return_value=None), \
-             patch("app.services.bonus.acceptance.calculate_project_bonus", return_value=None):
+        with (
+            patch("app.services.bonus.acceptance.get_active_rules", return_value=[]),
+            patch("app.services.bonus.acceptance.calculate_sales_bonus", return_value=None),
+            patch("app.services.bonus.acceptance.calculate_presale_bonus", return_value=None),
+            patch("app.services.bonus.acceptance.calculate_project_bonus", return_value=None),
+        ):
             result = trigger.trigger_calculation(project, acceptance_order)
         assert isinstance(result, list)
         assert len(result) == 0
 
     def test_trigger_calculation_with_allocations(self):
         from app.services.bonus.acceptance import AcceptanceBonusTrigger
+
         db = MagicMock()
         trigger = AcceptanceBonusTrigger(db)
         project = MagicMock()
         project.id = 1
         acceptance_order = MagicMock()
         mock_alloc = MagicMock()
-        with patch("app.services.bonus.acceptance.get_active_rules", return_value=[MagicMock()]), \
-             patch("app.services.bonus.acceptance.calculate_sales_bonus", return_value=mock_alloc), \
-             patch("app.services.bonus.acceptance.calculate_presale_bonus", return_value=None), \
-             patch("app.services.bonus.acceptance.calculate_project_bonus", return_value=mock_alloc):
+        with (
+            patch("app.services.bonus.acceptance.get_active_rules", return_value=[MagicMock()]),
+            patch("app.services.bonus.acceptance.calculate_sales_bonus", return_value=mock_alloc),
+            patch("app.services.bonus.acceptance.calculate_presale_bonus", return_value=None),
+            patch("app.services.bonus.acceptance.calculate_project_bonus", return_value=mock_alloc),
+        ):
             result = trigger.trigger_calculation(project, acceptance_order)
         assert len(result) == 2
 
@@ -1308,20 +1464,30 @@ class TestAcceptanceBonusTrigger:
 class TestDecompositionStats:
     def test_get_decomposition_stats_zero_counts(self):
         from app.services.strategy.decomposition.stats import get_decomposition_stats
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 0
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            0
+        )
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            0
+        )
         result = get_decomposition_stats(db, strategy_id=1, year=2025)
         assert isinstance(result, dict)
         assert result.get("csf_count", 0) == 0
 
     def test_get_decomposition_stats_default_year(self):
         from app.services.strategy.decomposition.stats import get_decomposition_stats
+
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.count.return_value = 5
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 10
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 3
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            10
+        )
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            3
+        )
         result = get_decomposition_stats(db, strategy_id=1)
         assert isinstance(result, dict)
 
@@ -1332,6 +1498,7 @@ class TestDecompositionStats:
 class TestBonusCalculatorBase:
     def test_check_trigger_condition_no_condition(self):
         from app.services.bonus.base import BonusCalculatorBase
+
         db = MagicMock()
         calc = BonusCalculatorBase(db)
         rule = MagicMock()
@@ -1341,6 +1508,7 @@ class TestBonusCalculatorBase:
 
     def test_check_trigger_condition_performance_level_match(self):
         from app.services.bonus.base import BonusCalculatorBase
+
         db = MagicMock()
         calc = BonusCalculatorBase(db)
         rule = MagicMock()
@@ -1352,6 +1520,7 @@ class TestBonusCalculatorBase:
 
     def test_check_trigger_condition_performance_level_mismatch(self):
         from app.services.bonus.base import BonusCalculatorBase
+
         db = MagicMock()
         calc = BonusCalculatorBase(db)
         rule = MagicMock()
@@ -1363,6 +1532,7 @@ class TestBonusCalculatorBase:
 
     def test_generate_calculation_code_format(self):
         from app.services.bonus.base import BonusCalculatorBase
+
         db = MagicMock()
         calc = BonusCalculatorBase(db)
         code = calc.generate_calculation_code()

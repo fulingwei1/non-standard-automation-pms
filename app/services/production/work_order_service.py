@@ -50,7 +50,9 @@ class WorkOrderService:
 
         workstation_name = None
         if order.workstation_id:
-            workstation = self.db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
+            workstation = (
+                self.db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
+            )
             workstation_name = workstation.workstation_name if workstation else None
 
         process_name = None
@@ -232,7 +234,9 @@ class WorkOrderService:
 
                 # 验证工人
                 if assign_in.assigned_to:
-                    worker = self.db.query(Worker).filter(Worker.id == assign_in.assigned_to).first()
+                    worker = (
+                        self.db.query(Worker).filter(Worker.id == assign_in.assigned_to).first()
+                    )
                     if not worker:
                         failed_orders.append({"order_id": order_id, "reason": "工人不存在"})
                         continue

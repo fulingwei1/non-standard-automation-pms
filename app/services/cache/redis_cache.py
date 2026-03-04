@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 # 尝试导入Redis
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -22,6 +23,7 @@ except ImportError:
 
 class CacheKeys:
     """缓存键常量"""
+
     PROJECT = "project"
     PROJECT_LIST = "project:list"
     PROJECT_DASHBOARD = "project:dashboard"
@@ -310,12 +312,14 @@ def get_cache() -> RedisCache:
     if _redis_cache_instance is None:
         # 从环境变量读取Redis配置
         import os
+
         redis_url = os.getenv("REDIS_URL", "")
-        
+
         if redis_url:
             # 解析Redis URL (格式: redis://[:password@]host[:port][/db])
             try:
                 from urllib.parse import urlparse
+
                 parsed = urlparse(redis_url)
                 _redis_cache_instance = RedisCache(
                     host=parsed.hostname or "localhost",
@@ -328,7 +332,7 @@ def get_cache() -> RedisCache:
                 _redis_cache_instance = RedisCache()
         else:
             _redis_cache_instance = RedisCache()
-    
+
     return _redis_cache_instance
 
 
@@ -344,25 +348,28 @@ def cache_result(expire: int = 300):
         def get_project(project_id: int):
             return db.query(Project).filter_by(id=project_id).first()
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             cache = get_cache()
-            
+
             # 生成缓存键
             import hashlib
+
             key_str = f"{func.__module__}.{func.__name__}:{args}:{kwargs}"
             key_hash = hashlib.md5(key_str.encode()).hexdigest()
             cache_key_str = f"func:{key_hash}"
-            
+
             # 尝试从缓存获取
             cached = cache.get(cache_key_str)
             if cached is not None:
                 return cached
-            
+
             # 执行函数并缓存结果
             result = func(*args, **kwargs)
             cache.set(cache_key_str, result, expire=expire)
             return result
-        
+
         return wrapper
+
     return decorator

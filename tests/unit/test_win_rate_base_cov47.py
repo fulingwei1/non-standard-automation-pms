@@ -39,6 +39,7 @@ def test_dimension_weights_keys():
 
 def test_probability_thresholds_coverage():
     from app.models.enums import WinProbabilityLevelEnum
+
     db = MagicMock()
     svc = WinRatePredictionService(db)
     # 每个枚举值都应该有对应阈值
@@ -48,6 +49,7 @@ def test_probability_thresholds_coverage():
 
 def test_probability_thresholds_ordered():
     from app.models.enums import WinProbabilityLevelEnum
+
     db = MagicMock()
     svc = WinRatePredictionService(db)
     values = list(svc.PROBABILITY_THRESHOLDS.values())

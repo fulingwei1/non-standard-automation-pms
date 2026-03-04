@@ -2,12 +2,14 @@
 """
 第六批覆盖测试 - approval_engine/router.py
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from typing import Any, Dict
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.router import ApprovalRouterService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -49,8 +51,10 @@ class TestSelectFlow:
         mock_rule = MagicMock()
         mock_rule.conditions = {"field": "amount", "op": ">=", "value": 10000}
         mock_rule.flow = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_rule]
-        with patch.object(router, '_evaluate_conditions', return_value=True):
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_rule
+        ]
+        with patch.object(router, "_evaluate_conditions", return_value=True):
             result = router.select_flow(template_id=1, context=context)
         # Returns the matching flow
         assert True
@@ -140,11 +144,7 @@ class TestGetNextNodes:
     def test_get_next_nodes_no_current(self, router, mock_db, context):
         mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
         try:
-            result = router.get_next_nodes(
-                flow_id=1,
-                current_node_id=None,
-                context=context
-            )
+            result = router.get_next_nodes(flow_id=1, current_node_id=None, context=context)
             assert isinstance(result, list)
         except Exception:
             pass

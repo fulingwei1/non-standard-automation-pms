@@ -6,7 +6,6 @@ Generates API integration tests for low-coverage endpoints
 
 from pathlib import Path
 
-
 LOW_COVERAGE_API_ENDPOINTS = [
     ("projects/gate_checks", 6.2, 224),
     ("presales_integration/utils", 9.7, 62),

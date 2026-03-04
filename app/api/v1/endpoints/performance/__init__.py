@@ -25,4 +25,4 @@ router.include_router(manager_api_router)
 router.include_router(hr_api_router)
 router.include_router(integration_router)
 
-__all__ = ['router']
+__all__ = ["router"]

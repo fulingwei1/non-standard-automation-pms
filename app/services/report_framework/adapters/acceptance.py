@@ -7,18 +7,17 @@
 
 from typing import Any, Dict, Optional
 
-
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 
 
 class AcceptanceReportAdapter(BaseReportAdapter):
     """验收报表适配器"""
-    
+
     def get_report_code(self) -> str:
         """返回报表代码"""
         return "ACCEPTANCE_REPORT"
-    
+
     def generate_data(
         self,
         params: Dict[str, Any],
@@ -26,39 +25,42 @@ class AcceptanceReportAdapter(BaseReportAdapter):
     ) -> Dict[str, Any]:
         """
         生成验收报表数据
-        
+
         Args:
             params: 报表参数（包含order_id和report_type）
             user: 当前用户
-            
+
         Returns:
             报表数据字典
         """
-        from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
         from sqlalchemy import func
-        
+
+        from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
+
         order_id = params.get("order_id")
         if not order_id:
             raise ValueError("order_id参数是必需的")
-        
-        order = self.db.query(AcceptanceOrder).filter(
-            AcceptanceOrder.id == order_id
-        ).first()
-        
+
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+
         if not order:
             raise ValueError(f"验收单不存在: {order_id}")
-        
+
         # 获取项目信息
-        project_name = order.project.project_name if hasattr(order, "project") and order.project else None
-        machine_name = order.machine.machine_name if hasattr(order, "machine") and order.machine else None
-        
+        project_name = (
+            order.project.project_name if hasattr(order, "project") and order.project else None
+        )
+        machine_name = (
+            order.machine.machine_name if hasattr(order, "machine") and order.machine else None
+        )
+
         # 获取问题统计
         total_issues = (
             self.db.query(func.count(AcceptanceIssue.id))
             .filter(AcceptanceIssue.order_id == order_id)
             .scalar()
         ) or 0
-        
+
         resolved_issues = (
             self.db.query(func.count(AcceptanceIssue.id))
             .filter(
@@ -67,7 +69,7 @@ class AcceptanceReportAdapter(BaseReportAdapter):
             )
             .scalar()
         ) or 0
-        
+
         return {
             "title": "验收报告",
             "summary": {

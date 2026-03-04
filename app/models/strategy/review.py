@@ -27,7 +27,9 @@ class StrategyReview(Base, TimestampMixin):
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 审视信息
-    review_type = Column(String(20), nullable=False, comment="审视类型：ANNUAL/QUARTERLY/MONTHLY/SPECIAL")
+    review_type = Column(
+        String(20), nullable=False, comment="审视类型：ANNUAL/QUARTERLY/MONTHLY/SPECIAL"
+    )
     review_date = Column(Date, nullable=False, comment="审视日期")
     review_period = Column(String(20), comment="审视周期，如 2026-Q1")
 
@@ -83,7 +85,11 @@ class StrategyCalendarEvent(Base, TimestampMixin):
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 事件基本信息
-    event_type = Column(String(30), nullable=False, comment="事件类型：ANNUAL_PLANNING/QUARTERLY_REVIEW/MONTHLY_TRACKING/KPI_COLLECTION/DECOMPOSITION/ASSESSMENT")
+    event_type = Column(
+        String(30),
+        nullable=False,
+        comment="事件类型：ANNUAL_PLANNING/QUARTERLY_REVIEW/MONTHLY_TRACKING/KPI_COLLECTION/DECOMPOSITION/ASSESSMENT",
+    )
     name = Column(String(200), nullable=False, comment="事件名称")
     description = Column(Text, comment="事件描述")
 
@@ -104,7 +110,9 @@ class StrategyCalendarEvent(Base, TimestampMixin):
     participants = Column(Text, comment="参与人员（JSON数组）")
 
     # 状态
-    status = Column(String(20), default="PLANNED", comment="状态：PLANNED/IN_PROGRESS/COMPLETED/CANCELLED")
+    status = Column(
+        String(20), default="PLANNED", comment="状态：PLANNED/IN_PROGRESS/COMPLETED/CANCELLED"
+    )
 
     # 关联审视记录
     review_id = Column(Integer, ForeignKey("strategy_reviews.id"), comment="关联审视记录")

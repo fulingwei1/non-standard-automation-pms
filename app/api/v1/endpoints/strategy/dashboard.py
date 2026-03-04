@@ -89,7 +89,7 @@ def get_strategy_overview(
 @router.get("/my-strategy", response_model=MyStrategyDashboardResponse)
 def get_my_strategy(
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     获取我的战略相关信息
@@ -114,20 +114,30 @@ def get_my_strategy(
         )
 
     # 获取我负责的公司 KPI
-    my_kpis = db.query(KPI).join(CSF).filter(
-        CSF.strategy_id == active_strategy.id,
-        CSF.is_active,
-        KPI.is_active,
-        KPI.owner_user_id == user_id
-    ).all()
+    my_kpis = (
+        db.query(KPI)
+        .join(CSF)
+        .filter(
+            CSF.strategy_id == active_strategy.id,
+            CSF.is_active,
+            KPI.is_active,
+            KPI.owner_user_id == user_id,
+        )
+        .all()
+    )
 
     # 获取我负责的年度重点工作
-    my_annual_works = db.query(AnnualKeyWork).join(CSF).filter(
-        CSF.strategy_id == active_strategy.id,
-        CSF.is_active,
-        AnnualKeyWork.is_active,
-        AnnualKeyWork.owner_user_id == user_id
-    ).all()
+    my_annual_works = (
+        db.query(AnnualKeyWork)
+        .join(CSF)
+        .filter(
+            CSF.strategy_id == active_strategy.id,
+            CSF.is_active,
+            AnnualKeyWork.is_active,
+            AnnualKeyWork.owner_user_id == user_id,
+        )
+        .all()
+    )
 
     # 获取我的个人 KPI（PersonalKPI 模型字段：id, kpi_name, target_value, actual_value, status，无 code）
     my_personal_kpis, _ = strategy_service.list_personal_kpis(
@@ -136,7 +146,9 @@ def get_my_strategy(
 
     # 统计完成情况（PersonalKPI.status：PENDING/SELF_RATED/MANAGER_RATED/CONFIRMED）
     total_count = len(my_personal_kpis)
-    completed_count = sum(1 for kpi in my_personal_kpis if getattr(kpi, "status", None) == "CONFIRMED")
+    completed_count = sum(
+        1 for kpi in my_personal_kpis if getattr(kpi, "status", None) == "CONFIRMED"
+    )
 
     return MyStrategyDashboardResponse(
         strategy_id=active_strategy.id,
@@ -147,7 +159,9 @@ def get_my_strategy(
                 "code": kpi.code,
                 "name": kpi.name,
                 "target_value": float(kpi.target_value) if kpi.target_value is not None else None,
-                "current_value": float(kpi.current_value) if kpi.current_value is not None else None,
+                "current_value": (
+                    float(kpi.current_value) if kpi.current_value is not None else None
+                ),
                 "completion_rate": strategy_service.calculate_kpi_completion_rate(kpi),
             }
             for kpi in my_kpis
@@ -200,12 +214,17 @@ def get_execution_status(
     items = []
     for dim_code, dim_name in dimension_names.items():
         # 统计 KPI
-        kpis = db.query(KPI).join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dim_code,
-            CSF.is_active,
-            KPI.is_active
-        ).all()
+        kpis = (
+            db.query(KPI)
+            .join(CSF)
+            .filter(
+                CSF.strategy_id == strategy_id,
+                CSF.dimension == dim_code,
+                CSF.is_active,
+                KPI.is_active,
+            )
+            .all()
+        )
 
         kpi_total = len(kpis)
         kpi_on_track = 0
@@ -224,30 +243,37 @@ def get_execution_status(
                 kpi_off_track += 1
 
         # 统计年度重点工作
-        works = db.query(AnnualKeyWork).join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dim_code,
-            CSF.is_active,
-            AnnualKeyWork.is_active
-        ).all()
+        works = (
+            db.query(AnnualKeyWork)
+            .join(CSF)
+            .filter(
+                CSF.strategy_id == strategy_id,
+                CSF.dimension == dim_code,
+                CSF.is_active,
+                AnnualKeyWork.is_active,
+            )
+            .all()
+        )
 
         work_total = len(works)
         work_completed = sum(1 for w in works if w.status == "COMPLETED")
         work_in_progress = sum(1 for w in works if w.status == "IN_PROGRESS")
         work_not_started = sum(1 for w in works if w.status in ["NOT_STARTED", None])
 
-        items.append({
-            "dimension": dim_code,
-            "dimension_name": dim_name,
-            "kpi_total": kpi_total,
-            "kpi_on_track": kpi_on_track,
-            "kpi_at_risk": kpi_at_risk,
-            "kpi_off_track": kpi_off_track,
-            "work_total": work_total,
-            "work_completed": work_completed,
-            "work_in_progress": work_in_progress,
-            "work_not_started": work_not_started,
-        })
+        items.append(
+            {
+                "dimension": dim_code,
+                "dimension_name": dim_name,
+                "kpi_total": kpi_total,
+                "kpi_on_track": kpi_on_track,
+                "kpi_at_risk": kpi_at_risk,
+                "kpi_off_track": kpi_off_track,
+                "work_total": work_total,
+                "work_completed": work_completed,
+                "work_in_progress": work_in_progress,
+                "work_not_started": work_not_started,
+            }
+        )
 
     return ExecutionStatusResponse(
         strategy_id=strategy_id,
@@ -257,44 +283,40 @@ def get_execution_status(
 
 class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
     """战略快速统计端点（使用基类）"""
-    
+
     module_name = "strategy"
     permission_required = None
-    
+
     def __init__(self):
         """初始化路由"""
         # 只注册quick-stats端点
         self.router = APIRouter()
         self._register_custom_routes()
-    
+
     def _register_custom_routes(self):
         """注册quick-stats端点"""
         user_dependency = self._get_user_dependency()
-        
+
         async def quick_stats_endpoint(
             db: Session = Depends(deps.get_db),
-            current_user = Depends(user_dependency),
+            current_user=Depends(user_dependency),
         ):
             return self._get_quick_stats_handler(db, current_user)
-        
+
         self.router.add_api_route(
             "/quick-stats",
             quick_stats_endpoint,
             methods=["GET"],
             summary="获取快速统计",
-            response_model=Dict[str, Any]
+            response_model=Dict[str, Any],
         )
-    
-    def get_dashboard_data(
-        self,
-        db: Session,
-        current_user
-    ) -> Dict[str, Any]:
+
+    def get_dashboard_data(self, db: Session, current_user) -> Dict[str, Any]:
         """
         获取快速统计
         返回系统级的战略管理统计数据
         """
-        from app.models.strategy import Strategy, CSF, KPI, AnnualKeyWork
+        from app.models.strategy import CSF, KPI, AnnualKeyWork, Strategy
 
         # 统计战略数量
         strategy_count = db.query(Strategy).filter(Strategy.is_active).count()
@@ -306,22 +328,25 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
         work_count = 0
 
         if active_strategy:
-            csf_count = db.query(CSF).filter(
-                CSF.strategy_id == active_strategy.id,
-                CSF.is_active
-            ).count()
+            csf_count = (
+                db.query(CSF).filter(CSF.strategy_id == active_strategy.id, CSF.is_active).count()
+            )
 
-            kpi_count = db.query(KPI).join(CSF).filter(
-                CSF.strategy_id == active_strategy.id,
-                CSF.is_active,
-                KPI.is_active
-            ).count()
+            kpi_count = (
+                db.query(KPI)
+                .join(CSF)
+                .filter(CSF.strategy_id == active_strategy.id, CSF.is_active, KPI.is_active)
+                .count()
+            )
 
-            work_count = db.query(AnnualKeyWork).join(CSF).filter(
-                CSF.strategy_id == active_strategy.id,
-                CSF.is_active,
-                AnnualKeyWork.is_active
-            ).count()
+            work_count = (
+                db.query(AnnualKeyWork)
+                .join(CSF)
+                .filter(
+                    CSF.strategy_id == active_strategy.id, CSF.is_active, AnnualKeyWork.is_active
+                )
+                .count()
+            )
 
         # 使用基类方法创建统计卡片
         stats = [
@@ -330,28 +355,16 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
                 label="战略总数",
                 value=strategy_count,
                 unit="个",
-                icon="strategy"
+                icon="strategy",
             ),
             self.create_stat_card(
-                key="csf_count",
-                label="关键成功因素",
-                value=csf_count,
-                unit="个",
-                icon="csf"
+                key="csf_count", label="关键成功因素", value=csf_count, unit="个", icon="csf"
             ),
             self.create_stat_card(
-                key="kpi_count",
-                label="KPI总数",
-                value=kpi_count,
-                unit="个",
-                icon="kpi"
+                key="kpi_count", label="KPI总数", value=kpi_count, unit="个", icon="kpi"
             ),
             self.create_stat_card(
-                key="annual_work_count",
-                label="重点工作",
-                value=work_count,
-                unit="个",
-                icon="work"
+                key="annual_work_count", label="重点工作", value=work_count, unit="个", icon="work"
             ),
         ]
 
@@ -364,12 +377,8 @@ class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
             "kpi_count": kpi_count,
             "annual_work_count": work_count,
         }
-    
-    def _get_quick_stats_handler(
-        self,
-        db: Session,
-        current_user
-    ) -> Dict[str, Any]:
+
+    def _get_quick_stats_handler(self, db: Session, current_user) -> Dict[str, Any]:
         """快速统计处理器"""
         data = self.get_dashboard_data(db, current_user)
         # 移除stats字段，保持原有响应格式

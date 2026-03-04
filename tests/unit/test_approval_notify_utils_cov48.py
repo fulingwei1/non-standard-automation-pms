@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - NotificationUtilsMixin (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.notify.utils import NotificationUtilsMixin
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False
@@ -15,6 +17,7 @@ pytestmark = pytest.mark.skipif(not _IMPORT_OK, reason="Import failed for Notifi
 
 class _ConcreteUtils(NotificationUtilsMixin):
     """具体化通知工具类用于测试"""
+
     def __init__(self):
         self.db = MagicMock()
 

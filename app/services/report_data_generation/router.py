@@ -23,7 +23,7 @@ class ReportRouterMixin:
         project_id: Optional[int] = None,
         department_id: Optional[int] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> Dict[str, Any]:
         """
         根据报表类型生成数据
@@ -78,9 +78,7 @@ class ReportRouterMixin:
             )
 
         elif report_type == "COST_ANALYSIS":
-            return AnalysisReportMixin.generate_cost_analysis(
-                db, project_id, start_date, end_date
-            )
+            return AnalysisReportMixin.generate_cost_analysis(db, project_id, start_date, end_date)
 
         else:
             return {
@@ -88,5 +86,5 @@ class ReportRouterMixin:
                 "summary": {},
                 "details": [],
                 "charts": [],
-                "message": "该报表类型待实现"
+                "message": "该报表类型待实现",
             }

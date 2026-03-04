@@ -4,11 +4,12 @@
 """
 
 import pytest
+
 from app.core.state_machine.exceptions import (
-    StateMachineException,
-    StateTransitionError,
     InvalidStateTransitionError,
+    StateMachineException,
     StateMachineValidationError,
+    StateTransitionError,
 )
 
 
@@ -62,9 +63,7 @@ class TestInvalidStateTransitionError:
     def test_error_can_be_raised(self):
         """测试错误可以被抛出"""
         with pytest.raises(InvalidStateTransitionError) as exc_info:
-            raise InvalidStateTransitionError(
-            "DRAFT", "COMPLETED", "Invalid transition"
-            )
+            raise InvalidStateTransitionError("DRAFT", "COMPLETED", "Invalid transition")
             assert "DRAFT" in str(exc_info.value)
             assert "COMPLETED" in str(exc_info.value)
 

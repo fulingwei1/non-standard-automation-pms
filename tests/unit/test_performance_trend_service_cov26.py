@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - performance_trend_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.performance_trend_service")
 
@@ -31,7 +32,9 @@ def make_result(total_score, period_id=1, rank=5, level="B", indicator_scores=No
 class TestGetEngineerTrend:
     def test_returns_empty_when_no_results(self):
         db = make_db()
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         assert result["has_data"] is False
@@ -41,7 +44,9 @@ class TestGetEngineerTrend:
     def test_has_data_true_when_results_exist(self):
         db = make_db()
         results = [make_result(80, i) for i in range(1, 4)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         assert result["has_data"] is True
@@ -49,7 +54,9 @@ class TestGetEngineerTrend:
     def test_scores_are_floats(self):
         db = make_db()
         results = [make_result(78.5, i) for i in range(1, 4)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         for score in result["total_scores"]:
@@ -58,7 +65,9 @@ class TestGetEngineerTrend:
     def test_dimension_trends_keys(self):
         db = make_db()
         results = [make_result(80, i) for i in range(1, 3)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         expected = {"technical", "execution", "cost_quality", "knowledge", "collaboration"}
@@ -74,7 +83,9 @@ class TestGetEngineerTrend:
             "collaboration_score": 70,
         }
         results = [make_result(82, 1, indicator_scores=scores)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         assert result["dimension_trends"]["technical"][0] == 90.0
@@ -83,7 +94,9 @@ class TestGetEngineerTrend:
     def test_uses_defaults_when_no_indicator_scores(self):
         db = make_db()
         results = [make_result(80, 1, indicator_scores=None)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         assert result["dimension_trends"]["technical"][0] == 75.0
@@ -91,7 +104,9 @@ class TestGetEngineerTrend:
     def test_trend_analysis_added_for_multi_period(self):
         db = make_db()
         results = [make_result(70 + i * 3, i) for i in range(1, 7)]
-        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = results
+        db.query.return_value.join.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            results
+        )
         svc = PerformanceTrendService(db)
         result = svc.get_engineer_trend(engineer_id=1)
         assert "trend_analysis" in result
@@ -112,7 +127,10 @@ class TestIdentifyAbilityChanges:
         trend_data = {
             "has_data": True,
             "total_scores": [80.0],
-            "dimension_trends": {k: [75.0] for k in ["technical", "execution", "cost_quality", "knowledge", "collaboration"]},
+            "dimension_trends": {
+                k: [75.0]
+                for k in ["technical", "execution", "cost_quality", "knowledge", "collaboration"]
+            },
         }
         with patch.object(svc, "get_engineer_trend", return_value=trend_data):
             result = svc.identify_ability_changes(engineer_id=1)
@@ -156,7 +174,14 @@ class TestIdentifyAbilityChanges:
         with patch.object(svc, "get_engineer_trend", return_value=trend_data):
             changes = svc.identify_ability_changes(engineer_id=1)
         if changes:
-            required = {"dimension", "dimension_name", "change", "trend", "recent_avg", "earlier_avg"}
+            required = {
+                "dimension",
+                "dimension_name",
+                "change",
+                "trend",
+                "recent_avg",
+                "earlier_avg",
+            }
             assert required.issubset(changes[0].keys())
 
 
@@ -165,14 +190,18 @@ class TestGetDepartmentTrend:
         """get_department_trend always returns a dict with department_id key."""
         db = make_db()
         svc = PerformanceTrendService(db)
-        with patch.object(svc, "get_department_trend", return_value={"department_id": 5, "has_data": False}):
+        with patch.object(
+            svc, "get_department_trend", return_value={"department_id": 5, "has_data": False}
+        ):
             result = svc.get_department_trend(department_id=5)
         assert result["department_id"] == 5
 
     def test_has_data_false_in_no_data_result(self):
         db = make_db()
         svc = PerformanceTrendService(db)
-        with patch.object(svc, "get_department_trend", return_value={"has_data": False, "department_id": 1}):
+        with patch.object(
+            svc, "get_department_trend", return_value={"has_data": False, "department_id": 1}
+        ):
             result = svc.get_department_trend(department_id=1)
         assert result["has_data"] is False
 

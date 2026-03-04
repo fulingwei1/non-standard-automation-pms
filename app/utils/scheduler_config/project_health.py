@@ -14,7 +14,13 @@ PROJECT_HEALTH_TASKS = [
         "category": "Project Health",
         "description": "每小时为所有活跃项目重新计算健康度并写入项目表。",
         "enabled": True,
-        "dependencies_tables": ["projects", "project_milestones", "issues", "alert_records", "tasks"],
+        "dependencies_tables": [
+            "projects",
+            "project_milestones",
+            "issues",
+            "alert_records",
+            "tasks",
+        ],
         "risk_level": "HIGH",
         "sla": {
             "max_execution_time_seconds": 300,

@@ -58,9 +58,9 @@ class NodeManagementMixin:
             NodeDefinition: 创建的节点定义
         """
         # 检查阶段存在
-        stage = self.db.query(StageDefinition).filter(
-            StageDefinition.id == stage_definition_id
-        ).first()
+        stage = (
+            self.db.query(StageDefinition).filter(StageDefinition.id == stage_definition_id).first()
+        )
         if not stage:
             raise ValueError(f"阶段定义 {stage_definition_id} 不存在")
 
@@ -86,15 +86,9 @@ class NodeManagementMixin:
         self.db.flush()
         return node
 
-    def update_node(
-        self,
-        node_id: int,
-        **kwargs
-    ) -> Optional[NodeDefinition]:
+    def update_node(self, node_id: int, **kwargs) -> Optional[NodeDefinition]:
         """更新节点定义"""
-        node = self.db.query(NodeDefinition).filter(
-            NodeDefinition.id == node_id
-        ).first()
+        node = self.db.query(NodeDefinition).filter(NodeDefinition.id == node_id).first()
 
         if not node:
             return None
@@ -108,9 +102,7 @@ class NodeManagementMixin:
 
     def delete_node(self, node_id: int) -> bool:
         """删除节点定义"""
-        node = self.db.query(NodeDefinition).filter(
-            NodeDefinition.id == node_id
-        ).first()
+        node = self.db.query(NodeDefinition).filter(NodeDefinition.id == node_id).first()
 
         if not node:
             return False
@@ -125,23 +117,14 @@ class NodeManagementMixin:
         """重新排序节点"""
         for index, node_id in enumerate(node_ids):
             self.db.query(NodeDefinition).filter(
-                and_(
-                    NodeDefinition.id == node_id,
-                    NodeDefinition.stage_definition_id == stage_id
-                )
+                and_(NodeDefinition.id == node_id, NodeDefinition.stage_definition_id == stage_id)
             ).update({"sequence": index})
         self.db.flush()
         return True
 
-    def set_node_dependencies(
-        self,
-        node_id: int,
-        dependency_node_ids: List[int]
-    ) -> NodeDefinition:
+    def set_node_dependencies(self, node_id: int, dependency_node_ids: List[int]) -> NodeDefinition:
         """设置节点依赖关系"""
-        node = self.db.query(NodeDefinition).filter(
-            NodeDefinition.id == node_id
-        ).first()
+        node = self.db.query(NodeDefinition).filter(NodeDefinition.id == node_id).first()
 
         if not node:
             raise ValueError(f"节点 {node_id} 不存在")
@@ -151,12 +134,14 @@ class NodeManagementMixin:
         template_id = stage.template_id
 
         for dep_id in dependency_node_ids:
-            dep_node = self.db.query(NodeDefinition).join(StageDefinition).filter(
-                and_(
-                    NodeDefinition.id == dep_id,
-                    StageDefinition.template_id == template_id
+            dep_node = (
+                self.db.query(NodeDefinition)
+                .join(StageDefinition)
+                .filter(
+                    and_(NodeDefinition.id == dep_id, StageDefinition.template_id == template_id)
                 )
-            ).first()
+                .first()
+            )
             if not dep_node:
                 raise ValueError(f"依赖节点 {dep_id} 不存在或不属于同一模板")
 

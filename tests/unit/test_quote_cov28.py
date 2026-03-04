@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - quote (审批适配器) 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.adapters.quote")
 
 from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_quote(
     quote_id=1,
@@ -66,6 +67,7 @@ def _make_adapter(db=None):
 
 # ─── get_entity ──────────────────────────────────────────────
 
+
 class TestGetEntity:
 
     def test_returns_quote_when_found(self):
@@ -87,6 +89,7 @@ class TestGetEntity:
 
 
 # ─── get_entity_data ─────────────────────────────────────────
+
 
 class TestGetEntityData:
 
@@ -145,6 +148,7 @@ class TestGetEntityData:
 
 # ─── 状态回调 ─────────────────────────────────────────────────
 
+
 class TestStatusCallbacks:
 
     def test_on_submit_sets_pending_approval(self):
@@ -199,6 +203,7 @@ class TestStatusCallbacks:
 
 # ─── get_title / get_summary ─────────────────────────────────
 
+
 class TestGetTitleAndSummary:
 
     def test_get_title_includes_quote_code(self):
@@ -239,6 +244,7 @@ class TestGetTitleAndSummary:
 
 
 # ─── validate_submit ─────────────────────────────────────────
+
 
 class TestValidateSubmit:
 

@@ -9,14 +9,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.organization import Employee
 from app.models.staff_matching import HrEmployeeTagEvaluation, HrTagDict
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -30,7 +30,7 @@ def list_evaluations(
     is_valid: Optional[bool] = Query(True, description="是否有效"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取员工标签评估列表"""
     query = db.query(HrEmployeeTagEvaluation).join(HrTagDict)
@@ -44,35 +44,41 @@ def list_evaluations(
     if is_valid is not None:
         query = query.filter(HrEmployeeTagEvaluation.is_valid == is_valid)
 
-    evaluations = apply_pagination(query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()), pagination.offset, pagination.limit).all()
+    evaluations = apply_pagination(
+        query.order_by(HrEmployeeTagEvaluation.evaluate_date.desc()),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 附加关联信息
     result = []
     for eval in evaluations:
         eval_dict = {
-            'id': eval.id,
-            'employee_id': eval.employee_id,
-            'tag_id': eval.tag_id,
-            'score': eval.score,
-            'evidence': eval.evidence,
-            'evaluator_id': eval.evaluator_id,
-            'evaluate_date': eval.evaluate_date,
-            'is_valid': eval.is_valid,
-            'created_at': eval.created_at,
-            'tag_name': eval.tag.tag_name if eval.tag else None,
-            'tag_type': eval.tag.tag_type if eval.tag else None,
-            'evaluator_name': eval.evaluator.real_name if eval.evaluator else None
+            "id": eval.id,
+            "employee_id": eval.employee_id,
+            "tag_id": eval.tag_id,
+            "score": eval.score,
+            "evidence": eval.evidence,
+            "evaluator_id": eval.evaluator_id,
+            "evaluate_date": eval.evaluate_date,
+            "is_valid": eval.is_valid,
+            "created_at": eval.created_at,
+            "tag_name": eval.tag.tag_name if eval.tag else None,
+            "tag_type": eval.tag.tag_type if eval.tag else None,
+            "evaluator_name": eval.evaluator.real_name if eval.evaluator else None,
         }
         result.append(eval_dict)
 
     return result
 
 
-@router.post("/", response_model=schemas.EmployeeTagEvaluationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=schemas.EmployeeTagEvaluationResponse, status_code=status.HTTP_201_CREATED
+)
 def create_evaluation(
     eval_data: schemas.EmployeeTagEvaluationCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:create"))
+    current_user: User = Depends(security.require_permission("staff_matching:create")),
 ):
     """创建员工标签评估"""
     # 验证员工和标签存在
@@ -84,27 +90,24 @@ def create_evaluation(
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
 
-    evaluation = HrEmployeeTagEvaluation(
-        **eval_data.model_dump(),
-        evaluator_id=current_user.id
-    )
+    evaluation = HrEmployeeTagEvaluation(**eval_data.model_dump(), evaluator_id=current_user.id)
     db.add(evaluation)
     db.commit()
     db.refresh(evaluation)
 
     return {
-        'id': evaluation.id,
-        'employee_id': evaluation.employee_id,
-        'tag_id': evaluation.tag_id,
-        'score': evaluation.score,
-        'evidence': evaluation.evidence,
-        'evaluator_id': evaluation.evaluator_id,
-        'evaluate_date': evaluation.evaluate_date,
-        'is_valid': evaluation.is_valid,
-        'created_at': evaluation.created_at,
-        'tag_name': tag.tag_name,
-        'tag_type': tag.tag_type,
-        'evaluator_name': current_user.real_name
+        "id": evaluation.id,
+        "employee_id": evaluation.employee_id,
+        "tag_id": evaluation.tag_id,
+        "score": evaluation.score,
+        "evidence": evaluation.evidence,
+        "evaluator_id": evaluation.evaluator_id,
+        "evaluate_date": evaluation.evaluate_date,
+        "is_valid": evaluation.is_valid,
+        "created_at": evaluation.created_at,
+        "tag_name": tag.tag_name,
+        "tag_type": tag.tag_type,
+        "evaluator_name": current_user.real_name,
     }
 
 
@@ -112,7 +115,7 @@ def create_evaluation(
 def batch_create_evaluations(
     batch_data: schemas.EmployeeTagEvaluationBatch,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:create"))
+    current_user: User = Depends(security.require_permission("staff_matching:create")),
 ):
     """批量创建员工标签评估"""
     # 验证员工存在
@@ -122,9 +125,9 @@ def batch_create_evaluations(
 
     created_count = 0
     for eval_item in batch_data.evaluations:
-        tag_id = eval_item.get('tag_id')
-        score = eval_item.get('score')
-        evidence = eval_item.get('evidence', '')
+        tag_id = eval_item.get("tag_id")
+        score = eval_item.get("score")
+        evidence = eval_item.get("evidence", "")
 
         if not tag_id or not score:
             continue
@@ -140,7 +143,7 @@ def batch_create_evaluations(
             score=score,
             evidence=evidence,
             evaluator_id=current_user.id,
-            evaluate_date=batch_data.evaluate_date
+            evaluate_date=batch_data.evaluate_date,
         )
         db.add(evaluation)
         created_count += 1
@@ -158,7 +161,7 @@ def update_evaluation(
     eval_id: int,
     eval_data: schemas.EmployeeTagEvaluationUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:update"))
+    current_user: User = Depends(security.require_permission("staff_matching:update")),
 ):
     """更新员工标签评估"""
     evaluation = get_or_404(db, HrEmployeeTagEvaluation, eval_id, "评估记录不存在")
@@ -170,18 +173,18 @@ def update_evaluation(
     db.refresh(evaluation)
 
     return {
-        'id': evaluation.id,
-        'employee_id': evaluation.employee_id,
-        'tag_id': evaluation.tag_id,
-        'score': evaluation.score,
-        'evidence': evaluation.evidence,
-        'evaluator_id': evaluation.evaluator_id,
-        'evaluate_date': evaluation.evaluate_date,
-        'is_valid': evaluation.is_valid,
-        'created_at': evaluation.created_at,
-        'tag_name': evaluation.tag.tag_name if evaluation.tag else None,
-        'tag_type': evaluation.tag.tag_type if evaluation.tag else None,
-        'evaluator_name': evaluation.evaluator.real_name if evaluation.evaluator else None
+        "id": evaluation.id,
+        "employee_id": evaluation.employee_id,
+        "tag_id": evaluation.tag_id,
+        "score": evaluation.score,
+        "evidence": evaluation.evidence,
+        "evaluator_id": evaluation.evaluator_id,
+        "evaluate_date": evaluation.evaluate_date,
+        "is_valid": evaluation.is_valid,
+        "created_at": evaluation.created_at,
+        "tag_name": evaluation.tag.tag_name if evaluation.tag else None,
+        "tag_type": evaluation.tag.tag_type if evaluation.tag else None,
+        "evaluator_name": evaluation.evaluator.real_name if evaluation.evaluator else None,
     }
 
 
@@ -189,7 +192,7 @@ def update_evaluation(
 def delete_evaluation(
     eval_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """删除评估记录（软删除）"""
     evaluation = get_or_404(db, HrEmployeeTagEvaluation, eval_id, "评估记录不存在")

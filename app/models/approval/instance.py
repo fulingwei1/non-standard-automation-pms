@@ -28,11 +28,17 @@ class ApprovalInstance(Base, TimestampMixin):
     __tablename__ = "approval_instances"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_no = Column(String(50), unique=True, nullable=False, comment="审批单号（如AP202601200001）")
+    instance_no = Column(
+        String(50), unique=True, nullable=False, comment="审批单号（如AP202601200001）"
+    )
 
     # 关联模板和流程
-    template_id = Column(Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID")
-    flow_id = Column(Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="流程ID")
+    template_id = Column(
+        Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
+    )
+    flow_id = Column(
+        Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="流程ID"
+    )
 
     # 关联业务实体
     entity_type = Column(String(50), comment="业务实体类型（如QUOTE/CONTRACT/ECN）")
@@ -44,7 +50,9 @@ class ApprovalInstance(Base, TimestampMixin):
     initiator_dept_id = Column(Integer, ForeignKey("departments.id"), comment="发起人部门ID")
 
     # 表单数据
-    form_data = Column(JSON, comment="""
+    form_data = Column(
+        JSON,
+        comment="""
         表单数据，示例：
         {
             "title": "XX项目报价审批",
@@ -52,10 +60,15 @@ class ApprovalInstance(Base, TimestampMixin):
             "leave_days": 5,
             "reason": "家庭事务"
         }
-    """)
+    """,
+    )
 
     # 审批状态
-    status = Column(String(20), nullable=False, default="PENDING", comment="""
+    status = Column(
+        String(20),
+        nullable=False,
+        default="PENDING",
+        comment="""
         审批状态：
         DRAFT: 草稿（未提交）
         PENDING: 审批中
@@ -63,19 +76,26 @@ class ApprovalInstance(Base, TimestampMixin):
         REJECTED: 已驳回
         CANCELLED: 已撤销（发起人撤销）
         TERMINATED: 已终止（管理员终止）
-    """)
+    """,
+    )
 
     # 当前节点
-    current_node_id = Column(Integer, ForeignKey("approval_node_definitions.id"), comment="当前节点ID")
+    current_node_id = Column(
+        Integer, ForeignKey("approval_node_definitions.id"), comment="当前节点ID"
+    )
     current_node_order = Column(Integer, comment="当前节点顺序")
 
     # 紧急程度
-    urgency = Column(String(10), default="NORMAL", comment="""
+    urgency = Column(
+        String(10),
+        default="NORMAL",
+        comment="""
         紧急程度：
         NORMAL: 普通
         URGENT: 紧急
         CRITICAL: 特急
-    """)
+    """,
+    )
 
     # 标题和摘要
     title = Column(String(200), comment="审批标题")
@@ -97,8 +117,12 @@ class ApprovalInstance(Base, TimestampMixin):
     current_node = relationship("ApprovalNodeDefinition", foreign_keys=[current_node_id])
     final_approver = relationship("User", foreign_keys=[final_approver_id])
     tasks = relationship("ApprovalTask", back_populates="instance", cascade="all, delete-orphan")
-    cc_records = relationship("ApprovalCarbonCopy", back_populates="instance", cascade="all, delete-orphan")
-    action_logs = relationship("ApprovalActionLog", back_populates="instance", cascade="all, delete-orphan")
+    cc_records = relationship(
+        "ApprovalCarbonCopy", back_populates="instance", cascade="all, delete-orphan"
+    )
+    action_logs = relationship(
+        "ApprovalActionLog", back_populates="instance", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_approval_instance_no", "instance_no"),

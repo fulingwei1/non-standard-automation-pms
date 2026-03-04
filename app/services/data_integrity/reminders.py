@@ -21,10 +21,7 @@ logger = logging.getLogger(__name__)
 class RemindersMixin:
     """缺失数据提醒功能混入类"""
 
-    def get_missing_data_reminders(
-        self,
-        period_id: int
-    ) -> List[Dict[str, Any]]:
+    def get_missing_data_reminders(self, period_id: int) -> List[Dict[str, Any]]:
         """
         获取数据缺失提醒列表
 
@@ -34,9 +31,7 @@ class RemindersMixin:
         Returns:
             数据缺失提醒列表
         """
-        period = self.db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
+        period = self.db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
 
         if not period:
             return []
@@ -44,73 +39,91 @@ class RemindersMixin:
         reminders = []
 
         # 1. 检查未完成项目评价的项目
-        projects_without_evaluation = self.db.query(Project).outerjoin(
-            ProjectEvaluation, and_(
-                Project.id == ProjectEvaluation.project_id,
-                ProjectEvaluation.status == 'CONFIRMED'
+        projects_without_evaluation = (
+            self.db.query(Project)
+            .outerjoin(
+                ProjectEvaluation,
+                and_(
+                    Project.id == ProjectEvaluation.project_id,
+                    ProjectEvaluation.status == "CONFIRMED",
+                ),
             )
-        ).filter(
-            Project.created_at.between(period.start_date, period.end_date),
-            ProjectEvaluation.id.is_(None)
-        ).all()
+            .filter(
+                Project.created_at.between(period.start_date, period.end_date),
+                ProjectEvaluation.id.is_(None),
+            )
+            .all()
+        )
 
         for project in projects_without_evaluation:
-            reminders.append({
-                'type': 'project_evaluation_missing',
-                'priority': 'high',
-                'message': f"项目 {project.project_code} 未完成评价",
-                'project_id': project.id,
-                'project_code': project.project_code,
-                'project_name': project.project_name,
-                'suggestion': '项目管理部经理需要完成项目难度和工作量评价'
-            })
+            reminders.append(
+                {
+                    "type": "project_evaluation_missing",
+                    "priority": "high",
+                    "message": f"项目 {project.project_code} 未完成评价",
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "suggestion": "项目管理部经理需要完成项目难度和工作量评价",
+                }
+            )
 
         # 2. 检查缺少跨部门协作评价的工程师
-        engineers_without_collab = self.db.query(EngineerProfile).outerjoin(
-            CollaborationRating, and_(
-                EngineerProfile.user_id == CollaborationRating.ratee_id,
-                CollaborationRating.period_id == period_id,
-                CollaborationRating.total_score.isnot(None)
+        engineers_without_collab = (
+            self.db.query(EngineerProfile)
+            .outerjoin(
+                CollaborationRating,
+                and_(
+                    EngineerProfile.user_id == CollaborationRating.ratee_id,
+                    CollaborationRating.period_id == period_id,
+                    CollaborationRating.total_score.isnot(None),
+                ),
             )
-        ).filter(
-            CollaborationRating.id.is_(None)
-        ).all()
+            .filter(CollaborationRating.id.is_(None))
+            .all()
+        )
 
         for engineer in engineers_without_collab:
-            reminders.append({
-                'type': 'collaboration_rating_missing',
-                'priority': 'medium',
-                'message': f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少跨部门协作评价",
-                'engineer_id': engineer.user_id,
-                'suggestion': '系统将自动抽取合作人员进行评价'
-            })
+            reminders.append(
+                {
+                    "type": "collaboration_rating_missing",
+                    "priority": "medium",
+                    "message": f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少跨部门协作评价",
+                    "engineer_id": engineer.user_id,
+                    "suggestion": "系统将自动抽取合作人员进行评价",
+                }
+            )
 
         # 3. 检查缺少工作日志的工程师
-        engineers_without_logs = self.db.query(EngineerProfile).outerjoin(
-            WorkLog, and_(
-                EngineerProfile.user_id == WorkLog.user_id,
-                WorkLog.work_date.between(period.start_date, period.end_date),
-                WorkLog.status == 'SUBMITTED'
+        engineers_without_logs = (
+            self.db.query(EngineerProfile)
+            .outerjoin(
+                WorkLog,
+                and_(
+                    EngineerProfile.user_id == WorkLog.user_id,
+                    WorkLog.work_date.between(period.start_date, period.end_date),
+                    WorkLog.status == "SUBMITTED",
+                ),
             )
-        ).filter(
-            WorkLog.id.is_(None)
-        ).all()
+            .filter(WorkLog.id.is_(None))
+            .all()
+        )
 
         for engineer in engineers_without_logs:
-            reminders.append({
-                'type': 'work_log_missing',
-                'priority': 'low',
-                'message': f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少工作日志",
-                'engineer_id': engineer.user_id,
-                'suggestion': '建议工程师填写工作日志，以便提取自我评价数据'
-            })
+            reminders.append(
+                {
+                    "type": "work_log_missing",
+                    "priority": "low",
+                    "message": f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少工作日志",
+                    "engineer_id": engineer.user_id,
+                    "suggestion": "建议工程师填写工作日志，以便提取自我评价数据",
+                }
+            )
 
         return reminders
 
     def send_data_missing_reminders(
-        self,
-        period_id: int,
-        reminder_types: Optional[List[str]] = None
+        self, period_id: int, reminder_types: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         发送数据缺失提醒
@@ -125,38 +138,38 @@ class RemindersMixin:
         reminders = self.get_missing_data_reminders(period_id)
 
         if reminder_types:
-            reminders = [r for r in reminders if r['type'] in reminder_types]
+            reminders = [r for r in reminders if r["type"] in reminder_types]
 
         sent_count = 0
         failed_count = 0
 
         # 使用统一通知服务发送提醒
         try:
-            from app.services.notification_dispatcher import NotificationDispatcher
+            from app.services.channel_handlers.base import NotificationPriority as UnifiedPriority
             from app.services.channel_handlers.base import (
                 NotificationRequest,
-                NotificationPriority as UnifiedPriority,
             )
+            from app.services.notification_dispatcher import NotificationDispatcher
 
             dispatcher = NotificationDispatcher(self.db)
             for reminder in reminders:
                 try:
                     # 确定通知优先级
                     priority = UnifiedPriority.NORMAL
-                    if reminder.get('priority') == 'high':
+                    if reminder.get("priority") == "high":
                         priority = UnifiedPriority.HIGH
-                    elif reminder.get('priority') == 'urgent':
+                    elif reminder.get("priority") == "urgent":
                         priority = UnifiedPriority.URGENT
 
                     # 发送通知
                     request = NotificationRequest(
-                        recipient_id=reminder.get('engineer_id'),
+                        recipient_id=reminder.get("engineer_id"),
                         notification_type="DEADLINE_REMINDER",
                         category="deadline",
                         title=f"数据填报提醒: {reminder.get('type', '未知类型')}",
-                        content=reminder.get('message', '请及时完成数据填报'),
+                        content=reminder.get("message", "请及时完成数据填报"),
                         priority=priority,
-                        extra_data={'reminder': reminder},
+                        extra_data={"reminder": reminder},
                     )
                     result = dispatcher.send_notification_request(request)
                     if result.get("success"):
@@ -171,9 +184,9 @@ class RemindersMixin:
             failed_count = len(reminders)
 
         return {
-            'period_id': period_id,
-            'total_reminders': len(reminders),
-            'sent_count': sent_count,
-            'failed_count': failed_count,
-            'reminders': reminders
+            "period_id": period_id,
+            "total_reminders": len(reminders),
+            "sent_count": sent_count,
+            "failed_count": failed_count,
+            "reminders": reminders,
         }

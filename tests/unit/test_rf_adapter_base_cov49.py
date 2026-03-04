@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/adapters/base.py"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.adapters.base import BaseReportAdapter

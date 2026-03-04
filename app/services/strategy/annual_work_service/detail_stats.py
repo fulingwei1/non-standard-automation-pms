@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.strategy import AnnualKeyWork, AnnualKeyWorkProjectLink, CSF
+from app.models.strategy import CSF, AnnualKeyWork, AnnualKeyWorkProjectLink
 from app.schemas.strategy import (
     AnnualKeyWorkDetailResponse,
     ProjectLinkItem,
@@ -38,12 +38,14 @@ def get_annual_work_detail(db: Session, work_id: int) -> Optional[AnnualKeyWorkD
 
     if work.owner_user_id:
         from app.models.user import User
+
         user = db.query(User).filter(User.id == work.owner_user_id).first()
         if user:
             owner_name = user.name
 
     if work.owner_dept_id:
         from app.models.organization import Department
+
         dept = db.query(Department).filter(Department.id == work.owner_dept_id).first()
         if dept:
             owner_dept_name = dept.name
@@ -54,22 +56,28 @@ def get_annual_work_detail(db: Session, work_id: int) -> Optional[AnnualKeyWorkD
     csf_dimension = csf.dimension if csf else None
 
     # 获取关联项目
-    links = db.query(AnnualKeyWorkProjectLink).filter(
-        AnnualKeyWorkProjectLink.annual_work_id == work_id,
-        AnnualKeyWorkProjectLink.is_active
-    ).all()
+    links = (
+        db.query(AnnualKeyWorkProjectLink)
+        .filter(
+            AnnualKeyWorkProjectLink.annual_work_id == work_id, AnnualKeyWorkProjectLink.is_active
+        )
+        .all()
+    )
 
     linked_projects = []
     for link in links:
         from app.models.project import Project
+
         project = db.query(Project).filter(Project.id == link.project_id).first()
         if project:
-            linked_projects.append(ProjectLinkItem(
-                project_id=project.id,
-                project_code=project.code,
-                project_name=project.name,
-                contribution_weight=link.contribution_weight,
-            ))
+            linked_projects.append(
+                ProjectLinkItem(
+                    project_id=project.id,
+                    project_code=project.code,
+                    project_name=project.name,
+                    contribution_weight=link.contribution_weight,
+                )
+            )
 
     # 计算关联项目进度
     linked_project_count = len(linked_projects)
@@ -105,9 +113,7 @@ def get_annual_work_detail(db: Session, work_id: int) -> Optional[AnnualKeyWorkD
 
 
 def get_annual_work_stats(
-    db: Session,
-    strategy_id: int,
-    year: Optional[int] = None
+    db: Session, strategy_id: int, year: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     获取年度重点工作统计
@@ -123,12 +129,17 @@ def get_annual_work_stats(
     if year is None:
         year = date.today().year
 
-    works = db.query(AnnualKeyWork).join(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active,
-        AnnualKeyWork.year == year,
-        AnnualKeyWork.is_active
-    ).all()
+    works = (
+        db.query(AnnualKeyWork)
+        .join(CSF)
+        .filter(
+            CSF.strategy_id == strategy_id,
+            CSF.is_active,
+            AnnualKeyWork.year == year,
+            AnnualKeyWork.is_active,
+        )
+        .all()
+    )
 
     total = len(works)
     by_status = {}

@@ -107,9 +107,7 @@ class ApprovalDelegateService:
         # 获取代理人姓名
         from app.models.user import User
 
-        delegate_user = (
-            self.db.query(User).filter(User.id == delegate_config.delegate_id).first()
-        )
+        delegate_user = self.db.query(User).filter(User.id == delegate_config.delegate_id).first()
         if delegate_user:
             task.assignee_name = delegate_user.real_name or delegate_user.username
 
@@ -209,9 +207,7 @@ class ApprovalDelegateService:
             更新后的代理配置
         """
         delegate = (
-            self.db.query(ApprovalDelegate)
-            .filter(ApprovalDelegate.id == delegate_id)
-            .first()
+            self.db.query(ApprovalDelegate).filter(ApprovalDelegate.id == delegate_id).first()
         )
 
         if not delegate:
@@ -247,9 +243,7 @@ class ApprovalDelegateService:
             是否成功取消
         """
         delegate = (
-            self.db.query(ApprovalDelegate)
-            .filter(ApprovalDelegate.id == delegate_id)
-            .first()
+            self.db.query(ApprovalDelegate).filter(ApprovalDelegate.id == delegate_id).first()
         )
 
         if not delegate:
@@ -369,9 +363,7 @@ class ApprovalDelegateService:
             ApprovalDelegate.end_date < today,
         ).update({"is_active": False}, synchronize_session=False)
 
-    def _send_delegate_notification(
-        self, log: ApprovalDelegateLog, config: ApprovalDelegate
-    ):
+    def _send_delegate_notification(self, log: ApprovalDelegateLog, config: ApprovalDelegate):
         """
         发送代理审批完成通知给原审批人
 
@@ -383,11 +375,7 @@ class ApprovalDelegateService:
 
         try:
             # 获取审批任务信息
-            task = (
-                self.db.query(ApprovalTask)
-                .filter(ApprovalTask.id == log.task_id)
-                .first()
-            )
+            task = self.db.query(ApprovalTask).filter(ApprovalTask.id == log.task_id).first()
 
             if not task or not task.instance:
                 return

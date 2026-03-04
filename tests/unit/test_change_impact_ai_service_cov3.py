@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - change_impact_ai_service"""
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import datetime
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.change_impact_ai_service")
 
@@ -151,7 +152,7 @@ class TestIdentifyChainReactions:
 class TestGatherAnalysisContext:
     def test_gather_context(self):
         db = make_db()
-        
+
         # change_type and change_source need .value attribute (enums in real code)
         change = MagicMock()
         change.id = 1
@@ -167,7 +168,7 @@ class TestGatherAnalysisContext:
         project = make_project()
         project.plan_start = None
         project.plan_end = None
-        
+
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
         mock_q.all.return_value = []

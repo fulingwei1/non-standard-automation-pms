@@ -26,10 +26,7 @@ class TestNotificationCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/notifications/", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -44,7 +41,7 @@ class TestNotificationCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/notifications/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -56,9 +53,7 @@ class TestNotificationCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/",
-            params={"is_read": False},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/notifications/", params={"is_read": False}, headers=headers
         )
 
         assert response.status_code == 200
@@ -71,10 +66,7 @@ class TestNotificationCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取通知列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/notifications/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get notifications list")
@@ -87,8 +79,7 @@ class TestNotificationCRUD:
         notification_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/{notification_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/notifications/{notification_id}", headers=headers
         )
 
         if response.status_code == 405:
@@ -104,10 +95,7 @@ class TestNotificationCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取通知列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/notifications/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get notifications list")
@@ -120,8 +108,7 @@ class TestNotificationCRUD:
         notification_id = items[0]["id"]
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/notifications/{notification_id}/read",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/notifications/{notification_id}/read", headers=headers
         )
 
         if response.status_code == 404:
@@ -135,10 +122,7 @@ class TestNotificationCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.put(
-            f"{settings.API_V1_PREFIX}/notifications/read-all",
-            headers=headers
-        )
+        response = client.put(f"{settings.API_V1_PREFIX}/notifications/read-all", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Mark all read endpoint not implemented")
@@ -151,10 +135,7 @@ class TestNotificationCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/count",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/notifications/count", headers=headers)
 
         if response.status_code in [404, 405]:
             pytest.skip("Notification count endpoint not implemented")
@@ -169,10 +150,7 @@ class TestNotificationCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取通知列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/notifications/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/notifications/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get notifications list")
@@ -185,8 +163,7 @@ class TestNotificationCRUD:
         notification_id = items[0]["id"]
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/notifications/{notification_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/notifications/{notification_id}", headers=headers
         )
 
         if response.status_code == 404:

@@ -19,14 +19,18 @@ from app.schemas.acceptance import (
     AcceptanceIssueResponse,
     AcceptanceIssueVerify,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import build_issue_response
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.post("/acceptance-issues/{issue_id}/assign", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-issues/{issue_id}/assign",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def assign_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -59,10 +63,11 @@ def assign_acceptance_issue(
     follow_up = IssueFollowUp(
         issue_id=issue_id,
         action_type="ASSIGN",
-        action_content=assign_in.remark or f"问题已指派给 {assigned_user.real_name or assigned_user.username}",
+        action_content=assign_in.remark
+        or f"问题已指派给 {assigned_user.real_name or assigned_user.username}",
         old_value=str(old_assigned_to) if old_assigned_to else None,
         new_value=str(assign_in.assigned_to),
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(follow_up)
 
@@ -72,7 +77,11 @@ def assign_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.post("/acceptance-issues/{issue_id}/resolve", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-issues/{issue_id}/resolve",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def resolve_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -114,7 +123,7 @@ def resolve_acceptance_issue(
         old_value=old_status,
         new_value="RESOLVED",
         attachments=resolve_in.attachments,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(follow_up)
 
@@ -124,7 +133,11 @@ def resolve_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.post("/acceptance-issues/{issue_id}/verify", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-issues/{issue_id}/verify",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def verify_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -175,7 +188,7 @@ def verify_acceptance_issue(
         action_content=f"验证结果：{verify_in.verified_result}。{verify_in.remark or ''}",
         old_value=old_verified_result or old_status,
         new_value=verify_in.verified_result,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(follow_up)
 
@@ -185,7 +198,11 @@ def verify_acceptance_issue(
     return build_issue_response(issue, db)
 
 
-@router.post("/acceptance-issues/{issue_id}/defer", response_model=AcceptanceIssueResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-issues/{issue_id}/defer",
+    response_model=AcceptanceIssueResponse,
+    status_code=status.HTTP_200_OK,
+)
 def defer_acceptance_issue(
     *,
     db: Session = Depends(deps.get_db),
@@ -218,7 +235,7 @@ def defer_acceptance_issue(
         action_content=f"问题延期：{defer_in.reason}。新完成日期：{defer_in.new_due_date}",
         old_value=str(old_due_date) if old_due_date else None,
         new_value=str(defer_in.new_due_date),
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(follow_up)
 

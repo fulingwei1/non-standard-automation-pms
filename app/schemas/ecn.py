@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== ECN ====================
 
+
 class EcnCreate(BaseModel):
     """创建ECN"""
+
     ecn_title: str = Field(max_length=200, description="ECN标题")
     ecn_type: str = Field(description="变更类型")
     source_type: str = Field(description="来源类型")
@@ -35,6 +37,7 @@ class EcnCreate(BaseModel):
 
 class EcnUpdate(BaseModel):
     """更新ECN"""
+
     ecn_title: Optional[str] = None
     change_reason: Optional[str] = None
     change_description: Optional[str] = None
@@ -49,16 +52,17 @@ class EcnUpdate(BaseModel):
 
 class EcnSubmit(BaseModel):
     """提交ECN"""
+
     remark: Optional[str] = None
     # 手动指定评估人员（可选，如果提供则优先使用，否则自动分配）
     preferred_evaluators: Optional[Dict[str, int]] = Field(
-        default=None,
-        description="手动指定评估人员，格式：{'部门名': 用户ID}"
+        default=None, description="手动指定评估人员，格式：{'部门名': 用户ID}"
     )
 
 
 class EcnResponse(TimestampSchema):
     """ECN响应"""
+
     id: int
     ecn_no: str
     ecn_title: str
@@ -86,6 +90,7 @@ class EcnResponse(TimestampSchema):
 
 class EcnListResponse(BaseSchema):
     """ECN列表响应"""
+
     id: int
     ecn_no: str
     ecn_title: str
@@ -100,8 +105,10 @@ class EcnListResponse(BaseSchema):
 
 # ==================== ECN评估 ====================
 
+
 class EcnEvaluationCreate(BaseModel):
     """创建ECN评估"""
+
     ecn_id: int = Field(description="ECN ID")
     eval_dept: str = Field(description="评估部门")
     impact_analysis: Optional[str] = None
@@ -117,6 +124,7 @@ class EcnEvaluationCreate(BaseModel):
 
 class EcnEvaluationResponse(TimestampSchema):
     """ECN评估响应"""
+
     id: int
     ecn_id: int
     eval_dept: str
@@ -133,8 +141,10 @@ class EcnEvaluationResponse(TimestampSchema):
 
 # ==================== ECN审批 ====================
 
+
 class EcnApprovalCreate(BaseModel):
     """创建ECN审批"""
+
     ecn_id: int
     approval_level: int
     approval_role: str
@@ -144,12 +154,14 @@ class EcnApprovalCreate(BaseModel):
 
 class EcnApprovalAction(BaseModel):
     """ECN审批操作"""
+
     approval_result: str = Field(description="审批结果: APPROVED/REJECTED/RETURNED")
     approval_opinion: Optional[str] = None
 
 
 class EcnApprovalResponse(TimestampSchema):
     """ECN审批响应"""
+
     id: int
     ecn_id: int
     approval_level: int
@@ -166,8 +178,10 @@ class EcnApprovalResponse(TimestampSchema):
 
 # ==================== ECN任务 ====================
 
+
 class EcnTaskCreate(BaseModel):
     """创建ECN任务"""
+
     ecn_id: int
     task_name: str = Field(max_length=200)
     task_type: Optional[str] = None
@@ -181,6 +195,7 @@ class EcnTaskCreate(BaseModel):
 
 class EcnTaskUpdate(BaseModel):
     """更新ECN任务"""
+
     task_name: Optional[str] = None
     task_description: Optional[str] = None
     assignee_id: Optional[int] = None
@@ -195,6 +210,7 @@ class EcnTaskUpdate(BaseModel):
 
 class EcnTaskResponse(TimestampSchema):
     """ECN任务响应"""
+
     id: int
     ecn_id: int
     task_no: int
@@ -213,8 +229,10 @@ class EcnTaskResponse(TimestampSchema):
 
 # ==================== ECN受影响物料 ====================
 
+
 class EcnAffectedMaterialCreate(BaseModel):
     """创建ECN受影响物料"""
+
     ecn_id: int
     material_id: Optional[int] = None
     bom_item_id: Optional[int] = None
@@ -234,6 +252,7 @@ class EcnAffectedMaterialCreate(BaseModel):
 
 class EcnAffectedMaterialUpdate(BaseModel):
     """更新ECN受影响物料"""
+
     change_type: Optional[str] = None
     old_quantity: Optional[Decimal] = None
     old_specification: Optional[str] = None
@@ -248,6 +267,7 @@ class EcnAffectedMaterialUpdate(BaseModel):
 
 class EcnAffectedMaterialResponse(TimestampSchema):
     """ECN受影响物料响应"""
+
     id: int
     ecn_id: int
     material_id: Optional[int] = None
@@ -270,8 +290,10 @@ class EcnAffectedMaterialResponse(TimestampSchema):
 
 # ==================== ECN受影响订单 ====================
 
+
 class EcnAffectedOrderCreate(BaseModel):
     """创建ECN受影响订单"""
+
     ecn_id: int
     order_type: str = Field(description="订单类型: PURCHASE/OUTSOURCING")
     order_id: int = Field(description="订单ID")
@@ -283,6 +305,7 @@ class EcnAffectedOrderCreate(BaseModel):
 
 class EcnAffectedOrderUpdate(BaseModel):
     """更新ECN受影响订单"""
+
     impact_description: Optional[str] = None
     action_type: Optional[str] = None
     action_description: Optional[str] = None
@@ -291,6 +314,7 @@ class EcnAffectedOrderUpdate(BaseModel):
 
 class EcnAffectedOrderResponse(TimestampSchema):
     """ECN受影响订单响应"""
+
     id: int
     ecn_id: int
     order_type: str
@@ -306,8 +330,10 @@ class EcnAffectedOrderResponse(TimestampSchema):
 
 # ==================== ECN类型配置 ====================
 
+
 class EcnTypeCreate(BaseModel):
     """创建ECN类型配置"""
+
     type_code: str = Field(max_length=20, description="类型编码")
     type_name: str = Field(max_length=50, description="类型名称")
     description: Optional[str] = None
@@ -319,6 +345,7 @@ class EcnTypeCreate(BaseModel):
 
 class EcnTypeUpdate(BaseModel):
     """更新ECN类型配置"""
+
     type_name: Optional[str] = None
     description: Optional[str] = None
     required_depts: Optional[List[str]] = None
@@ -329,6 +356,7 @@ class EcnTypeUpdate(BaseModel):
 
 class EcnTypeResponse(TimestampSchema):
     """ECN类型配置响应"""
+
     id: int
     type_code: str
     type_name: str
@@ -341,13 +369,16 @@ class EcnTypeResponse(TimestampSchema):
 
 # ==================== ECN执行操作 ====================
 
+
 class EcnStartExecution(BaseModel):
     """开始执行ECN"""
+
     remark: Optional[str] = None
 
 
 class EcnVerify(BaseModel):
     """验证ECN执行结果"""
+
     verify_result: str = Field(description="验证结果: PASS/FAIL")
     verify_note: Optional[str] = None
     attachments: Optional[List[Any]] = None
@@ -355,4 +386,5 @@ class EcnVerify(BaseModel):
 
 class EcnClose(BaseModel):
     """关闭ECN"""
+
     close_note: Optional[str] = None

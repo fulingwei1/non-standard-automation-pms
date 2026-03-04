@@ -12,7 +12,6 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-
 logger = logging.getLogger(__name__)
 
 # 通义千问API配置
@@ -58,14 +57,26 @@ class AIAssessmentService:
 
     def _build_analysis_prompt(self, requirement_data: Dict[str, Any]) -> str:
         """构建分析提示词"""
-        project_name = requirement_data.get('project_name') or requirement_data.get('projectName', '未填写')
-        industry = requirement_data.get('industry', '未填写')
-        customer_name = requirement_data.get('customer_name') or requirement_data.get('customerName', '未填写')
-        budget_value = requirement_data.get('budget_value') or requirement_data.get('budgetValue')
-        budget_status = requirement_data.get('budget_status') or requirement_data.get('budgetStatus', '未填写')
-        tech_requirements = requirement_data.get('tech_requirements') or requirement_data.get('techRequirements', '未填写')
-        delivery_months = requirement_data.get('delivery_months') or requirement_data.get('deliveryMonths')
-        requirement_maturity = requirement_data.get('requirement_maturity') or requirement_data.get('requirementMaturity')
+        project_name = requirement_data.get("project_name") or requirement_data.get(
+            "projectName", "未填写"
+        )
+        industry = requirement_data.get("industry", "未填写")
+        customer_name = requirement_data.get("customer_name") or requirement_data.get(
+            "customerName", "未填写"
+        )
+        budget_value = requirement_data.get("budget_value") or requirement_data.get("budgetValue")
+        budget_status = requirement_data.get("budget_status") or requirement_data.get(
+            "budgetStatus", "未填写"
+        )
+        tech_requirements = requirement_data.get("tech_requirements") or requirement_data.get(
+            "techRequirements", "未填写"
+        )
+        delivery_months = requirement_data.get("delivery_months") or requirement_data.get(
+            "deliveryMonths"
+        )
+        requirement_maturity = requirement_data.get("requirement_maturity") or requirement_data.get(
+            "requirementMaturity"
+        )
 
         prompt = f"""
 作为一个专业的售前技术顾问和项目经理，请对以下项目进行深度分析并给出评估建议：
@@ -129,12 +140,9 @@ class AIAssessmentService:
             "messages": [
                 {
                     "role": "system",
-                    "content": "你是一个资深的售前工程师与项目经理，擅长非标自动化、储能与新能源行业的项目评估与技术咨询。"
+                    "content": "你是一个资深的售前工程师与项目经理，擅长非标自动化、储能与新能源行业的项目评估与技术咨询。",
                 },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "user", "content": prompt},
             ],
             "temperature": 0.7,
         }
@@ -149,8 +157,9 @@ class AIAssessmentService:
             else:
                 raise ValueError(f"API返回格式异常: {data}")
 
-    async def analyze_case_similarity(self, current_project: Dict[str, Any],
-                                     historical_cases: list) -> Optional[str]:
+    async def analyze_case_similarity(
+        self, current_project: Dict[str, Any], historical_cases: list
+    ) -> Optional[str]:
         """
         分析案例相似度
 
@@ -172,8 +181,9 @@ class AIAssessmentService:
             logger.error(f"案例相似度分析失败: {e}", exc_info=True)
             return None
 
-    def _build_similarity_prompt(self, current_project: Dict[str, Any],
-                                historical_cases: list) -> str:
+    def _build_similarity_prompt(
+        self, current_project: Dict[str, Any], historical_cases: list
+    ) -> str:
         """构建相似度分析提示词"""
         project_info = f"""
 项目名称：{current_project.get('project_name', '未填写')}
@@ -182,10 +192,12 @@ class AIAssessmentService:
 预算：{current_project.get('budget_value', '未填写')}
 """
 
-        cases_text = "\n".join([
-            f"{i+1}. {case.get('project_name', '')} - {case.get('core_failure_reason', '')}"
-            for i, case in enumerate(historical_cases[:5])
-        ])
+        cases_text = "\n".join(
+            [
+                f"{i+1}. {case.get('project_name', '')} - {case.get('core_failure_reason', '')}"
+                for i, case in enumerate(historical_cases[:5])
+            ]
+        )
 
         prompt = f"""
 请分析以下当前项目与历史案例的相似度，并给出参考建议：
@@ -205,9 +217,3 @@ class AIAssessmentService:
 请用中文回复，并给出具体、可操作的建议。
 """
         return prompt
-
-
-
-
-
-

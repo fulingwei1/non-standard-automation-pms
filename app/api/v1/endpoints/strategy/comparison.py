@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.common import PageResponse
 from app.schemas.strategy import (
     StrategyComparisonCreate,
@@ -16,7 +17,6 @@ from app.schemas.strategy import (
 )
 from app.schemas.strategy.yoy_report import YoYReportResponse
 from app.services import strategy as strategy_service
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ router = APIRouter()
 def create_comparison(
     data: StrategyComparisonCreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建战略对比记录
@@ -129,10 +129,7 @@ def get_comparison(
     """
     comparison = strategy_service.get_strategy_comparison(db, comparison_id)
     if not comparison:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="对比记录不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="对比记录不存在")
 
     return StrategyComparisonResponse(
         id=comparison.id,
@@ -153,15 +150,12 @@ def get_comparison(
 def delete_comparison(
     comparison_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     删除战略对比记录（软删除）
     """
     success = strategy_service.delete_strategy_comparison(db, comparison_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="对比记录不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="对比记录不存在")
     return None

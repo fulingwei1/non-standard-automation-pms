@@ -3,25 +3,35 @@
 项目统计服务单元测试
 覆盖纯函数统计方法（不依赖真实DB）
 """
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.services.project_statistics_service import (
-    calculate_status_statistics,
-    calculate_stage_statistics,
-    calculate_health_statistics,
-    calculate_pm_statistics,
-    calculate_customer_statistics,
-    calculate_monthly_statistics,
     build_project_statistics,
+    calculate_customer_statistics,
+    calculate_health_statistics,
+    calculate_monthly_statistics,
+    calculate_pm_statistics,
+    calculate_stage_statistics,
+    calculate_status_statistics,
 )
 
 
-def make_project(status=None, stage=None, health=None, pm_id=None, pm_name=None,
-                 customer_id=None, customer_name=None, contract_amount=None,
-                 created_at=None, progress_pct=None):
+def make_project(
+    status=None,
+    stage=None,
+    health=None,
+    pm_id=None,
+    pm_name=None,
+    customer_id=None,
+    customer_name=None,
+    contract_amount=None,
+    created_at=None,
+    progress_pct=None,
+):
     p = MagicMock()
     p.status = status
     p.stage = stage
@@ -125,7 +135,9 @@ class TestCalculateCustomerStatistics:
         assert result[0]["count"] == 2
 
     def test_none_customer_id_groups_as_zero(self):
-        projects = [make_project(customer_id=None, customer_name=None, contract_amount=Decimal("0"))]
+        projects = [
+            make_project(customer_id=None, customer_name=None, contract_amount=Decimal("0"))
+        ]
         result = calculate_customer_statistics(make_query(projects))
         assert result[0]["customer_id"] == 0
 
@@ -161,12 +173,26 @@ class TestCalculateMonthlyStatistics:
 class TestBuildProjectStatistics:
     def test_total_and_average_progress(self):
         projects = [
-            make_project(status="ST10", stage="DESIGN", health="H1",
-                         pm_id=1, pm_name="Alice", progress_pct=60.0,
-                         created_at=datetime(2025, 1, 1), contract_amount=Decimal("0")),
-            make_project(status="ST10", stage="DESIGN", health="H1",
-                         pm_id=1, pm_name="Alice", progress_pct=40.0,
-                         created_at=datetime(2025, 1, 1), contract_amount=Decimal("0")),
+            make_project(
+                status="ST10",
+                stage="DESIGN",
+                health="H1",
+                pm_id=1,
+                pm_name="Alice",
+                progress_pct=60.0,
+                created_at=datetime(2025, 1, 1),
+                contract_amount=Decimal("0"),
+            ),
+            make_project(
+                status="ST10",
+                stage="DESIGN",
+                health="H1",
+                pm_id=1,
+                pm_name="Alice",
+                progress_pct=40.0,
+                created_at=datetime(2025, 1, 1),
+                contract_amount=Decimal("0"),
+            ),
         ]
         q = make_query(projects)
         db = MagicMock()

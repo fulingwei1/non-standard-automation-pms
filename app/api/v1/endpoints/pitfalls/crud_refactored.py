@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.schemas import paginated_response, success_response
 from app.models.user import User
@@ -18,7 +19,6 @@ from app.schemas.pitfall import (
     PitfallUpdate,
 )
 from app.services.pitfall import PitfallService
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -62,8 +62,7 @@ def create_pitfall(
 
     # 使用统一响应格式
     return success_response(
-        data={"id": pitfall.id, "pitfall_no": pitfall.pitfall_no},
-        message="踩坑记录创建成功"
+        data={"id": pitfall.id, "pitfall_no": pitfall.pitfall_no}, message="踩坑记录创建成功"
     )
 
 
@@ -118,7 +117,7 @@ def list_pitfalls(
     # 使用统一响应格式（注意：这里使用skip/limit，不是page/page_size）
     # 为了兼容，我们计算page
     page = (pagination.offset // pagination.limit) + 1 if pagination.limit > 0 else 1
-    
+
     return paginated_response(
         items=items,
         total=total,
@@ -168,14 +167,10 @@ def get_pitfall(
             "verified": pitfall.verified,
             "verify_count": pitfall.verify_count,
             "created_by": pitfall.created_by,
-            "created_at": pitfall.created_at.isoformat()
-            if pitfall.created_at
-            else None,
-            "updated_at": pitfall.updated_at.isoformat()
-            if pitfall.updated_at
-            else None,
+            "created_at": pitfall.created_at.isoformat() if pitfall.created_at else None,
+            "updated_at": pitfall.updated_at.isoformat() if pitfall.updated_at else None,
         },
-        message="获取踩坑详情成功"
+        message="获取踩坑详情成功",
     )
 
 
@@ -200,10 +195,7 @@ def update_pitfall(
         raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限编辑")
 
     # 使用统一响应格式
-    return success_response(
-        data={"id": pitfall.id},
-        message="踩坑记录更新成功"
-    )
+    return success_response(data={"id": pitfall.id}, message="踩坑记录更新成功")
 
 
 @router.delete("/{pitfall_id}")
@@ -224,10 +216,7 @@ def delete_pitfall(
         raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限删除")
 
     # 使用统一响应格式
-    return success_response(
-        data={"id": pitfall_id},
-        message="踩坑记录删除成功"
-    )
+    return success_response(data={"id": pitfall_id}, message="踩坑记录删除成功")
 
 
 @router.post("/{pitfall_id}/publish")
@@ -249,6 +238,5 @@ def publish_pitfall(
 
     # 使用统一响应格式
     return success_response(
-        data={"id": pitfall.id, "status": pitfall.status},
-        message="踩坑记录发布成功"
+        data={"id": pitfall.id, "status": pitfall.status}, message="踩坑记录发布成功"
     )

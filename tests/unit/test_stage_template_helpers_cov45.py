@@ -3,8 +3,9 @@
 第四十五批覆盖：stage_template/helpers.py
 """
 
-import pytest
 from unittest.mock import MagicMock, call
+
+import pytest
 
 pytest.importorskip("app.services.stage_template.helpers")
 

@@ -37,19 +37,14 @@ def find_users_by_role(db: Session, role_name: str) -> List[User]:
     role_ids = [r.id for r in roles]
 
     # 查找拥有这些角色的用户
-    user_roles = db.query(UserRole).filter(
-        UserRole.role_id.in_(role_ids)
-    ).all()
+    user_roles = db.query(UserRole).filter(UserRole.role_id.in_(role_ids)).all()
 
     user_ids = list(set([ur.user_id for ur in user_roles]))
 
     if not user_ids:
         return []
 
-    users = db.query(User).filter(
-        User.id.in_(user_ids),
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.id.in_(user_ids), User.is_active).all()
 
     return users
 
@@ -84,7 +79,7 @@ def create_notification(
     source_id: Optional[int] = None,
     link_url: Optional[str] = None,
     priority: str = "NORMAL",
-    extra_data: Optional[dict] = None
+    extra_data: Optional[dict] = None,
 ) -> object:
     """
     创建系统通知

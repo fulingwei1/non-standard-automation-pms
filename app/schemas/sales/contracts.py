@@ -61,9 +61,7 @@ class ContractCreate(BaseModel):
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
     status: Optional[str] = Field(default=None, description="状态")
-    payment_terms_summary: Optional[str] = Field(
-        default=None, description="付款条款摘要"
-    )
+    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
     acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     deliverables: Optional[List[ContractDeliverableCreate]] = Field(
@@ -102,9 +100,7 @@ class ContractResponse(TimestampSchema):
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
     status: Optional[str] = Field(default=None, description="状态")
-    payment_terms_summary: Optional[str] = Field(
-        default=None, description="付款条款摘要"
-    )
+    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
     acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
 
@@ -220,9 +216,7 @@ class ApprovalWorkflowResponse(TimestampSchema):
     workflow_name: str = Field(description="工作流名称")
     entity_type: str = Field(description="实体类型")
     description: Optional[str] = Field(default=None, description="描述")
-    steps: List[ApprovalWorkflowStepResponse] = Field(
-        default=[], description="审批步骤列表"
-    )
+    steps: List[ApprovalWorkflowStepResponse] = Field(default=[], description="审批步骤列表")
     is_active: bool = Field(description="是否启用")
     created_by: Optional[int] = Field(default=None, description="创建人ID")
     created_by_name: Optional[str] = Field(default=None, description="创建人姓名")
@@ -282,9 +276,7 @@ class ApprovalHistoryResponse(BaseModel):
 
     entity_id: int = Field(description="实体ID")
     entity_type: str = Field(description="实体类型")
-    records: List[ApprovalRecordResponse] = Field(
-        default=[], description="审批记录列表"
-    )
+    records: List[ApprovalRecordResponse] = Field(default=[], description="审批记录列表")
 
     # 审批相关
     ("ApprovalWorkflowStepResponse",)

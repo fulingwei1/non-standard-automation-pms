@@ -16,7 +16,10 @@ class TestExtractSelfEvaluation:
     @patch("app.services.performance_collector.work_log.KNOWLEDGE_SHARING_PATTERNS", ["分享.*经验"])
     @patch("app.services.performance_collector.work_log.TECH_BREAKTHROUGH_PATTERNS", ["突破.*技术"])
     def test_no_work_logs(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = extract_self_evaluation_from_work_logs(db, 1, date(2024, 1, 1), date(2024, 3, 31))
@@ -31,7 +34,10 @@ class TestExtractSelfEvaluation:
     @patch("app.services.performance_collector.work_log.KNOWLEDGE_SHARING_PATTERNS", ["分享.*经验"])
     @patch("app.services.performance_collector.work_log.TECH_BREAKTHROUGH_PATTERNS", ["突破.*技术"])
     def test_positive_logs(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         log = MagicMock()
         log.content = "今天完成了架构优化工作，解决了性能问题"
@@ -50,7 +56,10 @@ class TestExtractSelfEvaluation:
     @patch("app.services.performance_collector.work_log.KNOWLEDGE_SHARING_PATTERNS", [])
     @patch("app.services.performance_collector.work_log.TECH_BREAKTHROUGH_PATTERNS", [])
     def test_negative_logs(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         log = MagicMock()
         log.content = "项目延迟了，测试失败"
@@ -67,7 +76,10 @@ class TestExtractSelfEvaluation:
     @patch("app.services.performance_collector.work_log.KNOWLEDGE_SHARING_PATTERNS", [])
     @patch("app.services.performance_collector.work_log.TECH_BREAKTHROUGH_PATTERNS", [])
     def test_empty_content(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         log = MagicMock()
         log.content = None
@@ -77,7 +89,10 @@ class TestExtractSelfEvaluation:
         assert result["self_evaluation_score"] == 75.0
 
     def test_exception_handling(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         db.query.side_effect = Exception("DB error")
         result = extract_self_evaluation_from_work_logs(db, 1, date(2024, 1, 1), date(2024, 3, 31))
@@ -92,7 +107,10 @@ class TestExtractSelfEvaluation:
     @patch("app.services.performance_collector.work_log.KNOWLEDGE_SHARING_PATTERNS", ["分享.*经验"])
     @patch("app.services.performance_collector.work_log.TECH_BREAKTHROUGH_PATTERNS", ["突破.*技术"])
     def test_all_bonus_scenarios(self):
-        from app.services.performance_collector.work_log import extract_self_evaluation_from_work_logs
+        from app.services.performance_collector.work_log import (
+            extract_self_evaluation_from_work_logs,
+        )
+
         db = MagicMock()
         log = MagicMock()
         log.content = "完成架构设计，与团队协作解决了核心问题，分享了调试经验，突破了关键技术"

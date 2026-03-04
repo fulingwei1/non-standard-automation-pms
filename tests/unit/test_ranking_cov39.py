@@ -2,11 +2,11 @@
 """
 第三十九批覆盖率测试 - lead_priority_scoring/ranking.py
 """
-import pytest
 from unittest.mock import MagicMock
 
-pytest.importorskip("app.services.lead_priority_scoring.ranking",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.lead_priority_scoring.ranking", reason="import failed, skip")
 
 from app.services.lead_priority_scoring.ranking import RankingMixin
 
@@ -34,12 +34,22 @@ class ConcreteRankingService(RankingMixin):
         self.db = db
 
     def calculate_lead_priority(self, lead_id):
-        return {"total_score": 80.0, "is_key_lead": True,
-                "priority_level": "HIGH", "importance_level": "HIGH", "urgency_level": "MEDIUM"}
+        return {
+            "total_score": 80.0,
+            "is_key_lead": True,
+            "priority_level": "HIGH",
+            "importance_level": "HIGH",
+            "urgency_level": "MEDIUM",
+        }
 
     def calculate_opportunity_priority(self, opp_id):
-        return {"total_score": 75.0, "is_key_opportunity": False,
-                "priority_level": "MEDIUM", "importance_level": "MEDIUM", "urgency_level": "LOW"}
+        return {
+            "total_score": 75.0,
+            "is_key_opportunity": False,
+            "priority_level": "MEDIUM",
+            "importance_level": "MEDIUM",
+            "urgency_level": "LOW",
+        }
 
 
 class TestRankingMixin:
@@ -118,8 +128,13 @@ class TestRankingMixin:
         def side_calculate(lead_id):
             idx = call_count[0]
             call_count[0] += 1
-            return {"total_score": scores[idx], "is_key_lead": False,
-                    "priority_level": "LOW", "importance_level": "LOW", "urgency_level": "LOW"}
+            return {
+                "total_score": scores[idx],
+                "is_key_lead": False,
+                "priority_level": "LOW",
+                "importance_level": "LOW",
+                "urgency_level": "LOW",
+            }
 
         mock_q = MagicMock()
         self.db.query.return_value = mock_q

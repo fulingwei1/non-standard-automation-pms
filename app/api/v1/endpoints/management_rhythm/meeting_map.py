@@ -41,17 +41,14 @@ from .permission_utils import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/meeting-map",
-    tags=["meeting_map"]
-)
+router = APIRouter(prefix="/meeting-map", tags=["meeting_map"])
 
 # 共 3 个路由
 
 # ==================== 会议地图 ====================
+
 
 @router.get("/", response_model=MeetingMapResponse)
 def read_meeting_map(
@@ -94,13 +91,19 @@ def read_meeting_map(
 
     for meeting in meetings:
         # 统计行动项
-        action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-        completed_count = db.query(MeetingActionItem).filter(
-            and_(
-                MeetingActionItem.meeting_id == meeting.id,
-                MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+        action_items_count = (
+            db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+        )
+        completed_count = (
+            db.query(MeetingActionItem)
+            .filter(
+                and_(
+                    MeetingActionItem.meeting_id == meeting.id,
+                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+                )
             )
-        ).count()
+            .count()
+        )
 
         item = MeetingMapItem(
             id=meeting.id,
@@ -146,10 +149,7 @@ def read_meeting_calendar(
     获取会议日历视图
     """
     query = db.query(StrategicMeeting).filter(
-        and_(
-            StrategicMeeting.meeting_date >= start_date,
-            StrategicMeeting.meeting_date <= end_date
-        )
+        and_(StrategicMeeting.meeting_date >= start_date, StrategicMeeting.meeting_date <= end_date)
     )
 
     if rhythm_level:
@@ -166,36 +166,46 @@ def read_meeting_calendar(
             calendar_map[meeting_date] = []
 
         # 统计行动项
-        action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
-        completed_count = db.query(MeetingActionItem).filter(
-            and_(
-                MeetingActionItem.meeting_id == meeting.id,
-                MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+        action_items_count = (
+            db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
+        )
+        completed_count = (
+            db.query(MeetingActionItem)
+            .filter(
+                and_(
+                    MeetingActionItem.meeting_id == meeting.id,
+                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+                )
             )
-        ).count()
+            .count()
+        )
 
-        calendar_map[meeting_date].append(MeetingMapItem(
-            id=meeting.id,
-            rhythm_level=meeting.rhythm_level,
-            cycle_type=meeting.cycle_type,
-            meeting_name=meeting.meeting_name,
-            meeting_date=meeting.meeting_date,
-            start_time=meeting.start_time,
-            status=meeting.status,
-            organizer_name=meeting.organizer_name,
-            action_items_count=action_items_count,
-            completed_action_items_count=completed_count,
-        ))
+        calendar_map[meeting_date].append(
+            MeetingMapItem(
+                id=meeting.id,
+                rhythm_level=meeting.rhythm_level,
+                cycle_type=meeting.cycle_type,
+                meeting_name=meeting.meeting_name,
+                meeting_date=meeting.meeting_date,
+                start_time=meeting.start_time,
+                status=meeting.status,
+                organizer_name=meeting.organizer_name,
+                action_items_count=action_items_count,
+                completed_action_items_count=completed_count,
+            )
+        )
 
     # 转换为列表
     result = []
     current_date = start_date
     while current_date <= end_date:
         if current_date in calendar_map:
-            result.append(MeetingCalendarResponse(
-                date=current_date,
-                meetings=calendar_map[current_date],
-            ))
+            result.append(
+                MeetingCalendarResponse(
+                    date=current_date,
+                    meetings=calendar_map[current_date],
+                )
+            )
         current_date += timedelta(days=1)
 
     return result
@@ -233,29 +243,41 @@ def read_meeting_statistics(
     # 统计行动项
     meeting_ids = [m.id for m in meetings]
     if meeting_ids:
-        total_action_items = db.query(MeetingActionItem).filter(
-            MeetingActionItem.meeting_id.in_(meeting_ids)
-        ).count()
+        total_action_items = (
+            db.query(MeetingActionItem)
+            .filter(MeetingActionItem.meeting_id.in_(meeting_ids))
+            .count()
+        )
 
-        completed_action_items = db.query(MeetingActionItem).filter(
-            and_(
-                MeetingActionItem.meeting_id.in_(meeting_ids),
-                MeetingActionItem.status == ActionItemStatus.COMPLETED.value
+        completed_action_items = (
+            db.query(MeetingActionItem)
+            .filter(
+                and_(
+                    MeetingActionItem.meeting_id.in_(meeting_ids),
+                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+                )
             )
-        ).count()
+            .count()
+        )
 
-        overdue_action_items = db.query(MeetingActionItem).filter(
-            and_(
-                MeetingActionItem.meeting_id.in_(meeting_ids),
-                MeetingActionItem.status == ActionItemStatus.OVERDUE.value
+        overdue_action_items = (
+            db.query(MeetingActionItem)
+            .filter(
+                and_(
+                    MeetingActionItem.meeting_id.in_(meeting_ids),
+                    MeetingActionItem.status == ActionItemStatus.OVERDUE.value,
+                )
             )
-        ).count()
+            .count()
+        )
     else:
         total_action_items = 0
         completed_action_items = 0
         overdue_action_items = 0
 
-    completion_rate = (completed_action_items / total_action_items * 100) if total_action_items > 0 else 0.0
+    completion_rate = (
+        (completed_action_items / total_action_items * 100) if total_action_items > 0 else 0.0
+    )
 
     # 按层级统计
     by_level = {}
@@ -281,5 +303,3 @@ def read_meeting_statistics(
         by_level=by_level,
         by_cycle=by_cycle,
     )
-
-

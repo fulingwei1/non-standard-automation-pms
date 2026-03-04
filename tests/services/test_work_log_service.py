@@ -6,7 +6,7 @@ WorkLogService 单元测试 - N5组
 
 import unittest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.services.work_log_service import WorkLogService
 
@@ -83,6 +83,7 @@ class TestCreateWorkLog(unittest.TestCase):
         data = _make_create_data()
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -102,6 +103,7 @@ class TestCreateWorkLog(unittest.TestCase):
         data = _make_create_data()
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -124,6 +126,7 @@ class TestCreateWorkLog(unittest.TestCase):
         data = _make_create_data(mentioned_projects=[], mentioned_machines=[], mentioned_users=[])
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -138,7 +141,7 @@ class TestCreateWorkLog(unittest.TestCase):
         work_log = MagicMock(id=1)
         self.db.flush = MagicMock()
 
-        with patch('app.services.work_log_service.WorkLog', return_value=work_log):
+        with patch("app.services.work_log_service.WorkLog", return_value=work_log):
             result = self.svc.create_work_log(user_id=1, work_log_in=data)
 
         self.db.add.assert_called()
@@ -150,6 +153,7 @@ class TestCreateWorkLog(unittest.TestCase):
         data = _make_create_data(work_hours=8.0, project_id=None, rd_project_id=None, task_id=None)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -164,11 +168,17 @@ class TestCreateWorkLog(unittest.TestCase):
         work_log = MagicMock(id=1, timesheet_id=None)
         timesheet = MagicMock(id=99)
 
-        with patch('app.services.work_log_service.WorkLog', return_value=work_log), \
-             patch('app.services.work_log_service.Timesheet', return_value=timesheet):
-            with patch.object(self.svc, '_create_mentions'), \
-                 patch.object(self.svc, '_link_to_progress'), \
-                 patch.object(self.svc, '_create_timesheet_from_worklog', return_value=timesheet) as mock_ts:
+        with (
+            patch("app.services.work_log_service.WorkLog", return_value=work_log),
+            patch("app.services.work_log_service.Timesheet", return_value=timesheet),
+        ):
+            with (
+                patch.object(self.svc, "_create_mentions"),
+                patch.object(self.svc, "_link_to_progress"),
+                patch.object(
+                    self.svc, "_create_timesheet_from_worklog", return_value=timesheet
+                ) as mock_ts,
+            ):
                 result = self.svc.create_work_log(user_id=1, work_log_in=data)
                 mock_ts.assert_called_once()
 
@@ -218,9 +228,14 @@ class TestUpdateWorkLog(unittest.TestCase):
 
     def test_update_content_success(self):
         """合法内容更新应成功"""
-        log = MagicMock(id=1, user_id=1, status="DRAFT",
-                        work_date=date(2025, 6, 1), content="旧内容",
-                        timesheet_id=None)
+        log = MagicMock(
+            id=1,
+            user_id=1,
+            status="DRAFT",
+            work_date=date(2025, 6, 1),
+            content="旧内容",
+            timesheet_id=None,
+        )
         self.q.first.return_value = log
         data = _make_update_data(content="新内容")
 
@@ -230,9 +245,14 @@ class TestUpdateWorkLog(unittest.TestCase):
 
     def test_update_status_to_submitted(self):
         """可以更新状态"""
-        log = MagicMock(id=1, user_id=1, status="DRAFT",
-                        work_date=date(2025, 6, 1), content="内容",
-                        timesheet_id=None)
+        log = MagicMock(
+            id=1,
+            user_id=1,
+            status="DRAFT",
+            work_date=date(2025, 6, 1),
+            content="内容",
+            timesheet_id=None,
+        )
         self.q.first.return_value = log
         data = _make_update_data(status="SUBMITTED")
 
@@ -253,7 +273,7 @@ class TestCreateMentions(unittest.TestCase):
         self.q.first.return_value = project
         data = _make_create_data(mentioned_projects=[1], mentioned_machines=[], mentioned_users=[])
 
-        with patch('app.services.work_log_service.WorkLogMention') as MockMention:
+        with patch("app.services.work_log_service.WorkLogMention") as MockMention:
             MockMention.return_value = MagicMock()
             self.svc._create_mentions(work_log_id=100, work_log_in=data)
 
@@ -267,7 +287,7 @@ class TestCreateMentions(unittest.TestCase):
         self.q.first.return_value = machine
         data = _make_create_data(mentioned_projects=[], mentioned_machines=[2], mentioned_users=[])
 
-        with patch('app.services.work_log_service.WorkLogMention') as MockMention:
+        with patch("app.services.work_log_service.WorkLogMention") as MockMention:
             MockMention.return_value = MagicMock()
             self.svc._create_mentions(work_log_id=100, work_log_in=data)
 
@@ -279,7 +299,7 @@ class TestCreateMentions(unittest.TestCase):
         self.q.first.return_value = user
         data = _make_create_data(mentioned_projects=[], mentioned_machines=[], mentioned_users=[3])
 
-        with patch('app.services.work_log_service.WorkLogMention') as MockMention:
+        with patch("app.services.work_log_service.WorkLogMention") as MockMention:
             MockMention.return_value = MagicMock()
             self.svc._create_mentions(work_log_id=100, work_log_in=data)
 
@@ -288,9 +308,11 @@ class TestCreateMentions(unittest.TestCase):
     def test_nonexistent_mention_target_skipped(self):
         """@的目标不存在时跳过（不抛异常）"""
         self.q.first.return_value = None  # project not found
-        data = _make_create_data(mentioned_projects=[999], mentioned_machines=[], mentioned_users=[])
+        data = _make_create_data(
+            mentioned_projects=[999], mentioned_machines=[], mentioned_users=[]
+        )
 
-        with patch('app.services.work_log_service.WorkLogMention') as MockMention:
+        with patch("app.services.work_log_service.WorkLogMention") as MockMention:
             self.svc._create_mentions(work_log_id=100, work_log_in=data)
 
         MockMention.assert_not_called()
@@ -310,6 +332,7 @@ class TestGetMentionOptions(unittest.TestCase):
         user = MagicMock(id=3, real_name="王五", username="wangwu", is_active=True)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q

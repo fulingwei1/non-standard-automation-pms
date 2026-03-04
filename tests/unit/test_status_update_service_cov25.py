@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - status_update_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_update_service")
 
-from app.services.status_update_service import StatusUpdateService, StatusUpdateResult
+from app.services.status_update_service import StatusUpdateResult, StatusUpdateService
 
 
 @pytest.fixture
@@ -35,6 +36,7 @@ def _make_entity(status="DRAFT"):
 
 
 # ── StatusUpdateResult ────────────────────────────────────────────────────────
+
 
 class TestStatusUpdateResult:
     def test_success_result(self):
@@ -67,12 +69,12 @@ class TestStatusUpdateResult:
 
 # ── update_status - valid_statuses validation ─────────────────────────────────
 
+
 class TestUpdateStatusValidation:
     def test_rejects_invalid_status(self, service, operator):
         entity = _make_entity("DRAFT")
         result = service.update_status(
-            entity, "INVALID", operator,
-            valid_statuses=["DRAFT", "SUBMITTED", "APPROVED"]
+            entity, "INVALID", operator, valid_statuses=["DRAFT", "SUBMITTED", "APPROVED"]
         )
         assert result.success is False
         assert len(result.errors) > 0
@@ -81,8 +83,7 @@ class TestUpdateStatusValidation:
     def test_accepts_valid_status(self, service, operator):
         entity = _make_entity("DRAFT")
         result = service.update_status(
-            entity, "SUBMITTED", operator,
-            valid_statuses=["DRAFT", "SUBMITTED", "APPROVED"]
+            entity, "SUBMITTED", operator, valid_statuses=["DRAFT", "SUBMITTED", "APPROVED"]
         )
         assert result.success is True
 
@@ -99,33 +100,25 @@ class TestUpdateStatusValidation:
 
 # ── update_status - transition_rules ─────────────────────────────────────────
 
+
 class TestUpdateStatusTransitionRules:
     def test_allows_valid_transition(self, service, operator):
         entity = _make_entity("DRAFT")
         rules = {"DRAFT": ["SUBMITTED"], "SUBMITTED": ["APPROVED", "REJECTED"]}
-        result = service.update_status(
-            entity, "SUBMITTED", operator,
-            transition_rules=rules
-        )
+        result = service.update_status(entity, "SUBMITTED", operator, transition_rules=rules)
         assert result.success is True
 
     def test_rejects_invalid_transition(self, service, operator):
         entity = _make_entity("DRAFT")
         rules = {"DRAFT": ["SUBMITTED"]}
-        result = service.update_status(
-            entity, "APPROVED", operator,
-            transition_rules=rules
-        )
+        result = service.update_status(entity, "APPROVED", operator, transition_rules=rules)
         assert result.success is False
         assert "不允许的状态转换" in result.errors[0]
 
     def test_rejects_when_status_not_in_rules(self, service, operator):
         entity = _make_entity("ARCHIVED")
         rules = {"DRAFT": ["SUBMITTED"]}
-        result = service.update_status(
-            entity, "DRAFT", operator,
-            transition_rules=rules
-        )
+        result = service.update_status(entity, "DRAFT", operator, transition_rules=rules)
         assert result.success is False
 
     def test_no_transition_rules_skips_check(self, service, operator):
@@ -135,6 +128,7 @@ class TestUpdateStatusTransitionRules:
 
 
 # ── update_status - same status ───────────────────────────────────────────────
+
 
 class TestUpdateStatusSameStatus:
     def test_same_status_returns_success_with_message(self, service, operator):
@@ -151,6 +145,7 @@ class TestUpdateStatusSameStatus:
 
 # ── update_status - timestamp_fields ─────────────────────────────────────────
 
+
 class TestUpdateStatusTimestampFields:
     def test_sets_timestamp_on_matching_status(self, service, operator):
         entity = MagicMock()
@@ -160,8 +155,7 @@ class TestUpdateStatusTimestampFields:
         with patch("app.services.status_update_service.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2025, 6, 1, 12, 0)
             service.update_status(
-                entity, "SUBMITTED", operator,
-                timestamp_fields={"SUBMITTED": "submitted_at"}
+                entity, "SUBMITTED", operator, timestamp_fields={"SUBMITTED": "submitted_at"}
             )
         # submitted_at should have been set
         assert entity.submitted_at == datetime(2025, 6, 1, 12, 0)
@@ -172,14 +166,14 @@ class TestUpdateStatusTimestampFields:
         entity.submitted_at = datetime(2025, 1, 1)  # Already has value
 
         service.update_status(
-            entity, "SUBMITTED", operator,
-            timestamp_fields={"SUBMITTED": "submitted_at"}
+            entity, "SUBMITTED", operator, timestamp_fields={"SUBMITTED": "submitted_at"}
         )
         # Should NOT be overwritten
         assert entity.submitted_at == datetime(2025, 1, 1)
 
 
 # ── update_status - callbacks ─────────────────────────────────────────────────
+
 
 class TestUpdateStatusCallbacks:
     def test_before_callback_called(self, service, operator):
@@ -196,11 +190,12 @@ class TestUpdateStatusCallbacks:
 
     def test_before_callback_failure_returns_error(self, service, operator):
         entity = _make_entity("DRAFT")
+
         def bad_callback(*args, **kwargs):
             raise ValueError("回调失败")
+
         result = service.update_status(
-            entity, "SUBMITTED", operator,
-            before_update_callback=bad_callback
+            entity, "SUBMITTED", operator, before_update_callback=bad_callback
         )
         assert result.success is False
         assert len(result.errors) > 0
@@ -214,14 +209,17 @@ class TestUpdateStatusCallbacks:
 
 # ── update_status - related_entities ─────────────────────────────────────────
 
+
 class TestUpdateStatusRelatedEntities:
     def test_updates_related_entity_status(self, service, operator):
         entity = _make_entity("DRAFT")
         related = MagicMock()
         related.status = "DRAFT"
         result = service.update_status(
-            entity, "SUBMITTED", operator,
-            related_entities=[{"entity": related, "field": "status", "value": "LINKED"}]
+            entity,
+            "SUBMITTED",
+            operator,
+            related_entities=[{"entity": related, "field": "status", "value": "LINKED"}],
         )
         assert result.success is True
         assert related.status == "LINKED"

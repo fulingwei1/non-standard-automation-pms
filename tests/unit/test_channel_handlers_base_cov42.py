@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.channel_handlers.base")
 
 from unittest.mock import MagicMock
+
 from app.services.channel_handlers.base import (
     ChannelHandler,
     NotificationChannel,
@@ -13,11 +14,12 @@ from app.services.channel_handlers.base import (
     NotificationResult,
 )
 
-
 # ------------------------------------------------------------------ helpers --
+
 
 class ConcreteHandler(ChannelHandler):
     """用于测试的具体处理器"""
+
     def send(self, request):
         return NotificationResult(channel=self.channel, success=True)
 
@@ -35,6 +37,7 @@ def make_settings(**kwargs):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_notification_channel_constants():
     assert NotificationChannel.SYSTEM == "system"
@@ -97,8 +100,7 @@ def test_should_send_no_settings_returns_true():
 def test_concrete_handler_send_returns_result():
     h = make_handler()
     req = NotificationRequest(
-        recipient_id=1, notification_type="T", category="c",
-        title="title", content="body"
+        recipient_id=1, notification_type="T", category="c", title="title", content="body"
     )
     result = h.send(req)
     assert result.success is True

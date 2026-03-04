@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter
 
-from . import crud, project_integration, bulk_import, history
+from . import bulk_import, crud, history, project_integration
 
 router = APIRouter()
 

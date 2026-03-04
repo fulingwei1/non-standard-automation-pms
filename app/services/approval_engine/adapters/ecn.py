@@ -8,27 +8,22 @@ ECN审批较为复杂，包含多部门评估（会签）环节
 
 from __future__ import annotations
 
+import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.ecn import Ecn, EcnEvaluation, EcnApproval
+from app.models.approval import ApprovalInstance, ApprovalNodeDefinition, ApprovalTask
+from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
+from app.models.user import Role, User, UserRole
+from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
 
-
-
-from datetime import datetime, timedelta
-from app.schemas.approval.instance import ApprovalInstanceCreate
-from app.models.user import UserRole
-from app.models.user import User
-from app.models.user import Role
-from app.models.ecn import EcnApprovalMatrix
-from app.models.approval import ApprovalNodeDefinition
-import logging
-
 logger = logging.getLogger(__name__)
+
+
 class EcnApprovalAdapter(ApprovalAdapter):
     """
     ECN审批适配器
@@ -67,20 +62,14 @@ class EcnApprovalAdapter(ApprovalAdapter):
             return {}
 
         # 获取评估汇总
-        evaluations = self.db.query(EcnEvaluation).filter(
-            EcnEvaluation.ecn_id == entity_id
-        ).all()
+        evaluations = self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == entity_id).all()
 
         eval_summary = {
             "total_evaluations": len(evaluations),
             "completed_evaluations": len([e for e in evaluations if e.status == "COMPLETED"]),
             "pending_evaluations": len([e for e in evaluations if e.status == "PENDING"]),
-            "total_cost_estimate": sum(
-                float(e.cost_estimate or 0) for e in evaluations
-            ),
-            "total_schedule_estimate": sum(
-                e.schedule_estimate or 0 for e in evaluations
-            ),
+            "total_cost_estimate": sum(float(e.cost_estimate or 0) for e in evaluations),
+            "total_schedule_estimate": sum(e.schedule_estimate or 0 for e in evaluations),
             "departments": [e.eval_dept for e in evaluations],
         }
 
@@ -161,7 +150,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
         data = self.get_entity_data(entity_id)
         if not data:
             return ""
-        
+
         parts = []
         if data.get("ecn_type"):
             parts.append(f"类型: {data['ecn_type']}")
@@ -173,11 +162,11 @@ class EcnApprovalAdapter(ApprovalAdapter):
             parts.append(f"工期影响: {data['schedule_impact_days']}天")
         if data.get("priority"):
             parts.append(f"优先级: {data['priority']}")
-        
+
         return " | ".join(parts)
-    
+
     # ========== 高级方法：使用 WorkflowEngine ========== #
-    
+
     def submit_for_approval(
         self,
         ecn,
@@ -189,7 +178,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> ApprovalInstance:
         """
         提交ECN到统一审批引擎
-        
+
         Args:
             ecn: ECN实例
             initiator_id: 发起人ID
@@ -197,7 +186,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
             summary: 审批摘要
             urgency: 紧急程度
             cc_user_ids: 抄送人ID列表
-        
+
         Returns:
             创建的ApprovalInstance
         """
@@ -210,7 +199,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 .filter(ApprovalInstance.id == ecn.approval_instance_id)
                 .first()
             )
-        
+
         # 构建表单数据
         form_data = {
             "ecn_id": ecn.id,
@@ -222,11 +211,9 @@ class EcnApprovalAdapter(ApprovalAdapter):
             "project_id": ecn.project_id,
             "impact_analysis": ecn.impact_analysis or "",
         }
-        
+
         # 添加ECN评估信息
-        evaluations = (
-            self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn.id).all()
-        )
+        evaluations = self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn.id).all()
         if evaluations:
             form_data["evaluations"] = [
                 {
@@ -244,7 +231,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 }
                 for e in evaluations
             ]
-        
+
         # 创建审批实例
         ApprovalInstanceCreate(
             template_code="ECN_STANDARD",
@@ -256,12 +243,12 @@ class EcnApprovalAdapter(ApprovalAdapter):
             urgency=urgency,
             cc_user_ids=cc_user_ids,
         )
-        
+
         # 使用统一引擎创建实例
         from app.services.approval_engine.workflow_engine import WorkflowEngine
-        
+
         workflow_engine = WorkflowEngine(self.db)
-        
+
         instance = workflow_engine.create_instance(
             flow_code="ECN_STANDARD",
             business_type="ECN",
@@ -270,17 +257,17 @@ class EcnApprovalAdapter(ApprovalAdapter):
             submitted_by=initiator_id,
             config={"ecn": form_data},
         )
-        
+
         # 更新ECN记录，关联审批实例
         ecn.approval_instance_id = instance.id
         ecn.approval_status = instance.status
         self.db.add(ecn)
         self.db.commit()
-        
+
         logger.info(f"ECN {ecn.ecn_no} 已提交审批，实例ID: {instance.id}")
-        
+
         return instance
-    
+
     def sync_from_approval_instance(
         self,
         instance: ApprovalInstance,
@@ -288,7 +275,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> None:
         """
         将ApprovalEngine状态同步回ECN模型
-        
+
         Args:
             instance: 审批实例
             ecn: ECN实例
@@ -296,7 +283,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
         # 同步审批状态
         old_status = ecn.approval_status
         ecn.approval_status = instance.status
-        
+
         # 根据实例状态更新ECN状态
         if instance.status == "APPROVED":
             ecn.status = "APPROVED"
@@ -313,20 +300,18 @@ class EcnApprovalAdapter(ApprovalAdapter):
         elif instance.status == "TERMINATED":
             ecn.status = "TERMINATED"
             ecn.approval_result = "TERMINATED"
-        
+
         # 获取最终审批意见
         if instance.final_comment:
             ecn.approval_note = instance.final_comment
-        
+
         self.db.add(ecn)
         self.db.commit()
-        
+
         # 如果状态发生变化，记录日志
         if old_status != instance.status:
-            logger.info(
-                f"ECN {ecn.ecn_no} 审批状态变化: {old_status} -> {instance.status}"
-            )
-    
+            logger.info(f"ECN {ecn.ecn_no} 审批状态变化: {old_status} -> {instance.status}")
+
     def create_ecn_approval_records(
         self,
         instance: ApprovalInstance,
@@ -334,11 +319,11 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> List[EcnApproval]:
         """
         根据审批实例创建ECN审批记录
-        
+
         将ApprovalEngine的任务转换为ECN的审批记录
         """
         from app.models.ecn import EcnApproval
-        
+
         # 获取当前节点对应的审批任务
         tasks = (
             self.db.query(ApprovalTask)
@@ -348,21 +333,19 @@ class EcnApprovalAdapter(ApprovalAdapter):
             )
             .all()
         )
-        
+
         approval_records = []
-        
+
         for task in tasks:
             # 确定审批层级
             approval_level = self._determine_approval_level(task.node_id, ecn)
-            
+
             # 获取审批人
             if task.assignee_id:
-                approver = (
-                    self.db.query(User).filter(User.id == task.assignee_id).first()
-                )
+                approver = self.db.query(User).filter(User.id == task.assignee_id).first()
             else:
                 approver = None
-            
+
             # 创建或更新EcnApproval记录
             existing_approval = (
                 self.db.query(EcnApproval)
@@ -372,10 +355,10 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 )
                 .first()
             )
-            
+
             # 计算到期时间
             due_date = task.due_at or (datetime.now() + timedelta(hours=48))
-            
+
             if existing_approval:
                 # 更新现有记录
                 existing_approval.approver_id = task.assignee_id
@@ -384,7 +367,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 existing_approval.status = "PENDING"
                 existing_approval.due_date = due_date
                 existing_approval.is_overdue = False
-                
+
                 self.db.add(existing_approval)
                 approval_records.append(existing_approval)
             else:
@@ -400,16 +383,16 @@ class EcnApprovalAdapter(ApprovalAdapter):
                     due_date=due_date,
                     is_overdue=False,
                 )
-                
+
                 self.db.add(approval)
                 approval_records.append(approval)
-        
+
         self.db.commit()
-        
+
         logger.info(f"为ECN {ecn.ecn_no} 创建了 {len(approval_records)} 个审批记录")
-        
+
         return approval_records
-    
+
     def get_ecn_approvers(
         self,
         ecn,
@@ -418,12 +401,12 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> List[int]:
         """
         根据审批矩阵获取ECN审批人
-        
+
         Args:
             ecn: ECN实例
             level: 审批层级
             matrix: 审批矩阵配置
-        
+
         Returns:
             审批人ID列表
         """
@@ -438,9 +421,9 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 )
                 .all()
             )
-        
+
         approvers = []
-        
+
         for matrix_item in matrix:
             # 根据审批角色查找用户
             if matrix_item.approval_role:
@@ -455,10 +438,10 @@ class EcnApprovalAdapter(ApprovalAdapter):
                     .all()
                 )
                 approvers.extend([u.id for u in users])
-        
+
         # 去重
         return list(set(approvers))
-    
+
     def _determine_approval_level(
         self,
         node_id: int,
@@ -466,7 +449,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> int:
         """
         根据节点ID确定ECN审批层级
-        
+
         简化逻辑：根据node_id的顺序确定层级
         """
         # 获取节点顺序
@@ -475,13 +458,13 @@ class EcnApprovalAdapter(ApprovalAdapter):
             .filter(ApprovalNodeDefinition.id == node_id)
             .first()
         )
-        
+
         if not node:
             return 1
-        
+
         # 使用node_order作为approval_level
         return node.node_order
-    
+
     def update_ecn_approval_from_action(
         self,
         task: ApprovalTask,
@@ -490,19 +473,17 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> Optional[EcnApproval]:
         """
         根据审批操作更新ECN审批记录
-        
+
         Args:
             task: 审批任务
             action: 操作（APPROVE/REJECT/WITHDRAW）
             comment: 审批意见
-        
+
         Returns:
             更新后的EcnApproval实例
         """
         # 获取ECN审批记录
-        approval_level = self._determine_approval_level(
-            task.node_id, task.instance.entity
-        )
+        approval_level = self._determine_approval_level(task.node_id, task.instance.entity)
         approval = (
             self.db.query(EcnApproval)
             .filter(
@@ -511,13 +492,13 @@ class EcnApprovalAdapter(ApprovalAdapter):
             )
             .first()
         )
-        
+
         if not approval:
             logger.warning(
                 f"未找到ECN审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
             )
             return None
-        
+
         # 更新审批结果
         if action == "APPROVE":
             approval.approval_result = "APPROVED"
@@ -532,50 +513,50 @@ class EcnApprovalAdapter(ApprovalAdapter):
         elif action == "WITHDRAW":
             approval.approval_result = "WITHDRAWN"
             approval.status = "CANCELLED"
-        
+
         self.db.add(approval)
         self.db.commit()
-        
+
         logger.info(
             f"ECN审批记录已更新: entity_id={approval.ecn_id}, level={approval.approval_level}, action={action}"
         )
-        
+
         return approval
-    
+
     # ========== ECN特有方法 ========== #
-    
+
     def get_required_evaluators(self, entity_id: int) -> List[Dict[str, Any]]:
         """
         获取ECN需要的评估部门列表
-        
+
         根据ECN类型确定需要哪些部门进行评估
         """
         ecn = self.get_entity(entity_id)
         if not ecn:
             return []
-        
+
         # 基础评估部门（所有ECN都需要）
         base_depts = [
             {"dept": "工程部", "required": True},
         ]
-        
+
         # 根据ECN类型添加额外评估部门
         ecn_type = ecn.ecn_type
         if ecn_type in ("MATERIAL", "SUPPLIER"):
             base_depts.append({"dept": "采购部", "required": True})
-        
+
         if ecn_type in ("PROCESS", "MATERIAL"):
             base_depts.append({"dept": "生产部", "required": True})
-        
+
         if ecn_type in ("DESIGN", "SPEC"):
             base_depts.append({"dept": "质量部", "required": True})
-        
+
         # 成本影响较大时需要财务评估
         if ecn.cost_impact and ecn.cost_impact > 10000:
             base_depts.append({"dept": "财务部", "required": True})
-        
+
         return base_depts
-    
+
     def create_evaluation_tasks(
         self,
         entity_id: int,
@@ -583,12 +564,12 @@ class EcnApprovalAdapter(ApprovalAdapter):
     ) -> List[EcnEvaluation]:
         """
         创建ECN评估任务
-        
+
         在审批流程开始时，为各部门创建评估任务
         """
         evaluators = self.get_required_evaluators(entity_id)
         evaluations = []
-        
+
         for eval_info in evaluators:
             evaluation = EcnEvaluation(
                 ecn_id=entity_id,
@@ -608,9 +589,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
         Returns:
             (是否完成, 评估汇总数据)
         """
-        evaluations = self.db.query(EcnEvaluation).filter(
-            EcnEvaluation.ecn_id == entity_id
-        ).all()
+        evaluations = self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == entity_id).all()
 
         if not evaluations:
             return False, {}

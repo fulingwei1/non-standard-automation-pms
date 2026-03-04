@@ -15,13 +15,12 @@ from app.models.user import User, UserRole
 from app.services.sales_team_service import SalesTeamService
 
 
-
 def ensure_sales_director_permission(current_user: User, db: Session):
     """检查是否为销售总监（数据范围 ALL）"""
     if current_user.is_superuser:
         return
     scope = security.get_sales_data_scope(current_user, db)
-    if scope != 'ALL':
+    if scope != "ALL":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="仅销售总监可以调整排名权重配置",
@@ -54,11 +53,21 @@ def collect_sales_team_members(
 
     team_service = SalesTeamService()
     personal_targets_map = team_service.build_personal_target_map(user_ids, month_value, year_value)
-    recent_followups_map = team_service.get_recent_followups_map(user_ids, start_datetime, end_datetime)
-    customer_distribution_map = team_service.get_customer_distribution_map(user_ids, start_date_value, end_date_value)
-    followup_stats_map = team_service.get_followup_statistics_map(user_ids, start_datetime, end_datetime)
-    lead_quality_map = team_service.get_lead_quality_stats_map(user_ids, start_datetime, end_datetime)
-    opportunity_stats_map = team_service.get_opportunity_stats_map(user_ids, start_datetime, end_datetime)
+    recent_followups_map = team_service.get_recent_followups_map(
+        user_ids, start_datetime, end_datetime
+    )
+    customer_distribution_map = team_service.get_customer_distribution_map(
+        user_ids, start_date_value, end_date_value
+    )
+    followup_stats_map = team_service.get_followup_statistics_map(
+        user_ids, start_datetime, end_datetime
+    )
+    lead_quality_map = team_service.get_lead_quality_stats_map(
+        user_ids, start_datetime, end_datetime
+    )
+    opportunity_stats_map = team_service.get_opportunity_stats_map(
+        user_ids, start_datetime, end_datetime
+    )
 
     team_members: List[dict] = []
     for user in users:
@@ -108,35 +117,37 @@ def collect_sales_team_members(
         yearly_actual_value = yearly_target_info.get("actual_value", 0.0)
         yearly_completion_rate = yearly_target_info.get("completion_rate", 0.0)
 
-        team_members.append({
-            "user_id": user.id,
-            "user_name": user.real_name or user.username,
-            "username": user.username,
-            "role": user_roles_map.get(user.id, "销售专员"),
-            "department_name": department_name,
-            "email": user.email,
-            "phone": user.phone,
-            "lead_count": lead_count,
-            "opportunity_count": opp_count,
-            "contract_count": contract_count,
-            "contract_amount": float(contract_amount),
-            "collection_amount": float(collection_amount),
-            "monthly_target": monthly_target_value,
-            "monthly_actual": monthly_actual_value,
-            "monthly_completion_rate": monthly_completion_rate,
-            "year_target": yearly_target_value,
-            "year_actual": yearly_actual_value,
-            "year_completion_rate": yearly_completion_rate,
-            "personal_targets": target_snapshot,
-            "recent_follow_up": recent_follow_up,
-            "customer_distribution": customer_distribution.get("categories", []),
-            "customer_total": customer_distribution.get("total", 0),
-            "new_customers": customer_distribution.get("new_customers", 0),
-            "region": region_name,
-            "follow_up_stats": followup_stats,
-            "lead_quality_stats": lead_quality_stats,
-            "opportunity_stats": opportunity_stats,
-        })
+        team_members.append(
+            {
+                "user_id": user.id,
+                "user_name": user.real_name or user.username,
+                "username": user.username,
+                "role": user_roles_map.get(user.id, "销售专员"),
+                "department_name": department_name,
+                "email": user.email,
+                "phone": user.phone,
+                "lead_count": lead_count,
+                "opportunity_count": opp_count,
+                "contract_count": contract_count,
+                "contract_amount": float(contract_amount),
+                "collection_amount": float(collection_amount),
+                "monthly_target": monthly_target_value,
+                "monthly_actual": monthly_actual_value,
+                "monthly_completion_rate": monthly_completion_rate,
+                "year_target": yearly_target_value,
+                "year_actual": yearly_actual_value,
+                "year_completion_rate": yearly_completion_rate,
+                "personal_targets": target_snapshot,
+                "recent_follow_up": recent_follow_up,
+                "customer_distribution": customer_distribution.get("categories", []),
+                "customer_total": customer_distribution.get("total", 0),
+                "new_customers": customer_distribution.get("new_customers", 0),
+                "region": region_name,
+                "follow_up_stats": followup_stats,
+                "lead_quality_stats": lead_quality_stats,
+                "opportunity_stats": opportunity_stats,
+            }
+        )
 
     return team_members
 
@@ -146,10 +157,14 @@ def build_team_response(team, db: Session, include_members: bool = True) -> dict
     from app.models.sales import SalesTeamMember
 
     # 获取成员数量
-    member_count = db.query(SalesTeamMember).filter(
-        SalesTeamMember.team_id == team.id,
-        SalesTeamMember.is_active,
-    ).count()
+    member_count = (
+        db.query(SalesTeamMember)
+        .filter(
+            SalesTeamMember.team_id == team.id,
+            SalesTeamMember.is_active,
+        )
+        .count()
+    )
 
     # 获取部门名称
     department_name = None
@@ -186,10 +201,14 @@ def build_team_response(team, db: Session, include_members: bool = True) -> dict
     }
 
     if include_members:
-        members = db.query(SalesTeamMember).filter(
-            SalesTeamMember.team_id == team.id,
-            SalesTeamMember.is_active,
-        ).all()
+        members = (
+            db.query(SalesTeamMember)
+            .filter(
+                SalesTeamMember.team_id == team.id,
+                SalesTeamMember.is_active,
+            )
+            .all()
+        )
         result["members"] = [
             {
                 "id": m.id,

@@ -4,16 +4,18 @@ Unit tests for app/utils/spec_match_service.py
 Covers: SpecMatchService class
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.utils.spec_match_service import SpecMatchService
 from app.utils.spec_matcher import SpecMatchResult
 
 
-def make_requirement(id=1, project_id=1, material_code="MAT001",
-                     material_name="电阻", specification="100Ω 1%"):
+def make_requirement(
+    id=1, project_id=1, material_code="MAT001", material_name="电阻", specification="100Ω 1%"
+):
     req = MagicMock()
     req.id = id
     req.project_id = project_id
@@ -33,6 +35,7 @@ class TestSpecMatchServiceInit:
     def test_init_creates_matcher(self):
         """SpecMatchService creates a SpecMatcher on init."""
         from app.utils.spec_matcher import SpecMatcher
+
         service = SpecMatchService()
         assert isinstance(service.matcher, SpecMatcher)
 
@@ -65,9 +68,7 @@ class TestCheckPoItemSpecMatch:
 
         # Patch the matcher to return a MATCHED result
         match_result = SpecMatchResult(
-            match_status="MATCHED",
-            match_score=Decimal("95.0"),
-            differences={}
+            match_status="MATCHED", match_score=Decimal("95.0"), differences={}
         )
         service.matcher.match_specification = MagicMock(return_value=match_result)
 
@@ -101,7 +102,7 @@ class TestCheckPoItemSpecMatch:
         match_result = SpecMatchResult(
             match_status="MISMATCHED",
             match_score=Decimal("50.0"),
-            differences={"specification": {"required": "100Ω", "actual": "200Ω"}}
+            differences={"specification": {"required": "100Ω", "actual": "200Ω"}},
         )
         service.matcher.match_specification = MagicMock(return_value=match_result)
         service._create_alert = MagicMock()
@@ -169,9 +170,7 @@ class TestCheckBomItemSpecMatch:
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = [req]
 
         match_result = SpecMatchResult(
-            match_status="MATCHED",
-            match_score=Decimal("90.0"),
-            differences={}
+            match_status="MATCHED", match_score=Decimal("90.0"), differences={}
         )
         service.matcher.match_specification = MagicMock(return_value=match_result)
 
@@ -208,14 +207,14 @@ class TestCreateAlert:
 
         req = make_requirement()
         match_result = SpecMatchResult(
-            match_status="MISMATCHED",
-            match_score=Decimal("40.0"),
-            differences={}
+            match_status="MISMATCHED", match_score=Decimal("40.0"), differences={}
         )
 
-        with patch("app.utils.spec_match_service.AlertRule") as MockRule, \
-             patch("app.utils.spec_match_service.AlertRecord") as MockAlert, \
-             patch("app.utils.spec_match_service.apply_like_filter") as mock_filter:
+        with (
+            patch("app.utils.spec_match_service.AlertRule") as MockRule,
+            patch("app.utils.spec_match_service.AlertRecord") as MockAlert,
+            patch("app.utils.spec_match_service.apply_like_filter") as mock_filter,
+        ):
 
             mock_rule_instance = MagicMock()
             mock_rule_instance.id = 1
@@ -231,11 +230,7 @@ class TestCreateAlert:
             db.query.return_value.filter.return_value.first.side_effect = [None, mock_match_record]
 
             service._create_alert(
-                db=db,
-                project_id=1,
-                match_record_id=5,
-                requirement=req,
-                match_result=match_result
+                db=db, project_id=1, match_record_id=5, requirement=req, match_result=match_result
             )
 
         db.add.assert_called()
@@ -255,27 +250,26 @@ class TestCreateAlert:
 
         req = make_requirement()
         match_result = SpecMatchResult(
-            match_status="MISMATCHED",
-            match_score=Decimal("30.0"),
-            differences={}
+            match_status="MISMATCHED", match_score=Decimal("30.0"), differences={}
         )
 
-        with patch("app.utils.spec_match_service.AlertRecord") as MockAlert, \
-             patch("app.utils.spec_match_service.apply_like_filter") as mock_filter:
+        with (
+            patch("app.utils.spec_match_service.AlertRecord") as MockAlert,
+            patch("app.utils.spec_match_service.apply_like_filter") as mock_filter,
+        ):
 
             mock_filter.return_value = count_mock
             mock_alert = MagicMock()
             MockAlert.return_value = mock_alert
 
             match_record = MagicMock()
-            db.query.return_value.filter.return_value.first.side_effect = [existing_rule, match_record]
+            db.query.return_value.filter.return_value.first.side_effect = [
+                existing_rule,
+                match_record,
+            ]
 
             service._create_alert(
-                db=db,
-                project_id=1,
-                match_record_id=5,
-                requirement=req,
-                match_result=match_result
+                db=db, project_id=1, match_record_id=5, requirement=req, match_result=match_result
             )
 
         # Should not create a new rule

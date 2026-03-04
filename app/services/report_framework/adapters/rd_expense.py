@@ -15,7 +15,7 @@ from app.services.report_framework.adapters.base import BaseReportAdapter
 
 class RdExpenseReportAdapter(BaseReportAdapter):
     """研发费用报表适配器"""
-    
+
     # 报表类型到报表代码的映射
     REPORT_TYPE_MAP = {
         "RD_AUXILIARY_LEDGER": "RD_AUXILIARY_LEDGER",
@@ -24,7 +24,7 @@ class RdExpenseReportAdapter(BaseReportAdapter):
         "RD_INTENSITY": "RD_INTENSITY",
         "RD_PERSONNEL": "RD_PERSONNEL",
     }
-    
+
     def __init__(self, db: Session, report_type: str = "RD_AUXILIARY_LEDGER"):
         """
         Args:
@@ -33,11 +33,11 @@ class RdExpenseReportAdapter(BaseReportAdapter):
         """
         super().__init__(db)
         self.report_type = report_type
-    
+
     def get_report_code(self) -> str:
         """返回报表代码"""
         return self.REPORT_TYPE_MAP.get(self.report_type, self.report_type)
-    
+
     def generate_data(
         self,
         params: Dict[str, Any],
@@ -45,11 +45,11 @@ class RdExpenseReportAdapter(BaseReportAdapter):
     ) -> Dict[str, Any]:
         """
         生成研发费用报表数据
-        
+
         Args:
             params: 报表参数（包含year和可选的project_id）
             user: 当前用户
-            
+
         Returns:
             报表数据字典
         """
@@ -60,13 +60,13 @@ class RdExpenseReportAdapter(BaseReportAdapter):
             build_intensity_data,
             build_personnel_data,
         )
-        
+
         year = params.get("year")
         if not year:
             raise ValueError("year参数是必需的")
-        
+
         project_id = params.get("project_id")
-        
+
         # 根据报表类型调用不同的构建函数
         if self.report_type == "RD_AUXILIARY_LEDGER":
             return build_auxiliary_ledger_data(self.db, year, project_id)

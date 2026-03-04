@@ -3,6 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.stock_count_service import StockCountService
@@ -33,9 +34,7 @@ class TestCreateCountTask:
     def test_create_basic_task(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
         result = service.create_count_task(
-            count_type="FULL",
-            count_date=date(2024, 6, 1),
-            created_by=1
+            count_type="FULL", count_date=date(2024, 6, 1), created_by=1
         )
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
@@ -43,19 +42,17 @@ class TestCreateCountTask:
     def test_create_task_with_location(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
         result = service.create_count_task(
-            count_type="SPOT",
-            count_date=date(2024, 6, 1),
-            location="仓库A"
+            count_type="SPOT", count_date=date(2024, 6, 1), location="仓库A"
         )
         mock_db.add.assert_called_once()
 
     def test_create_task_with_category(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        mock_db.query.return_value.filter.return_value.join.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.join.return_value.filter.return_value.all.return_value = (
+            []
+        )
         result = service.create_count_task(
-            count_type="CATEGORY",
-            count_date=date(2024, 6, 1),
-            category_id=10
+            count_type="CATEGORY", count_date=date(2024, 6, 1), category_id=10
         )
         mock_db.add.assert_called_once()
 
@@ -63,37 +60,26 @@ class TestCreateCountTask:
         mock_db.query.return_value.filter.return_value.all.return_value = []
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
         result = service.create_count_task(
-            count_type="SELECTIVE",
-            count_date=date(2024, 6, 1),
-            material_ids=[1, 2, 3]
+            count_type="SELECTIVE", count_date=date(2024, 6, 1), material_ids=[1, 2, 3]
         )
         mock_db.add.assert_called_once()
 
     def test_create_task_with_assigned_to(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
         result = service.create_count_task(
-            count_type="FULL",
-            count_date=date(2024, 6, 1),
-            assigned_to=5,
-            remark="测试盘点"
+            count_type="FULL", count_date=date(2024, 6, 1), assigned_to=5, remark="测试盘点"
         )
         mock_db.add.assert_called_once()
 
     def test_task_has_pending_status(self, service, mock_db):
         stocks = []
         mock_db.query.return_value.filter.return_value.all.return_value = stocks
-        result = service.create_count_task(
-            count_type="FULL",
-            count_date=date(2024, 6, 1)
-        )
-        assert result.status == 'PENDING'
+        result = service.create_count_task(count_type="FULL", count_date=date(2024, 6, 1))
+        assert result.status == "PENDING"
 
     def test_task_no_generation(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        result = service.create_count_task(
-            count_type="FULL",
-            count_date=date(2024, 6, 1)
-        )
+        result = service.create_count_task(count_type="FULL", count_date=date(2024, 6, 1))
         assert result.total_items == 0
 
 

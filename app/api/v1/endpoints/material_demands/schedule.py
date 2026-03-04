@@ -49,7 +49,7 @@ def read_material_demand_schedule(
             BomItem.material_id,
             BomItem.material_code,
             BomItem.material_name,
-            func.sum(BomItem.quantity).label('demand_qty')
+            func.sum(BomItem.quantity).label("demand_qty"),
         )
         .join(BomHeader, BomItem.bom_id == BomHeader.id)
         .join(Machine, BomHeader.machine_id == Machine.id)
@@ -60,7 +60,9 @@ def read_material_demand_schedule(
     if project_id_list:
         query = query.filter(Machine.project_id.in_(project_id_list))
 
-    query = query.group_by(BomItem.required_date, BomItem.material_id, BomItem.material_code, BomItem.material_name)
+    query = query.group_by(
+        BomItem.required_date, BomItem.material_id, BomItem.material_code, BomItem.material_name
+    )
     results = query.all()
 
     # 按日期分组
@@ -85,21 +87,25 @@ def read_material_demand_schedule(
         if demand_date not in schedule:
             schedule[demand_date] = []
 
-        schedule[demand_date].append({
-            "material_id": result.material_id,
-            "material_code": result.material_code,
-            "material_name": result.material_name,
-            "demand_qty": float(result.demand_qty)
-        })
+        schedule[demand_date].append(
+            {
+                "material_id": result.material_id,
+                "material_code": result.material_code,
+                "material_name": result.material_name,
+                "demand_qty": float(result.demand_qty),
+            }
+        )
 
     # 转换为列表格式
     items = []
     for demand_date in sorted(schedule.keys()):
-        items.append({
-            "date": demand_date,
-            "materials": schedule[demand_date],
-            "total_materials": len(schedule[demand_date]),
-            "total_demand": sum(m["demand_qty"] for m in schedule[demand_date])
-        })
+        items.append(
+            {
+                "date": demand_date,
+                "materials": schedule[demand_date],
+                "total_materials": len(schedule[demand_date]),
+                "total_demand": sum(m["demand_qty"] for m in schedule[demand_date]),
+            }
+        )
 
     return items

@@ -45,9 +45,15 @@ def build_basic_info(project: Project) -> Dict[str, Any]:
         "status": project.status or "ST01",
         "health": project.health or "H1",
         "progress_pct": float(project.progress_pct or 0),
-        "planned_start_date": project.planned_start_date.isoformat() if project.planned_start_date else None,
-        "planned_end_date": project.planned_end_date.isoformat() if project.planned_end_date else None,
-        "actual_start_date": project.actual_start_date.isoformat() if project.actual_start_date else None,
+        "planned_start_date": (
+            project.planned_start_date.isoformat() if project.planned_start_date else None
+        ),
+        "planned_end_date": (
+            project.planned_end_date.isoformat() if project.planned_end_date else None
+        ),
+        "actual_start_date": (
+            project.actual_start_date.isoformat() if project.actual_start_date else None
+        ),
         "actual_end_date": project.actual_end_date.isoformat() if project.actual_end_date else None,
         "contract_amount": float(project.contract_amount or 0),
         "budget_amount": float(project.budget_amount or 0),
@@ -108,15 +114,13 @@ def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:
     """
     # 使用聚合函数优化查询
     task_total_result = (
-        db.query(func.count(Task.id).label('total'))
-        .filter(Task.project_id == project_id)
-        .first()
+        db.query(func.count(Task.id).label("total")).filter(Task.project_id == project_id).first()
     )
     task_total = task_total_result.total or 0
 
     # 按状态聚合
     status_counts = (
-        db.query(Task.status, func.count(Task.id).label('count'))
+        db.query(Task.status, func.count(Task.id).label("count"))
         .filter(Task.project_id == project_id)
         .group_by(Task.status)
         .all()
@@ -130,7 +134,7 @@ def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:
 
     # 计算平均进度
     avg_progress_result = (
-        db.query(func.avg(Task.progress_pct).label('avg'))
+        db.query(func.avg(Task.progress_pct).label("avg"))
         .filter(Task.project_id == project_id)
         .first()
     )
@@ -156,7 +160,7 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
     """
     # 使用聚合函数优化查询
     milestone_total_result = (
-        db.query(func.count(ProjectMilestone.id).label('total'))
+        db.query(func.count(ProjectMilestone.id).label("total"))
         .filter(ProjectMilestone.project_id == project_id)
         .first()
     )
@@ -164,10 +168,7 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
 
     milestone_completed = (
         db.query(func.count(ProjectMilestone.id))
-        .filter(
-            ProjectMilestone.project_id == project_id,
-            ProjectMilestone.status == "COMPLETED"
-        )
+        .filter(ProjectMilestone.project_id == project_id, ProjectMilestone.status == "COMPLETED")
         .scalar()
     ) or 0
 
@@ -176,7 +177,7 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
         .filter(
             ProjectMilestone.project_id == project_id,
             ProjectMilestone.status != "COMPLETED",
-            ProjectMilestone.planned_date < today
+            ProjectMilestone.planned_date < today,
         )
         .scalar()
     ) or 0
@@ -186,7 +187,7 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
         .filter(
             ProjectMilestone.project_id == project_id,
             ProjectMilestone.status != "COMPLETED",
-            ProjectMilestone.planned_date >= today
+            ProjectMilestone.planned_date >= today,
         )
         .scalar()
     ) or 0
@@ -196,7 +197,9 @@ def calculate_milestone_stats(db: Session, project_id: int, today: date) -> Dict
         "completed": milestone_completed,
         "overdue": milestone_overdue,
         "upcoming": milestone_upcoming,
-        "completion_rate": (milestone_completed / milestone_total * 100) if milestone_total > 0 else 0,
+        "completion_rate": (
+            (milestone_completed / milestone_total * 100) if milestone_total > 0 else 0
+        ),
     }
 
 
@@ -215,7 +218,9 @@ def calculate_risk_stats(db: Session, project_id: int) -> Optional[Dict[str, Any
 
         risk_total = len(risks)
         risk_high = len([r for r in risks if r.risk_level == "HIGH" and r.status != "CLOSED"])
-        risk_critical = len([r for r in risks if r.risk_level == "CRITICAL" and r.status != "CLOSED"])
+        risk_critical = len(
+            [r for r in risks if r.risk_level == "CRITICAL" and r.status != "CLOSED"]
+        )
         risk_open = len([r for r in risks if r.status != "CLOSED"])
 
         return {
@@ -226,6 +231,7 @@ def calculate_risk_stats(db: Session, project_id: int) -> Optional[Dict[str, Any
         }
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"计算风险统计失败: {e}")
         return None
 
@@ -256,6 +262,7 @@ def calculate_issue_stats(db: Session, project_id: int) -> Optional[Dict[str, An
         }
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"计算问题统计失败: {e}")
         return None
 
@@ -271,9 +278,11 @@ def calculate_resource_usage(db: Session, project_id: int) -> Optional[Dict[str,
         return None
 
     try:
-        allocations = db.query(PmoResourceAllocation).filter(
-            PmoResourceAllocation.project_id == project_id
-        ).all()
+        allocations = (
+            db.query(PmoResourceAllocation)
+            .filter(PmoResourceAllocation.project_id == project_id)
+            .all()
+        )
 
         if not allocations:
             return None
@@ -294,6 +303,7 @@ def calculate_resource_usage(db: Session, project_id: int) -> Optional[Dict[str,
         return resource_usage
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"计算资源使用失败: {e}")
         return None
 
@@ -308,9 +318,13 @@ def get_recent_activities(db: Session, project_id: int) -> List[Dict[str, Any]]:
     recent_activities = []
 
     # 最近的状态变更
-    recent_status_logs = db.query(ProjectStatusLog).filter(
-        ProjectStatusLog.project_id == project_id
-    ).order_by(desc(ProjectStatusLog.changed_at)).limit(5).all()
+    recent_status_logs = (
+        db.query(ProjectStatusLog)
+        .filter(ProjectStatusLog.project_id == project_id)
+        .order_by(desc(ProjectStatusLog.changed_at))
+        .limit(5)
+        .all()
+    )
 
     for log in recent_status_logs:
         activity = {
@@ -322,10 +336,13 @@ def get_recent_activities(db: Session, project_id: int) -> List[Dict[str, Any]]:
         recent_activities.append(activity)
 
     # 最近的里程碑完成
-    recent_milestones = db.query(ProjectMilestone).filter(
-        ProjectMilestone.project_id == project_id,
-        ProjectMilestone.status == "COMPLETED"
-    ).order_by(desc(ProjectMilestone.actual_date)).limit(3).all()
+    recent_milestones = (
+        db.query(ProjectMilestone)
+        .filter(ProjectMilestone.project_id == project_id, ProjectMilestone.status == "COMPLETED")
+        .order_by(desc(ProjectMilestone.actual_date))
+        .limit(3)
+        .all()
+    )
 
     for milestone in recent_milestones:
         activity = {
@@ -346,7 +363,7 @@ def calculate_key_metrics(
     progress_deviation: float,
     cost_variance_rate: float,
     task_completed: int,
-    task_total: int
+    task_total: int,
 ) -> Dict[str, float]:
     """
     计算关键指标
@@ -355,20 +372,28 @@ def calculate_key_metrics(
         dict: 关键指标数据
     """
     key_metrics = {
-        "health_score": 100 if project.health == "H1" else (75 if project.health == "H2" else (50 if project.health == "H3" else 25)),
+        "health_score": (
+            100
+            if project.health == "H1"
+            else (75 if project.health == "H2" else (50 if project.health == "H3" else 25))
+        ),
         "progress_score": float(project.progress_pct or 0),
-        "schedule_score": max(0, 100 - abs(progress_deviation)) if abs(progress_deviation) <= 5 else max(0, 100 - abs(progress_deviation) * 2),
+        "schedule_score": (
+            max(0, 100 - abs(progress_deviation))
+            if abs(progress_deviation) <= 5
+            else max(0, 100 - abs(progress_deviation) * 2)
+        ),
         "cost_score": max(0, 100 - abs(cost_variance_rate) * 2),
         "quality_score": (task_completed / task_total * 100) if task_total > 0 else 100,
     }
 
     # 计算综合得分
     key_metrics["overall_score"] = (
-        key_metrics["health_score"] * 0.3 +
-        key_metrics["progress_score"] * 0.25 +
-        key_metrics["schedule_score"] * 0.2 +
-        key_metrics["cost_score"] * 0.15 +
-        key_metrics["quality_score"] * 0.1
+        key_metrics["health_score"] * 0.3
+        + key_metrics["progress_score"] * 0.25
+        + key_metrics["schedule_score"] * 0.2
+        + key_metrics["cost_score"] * 0.15
+        + key_metrics["quality_score"] * 0.1
     )
 
     return key_metrics

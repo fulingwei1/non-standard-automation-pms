@@ -76,7 +76,7 @@ class TestSelectFlow:
         mock_rule = MagicMock()
         mock_rule.conditions = {
             "operator": "AND",
-            "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]
+            "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}],
         }
         mock_flow = MagicMock()
         mock_flow.id = 100
@@ -93,7 +93,9 @@ class TestSelectFlow:
         assert result == mock_flow
         mock_db.query.assert_called()
 
-    def test_select_flow_no_matching_rule_returns_default(self, router_service, mock_db, sample_context):
+    def test_select_flow_no_matching_rule_returns_default(
+        self, router_service, mock_db, sample_context
+    ):
         """测试无匹配规则时返回默认流程"""
         # Mock 查询返回空规则列表
         mock_query_rules = MagicMock()
@@ -117,15 +119,24 @@ class TestSelectFlow:
         """测试多条规则时按优先级匹配"""
         # 创建两条规则
         mock_rule1 = MagicMock()
-        mock_rule1.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]}
+        mock_rule1.conditions = {
+            "operator": "AND",
+            "items": [{"field": "form_data.amount", "op": ">", "value": 100000}],
+        }
         mock_rule1.flow = MagicMock(id=101, flow_name="高额流程")
 
         mock_rule2 = MagicMock()
-        mock_rule2.conditions = {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]}
+        mock_rule2.conditions = {
+            "operator": "AND",
+            "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}],
+        }
         mock_rule2.flow = MagicMock(id=102, flow_name="中额流程")
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_rule1, mock_rule2]
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [
+            mock_rule1,
+            mock_rule2,
+        ]
         mock_db.query.return_value = mock_query
 
         result = router_service.select_flow(template_id=1, context=sample_context)
@@ -180,7 +191,7 @@ class TestEvaluateConditions:
             "items": [
                 {"field": "form_data.amount", "op": ">=", "value": 10000},
                 {"field": "form_data.department", "op": "==", "value": "engineering"},
-            ]
+            ],
         }
         result = router_service._evaluate_conditions(conditions, sample_context)
         assert result is True
@@ -192,7 +203,7 @@ class TestEvaluateConditions:
             "items": [
                 {"field": "form_data.amount", "op": ">", "value": 100000},  # False
                 {"field": "form_data.department", "op": "==", "value": "engineering"},  # True
-            ]
+            ],
         }
         result = router_service._evaluate_conditions(conditions, sample_context)
         assert result is False
@@ -204,7 +215,7 @@ class TestEvaluateConditions:
             "items": [
                 {"field": "form_data.amount", "op": ">", "value": 100000},  # False
                 {"field": "form_data.department", "op": "==", "value": "engineering"},  # True
-            ]
+            ],
         }
         result = router_service._evaluate_conditions(conditions, sample_context)
         assert result is True
@@ -216,7 +227,7 @@ class TestEvaluateConditions:
             "items": [
                 {"field": "form_data.amount", "op": ">", "value": 100000},  # False
                 {"field": "form_data.department", "op": "==", "value": "sales"},  # False
-            ]
+            ],
         }
         result = router_service._evaluate_conditions(conditions, sample_context)
         assert result is False
@@ -446,7 +457,9 @@ class TestResolveApprovers:
 
         assert result == []
 
-    def test_resolve_approvers_dynamic_with_adapter(self, router_service, mock_node, sample_context):
+    def test_resolve_approvers_dynamic_with_adapter(
+        self, router_service, mock_node, sample_context
+    ):
         """测试动态类型使用适配器"""
         mock_adapter = MagicMock()
         mock_adapter.resolve_approvers.return_value = [100, 200]
@@ -666,7 +679,9 @@ class TestResolveDirectManager:
 class TestResolveMultiDeptApprovers:
     """测试 _resolve_multi_dept_approvers 方法"""
 
-    def test_resolve_multi_dept_approvers_multiple_depts(self, router_service, mock_db, sample_context):
+    def test_resolve_multi_dept_approvers_multiple_depts(
+        self, router_service, mock_db, sample_context
+    ):
         """测试多个部门审批人"""
         config = {"departments": ["工程部", "采购部", "质量部"]}
 
@@ -685,7 +700,9 @@ class TestResolveMultiDeptApprovers:
 
         assert result == [100, 200]
 
-    def test_resolve_multi_dept_approvers_empty_config(self, router_service, mock_db, sample_context):
+    def test_resolve_multi_dept_approvers_empty_config(
+        self, router_service, mock_db, sample_context
+    ):
         """测试空配置返回空列表"""
         config = {}
 
@@ -727,7 +744,9 @@ class TestGetNextNodes:
 
         assert result == []
 
-    def test_get_next_nodes_condition_node(self, router_service, mock_db, mock_node, sample_context):
+    def test_get_next_nodes_condition_node(
+        self, router_service, mock_db, mock_node, sample_context
+    ):
         """测试下一个节点为条件分支节点"""
         condition_node = MagicMock()
         condition_node.id = 2
@@ -735,11 +754,14 @@ class TestGetNextNodes:
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]},
-                    "target_node_id": 10
+                    "conditions": {
+                        "operator": "AND",
+                        "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}],
+                    },
+                    "target_node_id": 10,
                 }
             ],
-            "default_node_id": 20
+            "default_node_id": 20,
         }
 
         target_node = MagicMock()
@@ -769,8 +791,11 @@ class TestResolveConditionBranch:
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}]},
-                    "target_node_id": 100
+                    "conditions": {
+                        "operator": "AND",
+                        "items": [{"field": "form_data.amount", "op": ">=", "value": 10000}],
+                    },
+                    "target_node_id": 100,
                 }
             ]
         }
@@ -792,11 +817,14 @@ class TestResolveConditionBranch:
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]},
-                    "target_node_id": 100
+                    "conditions": {
+                        "operator": "AND",
+                        "items": [{"field": "form_data.amount", "op": ">", "value": 100000}],
+                    },
+                    "target_node_id": 100,
                 }
             ],
-            "default_node_id": 200
+            "default_node_id": 200,
         }
 
         default_node = MagicMock()
@@ -811,14 +839,19 @@ class TestResolveConditionBranch:
 
         assert result == [default_node]
 
-    def test_resolve_condition_branch_no_match_no_default(self, router_service, mock_db, sample_context):
+    def test_resolve_condition_branch_no_match_no_default(
+        self, router_service, mock_db, sample_context
+    ):
         """测试无匹配且无默认分支时返回空列表"""
         condition_node = MagicMock()
         condition_node.approver_config = {
             "branches": [
                 {
-                    "conditions": {"operator": "AND", "items": [{"field": "form_data.amount", "op": ">", "value": 100000}]},
-                    "target_node_id": 100
+                    "conditions": {
+                        "operator": "AND",
+                        "items": [{"field": "form_data.amount", "op": ">", "value": 100000}],
+                    },
+                    "target_node_id": 100,
                 }
             ]
         }
@@ -850,34 +883,40 @@ class TestEdgeCases:
         mock_node.approver_type = "ROLE"
         mock_node.approver_config = {"role_codes": ["MANAGER"]}
 
-        with patch.object(router_service, '_resolve_role_approvers', return_value=[10, 20]):
+        with patch.object(router_service, "_resolve_role_approvers", return_value=[10, 20]):
             result = router_service.resolve_approvers(mock_node, sample_context)
             assert result == [10, 20]
 
-    def test_resolve_approvers_department_head_type(self, router_service, mock_db, mock_node, sample_context):
+    def test_resolve_approvers_department_head_type(
+        self, router_service, mock_db, mock_node, sample_context
+    ):
         """测试DEPARTMENT_HEAD类型审批人解析"""
         mock_node.approver_type = "DEPARTMENT_HEAD"
         mock_node.approver_config = {}
 
-        with patch.object(router_service, '_resolve_department_head', return_value=[50]):
+        with patch.object(router_service, "_resolve_department_head", return_value=[50]):
             result = router_service.resolve_approvers(mock_node, sample_context)
             assert result == [50]
 
-    def test_resolve_approvers_direct_manager_type(self, router_service, mock_db, mock_node, sample_context):
+    def test_resolve_approvers_direct_manager_type(
+        self, router_service, mock_db, mock_node, sample_context
+    ):
         """测试DIRECT_MANAGER类型审批人解析"""
         mock_node.approver_type = "DIRECT_MANAGER"
         mock_node.approver_config = {}
 
-        with patch.object(router_service, '_resolve_direct_manager', return_value=[30]):
+        with patch.object(router_service, "_resolve_direct_manager", return_value=[30]):
             result = router_service.resolve_approvers(mock_node, sample_context)
             assert result == [30]
 
-    def test_resolve_approvers_multi_dept_type(self, router_service, mock_db, mock_node, sample_context):
+    def test_resolve_approvers_multi_dept_type(
+        self, router_service, mock_db, mock_node, sample_context
+    ):
         """测试MULTI_DEPT类型审批人解析"""
         mock_node.approver_type = "MULTI_DEPT"
         mock_node.approver_config = {"departments": ["工程部", "采购部"]}
 
-        with patch.object(router_service, '_resolve_multi_dept_approvers', return_value=[100, 200]):
+        with patch.object(router_service, "_resolve_multi_dept_approvers", return_value=[100, 200]):
             result = router_service.resolve_approvers(mock_node, sample_context)
             assert result == [100, 200]
 

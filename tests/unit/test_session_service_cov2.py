@@ -2,9 +2,10 @@
 """
 session_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 
 # ─── 1. _parse_user_agent ─────────────────────────────────────────────────────
@@ -159,7 +160,9 @@ def test_assess_risk_new_user():
     from app.services.session_service import SessionService
 
     mock_db = MagicMock()
-    mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
 
     is_suspicious, risk_score = SessionService._assess_risk(mock_db, 1, "1.2.3.4", None, None)
     assert is_suspicious is False
@@ -175,8 +178,12 @@ def test_get_user_sessions_active_only():
 
     mock_db = MagicMock()
     # get_user_sessions: .filter(user_id).filter(active) chained
-    mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_s]
+    mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [
+        mock_s
+    ]
 
-    sessions = SessionService.get_user_sessions(mock_db, 1, active_only=True, current_jti="current-jti")
+    sessions = SessionService.get_user_sessions(
+        mock_db, 1, active_only=True, current_jti="current-jti"
+    )
     assert len(sessions) == 1
     assert mock_s.is_current is True

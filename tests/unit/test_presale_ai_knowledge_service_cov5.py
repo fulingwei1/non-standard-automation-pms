@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """第五批：presale_ai_knowledge_service.py 单元测试"""
-import pytest
-import numpy as np
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 
 try:
     from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
 
-pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="presale_ai_knowledge_service not importable")
+pytestmark = pytest.mark.skipif(
+    not HAS_MODULE, reason="presale_ai_knowledge_service not importable"
+)
 
 
 def make_service(db=None):

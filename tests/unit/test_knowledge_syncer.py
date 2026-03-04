@@ -24,10 +24,17 @@ def _make_syncer(db=None):
     return syncer
 
 
-def _make_review(budget=1_000_000, satisfaction=4, schedule_var=0, cost_var=0,
-                 change_count=2, success_factors="success" * 15,
-                 problems="problems" * 15, best_practices="bp" * 30,
-                 conclusion="conclusion" * 15):
+def _make_review(
+    budget=1_000_000,
+    satisfaction=4,
+    schedule_var=0,
+    cost_var=0,
+    change_count=2,
+    success_factors="success" * 15,
+    problems="problems" * 15,
+    best_practices="bp" * 30,
+    conclusion="conclusion" * 15,
+):
     review = MagicMock()
     review.budget_amount = Decimal(str(budget))
     review.customer_satisfaction = satisfaction
@@ -199,10 +206,17 @@ class TestExtractTags:
 class TestCalculateQualityScore:
     def test_perfect_review_scores_high(self):
         syncer = _make_syncer()
-        review = _make_review(budget=1_000_000, satisfaction=5, schedule_var=0,
-                              cost_var=0, change_count=1,
-                              success_factors="A" * 60, problems="B" * 60,
-                              best_practices="C" * 60, conclusion="D" * 60)
+        review = _make_review(
+            budget=1_000_000,
+            satisfaction=5,
+            schedule_var=0,
+            cost_var=0,
+            change_count=1,
+            success_factors="A" * 60,
+            problems="B" * 60,
+            best_practices="C" * 60,
+            conclusion="D" * 60,
+        )
         score = syncer._calculate_quality_score(review)
         assert score > 0.9
 
@@ -241,19 +255,22 @@ class TestCalculateQualityScore:
 class TestExtractTechnicalHighlights:
     def test_no_best_practices_returns_empty(self):
         syncer = _make_syncer()
-        review = MagicMock(); review.best_practices = None
+        review = MagicMock()
+        review.best_practices = None
         result = syncer._extract_technical_highlights(review)
         assert result == ""
 
     def test_short_best_practices_returned_as_is(self):
         syncer = _make_syncer()
-        review = MagicMock(); review.best_practices = "short"
+        review = MagicMock()
+        review.best_practices = "short"
         result = syncer._extract_technical_highlights(review)
         assert result == "short"
 
     def test_long_best_practices_truncated(self):
         syncer = _make_syncer()
-        review = MagicMock(); review.best_practices = "A" * 400
+        review = MagicMock()
+        review.best_practices = "A" * 400
         result = syncer._extract_technical_highlights(review)
         assert len(result) <= 303  # 300 + "..."
         assert result.endswith("...")
@@ -311,11 +328,16 @@ class TestSyncToKnowledgeBase:
         db.commit = MagicMock()
         db.refresh = MagicMock()
 
-        case = MagicMock(); case.id = 1; case.case_name = "PJ-001 - Test Project"; case.quality_score = Decimal("0.8")
+        case = MagicMock()
+        case.id = 1
+        case.case_name = "PJ-001 - Test Project"
+        case.quality_score = Decimal("0.8")
         db.refresh.side_effect = lambda x: None
 
         # Patch PresaleKnowledgeCase constructor
-        with patch("app.services.project_review_ai.knowledge_syncer.PresaleKnowledgeCase") as MockCase:
+        with patch(
+            "app.services.project_review_ai.knowledge_syncer.PresaleKnowledgeCase"
+        ) as MockCase:
             mock_case_instance = MagicMock()
             mock_case_instance.id = 1
             mock_case_instance.case_name = "PJ-001 - Test Project"
@@ -362,7 +384,9 @@ class TestSyncToKnowledgeBase:
 class TestGetSyncStatus:
     def test_review_not_found(self):
         db = MagicMock()
-        q = MagicMock(); q.filter.return_value = q; q.first.return_value = None
+        q = MagicMock()
+        q.filter.return_value = q
+        q.first.return_value = None
         db.query.return_value = q
         syncer = _make_syncer(db)
         result = syncer.get_sync_status(999)
@@ -372,9 +396,11 @@ class TestGetSyncStatus:
         db = MagicMock()
         review = MagicMock()
         review.project_code = "PJ-001"
-        review.project = MagicMock(); review.project.name = "Test"
+        review.project = MagicMock()
+        review.project.name = "Test"
 
-        q = MagicMock(); q.filter.return_value = q
+        q = MagicMock()
+        q.filter.return_value = q
         q.first.side_effect = [review, None]
         db.query.return_value = q
 
@@ -387,7 +413,8 @@ class TestGetSyncStatus:
         db = MagicMock()
         review = MagicMock()
         review.project_code = "PJ-001"
-        review.project = MagicMock(); review.project.name = "Test"
+        review.project = MagicMock()
+        review.project.name = "Test"
 
         case = MagicMock()
         case.id = 3
@@ -396,7 +423,8 @@ class TestGetSyncStatus:
         case.updated_at = datetime(2024, 1, 1)
         case.tags = ["制造业", "大型项目"]
 
-        q = MagicMock(); q.filter.return_value = q
+        q = MagicMock()
+        q.filter.return_value = q
         q.first.side_effect = [review, case]
         db.query.return_value = q
 
@@ -412,7 +440,8 @@ class TestGetSyncStatus:
 class TestUpdateCaseFromLessons:
     def test_case_not_found_raises(self):
         db = MagicMock()
-        q = MagicMock(); q.filter.return_value = q
+        q = MagicMock()
+        q.filter.return_value = q
         q.all.return_value = []  # lessons
         q.first.return_value = None  # case not found
         db.query.return_value = q
@@ -424,15 +453,24 @@ class TestUpdateCaseFromLessons:
     def test_updates_case_with_lessons(self):
         db = MagicMock()
 
-        lesson1 = MagicMock(); lesson1.lesson_type = "SUCCESS"; lesson1.title = "T1"; lesson1.description = "D1"; lesson1.tags = ["tag1"]
-        lesson2 = MagicMock(); lesson2.lesson_type = "FAILURE"; lesson2.title = "T2"; lesson2.description = "D2"; lesson2.tags = ["tag2"]
+        lesson1 = MagicMock()
+        lesson1.lesson_type = "SUCCESS"
+        lesson1.title = "T1"
+        lesson1.description = "D1"
+        lesson1.tags = ["tag1"]
+        lesson2 = MagicMock()
+        lesson2.lesson_type = "FAILURE"
+        lesson2.title = "T2"
+        lesson2.description = "D2"
+        lesson2.tags = ["tag2"]
 
         case = MagicMock()
         case.tags = []
         case.success_factors = None
         case.lessons_learned = None
 
-        q = MagicMock(); q.filter.return_value = q
+        q = MagicMock()
+        q.filter.return_value = q
         q.all.return_value = [lesson1, lesson2]
         q.first.return_value = case
         db.query.return_value = q

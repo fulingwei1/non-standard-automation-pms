@@ -13,8 +13,10 @@ from app.schemas.common import PageParams, PaginatedResponse
 
 # ==================== 奖金规则 ====================
 
+
 class BonusRuleBase(BaseModel):
     """奖金规则基础模型"""
+
     rule_code: str = Field(..., description="规则编码")
     rule_name: str = Field(..., description="规则名称")
     bonus_type: str = Field(..., description="奖金类型")
@@ -35,11 +37,13 @@ class BonusRuleBase(BaseModel):
 
 class BonusRuleCreate(BonusRuleBase):
     """创建奖金规则"""
+
     pass
 
 
 class BonusRuleUpdate(BaseModel):
     """更新奖金规则"""
+
     rule_name: Optional[str] = None
     bonus_type: Optional[str] = None
     calculation_formula: Optional[str] = None
@@ -59,6 +63,7 @@ class BonusRuleUpdate(BaseModel):
 
 class BonusRuleResponse(BonusRuleBase):
     """奖金规则响应"""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -69,8 +74,10 @@ class BonusRuleResponse(BonusRuleBase):
 
 # ==================== 奖金计算 ====================
 
+
 class BonusCalculationBase(BaseModel):
     """奖金计算基础模型"""
+
     rule_id: int = Field(..., description="规则ID")
     period_id: Optional[int] = Field(None, description="考核周期ID")
     project_id: Optional[int] = Field(None, description="项目ID")
@@ -84,11 +91,13 @@ class BonusCalculationBase(BaseModel):
 
 class BonusCalculationCreate(BonusCalculationBase):
     """创建奖金计算"""
+
     pass
 
 
 class BonusCalculationResponse(BonusCalculationBase):
     """奖金计算响应"""
+
     id: int
     calculation_code: str
     status: str
@@ -105,14 +114,17 @@ class BonusCalculationResponse(BonusCalculationBase):
 
 class BonusCalculationApprove(BaseModel):
     """审批奖金计算"""
+
     approved: bool = Field(..., description="是否批准")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
 # ==================== 奖金发放 ====================
 
+
 class BonusDistributionBase(BaseModel):
     """奖金发放基础模型"""
+
     calculation_id: int = Field(..., description="计算记录ID")
     user_id: int = Field(..., description="受益人ID")
     distributed_amount: Decimal = Field(..., description="发放金额")
@@ -125,11 +137,13 @@ class BonusDistributionBase(BaseModel):
 
 class BonusDistributionCreate(BonusDistributionBase):
     """创建奖金发放"""
+
     pass
 
 
 class BonusDistributionResponse(BonusDistributionBase):
     """奖金发放响应"""
+
     id: int
     distribution_code: str
     status: str
@@ -144,6 +158,7 @@ class BonusDistributionResponse(BonusDistributionBase):
 
 class BonusDistributionPay(BaseModel):
     """确认发放"""
+
     voucher_no: Optional[str] = Field(None, description="凭证号")
     payment_account: Optional[str] = Field(None, description="付款账户")
     payment_remark: Optional[str] = Field(None, description="付款备注")
@@ -151,8 +166,10 @@ class BonusDistributionPay(BaseModel):
 
 # ==================== 团队奖金分配 ====================
 
+
 class TeamBonusAllocationBase(BaseModel):
     """团队奖金分配基础模型"""
+
     project_id: int = Field(..., description="项目ID")
     period_id: Optional[int] = Field(None, description="周期ID")
     total_bonus_amount: Decimal = Field(..., description="团队总奖金")
@@ -162,11 +179,13 @@ class TeamBonusAllocationBase(BaseModel):
 
 class TeamBonusAllocationCreate(TeamBonusAllocationBase):
     """创建团队奖金分配"""
+
     pass
 
 
 class TeamBonusAllocationResponse(TeamBonusAllocationBase):
     """团队奖金分配响应"""
+
     id: int
     status: str
     approved_by: Optional[int] = None
@@ -180,14 +199,17 @@ class TeamBonusAllocationResponse(TeamBonusAllocationBase):
 
 class TeamBonusAllocationApprove(BaseModel):
     """审批团队奖金分配"""
+
     approved: bool = Field(..., description="是否批准")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
 # ==================== 查询和统计 ====================
 
+
 class BonusCalculationQuery(PageParams):
     """奖金计算查询"""
+
     rule_id: Optional[int] = None
     user_id: Optional[int] = None
     project_id: Optional[int] = None
@@ -200,6 +222,7 @@ class BonusCalculationQuery(PageParams):
 
 class BonusDistributionQuery(PageParams):
     """奖金发放查询"""
+
     user_id: Optional[int] = None
     status: Optional[str] = None
     start_date: Optional[date] = None
@@ -208,6 +231,7 @@ class BonusDistributionQuery(PageParams):
 
 class MyBonusResponse(BaseModel):
     """我的奖金响应"""
+
     total_amount: Decimal = Field(..., description="总金额")
     pending_amount: Decimal = Field(..., description="待发放金额")
     paid_amount: Decimal = Field(..., description="已发放金额")
@@ -217,6 +241,7 @@ class MyBonusResponse(BaseModel):
 
 class BonusStatisticsResponse(BaseModel):
     """奖金统计响应"""
+
     total_calculated: Decimal = Field(..., description="总计算金额")
     total_distributed: Decimal = Field(..., description="总发放金额")
     total_pending: Decimal = Field(..., description="待发放金额")
@@ -228,8 +253,10 @@ class BonusStatisticsResponse(BaseModel):
 
 # ==================== 计算请求 ====================
 
+
 class CalculatePerformanceBonusRequest(BaseModel):
     """计算绩效奖金请求"""
+
     period_id: int = Field(..., description="考核周期ID")
     user_id: Optional[int] = Field(None, description="用户ID（不提供则计算所有用户）")
     rule_id: Optional[int] = Field(None, description="规则ID（不提供则使用所有启用规则）")
@@ -237,18 +264,21 @@ class CalculatePerformanceBonusRequest(BaseModel):
 
 class CalculateProjectBonusRequest(BaseModel):
     """计算项目奖金请求"""
+
     project_id: int = Field(..., description="项目ID")
     rule_id: Optional[int] = Field(None, description="规则ID")
 
 
 class CalculateMilestoneBonusRequest(BaseModel):
     """计算里程碑奖金请求"""
+
     milestone_id: int = Field(..., description="里程碑ID")
     rule_id: Optional[int] = Field(None, description="规则ID")
 
 
 class CalculateTeamBonusRequest(BaseModel):
     """计算团队奖金请求"""
+
     project_id: int = Field(..., description="项目ID")
     period_id: Optional[int] = Field(None, description="周期ID")
     rule_id: Optional[int] = Field(None, description="规则ID")
@@ -256,6 +286,7 @@ class CalculateTeamBonusRequest(BaseModel):
 
 class CalculateSalesBonusRequest(BaseModel):
     """计算销售奖金请求"""
+
     contract_id: int = Field(..., description="合同ID")
     based_on: str = Field("CONTRACT", description="计算依据：CONTRACT（合同签订）/PAYMENT（回款）")
     rule_id: Optional[int] = Field(None, description="规则ID")
@@ -263,6 +294,7 @@ class CalculateSalesBonusRequest(BaseModel):
 
 class CalculateSalesDirectorBonusRequest(BaseModel):
     """计算销售总监奖金请求"""
+
     director_id: int = Field(..., description="销售总监ID")
     period_start: date = Field(..., description="统计周期开始日期")
     period_end: date = Field(..., description="统计周期结束日期")
@@ -271,6 +303,7 @@ class CalculateSalesDirectorBonusRequest(BaseModel):
 
 class CalculatePresaleBonusRequest(BaseModel):
     """计算售前技术支持奖金请求"""
+
     ticket_id: int = Field(..., description="售前支持工单ID")
     based_on: str = Field("COMPLETION", description="计算依据：COMPLETION（工单完成）/WON（中标）")
     rule_id: Optional[int] = Field(None, description="规则ID")
@@ -278,8 +311,10 @@ class CalculatePresaleBonusRequest(BaseModel):
 
 # ==================== 奖金分配明细表 ====================
 
+
 class BonusAllocationSheetResponse(BaseModel):
     """奖金分配明细表响应"""
+
     id: int
     sheet_code: str
     sheet_name: str
@@ -311,6 +346,7 @@ class BonusAllocationSheetResponse(BaseModel):
 
 class BonusAllocationSheetConfirm(BaseModel):
     """确认分配明细表（线下确认完成）"""
+
     finance_confirmed: bool = Field(False, description="财务部确认")
     hr_confirmed: bool = Field(False, description="人力资源部确认")
     manager_confirmed: bool = Field(False, description="总经理确认")
@@ -318,6 +354,7 @@ class BonusAllocationSheetConfirm(BaseModel):
 
 class BonusAllocationRow(BaseModel):
     """分配明细表行数据"""
+
     calculation_id: int = Field(..., description="计算记录ID")
     user_id: int = Field(..., description="受益人ID")
     user_name: Optional[str] = Field(None, description="受益人姓名")
@@ -336,4 +373,3 @@ BonusRuleListResponse = PaginatedResponse[BonusRuleResponse]
 BonusCalculationListResponse = PaginatedResponse[BonusCalculationResponse]
 BonusDistributionListResponse = PaginatedResponse[BonusDistributionResponse]
 TeamBonusAllocationListResponse = PaginatedResponse[TeamBonusAllocationResponse]
-

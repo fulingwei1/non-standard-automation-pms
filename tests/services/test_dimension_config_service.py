@@ -3,7 +3,7 @@
 
 import unittest
 from datetime import date
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from app.services.engineer_performance.dimension_config_service import DimensionConfigService
 

@@ -21,12 +21,16 @@ from .utils import build_sales_order_response
 router = APIRouter()
 
 
-@router.post("/sales-orders/{order_id}/assign-project", response_model=ResponseModel[SalesOrderResponse], summary="分配项目号")
+@router.post(
+    "/sales-orders/{order_id}/assign-project",
+    response_model=ResponseModel[SalesOrderResponse],
+    summary="分配项目号",
+)
 async def assign_project_to_order(
     order_id: int,
     assign_data: AssignProjectRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """为销售订单分配项目号"""
     try:
@@ -47,9 +51,7 @@ async def assign_project_to_order(
         db.refresh(sales_order)
 
         return ResponseModel(
-            code=200,
-            message="分配项目号成功",
-            data=build_sales_order_response(sales_order)
+            code=200, message="分配项目号成功", data=build_sales_order_response(sales_order)
         )
     except HTTPException:
         raise
@@ -58,12 +60,14 @@ async def assign_project_to_order(
         raise HTTPException(status_code=500, detail=f"分配项目号失败: {str(e)}")
 
 
-@router.post("/sales-orders/{order_id}/send-notice", response_model=ResponseModel, summary="发送项目通知单")
+@router.post(
+    "/sales-orders/{order_id}/send-notice", response_model=ResponseModel, summary="发送项目通知单"
+)
 async def send_project_notice(
     order_id: int,
     notice_data: SendNoticeRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """发送项目通知单"""
     try:
@@ -96,14 +100,11 @@ async def send_project_notice(
                 extra_data={
                     "order_no": sales_order.order_no,
                     "project_id": project.id,
-                    "project_name": project.project_name
-                }
+                    "project_name": project.project_name,
+                },
             )
 
-        return ResponseModel(
-            code=200,
-            message="项目通知单发送成功"
-        )
+        return ResponseModel(code=200, message="项目通知单发送成功")
     except HTTPException:
         raise
     except Exception as e:

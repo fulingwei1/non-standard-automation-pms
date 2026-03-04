@@ -2,13 +2,14 @@
 """第四十六批 - 统一导入任务导入器单元测试"""
 import pytest
 
-pytest.importorskip("app.services.unified_import.task_importer",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.unified_import.task_importer", reason="依赖不满足，跳过")
 
-import pandas as pd
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pandas as pd
 from fastapi import HTTPException
+
 from app.services.unified_import.task_importer import TaskImporter
 
 
@@ -19,12 +20,12 @@ def _make_db(project=None):
     def query_side(model):
         call_count[0] += 1
         q = MagicMock()
-        name = getattr(model, '__name__', str(model))
-        if 'Project' in name:
+        name = getattr(model, "__name__", str(model))
+        if "Project" in name:
             q.filter.return_value.first.return_value = project
-        elif 'User' in name:
+        elif "User" in name:
             q.filter.return_value.first.return_value = None
-        elif 'Task' in name:
+        elif "Task" in name:
             q.filter.return_value.first.return_value = None
         return q
 
@@ -84,12 +85,12 @@ class TestImportTaskData:
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
-            name = getattr(model, '__name__', str(model))
-            if 'Project' in name:
+            name = getattr(model, "__name__", str(model))
+            if "Project" in name:
                 q.filter.return_value.first.return_value = project
-            elif 'User' in name:
+            elif "User" in name:
                 q.filter.return_value.first.return_value = None
-            elif 'Task' in name:
+            elif "Task" in name:
                 q.filter.return_value.first.return_value = existing_task
             return q
 
@@ -112,12 +113,12 @@ class TestImportTaskData:
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
-            name = getattr(model, '__name__', str(model))
-            if 'Project' in name:
+            name = getattr(model, "__name__", str(model))
+            if "Project" in name:
                 q.filter.return_value.first.return_value = project
-            elif 'User' in name:
+            elif "User" in name:
                 q.filter.return_value.first.return_value = None
-            elif 'Task' in name:
+            elif "Task" in name:
                 q.filter.return_value.first.return_value = existing_task
             return q
 

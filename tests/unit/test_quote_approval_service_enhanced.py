@@ -9,7 +9,7 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from app.services.quote_approval import QuoteApprovalService
 
@@ -125,9 +125,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.current_version = version_mock
 
         # 模拟数据库查询
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 模拟审批引擎
         instance_mock = self._create_approval_instance_mock()
@@ -171,14 +169,10 @@ class TestQuoteApprovalService(unittest.TestCase):
         # 模拟审批引擎
         instance1 = self._create_approval_instance_mock(10, 1)
         instance2 = self._create_approval_instance_mock(11, 2)
-        self.service.approval_engine.submit = MagicMock(
-            side_effect=[instance1, instance2]
-        )
+        self.service.approval_engine.submit = MagicMock(side_effect=[instance1, instance2])
 
         # 执行测试
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1, 2], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1, 2], initiator_id=1)
 
         # 验证结果
         self.assertEqual(len(result["success"]), 2)
@@ -192,9 +186,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         self.db_mock.query.return_value.filter.return_value.first.return_value = None
 
         # 执行测试
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[999], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[999], initiator_id=1)
 
         # 验证结果
         self.assertEqual(len(result["success"]), 0)
@@ -205,13 +197,9 @@ class TestQuoteApprovalService(unittest.TestCase):
     def test_submit_quote_invalid_status_approved(self):
         """测试提交审批时状态为已审批"""
         quote_mock = self._create_quote_mock(status="APPROVED")
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -220,13 +208,9 @@ class TestQuoteApprovalService(unittest.TestCase):
     def test_submit_quote_invalid_status_pending(self):
         """测试提交审批时状态为审批中"""
         quote_mock = self._create_quote_mock(status="PENDING")
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -238,16 +222,12 @@ class TestQuoteApprovalService(unittest.TestCase):
         version_mock = self._create_version_mock()
         quote_mock.current_version = version_mock
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         instance_mock = self._create_approval_instance_mock()
         self.service.approval_engine.submit = MagicMock(return_value=instance_mock)
 
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1], initiator_id=1)
 
         # REJECTED状态允许提交
         self.assertEqual(len(result["success"]), 1)
@@ -258,17 +238,13 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock = self._create_quote_mock()
         quote_mock.current_version = None
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
         # 模拟查询版本也返回None
         self.db_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
             None
         )
 
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -302,9 +278,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         version_mock = self._create_version_mock()
         quote_mock.current_version = version_mock
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         instance_mock = self._create_approval_instance_mock(urgency="URGENT")
         self.service.approval_engine.submit = MagicMock(return_value=instance_mock)
@@ -323,9 +297,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         version_mock = self._create_version_mock()
         quote_mock.current_version = version_mock
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         instance_mock = self._create_approval_instance_mock()
         self.service.approval_engine.submit = MagicMock(return_value=instance_mock)
@@ -342,18 +314,12 @@ class TestQuoteApprovalService(unittest.TestCase):
         version_mock = self._create_version_mock()
         quote_mock.current_version = version_mock
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 模拟审批引擎抛出异常
-        self.service.approval_engine.submit = MagicMock(
-            side_effect=Exception("审批引擎错误")
-        )
+        self.service.approval_engine.submit = MagicMock(side_effect=Exception("审批引擎错误"))
 
-        result = self.service.submit_quotes_for_approval(
-            quote_ids=[1], initiator_id=1
-        )
+        result = self.service.submit_quotes_for_approval(quote_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -369,13 +335,9 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.current_version = version_mock
 
         # 模拟审批引擎返回任务
-        self.service.approval_engine.get_pending_tasks = MagicMock(
-            return_value=[task_mock]
-        )
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[task_mock])
         # 模拟数据库查询返回报价
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         result = self.service.get_pending_tasks(user_id=1)
 
@@ -405,9 +367,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote1.current_version = version1
         quote2.current_version = version1
 
-        self.service.approval_engine.get_pending_tasks = MagicMock(
-            return_value=[task1, task2]
-        )
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[task1, task2])
 
         # 模拟数据库查询返回不同的报价
         # 需要返回3次：第一次筛选时2次，最后展示时1次
@@ -449,13 +409,9 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock = self._create_quote_mock()
         quote_mock.current_version = None
 
-        self.service.approval_engine.get_pending_tasks = MagicMock(
-            return_value=[task_mock]
-        )
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[task_mock])
         # 第一次返回报价
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
         # 模拟查询最新版本时也返回None
         self.db_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
             None
@@ -506,9 +462,7 @@ class TestQuoteApprovalService(unittest.TestCase):
     def test_perform_action_invalid_action(self):
         """测试执行不支持的操作类型"""
         with self.assertRaises(ValueError) as context:
-            self.service.perform_action(
-                task_id=1, action="cancel", approver_id=2
-            )
+            self.service.perform_action(task_id=1, action="cancel", approver_id=2)
 
         self.assertIn("不支持的操作类型", str(context.exception))
 
@@ -518,9 +472,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         result_mock.status = "APPROVED"
         self.service.approval_engine.approve = MagicMock(return_value=result_mock)
 
-        result = self.service.perform_action(
-            task_id=1, action="approve", approver_id=2
-        )
+        result = self.service.perform_action(task_id=1, action="approve", approver_id=2)
 
         self.assertEqual(result["action"], "approve")
         call_args = self.service.approval_engine.approve.call_args
@@ -671,9 +623,7 @@ class TestQuoteApprovalService(unittest.TestCase):
 
         self.assertEqual(result["quote_id"], 1)
         self.assertEqual(result["status"], "withdrawn")
-        self.service.approval_engine.withdraw.assert_called_once_with(
-            instance_id=10, user_id=1
-        )
+        self.service.approval_engine.withdraw.assert_called_once_with(instance_id=10, user_id=1)
 
     def test_withdraw_approval_quote_not_found(self):
         """测试撤回审批时报价不存在"""
@@ -733,9 +683,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         ]
 
         # 模拟查询报价
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         result = self.service.get_approval_history(user_id=2)
 
@@ -756,17 +704,13 @@ class TestQuoteApprovalService(unittest.TestCase):
             []
         )
 
-        result = self.service.get_approval_history(
-            user_id=2, status_filter="APPROVED"
-        )
+        result = self.service.get_approval_history(user_id=2, status_filter="APPROVED")
 
         self.assertEqual(result["total"], 0)
 
     def test_get_approval_history_pagination(self):
         """测试审批历史分页"""
-        tasks = [
-            self._create_approval_task_mock(i, 10 + i, "APPROVED") for i in range(1, 6)
-        ]
+        tasks = [self._create_approval_task_mock(i, 10 + i, "APPROVED") for i in range(1, 6)]
         for task in tasks:
             task.completed_at = datetime(2024, 1, 1, 11, 0, 0)
 
@@ -776,9 +720,9 @@ class TestQuoteApprovalService(unittest.TestCase):
         join_mock = query_mock.join.return_value
         filter_mock = join_mock.filter.return_value
         filter_mock.count.return_value = 5
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
-            tasks[0:2]
-        )
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = tasks[
+            0:2
+        ]
 
         self.db_mock.query.return_value.filter.return_value.first.side_effect = [
             quote_mock,
@@ -797,9 +741,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock = self._create_quote_mock()
         version_mock = self._create_version_mock(5, 1, "V2.0")
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            version_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = version_mock
 
         version = self.service._get_quote_version(quote_mock, version_ids=[5], index=0)
 

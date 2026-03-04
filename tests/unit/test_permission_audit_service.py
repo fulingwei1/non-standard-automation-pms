@@ -38,14 +38,8 @@ class TestPermissionAuditServiceConstants:
         assert PermissionAuditService.ACTION_ROLE_DELETED == "ROLE_DELETED"
         assert PermissionAuditService.ACTION_ROLE_ACTIVATED == "ROLE_ACTIVATED"
         assert PermissionAuditService.ACTION_ROLE_DEACTIVATED == "ROLE_DEACTIVATED"
-        assert (
-            PermissionAuditService.ACTION_ROLE_PERMISSION_ASSIGNED
-            == "ROLE_PERMISSION_ASSIGNED"
-        )
-        assert (
-            PermissionAuditService.ACTION_ROLE_PERMISSION_REVOKED
-            == "ROLE_PERMISSION_REVOKED"
-        )
+        assert PermissionAuditService.ACTION_ROLE_PERMISSION_ASSIGNED == "ROLE_PERMISSION_ASSIGNED"
+        assert PermissionAuditService.ACTION_ROLE_PERMISSION_REVOKED == "ROLE_PERMISSION_REVOKED"
 
     def test_permission_action_constants(self):
         """测试权限操作常量"""

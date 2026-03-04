@@ -40,6 +40,7 @@ def cache_response(
         key_func: 自定义缓存键生成函数，默认使用参数生成
         invalidate_func: 缓存失效函数，在更新/删除操作时调用
     """
+
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -51,6 +52,7 @@ def cache_response(
             else:
                 import hashlib
                 import json
+
                 params_str = json.dumps(kwargs, sort_keys=True, default=str)
                 params_hash = hashlib.sha256(params_str.encode()).hexdigest()[:8]
                 cache_key = f"{prefix}:{params_hash}"
@@ -86,6 +88,7 @@ def cache_response(
 
 def cache_project_detail(func: Callable):
     """项目详情缓存装饰器"""
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         cache_service = get_cache_service()
@@ -115,12 +118,15 @@ def cache_project_detail(func: Callable):
 
         return result
 
-    wrapper.invalidate = lambda project_id: get_cache_service().invalidate_project_detail(project_id)
+    wrapper.invalidate = lambda project_id: get_cache_service().invalidate_project_detail(
+        project_id
+    )
     return wrapper
 
 
 def cache_project_list(func: Callable):
     """项目列表缓存装饰器"""
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         cache_service = get_cache_service()
@@ -166,14 +172,12 @@ def log_query_time(threshold: float = 0.5):
             elapsed = time.time() - start
 
             if elapsed > threshold:
-                logger.warning(
-                    f"慢查询: {func.__name__} "
-                    f"参数={kwargs} "
-                    f"耗时={elapsed:.3f}s"
-                )
+                logger.warning(f"慢查询: {func.__name__} " f"参数={kwargs} " f"耗时={elapsed:.3f}s")
 
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -193,20 +197,24 @@ class QueryStats:
 
     def record_query(self, func_name: str, elapsed: float, params: dict = None):
         """记录查询"""
-        self.queries.append({
-            "function": func_name,
-            "elapsed": elapsed,
-            "params": params,
-            "timestamp": datetime.now().isoformat(),
-        })
-        self.total_time += elapsed
-
-        if elapsed > 0.5:
-            self.slow_queries.append({
+        self.queries.append(
+            {
                 "function": func_name,
                 "elapsed": elapsed,
                 "params": params,
-            })
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        self.total_time += elapsed
+
+        if elapsed > 0.5:
+            self.slow_queries.append(
+                {
+                    "function": func_name,
+                    "elapsed": elapsed,
+                    "params": params,
+                }
+            )
 
     def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
@@ -217,9 +225,11 @@ class QueryStats:
             "slow_queries": len(self.slow_queries),
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
-            "cache_hit_rate": round(
-                self.cache_hits / (self.cache_hits + self.cache_misses) * 100, 2
-            ) if (self.cache_hits + self.cache_misses) > 0 else 0,
+            "cache_hit_rate": (
+                round(self.cache_hits / (self.cache_hits + self.cache_misses) * 100, 2)
+                if (self.cache_hits + self.cache_misses) > 0
+                else 0
+            ),
         }
 
 
@@ -236,11 +246,8 @@ def track_query(func: Callable):
         result = func(*args, **kwargs)
         elapsed = time.time() - start
 
-        query_stats.record_query(
-            func_name=func.__name__,
-            elapsed=elapsed,
-            params=kwargs
-        )
+        query_stats.record_query(func_name=func.__name__, elapsed=elapsed, params=kwargs)
 
         return result
+
     return wrapper

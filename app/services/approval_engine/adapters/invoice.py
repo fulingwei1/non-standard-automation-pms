@@ -7,19 +7,18 @@
 
 from __future__ import annotations
 
+import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.invoices import Invoice, InvoiceApproval
+from app.models.user import User
+from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
-
-from datetime import datetime, timedelta
-from app.schemas.approval.instance import ApprovalInstanceCreate
-from app.models.user import User
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -63,15 +62,11 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
             "tax_amount": float(invoice.tax_amount) if invoice.tax_amount else 0,
             "total_amount": float(invoice.total_amount) if invoice.total_amount else 0,
             "contract_id": invoice.contract_id,
-            "contract_code": invoice.contract.contract_code
-            if invoice.contract
-            else None,
+            "contract_code": invoice.contract.contract_code if invoice.contract else None,
             "project_id": invoice.project_id,
             "buyer_name": invoice.buyer_name,
             "buyer_tax_no": invoice.buyer_tax_no,
-            "issue_date": invoice.issue_date.isoformat()
-            if invoice.issue_date
-            else None,
+            "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
             "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
         }
 
@@ -190,13 +185,9 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
             "tax_amount": float(invoice.tax_amount) if invoice.tax_amount else 0,
             "total_amount": float(invoice.total_amount) if invoice.total_amount else 0,
             "contract_id": invoice.contract_id,
-            "contract_code": invoice.contract.contract_code
-            if invoice.contract
-            else None,
+            "contract_code": invoice.contract.contract_code if invoice.contract else None,
             "project_id": invoice.project_id,
-            "issue_date": invoice.issue_date.isoformat()
-            if invoice.issue_date
-            else None,
+            "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
             "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
             "buyer_name": invoice.buyer_name,
             "buyer_tax_no": invoice.buyer_tax_no,

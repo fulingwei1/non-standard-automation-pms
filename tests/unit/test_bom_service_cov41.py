@@ -16,6 +16,7 @@ def db():
 def service(db):
     with patch("app.services.bom_service.BaseService.__init__", return_value=None):
         from app.services.bom_service import BomService
+
         svc = BomService.__new__(BomService)
         svc.db = db
         svc.model = MagicMock()
@@ -27,6 +28,7 @@ def service(db):
 def test_bom_service_instantiation(db):
     with patch("app.services.bom_service.BaseService.__init__", return_value=None):
         from app.services.bom_service import BomService
+
         svc = BomService.__new__(BomService)
         svc.db = db
         assert svc is not None
@@ -100,8 +102,10 @@ def test_list_boms_machine_id_filter(service):
 
 
 def test_to_response_calls_model_validate(service):
-    from app.services.bom_service import BomService
     from unittest.mock import patch as mp
+
+    from app.services.bom_service import BomService
+
     bom_obj = MagicMock()
     with mp("app.services.bom_service.BomResponse") as MockResp:
         MockResp.model_validate.return_value = MagicMock()

@@ -10,12 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def service(db_session):
     from app.services.change_impact_ai_service import ChangeImpactAIService
+
     return ChangeImpactAIService(db_session)
 
 
@@ -47,6 +48,7 @@ def _make_project(budget=100000, actual_cost=20000):
 
 
 # ─── _calculate_overall_risk ────────────────────────────────────────────────
+
 
 class TestCalculateOverallRisk:
     """纯逻辑方法，无需数据库"""
@@ -108,13 +110,18 @@ class TestCalculateOverallRisk:
         no_chain = {"detected": False, "depth": 0}
         with_chain = {"detected": True, "depth": 2}
 
-        r_no = service._calculate_overall_risk(base_schedule, base_cost, base_quality, base_resource, no_chain)
-        r_with = service._calculate_overall_risk(base_schedule, base_cost, base_quality, base_resource, with_chain)
+        r_no = service._calculate_overall_risk(
+            base_schedule, base_cost, base_quality, base_resource, no_chain
+        )
+        r_with = service._calculate_overall_risk(
+            base_schedule, base_cost, base_quality, base_resource, with_chain
+        )
 
         assert r_with["score"] > r_no["score"]
 
 
 # ─── _analyze_cost_impact ────────────────────────────────────────────────────
+
 
 class TestAnalyzeCostImpact:
     """成本影响分析，无需 AI，同步逻辑"""
@@ -160,6 +167,7 @@ class TestAnalyzeCostImpact:
 
 # ─── _analyze_quality_impact ────────────────────────────────────────────────
 
+
 class TestAnalyzeQualityImpact:
 
     @pytest.mark.asyncio
@@ -191,6 +199,7 @@ class TestAnalyzeQualityImpact:
 
 # ─── _analyze_resource_impact ───────────────────────────────────────────────
 
+
 class TestAnalyzeResourceImpact:
 
     @pytest.mark.asyncio
@@ -219,6 +228,7 @@ class TestAnalyzeResourceImpact:
 
 
 # ─── _identify_chain_reactions ───────────────────────────────────────────────
+
 
 class TestIdentifyChainReactions:
 
@@ -257,6 +267,7 @@ class TestIdentifyChainReactions:
 
 # ─── _calculate_dependency_depth ────────────────────────────────────────────
 
+
 class TestCalculateDependencyDepth:
 
     def test_leaf_node(self, service):
@@ -275,6 +286,7 @@ class TestCalculateDependencyDepth:
 
 
 # ─── _parse_ai_response ──────────────────────────────────────────────────────
+
 
 class TestParseAiResponse:
 
@@ -306,6 +318,7 @@ class TestParseAiResponse:
 
 
 # ─── _find_affected_tasks & _find_affected_milestones ───────────────────────
+
 
 class TestFindAffected:
 
@@ -353,11 +366,13 @@ class TestFindAffected:
 
 # ─── analyze_change_impact (integration-mock) ────────────────────────────────
 
+
 class TestAnalyzeChangeImpact:
 
     @pytest.mark.asyncio
     async def test_change_not_found_raises(self, db_session):
         from app.services.change_impact_ai_service import ChangeImpactAIService
+
         svc = ChangeImpactAIService(db_session)
         db_session.query.return_value.filter.return_value.first.return_value = None
 
@@ -385,16 +400,34 @@ class TestAnalyzeChangeImpact:
         db_session.add.return_value = None
         db_session.flush.return_value = None
 
-        ai_response = json.dumps({"level": "MEDIUM", "delay_days": 5,
-                                  "affected_tasks_count": 0, "critical_path_affected": False,
-                                  "milestone_affected": False, "description": "test"})
+        ai_response = json.dumps(
+            {
+                "level": "MEDIUM",
+                "delay_days": 5,
+                "affected_tasks_count": 0,
+                "critical_path_affected": False,
+                "milestone_affected": False,
+                "description": "test",
+            }
+        )
 
-        with patch("app.services.change_impact_ai_service.call_glm_api",
-                   new=AsyncMock(return_value=ai_response)), \
-             patch.object(ChangeImpactAIService, "_gather_analysis_context", return_value={
-                 "change": {"time_impact": 5, "cost_impact": 10000},
-                 "project": {"start_date": "2025-01-01", "end_date": "2025-12-31"},
-                 "tasks": [], "dependencies": [], "milestones": []}):
+        with (
+            patch(
+                "app.services.change_impact_ai_service.call_glm_api",
+                new=AsyncMock(return_value=ai_response),
+            ),
+            patch.object(
+                ChangeImpactAIService,
+                "_gather_analysis_context",
+                return_value={
+                    "change": {"time_impact": 5, "cost_impact": 10000},
+                    "project": {"start_date": "2025-01-01", "end_date": "2025-12-31"},
+                    "tasks": [],
+                    "dependencies": [],
+                    "milestones": [],
+                },
+            ),
+        ):
             # Should not raise
             try:
                 svc = ChangeImpactAIService(db_session)

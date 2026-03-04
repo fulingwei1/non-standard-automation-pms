@@ -10,9 +10,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
-from app.core import security
-from app.common.pagination import get_pagination_query, PaginationParams
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
+from app.core import security
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
@@ -23,12 +23,12 @@ from app.schemas.sales import (
     OpportunityResponse,
     OpportunityUpdate,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import (
     generate_opportunity_code,
     get_entity_creator_id,
 )
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -50,7 +50,7 @@ def read_opportunities(
     query = db.query(Opportunity).options(joinedload(Opportunity.customer))
 
     # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, 'owner_id')
+    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
 
     query = apply_keyword_filter(query, Opportunity, keyword, ["opp_code", "opp_name"])
 
@@ -66,15 +66,18 @@ def read_opportunities(
     total = query.count()
     # 使用 eager loading 避免 N+1 查询
     # 默认按优先级排序，如果没有优先级则按创建时间排序
-    opportunities = query.options(
-        joinedload(Opportunity.customer),
-        joinedload(Opportunity.owner),
-        joinedload(Opportunity.updater),
-        joinedload(Opportunity.requirements)
-    ).order_by(
-        desc(Opportunity.priority_score).nullslast(),
-        desc(Opportunity.created_at)
-    ).offset(pagination.offset).limit(pagination.limit).all()
+    opportunities = (
+        query.options(
+            joinedload(Opportunity.customer),
+            joinedload(Opportunity.owner),
+            joinedload(Opportunity.updater),
+            joinedload(Opportunity.requirements),
+        )
+        .order_by(desc(Opportunity.priority_score).nullslast(), desc(Opportunity.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
 
     opp_responses = []
     for opp in opportunities:
@@ -88,7 +91,9 @@ def read_opportunities(
             "requirement": None,
         }
         if req:
-            opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+            opp_dict["requirement"] = OpportunityRequirementResponse(
+                **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+            )
         opp_responses.append(OpportunityResponse(**opp_dict))
 
     return pagination.to_response(opp_responses, total)
@@ -111,7 +116,9 @@ def create_opportunity(
         opp_data["opp_code"] = generate_opportunity_code(db)
     else:
         # 检查编码是否已存在
-        existing = db.query(Opportunity).filter(Opportunity.opp_code == opp_data["opp_code"]).first()
+        existing = (
+            db.query(Opportunity).filter(Opportunity.opp_code == opp_data["opp_code"]).first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="商机编码已存在")
 
@@ -140,7 +147,11 @@ def create_opportunity(
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": customer.customer_name,
@@ -149,7 +160,9 @@ def create_opportunity(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)
 
@@ -164,12 +177,17 @@ def read_opportunity(
     """
     获取商机详情
     """
-    opportunity = db.query(Opportunity).options(
-        joinedload(Opportunity.customer),
-        joinedload(Opportunity.owner),
-        joinedload(Opportunity.updater),
-        joinedload(Opportunity.requirements)
-    ).filter(Opportunity.id == opp_id).first()
+    opportunity = (
+        db.query(Opportunity)
+        .options(
+            joinedload(Opportunity.customer),
+            joinedload(Opportunity.owner),
+            joinedload(Opportunity.updater),
+            joinedload(Opportunity.requirements),
+        )
+        .filter(Opportunity.id == opp_id)
+        .first()
+    )
 
     if not opportunity:
         raise HTTPException(status_code=404, detail="商机不存在")
@@ -183,7 +201,9 @@ def read_opportunity(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)
 
@@ -221,9 +241,11 @@ def update_opportunity(
         req_data = opp_in.requirement.model_dump(exclude_unset=True)
         req_data = {k: v for k, v in req_data.items() if k in valid_req_fields}
         if req_data:
-            req = db.query(OpportunityRequirement).filter(
-                OpportunityRequirement.opportunity_id == opportunity.id
-            ).first()
+            req = (
+                db.query(OpportunityRequirement)
+                .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+                .first()
+            )
             if req:
                 for field, value in req_data.items():
                     setattr(req, field, value)
@@ -235,7 +257,11 @@ def update_opportunity(
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
@@ -244,6 +270,8 @@ def update_opportunity(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)

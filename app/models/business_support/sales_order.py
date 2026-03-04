@@ -37,7 +37,9 @@ class SalesOrder(Base, TimestampMixin):
     project_no = Column(String(50), comment="项目号")
 
     # 订单信息
-    order_type = Column(String(20), default="standard", comment="订单类型：standard/sample/repair/other")
+    order_type = Column(
+        String(20), default="standard", comment="订单类型：standard/sample/repair/other"
+    )
     order_amount = Column(Numeric(15, 2), comment="订单金额")
     currency = Column(String(10), default="CNY", comment="币种")
 
@@ -46,7 +48,11 @@ class SalesOrder(Base, TimestampMixin):
     promised_date = Column(Date, comment="承诺交期")
 
     # 状态
-    order_status = Column(String(20), default="draft", comment="订单状态：draft/confirmed/in_production/ready/partial_shipped/shipped/completed/cancelled")
+    order_status = Column(
+        String(20),
+        default="draft",
+        comment="订单状态：draft/confirmed/in_production/ready/partial_shipped/shipped/completed/cancelled",
+    )
 
     # 项目号分配
     project_no_assigned = Column(Boolean, default=False, comment="是否已分配项目号")
@@ -56,7 +62,9 @@ class SalesOrder(Base, TimestampMixin):
 
     # ERP信息
     erp_order_no = Column(String(50), comment="ERP订单号")
-    erp_sync_status = Column(String(20), default="pending", comment="ERP同步状态：pending/synced/failed")
+    erp_sync_status = Column(
+        String(20), default="pending", comment="ERP同步状态：pending/synced/failed"
+    )
     erp_sync_time = Column(DateTime, comment="ERP同步时间")
 
     # 负责人
@@ -72,8 +80,12 @@ class SalesOrder(Base, TimestampMixin):
     project = relationship("Project", foreign_keys=[project_id])
     sales_person = relationship("User", foreign_keys=[sales_person_id])
     support_person = relationship("User", foreign_keys=[support_person_id])
-    delivery_orders = relationship("DeliveryOrder", back_populates="sales_order", cascade="all, delete-orphan")
-    order_items = relationship("SalesOrderItem", back_populates="sales_order", cascade="all, delete-orphan")
+    delivery_orders = relationship(
+        "DeliveryOrder", back_populates="sales_order", cascade="all, delete-orphan"
+    )
+    order_items = relationship(
+        "SalesOrderItem", back_populates="sales_order", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_order_no", "order_no"),
@@ -93,7 +105,9 @@ class SalesOrderItem(Base, TimestampMixin):
     __tablename__ = "sales_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sales_order_id = Column(Integer, ForeignKey("sales_orders.id"), nullable=False, comment="销售订单ID")
+    sales_order_id = Column(
+        Integer, ForeignKey("sales_orders.id"), nullable=False, comment="销售订单ID"
+    )
     item_name = Column(String(200), comment="明细名称")
     item_spec = Column(String(200), comment="规格型号")
     qty = Column(Numeric(10, 2), comment="数量")
@@ -105,9 +119,7 @@ class SalesOrderItem(Base, TimestampMixin):
     # 关系
     sales_order = relationship("SalesOrder", back_populates="order_items")
 
-    __table_args__ = (
-        Index("idx_sales_order", "sales_order_id"),
-    )
+    __table_args__ = (Index("idx_sales_order", "sales_order_id"),)
 
     def __repr__(self):
         return f"<SalesOrderItem {self.id}>"

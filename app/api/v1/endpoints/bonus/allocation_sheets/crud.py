@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.bonus import BonusAllocationSheet
 from app.models.user import User
 from app.schemas.bonus import BonusAllocationSheetResponse
 from app.schemas.common import ResponseModel
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -38,7 +38,9 @@ def get_allocation_sheets(
         query = query.filter(BonusAllocationSheet.status == sheet_status)
 
     total = query.count()
-    sheets = apply_pagination(query.order_by(desc(BonusAllocationSheet.created_at)), pagination.offset, pagination.limit).all()
+    sheets = apply_pagination(
+        query.order_by(desc(BonusAllocationSheet.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [BonusAllocationSheetResponse.model_validate(sheet) for sheet in sheets]
 
@@ -49,12 +51,16 @@ def get_allocation_sheets(
             "total": total,
             "page": pagination.page,
             "page_size": pagination.page_size,
-            "pages": pagination.pages_for_total(total)
-        }
+            "pages": pagination.pages_for_total(total),
+        },
     )
 
 
-@router.get("/allocation-sheets/{sheet_id}", response_model=ResponseModel[BonusAllocationSheetResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/allocation-sheets/{sheet_id}",
+    response_model=ResponseModel[BonusAllocationSheetResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_allocation_sheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -66,7 +72,4 @@ def get_allocation_sheet(
     """
     sheet = get_or_404(db, BonusAllocationSheet, sheet_id, "分配明细表不存在")
 
-    return ResponseModel(
-        code=200,
-        data=BonusAllocationSheetResponse.model_validate(sheet)
-    )
+    return ResponseModel(code=200, data=BonusAllocationSheetResponse.model_validate(sheet))

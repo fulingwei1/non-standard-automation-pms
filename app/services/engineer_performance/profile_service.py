@@ -27,26 +27,22 @@ class ProfileService:
 
     def get_profile(self, user_id: int) -> Optional[EngineerProfile]:
         """获取工程师档案"""
-        return self.db.query(EngineerProfile).filter(
-            EngineerProfile.user_id == user_id
-        ).first()
+        return self.db.query(EngineerProfile).filter(EngineerProfile.user_id == user_id).first()
 
     def get_profile_by_id(self, profile_id: int) -> Optional[EngineerProfile]:
         """通过ID获取工程师档案"""
-        return self.db.query(EngineerProfile).filter(
-            EngineerProfile.id == profile_id
-        ).first()
+        return self.db.query(EngineerProfile).filter(EngineerProfile.id == profile_id).first()
 
     def create_profile(self, data: EngineerProfileCreate) -> EngineerProfile:
         """创建工程师档案"""
         profile = EngineerProfile(
             user_id=data.user_id,
             job_type=data.job_type,
-            job_level=data.job_level or 'junior',
+            job_level=data.job_level or "junior",
             skills=data.skills,
             certifications=data.certifications,
             job_start_date=data.job_start_date,
-            level_start_date=data.level_start_date
+            level_start_date=data.level_start_date,
         )
         save_obj(self.db, profile)
         return profile
@@ -74,12 +70,10 @@ class ProfileService:
         job_level: Optional[str] = None,
         department_id: Optional[int] = None,
         limit: int = 20,
-        offset: int = 0
+        offset: int = 0,
     ) -> Tuple[List[EngineerProfile], int]:
         """获取工程师列表"""
-        query = self.db.query(EngineerProfile).join(
-            User, EngineerProfile.user_id == User.id
-        )
+        query = self.db.query(EngineerProfile).join(User, EngineerProfile.user_id == User.id)
 
         if job_type:
             query = query.filter(EngineerProfile.job_type == job_type)
@@ -94,13 +88,10 @@ class ProfileService:
 
     def get_profiles_by_job_type(self, job_type: str) -> List[EngineerProfile]:
         """按岗位类型获取工程师"""
-        return self.db.query(EngineerProfile).filter(
-            EngineerProfile.job_type == job_type
-        ).all()
+        return self.db.query(EngineerProfile).filter(EngineerProfile.job_type == job_type).all()
 
     def count_profiles_by_config(
-        self, job_type: str, job_level: Optional[str] = None,
-        department_id: Optional[int] = None
+        self, job_type: str, job_level: Optional[str] = None, department_id: Optional[int] = None
     ) -> int:
         """
         统计受配置影响的工程师人数
@@ -110,24 +101,21 @@ class ProfileService:
             job_level: 职级（可选）
             department_id: 部门ID（如果指定则只统计该部门的工程师）
         """
-        query = self.db.query(EngineerProfile).filter(
-            EngineerProfile.job_type == job_type
-        )
+        query = self.db.query(EngineerProfile).filter(EngineerProfile.job_type == job_type)
         if job_level:
             query = query.filter(EngineerProfile.job_level == job_level)
 
         if department_id:
             # 获取部门内的员工
-            employees = self.db.query(Employee).filter(
-                Employee.department_id == department_id,
-                Employee.is_active
-            ).all()
+            employees = (
+                self.db.query(Employee)
+                .filter(Employee.department_id == department_id, Employee.is_active)
+                .all()
+            )
 
             employee_ids = [e.id for e in employees]
             user_ids = [
-                u.id for u in self.db.query(User).filter(
-                    User.employee_id.in_(employee_ids)
-                ).all()
+                u.id for u in self.db.query(User).filter(User.employee_id.in_(employee_ids)).all()
             ]
 
             query = query.filter(EngineerProfile.user_id.in_(user_ids))

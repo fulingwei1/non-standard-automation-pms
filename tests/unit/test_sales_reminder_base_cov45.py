@@ -3,15 +3,16 @@
 第四十五批覆盖：sales_reminder/base.py
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales_reminder.base")
 
 from app.services.sales_reminder.base import (
-    find_users_by_role,
-    find_users_by_department,
     create_notification,
+    find_users_by_department,
+    find_users_by_role,
 )
 
 
@@ -31,7 +32,10 @@ class TestFindUsersByRole:
 
     def test_no_matching_roles_returns_empty(self, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
-        with patch("app.services.sales_reminder.base.apply_keyword_filter", return_value=mock_db.query.return_value.filter.return_value):
+        with patch(
+            "app.services.sales_reminder.base.apply_keyword_filter",
+            return_value=mock_db.query.return_value.filter.return_value,
+        ):
             result = find_users_by_role(mock_db, "不存在的角色")
         assert result == []
 
@@ -49,7 +53,9 @@ class TestFindUsersByRole:
         user_roles_query = MagicMock()
         user_roles_query.all.return_value = [user_role]
 
-        with patch("app.services.sales_reminder.base.apply_keyword_filter", return_value=roles_query):
+        with patch(
+            "app.services.sales_reminder.base.apply_keyword_filter", return_value=roles_query
+        ):
             mock_db.query.return_value.filter.return_value.all.side_effect = [
                 [user_role],
                 [user],
@@ -73,7 +79,9 @@ class TestFindUsersByDepartment:
         query_mock = MagicMock()
         query_mock.all.return_value = [user]
 
-        with patch("app.services.sales_reminder.base.apply_keyword_filter", return_value=query_mock):
+        with patch(
+            "app.services.sales_reminder.base.apply_keyword_filter", return_value=query_mock
+        ):
             result = find_users_by_department(mock_db, "销售部")
         assert result == [user]
 

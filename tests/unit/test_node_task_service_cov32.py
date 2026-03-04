@@ -2,13 +2,15 @@
 """
 第三十二批覆盖率测试 - 节点子任务服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.node_task_service import NodeTaskService
     from app.models.enums import StageStatusEnum
+    from app.services.node_task_service import NodeTaskService
+
     HAS_NTS = True
 except Exception:
     HAS_NTS = False
@@ -96,14 +98,18 @@ class TestListTasks:
         """列出节点的所有任务"""
         svc, db = make_service()
         mock_tasks = [MagicMock(), MagicMock()]
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = mock_tasks
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            mock_tasks
+        )
         result = svc.list_tasks(node_instance_id=1)
         assert len(result) == 2
 
     def test_list_tasks_with_status_filter(self):
         """按状态筛选任务"""
         svc, db = make_service()
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         result = svc.list_tasks(node_instance_id=1, status="PENDING")
         assert result == []
 

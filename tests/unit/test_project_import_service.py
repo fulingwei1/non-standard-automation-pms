@@ -8,10 +8,16 @@ import pandas as pd
 import pytest
 
 from app.services.project_import_service import (
-    validate_excel_file, parse_excel_data, validate_project_columns,
-    get_column_value, parse_project_row, find_or_create_customer,
-    find_project_manager, parse_date_value, parse_decimal_value,
+    find_or_create_customer,
+    find_project_manager,
+    get_column_value,
     import_projects_from_dataframe,
+    parse_date_value,
+    parse_decimal_value,
+    parse_excel_data,
+    parse_project_row,
+    validate_excel_file,
+    validate_project_columns,
 )
 
 
@@ -21,6 +27,7 @@ class TestValidateExcelFile:
 
     def test_invalid(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("test.csv")
 
@@ -36,6 +43,7 @@ class TestValidateProjectColumns:
 
     def test_missing(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"其他": []})
         with pytest.raises(HTTPException):
             validate_project_columns(df)
@@ -52,6 +60,7 @@ class TestGetColumnValue:
 
     def test_nan(self):
         import numpy as np
+
         row = pd.Series({"项目编码*": np.nan})
         assert get_column_value(row, "项目编码*") is None
 
@@ -66,6 +75,7 @@ class TestParseProjectRow:
 
     def test_missing(self):
         import numpy as np
+
         row = pd.Series({"项目编码*": np.nan, "项目名称*": np.nan})
         code, name, errors = parse_project_row(row, 0)
         assert len(errors) > 0
@@ -78,6 +88,7 @@ class TestParseDateValue:
 
     def test_nan(self):
         import numpy as np
+
         assert parse_date_value(np.nan) is None
 
     def test_invalid(self):
@@ -90,6 +101,7 @@ class TestParseDecimalValue:
 
     def test_nan(self):
         import numpy as np
+
         assert parse_decimal_value(np.nan) is None
 
     def test_invalid(self):
@@ -129,6 +141,7 @@ class TestImportProjects:
     def test_missing_code(self):
         db = MagicMock()
         import numpy as np
+
         df = pd.DataFrame({"项目编码*": [np.nan], "项目名称*": [np.nan]})
         imported, updated, failed = import_projects_from_dataframe(db, df, False)
         assert len(failed) == 1
