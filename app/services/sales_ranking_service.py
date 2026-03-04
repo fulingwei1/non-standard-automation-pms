@@ -7,8 +7,6 @@
 - 计算综合评分和排名结果
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

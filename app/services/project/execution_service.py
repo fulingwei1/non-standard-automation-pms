@@ -6,8 +6,6 @@
 其他聚合端点复用。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, List, Optional
 

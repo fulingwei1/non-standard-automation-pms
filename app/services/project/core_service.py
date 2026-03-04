@@ -6,8 +6,6 @@
 聚合服务（执行、资源、财务、分析）复用。
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Dict, List, Optional, Sequence, Tuple
 

@@ -6,8 +6,6 @@ These types allow services to share the same pagination/query contract so
 controllers no longer have to reinvent keyword/filters handling.
 """
 
-from __future__ import annotations
-
 from enum import Enum
 from math import ceil
 from typing import Any, Dict, Generic, List, Optional, TypeVar

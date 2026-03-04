@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """项目审批流程冒烟测试."""
 
-from __future__ import annotations
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text

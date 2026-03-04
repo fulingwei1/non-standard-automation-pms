@@ -3,8 +3,6 @@
 项目机台 CRUD （迁移至 BaseCRUDService）
 """
 
-from __future__ import annotations
-
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status

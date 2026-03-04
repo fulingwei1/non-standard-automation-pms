@@ -353,8 +353,6 @@ def create_excel_response(
 
 # ── Re-exports for unified access (#39) ──────────────────────────────
 from app.services.report_framework.renderers.excel_renderer import ExcelRenderer  # noqa: F401, E402
-from app.services.report_framework.renderers.excel_styles import HEADER_FILL as EXCEL_HEADER_FILL
 from app.services.report_framework.renderers.excel_styles import (  # noqa: F401, E402
     HEADER_FONT as EXCEL_HEADER_FONT,
 )
-from app.services.report_framework.renderers.excel_styles import THIN_BORDER as EXCEL_THIN_BORDER

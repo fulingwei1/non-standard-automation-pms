@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for SyncBaseRepository"""
 
+from typing import Optional
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -28,8 +29,8 @@ class CreateSchema(BaseModel):
 
 
 class UpdateSchema(BaseModel):
-    name: str | None = None
-    status: str | None = None
+    name: Optional[str] = None
+    status: Optional[str] = None
 
 
 def _make_repo(db=None):

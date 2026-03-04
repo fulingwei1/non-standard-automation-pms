@@ -6,8 +6,6 @@
 replace(day=1)、date(year, month+1, 1) - timedelta(days=1) 的重复代码。
 """
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 from typing import Tuple
 

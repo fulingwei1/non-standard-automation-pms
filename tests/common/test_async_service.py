@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for async BaseService (app.common.crud.service)"""
 
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -26,7 +27,7 @@ class FCreate(BaseModel):
 
 
 class FUpdate(BaseModel):
-    name: str | None = None
+    name: Optional[str] = None
 
 
 class FResponse(BaseModel):

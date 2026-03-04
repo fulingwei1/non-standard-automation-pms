@@ -4,9 +4,7 @@
 适配当前项目使用的同步Session
 """
 
-from __future__ import annotations
-
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
@@ -91,7 +89,7 @@ class SyncBaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType])
         keyword: Optional[str] = None,
         keyword_fields: Optional[List[str]] = None,
         order_by: Optional[str] = None,
-        order_direction: str | SortOrder = "asc",
+        order_direction: Union[str, SortOrder] = "asc",
         load_relationships: Optional[List[str]] = None,
     ) -> tuple[List[ModelType], int]:
         """

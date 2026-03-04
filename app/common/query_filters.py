@@ -6,8 +6,6 @@
 .like('%keyword%') 与 .offset()/.limit() 的重复代码。
 """
 
-from __future__ import annotations
-
 from typing import Any, List, Optional, Sequence, Type, TypeVar, Union
 
 from sqlalchemy import or_

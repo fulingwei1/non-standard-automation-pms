@@ -5,8 +5,6 @@
 聚合项目成本、预算及费用分布，供分析端点复用。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, List, Optional
 

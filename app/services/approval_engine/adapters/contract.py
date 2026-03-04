@@ -5,8 +5,6 @@
 将合同模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:

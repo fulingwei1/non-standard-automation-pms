@@ -7,8 +7,6 @@ business module can inherit and immediately get pagination, filtering,
 sorting, soft delete helpers, and lifecycle hooks.
 """
 
-from __future__ import annotations
-
 from typing import (
     Any,
     Dict,

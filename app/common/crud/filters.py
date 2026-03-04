@@ -4,9 +4,7 @@
 支持筛选、排序、分页、关键词搜索
 """
 
-from __future__ import annotations
-
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 from sqlalchemy import Select, and_, asc, desc, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,7 +29,7 @@ class QueryBuilder:
         keyword: Optional[str] = None,
         keyword_fields: Optional[List[str]] = None,
         order_by: Optional[str] = None,
-        order_direction: str | SortOrder = "asc",
+        order_direction: Union[str, SortOrder] = "asc",
     ) -> tuple[Select, Select]:
         """
         构建列表查询

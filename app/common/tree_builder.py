@@ -6,8 +6,6 @@
 ``children = []`` + 循环 ``parent["children"].append(child)`` 的重复代码。
 """
 
-from __future__ import annotations
-
 from typing import (
     Any,
     Callable,

@@ -3,7 +3,7 @@
 技术规格要求提取器 - 工具函数
 """
 import re
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
@@ -27,7 +27,7 @@ def extract_key_parameters(specification: str) -> Dict[str, Any]:
 
     # 提取电压（如：220V, 24V, 12VDC等）
     voltage_patterns = [
-        r"(\d+(?:\.\d+)?)\s*V(?:DC|AC)?",
+        r"(\d+(?:\.\d+)?)\s*V(?:Union[DC, AC])?",
         r"(\d+(?:\.\d+)?)\s*伏",
     ]
     for pattern in voltage_patterns:
@@ -38,7 +38,7 @@ def extract_key_parameters(specification: str) -> Dict[str, Any]:
 
     # 提取电流（如：5A, 10mA, 0.5A等）
     current_patterns = [
-        r"(\d+(?:\.\d+)?)\s*(?:m|u)?A",
+        r"(\d+(?:\.\d+)?)\s*(?:Union[m, u])?A",
         r"(\d+(?:\.\d+)?)\s*安",
     ]
     for pattern in current_patterns:
@@ -74,7 +74,7 @@ def extract_key_parameters(specification: str) -> Dict[str, Any]:
 
     # 提取功率（如：100W, 1.5kW等）
     power_patterns = [
-        r"(\d+(?:\.\d+)?)\s*(?:m|k)?W",
+        r"(\d+(?:\.\d+)?)\s*(?:Union[m, k])?W",
         r"(\d+(?:\.\d+)?)\s*瓦",
     ]
     for pattern in power_patterns:

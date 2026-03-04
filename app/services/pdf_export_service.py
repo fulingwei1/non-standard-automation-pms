@@ -442,6 +442,3 @@ from app.services.report_framework.renderers.pdf_renderer import PdfRenderer  # 
 from app.services.report_framework.renderers.pdf_styles import (  # noqa: F401, E402
     HEADER_BG as PDF_HEADER_BG,
 )
-from app.services.report_framework.renderers.pdf_styles import (
-    register_chinese_font,
-)

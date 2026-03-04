@@ -6,8 +6,6 @@ This service scopes every CRUD operation to a specific project_id so controllers
 don't need to reimplement filtering/validation logic.
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal

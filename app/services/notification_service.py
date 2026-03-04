@@ -18,8 +18,6 @@ AlertNotificationService 和 NotificationPriority。
     from app.services.unified_notification_service import get_notification_service
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Dict, Optional, Sequence
 

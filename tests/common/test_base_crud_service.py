@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for BaseCRUDService (sync, with QueryParams/PaginatedResult)"""
 
+from typing import Optional
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -33,8 +34,8 @@ class FakeCreate(BaseModel):
 
 
 class FakeUpdate(BaseModel):
-    name: str | None = None
-    status: str | None = None
+    name: Optional[str] = None
+    status: Optional[str] = None
 
 
 class FakeResponse(BaseModel):

@@ -6,8 +6,6 @@ ECN审批适配器
 ECN审批较为复杂，包含多部门评估（会签）环节
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional

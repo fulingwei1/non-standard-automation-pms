@@ -5,8 +5,6 @@
 将采购订单(PurchaseOrder)模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

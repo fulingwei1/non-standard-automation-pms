@@ -5,8 +5,6 @@
 提供个人工作量、部门工作量以及全局资源概览等能力。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 

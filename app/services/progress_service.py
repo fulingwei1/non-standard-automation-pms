@@ -10,8 +10,6 @@
 保持原有函数签名不变，确保向后兼容。
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal

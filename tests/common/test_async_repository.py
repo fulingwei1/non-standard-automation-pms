@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for async BaseRepository - mock at method level to avoid select() issues"""
 
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,7 +24,7 @@ class FCreate(BaseModel):
 
 
 class FUpdate(BaseModel):
-    name: str | None = None
+    name: Optional[str] = None
 
 
 def _make_repo():

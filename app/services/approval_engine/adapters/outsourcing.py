@@ -5,8 +5,6 @@
 将外协订单(OutsourcingOrder)模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session

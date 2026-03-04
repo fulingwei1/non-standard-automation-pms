@@ -5,8 +5,6 @@
 聚合成本分析、成本统计与利润分析等常用逻辑，减少各处重复计算。
 """
 
-from __future__ import annotations
-
 from typing import Any, Dict, Optional
 
 from sqlalchemy import func

@@ -5,8 +5,6 @@
 提供通用的 Excel/PDF 处理入口，减少各模块重复实现。
 """
 
-from __future__ import annotations
-
 import io
 from typing import Any, Dict, Iterable, List, Optional
 

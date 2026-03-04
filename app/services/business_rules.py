@@ -13,12 +13,10 @@
 - 劳动时间异常监控规定（HR 制度 §2.4）
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import List, Literal
+from typing import List, Literal, Union
 
 # ---------------------------------------------------------------------------
 # KPI 基准常量（以字典形式集中管理，方便统一调整）
@@ -46,11 +44,11 @@ KPI_BENCHMARKS = {
 
 
 def calc_gross_margin(
-    contract: float | Decimal,
-    hardware: float | Decimal,
-    labor: float | Decimal,
-    outsource: float | Decimal,
-    travel: float | Decimal,
+    contract: Union[float, Decimal],
+    hardware: Union[float, Decimal],
+    labor: Union[float, Decimal],
+    outsource: Union[float, Decimal],
+    travel: Union[float, Decimal],
 ) -> Decimal:
     """
     计算非标项目毛利率。
@@ -85,7 +83,7 @@ def calc_gross_margin(
     return margin.quantize(Decimal("0.000001"))
 
 
-def is_warning_required(margin: float | Decimal) -> bool:
+def is_warning_required(margin: Union[float, Decimal]) -> bool:
     """
     毛利率是否需要预警。
 
@@ -100,7 +98,7 @@ def is_warning_required(margin: float | Decimal) -> bool:
     return Decimal(str(margin)) < KPI_BENCHMARKS["gross_margin_warning"]
 
 
-def requires_gm_approval(margin: float | Decimal) -> bool:
+def requires_gm_approval(margin: Union[float, Decimal]) -> bool:
     """
     毛利率是否需要总经理审批。
 
@@ -120,7 +118,7 @@ def requires_gm_approval(margin: float | Decimal) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def calc_kit_rate(actual_qty: int | float | Decimal, bom_qty: int | float | Decimal) -> Decimal:
+def calc_kit_rate(actual_qty: Union[int, float, Decimal], bom_qty: Union[int, float, Decimal]) -> Decimal:
     """
     计算套件率。
 
@@ -146,7 +144,7 @@ def calc_kit_rate(actual_qty: int | float | Decimal, bom_qty: int | float | Deci
     return kit_rate.quantize(Decimal("0.000001"))
 
 
-def should_trigger_shortage_alert(kit_rate: float | Decimal) -> bool:
+def should_trigger_shortage_alert(kit_rate: Union[float, Decimal]) -> bool:
     """
     根据套件率判断是否触发缺料预警。
 
@@ -166,7 +164,7 @@ def should_trigger_shortage_alert(kit_rate: float | Decimal) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def calc_spi(ev: float | Decimal, pv: float | Decimal) -> Decimal:
+def calc_spi(ev: Union[float, Decimal], pv: Union[float, Decimal]) -> Decimal:
     """
     计算进度绩效指数 (SPI = EV / PV)。
 
@@ -193,7 +191,7 @@ def calc_spi(ev: float | Decimal, pv: float | Decimal) -> Decimal:
 DelayAlertLevel = Literal["NONE", "WARNING", "URGENT"]
 
 
-def get_delay_alert_level(spi: float | Decimal) -> DelayAlertLevel:
+def get_delay_alert_level(spi: Union[float, Decimal]) -> DelayAlertLevel:
     """
     根据 SPI 判断延期预警等级。
 
@@ -240,7 +238,7 @@ STANDARD_PAYMENT_RATIOS: List[dict] = [
 ]
 
 
-def create_standard_payment_milestones(contract_amount: float | Decimal) -> List[PaymentMilestone]:
+def create_standard_payment_milestones(contract_amount: Union[float, Decimal]) -> List[PaymentMilestone]:
     """
     按标准合同付款结构生成付款里程碑列表。
 
@@ -318,7 +316,7 @@ def is_overdue_escalation_required(overdue_days: int) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def is_daily_overtime(hours: float | Decimal) -> bool:
+def is_daily_overtime(hours: Union[float, Decimal]) -> bool:
     """
     判断日工时是否触发异常标记。
 
@@ -333,7 +331,7 @@ def is_daily_overtime(hours: float | Decimal) -> bool:
     return Decimal(str(hours)) > KPI_BENCHMARKS["daily_overtime_threshold"]
 
 
-def should_hr_review(monthly_hours: float | Decimal) -> bool:
+def should_hr_review(monthly_hours: Union[float, Decimal]) -> bool:
     """
     判断月工时是否需要 HR 关注。
 

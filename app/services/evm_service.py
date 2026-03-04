@@ -7,7 +7,7 @@ EVM (Earned Value Management) 挣值管理服务
 
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
@@ -29,7 +29,7 @@ class EVMCalculator:
     PERCENT_DECIMAL_PLACES = 2  # 百分比保留2位小数
 
     @staticmethod
-    def decimal(value: float | Decimal | int) -> Decimal:
+    def decimal(value: Union[float, Decimal, int]) -> Decimal:
         """转换为Decimal类型"""
         return Decimal(str(value))
 

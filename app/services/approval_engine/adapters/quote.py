@@ -5,8 +5,6 @@
 将报价模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 

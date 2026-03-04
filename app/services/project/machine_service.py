@@ -3,8 +3,6 @@
 Project machine service built on the shared BaseCRUDService.
 """
 
-from __future__ import annotations
-
 from typing import Optional, Sequence
 
 from fastapi import HTTPException, status

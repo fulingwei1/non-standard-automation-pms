@@ -4,8 +4,6 @@ Tests coverage for:
 - app.services.timesheet_report_service.TimesheetReportService
 """
 
-from __future__ import annotations
-
 import pytest
 
 # 跳过如果模块不存在

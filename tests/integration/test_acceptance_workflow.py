@@ -14,8 +14,6 @@
 脚本会自动清理自己创建的数据库记录，方便多次重复执行。
 """
 
-from __future__ import annotations
-
 import json
 import os
 import uuid

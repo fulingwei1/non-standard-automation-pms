@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for SyncBaseService (app.common.crud.sync_service)"""
 
+from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,7 +25,7 @@ class FCreate(BaseModel):
 
 
 class FUpdate(BaseModel):
-    name: str | None = None
+    name: Optional[str] = None
 
 
 class FResponse(BaseModel):
