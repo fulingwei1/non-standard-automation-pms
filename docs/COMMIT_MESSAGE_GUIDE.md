@@ -208,6 +208,16 @@ Nightshift-Ref: https://github.com/marcus/nightshift
 - `Co-authored-by:` - 共同作者
 - `Reviewed-by:` - 审查人
 
+## 安装 Git Hooks
+
+首次克隆仓库后，需要安装 Git hooks：
+
+```bash
+./scripts/install-hooks.sh
+```
+
+这将安装 commit-msg hook 到 `.git/hooks/` 目录。
+
 ## 验证
 
 项目已配置 Git commit-msg hook 来自动验证提交信息格式：
