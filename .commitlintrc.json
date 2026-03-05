@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json.schemastore.org/commitlintrc",
+  "extends": [],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      ["feat", "fix", "refactor", "docs", "test", "chore", "perf", "ci"]
+    ],
+    "type-case": [2, "always", "lower-case"],
+    "type-empty": [2, "never"],
+    "subject-empty": [2, "never"],
+    "subject-min-length": [2, "always", 10],
+    "subject-max-length": [1, "always", 100],
+    "subject-full-stop": [2, "never", "."],
+    "subject-case": [0],
+    "header-max-length": [1, "always", 100]
+  },
+  "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint",
+  "prompt": {
+    "messages": {
+      "type": "Select the type of change that you're committing:",
+      "subject": "Write a short, imperative tense description of the change:\n",
+      "body": "Provide a longer description of the change (optional):\n",
+      "footer": "List any breaking changes or issues closed by this change (optional):\n"
+    },
+    "questions": {
+      "type": {
+        "description": "Select the type of change that you're committing",
+        "enum": {
+          "feat": {
+            "description": "A new feature",
+            "title": "Features"
+          },
+          "fix": {
+            "description": "A bug fix",
+            "title": "Bug Fixes"
+          },
+          "refactor": {
+            "description": "A code change that neither fixes a bug nor adds a feature",
+            "title": "Code Refactoring"
+          },
+          "docs": {
+            "description": "Documentation only changes",
+            "title": "Documentation"
+          },
+          "test": {
+            "description": "Adding missing tests or correcting existing tests",
+            "title": "Tests"
+          },
+          "chore": {
+            "description": "Changes to the build process or auxiliary tools",
+            "title": "Chores"
+          },
+          "perf": {
+            "description": "A code change that improves performance",
+            "title": "Performance Improvements"
+          },
+          "ci": {
+            "description": "Changes to CI configuration files and scripts",
+            "title": "Continuous Integration"
+          }
+        }
+      }
+    }
+  }
+}
