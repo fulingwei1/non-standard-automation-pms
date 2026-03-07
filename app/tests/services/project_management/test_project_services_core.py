@@ -206,13 +206,17 @@ class TestHealthCalculatorBranches:
 
     def test_h3_blocking_issues(self, db_session, test_project):
         """分支：有严重阻塞问题 - H3"""
+        from datetime import datetime
         calculator = HealthCalculator(db_session)
         issue = Issue(
             project_id=test_project.id,
             title="阻塞问题",
+            description="严重阻塞问题描述",
             issue_type=IssueTypeEnum.BLOCKER,
             status=IssueStatusEnum.OPEN,
             priority="CRITICAL",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()
@@ -256,13 +260,17 @@ class TestHealthCalculatorBranches:
 
     def test_h2_high_priority_issues(self, db_session, test_project):
         """分支：高优先级问题 - H2"""
+        from datetime import datetime
         calculator = HealthCalculator(db_session)
         issue = Issue(
             project_id=test_project.id,
             title="高优先级问题",
+            description="高优先级问题描述",
             issue_type=IssueTypeEnum.TASK,
             status=IssueStatusEnum.OPEN,
             priority="HIGH",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()
@@ -446,12 +454,16 @@ class TestProjectManagementFlowBranches:
         db_session.commit()
 
         # 添加阻塞问题
+        from datetime import datetime
         issue = Issue(
             project_id=test_project.id,
             title="严重问题",
+            description="严重问题描述",
             issue_type=IssueTypeEnum.BLOCKER,
             status=IssueStatusEnum.OPEN,
             priority="CRITICAL",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()

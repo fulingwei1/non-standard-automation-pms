@@ -145,6 +145,8 @@ class OvertimeStatisticsResponse(BaseModel):
     total_overtime_hours: Decimal
     overtime_rate: Decimal
     avg_overtime_per_person: Decimal
+    weekend_hours: Decimal = Field(default=Decimal("0"), description="周末加班小时数")
+    holiday_hours: Decimal = Field(default=Decimal("0"), description="节假日加班小时数")
 
     class Config:
         from_attributes = True

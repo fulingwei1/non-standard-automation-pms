@@ -106,13 +106,17 @@ class TestHealthH3BlockedBranches:
 
     def test_h3_blocking_issues(self, db_session, calculator, test_project):
         """分支：有严重阻塞问题 - H3"""
+        from datetime import datetime
         # 创建阻塞类型问题
         issue = Issue(
             project_id=test_project.id,
             title="阻塞问题",
+            description="严重阻塞问题描述",
             issue_type=IssueTypeEnum.BLOCKER,
             status=IssueStatusEnum.OPEN,
             priority="CRITICAL",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()
@@ -216,12 +220,16 @@ class TestHealthH2RiskBranches:
 
     def test_h2_high_priority_issues(self, db_session, calculator, test_project):
         """分支：有高优先级未解决问题 - H2"""
+        from datetime import datetime
         issue = Issue(
             project_id=test_project.id,
             title="高优先级问题",
+            description="高优先级问题描述",
             issue_type=IssueTypeEnum.TASK,
             status=IssueStatusEnum.OPEN,
             priority="HIGH",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()
@@ -281,13 +289,17 @@ class TestHealthDetailsBranches:
 
     def test_get_health_details_with_issues(self, db_session, calculator, test_project):
         """分支：包含问题统计的详细信息"""
+        from datetime import datetime
         # 创建各种问题
         issue = Issue(
             project_id=test_project.id,
             title="测试问题",
+            description="测试问题描述",
             issue_type=IssueTypeEnum.BLOCKER,
             status=IssueStatusEnum.OPEN,
             priority="HIGH",
+            reporter_id=1,
+            report_date=datetime.now(),
         )
         db_session.add(issue)
         db_session.commit()

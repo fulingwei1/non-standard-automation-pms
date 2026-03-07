@@ -318,6 +318,7 @@ class TestInstallationDispatchBranches:
         # 创建机台
         machine = Machine(
             project_id=test_project.id,
+            machine_code="MC001",
             machine_no="PN001",
             machine_name="测试设备",
         )
@@ -346,6 +347,7 @@ class TestInstallationDispatchBranches:
         """分支：非S8阶段 - 不创建派工单"""
         machine = Machine(
             project_id=test_project.id,
+            machine_code="MC002",
             machine_no="PN002",
             machine_name="测试设备2",
         )
@@ -372,6 +374,7 @@ class TestInstallationDispatchBranches:
         """分支：已在S8 - 不重复创建"""
         machine = Machine(
             project_id=test_project.id,
+            machine_code="MC003",
             machine_no="PN003",
             machine_name="测试设备3",
         )
@@ -400,6 +403,7 @@ class TestInstallationDispatchBranches:
 
         machine = Machine(
             project_id=test_project.id,
+            machine_code="MC004",
             machine_no="PN004",
             machine_name="测试设备4",
         )
