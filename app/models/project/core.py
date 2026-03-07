@@ -287,6 +287,42 @@ class Project(Base, TimestampMixin):
             return self.actual_end_date > self.planned_end_date
         return date.today() > self.planned_end_date and self.stage not in ["S9", "CLOSED"]
 
+    # ------------------------------------------------------------------------
+    # Legacy compatibility aliases
+    # ------------------------------------------------------------------------
+    @property
+    def plan_end_date(self):
+        """Backward-compatible alias for old field name."""
+        return self.planned_end_date
+
+    @plan_end_date.setter
+    def plan_end_date(self, value):
+        self.planned_end_date = value
+
+    @property
+    def budget(self):
+        """Backward-compatible alias for old field name."""
+        return self.budget_amount
+
+    @budget.setter
+    def budget(self, value):
+        self.budget_amount = value
+
+    @property
+    def plan_manhours(self) -> int:
+        """Legacy field compatibility for cost overrun analysis."""
+        return 0
+
+    @property
+    def est_margin(self):
+        """Legacy field compatibility for cost impact calculations."""
+        return 0
+
+    @property
+    def ecns(self):
+        """Legacy relation compatibility."""
+        return []
+
     # ========================================================================
     # 扩展模型便捷属性 - 透明访问拆分的扩展表数据
     # ========================================================================

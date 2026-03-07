@@ -134,6 +134,11 @@ class ChangeTypeEnum(str, Enum):
     DESIGN = "DESIGN"  # 设计变更
     SCOPE = "SCOPE"  # 范围变更
     TECHNICAL = "TECHNICAL"  # 技术变更
+    AUTO = "AUTO"  # 兼容旧数据：自动识别/自动创建
+    OTHER = "OTHER"  # 兼容旧数据：其他
+    # Legacy values kept for backward compatibility with historical rows
+    MANUAL = "MANUAL"
+    NORMAL = "NORMAL"
 
 
 class ChangeSourceEnum(str, Enum):
@@ -141,18 +146,24 @@ class ChangeSourceEnum(str, Enum):
 
     CUSTOMER = "CUSTOMER"  # 客户提出
     INTERNAL = "INTERNAL"  # 内部提出
+    # Legacy values kept for backward compatibility with historical rows
+    MANUAL = "MANUAL"
+    NORMAL = "NORMAL"
+    LEGACY_CH230222 = "ch230222"
 
 
 class ChangeStatusEnum(str, Enum):
     """变更状态（工作流状态机）"""
 
     SUBMITTED = "SUBMITTED"  # 已提交
+    PENDING = "PENDING"  # 兼容旧数据：待处理
     ASSESSING = "ASSESSING"  # 影响评估中
     PENDING_APPROVAL = "PENDING_APPROVAL"  # 待审批
     APPROVED = "APPROVED"  # 已批准
     REJECTED = "REJECTED"  # 已拒绝
     IMPLEMENTING = "IMPLEMENTING"  # 实施中
     VERIFYING = "VERIFYING"  # 验证中
+    COMPLETED = "COMPLETED"  # 兼容旧数据：已完成
     CLOSED = "CLOSED"  # 已关闭
     CANCELLED = "CANCELLED"  # 已取消
 

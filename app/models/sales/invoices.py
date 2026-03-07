@@ -54,6 +54,33 @@ class Invoice(Base, TimestampMixin):
     def __repr__(self):
         return f"<Invoice {self.invoice_code}>"
 
+    # ------------------------------------------------------------------
+    # Legacy compatibility aliases
+    # ------------------------------------------------------------------
+    @property
+    def invoice_no(self):
+        return self.invoice_code
+
+    @invoice_no.setter
+    def invoice_no(self, value):
+        self.invoice_code = value
+
+    @property
+    def invoice_amount(self):
+        return self.amount
+
+    @invoice_amount.setter
+    def invoice_amount(self, value):
+        self.amount = value
+
+    @property
+    def customer_name(self):
+        return self.buyer_name
+
+    @customer_name.setter
+    def customer_name(self, value):
+        self.buyer_name = value
+
 
 class ReceivableDispute(Base, TimestampMixin):
     """回款争议/卡点表"""

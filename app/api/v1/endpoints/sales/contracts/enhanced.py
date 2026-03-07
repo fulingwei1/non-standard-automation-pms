@@ -30,6 +30,30 @@ from app.services.sales.contract_enhanced import ContractEnhancedService
 router = APIRouter()
 
 
+def _serialize_contract_list_item(contract) -> dict:
+    total_amount = contract.total_amount or 0
+    received_amount = contract.received_amount or 0
+    unreceived_amount = contract.unreceived_amount
+    if unreceived_amount is None:
+        unreceived_amount = total_amount - received_amount
+
+    return {
+        "id": contract.id,
+        "contract_code": contract.contract_code,
+        "contract_name": contract.contract_name,
+        "contract_type": contract.contract_type,
+        "customer_id": contract.customer_id,
+        "total_amount": float(total_amount),
+        "received_amount": float(received_amount),
+        "unreceived_amount": float(unreceived_amount or 0),
+        "status": contract.status,
+        "signing_date": contract.signing_date.isoformat() if contract.signing_date else None,
+        "effective_date": contract.effective_date.isoformat() if contract.effective_date else None,
+        "expiry_date": contract.expiry_date.isoformat() if contract.expiry_date else None,
+        "created_at": contract.created_at.isoformat() if contract.created_at else None,
+    }
+
+
 # ========== 合同CRUD ==========
 @router.post("/", response_model=ContractResponse, status_code=status.HTTP_201_CREATED)
 def create_contract(
@@ -67,8 +91,10 @@ def get_contracts(
         keyword=keyword,
     )
 
+    serialized_items = [_serialize_contract_list_item(contract) for contract in contracts]
+
     return {
-        "items": contracts,
+        "items": serialized_items,
         "total": total,
         "skip": skip,
         "limit": limit,
@@ -161,7 +187,7 @@ def approve_contract(
     try:
         if approval_data and approval_data.approval_status != "approved":
             raise ValueError("此接口仅用于审批通过")
-
+        
         opinion = approval_data.approval_opinion if approval_data else None
         contract = ContractEnhancedService.approve_contract(
             db, contract_id, approval_id, current_user.id, opinion
@@ -183,7 +209,7 @@ def reject_contract(
     try:
         if not approval_data or not approval_data.approval_opinion:
             raise ValueError("驳回必须填写审批意见")
-
+        
         contract = ContractEnhancedService.reject_contract(
             db, contract_id, approval_id, current_user.id, approval_data.approval_opinion
         )
@@ -203,9 +229,7 @@ def get_pending_approvals(
 
 
 # ========== 合同条款管理 ==========
-@router.post(
-    "/{contract_id}/terms", response_model=ContractTermResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/{contract_id}/terms", response_model=ContractTermResponse, status_code=status.HTTP_201_CREATED)
 def add_contract_term(
     contract_id: int,
     term_data: ContractTermCreate,
@@ -238,7 +262,7 @@ def update_contract_term(
     """更新条款"""
     if not term_data.term_content:
         raise HTTPException(status_code=400, detail="条款内容不能为空")
-
+    
     term = ContractEnhancedService.update_term(db, term_id, term_data.term_content)
     if not term:
         raise HTTPException(status_code=404, detail="条款不存在")
@@ -258,11 +282,7 @@ def delete_contract_term(
 
 
 # ========== 合同附件管理 ==========
-@router.post(
-    "/{contract_id}/attachments",
-    response_model=ContractAttachmentResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/{contract_id}/attachments", response_model=ContractAttachmentResponse, status_code=status.HTTP_201_CREATED)
 def upload_attachment(
     contract_id: int,
     attachment_data: ContractAttachmentCreate,
@@ -270,9 +290,7 @@ def upload_attachment(
     current_user: User = Depends(get_current_user),
 ):
     """上传附件"""
-    attachment = ContractEnhancedService.add_attachment(
-        db, contract_id, attachment_data, current_user.id
-    )
+    attachment = ContractEnhancedService.add_attachment(db, contract_id, attachment_data, current_user.id)
     return attachment
 
 

@@ -59,6 +59,61 @@ class Quote(Base, TimestampMixin):
     def __repr__(self):
         return f"<Quote {self.quote_code}>"
 
+    # ------------------------------------------------------------------
+    # Legacy compatibility aliases
+    # ------------------------------------------------------------------
+    @property
+    def quote_no(self):
+        return self.quote_code
+
+    @quote_no.setter
+    def quote_no(self, value):
+        self.quote_code = value
+
+    @property
+    def quote_name(self):
+        return self.quote_code
+
+    @quote_name.setter
+    def quote_name(self, value):
+        # Legacy field had no dedicated storage; keep backward-compatible behavior.
+        if value and not self.quote_code:
+            self.quote_code = str(value)
+
+    @property
+    def title(self):
+        return self.quote_name or self.quote_code
+
+    @title.setter
+    def title(self, value):
+        if value and not self.quote_code:
+            self.quote_code = str(value)
+
+    @property
+    def total_price(self):
+        if self.current_version:
+            return self.current_version.total_price
+        return None
+
+    @total_price.setter
+    def total_price(self, value):
+        if self.current_version:
+            self.current_version.total_price = value
+
+    @property
+    def total_amount(self):
+        return self.total_price
+
+    @total_amount.setter
+    def total_amount(self, value):
+        self.total_price = value
+
+    @property
+    def items(self):
+        if self.current_version and self.current_version.items:
+            return self.current_version.items
+        return []
+
 
 class QuoteVersion(Base, TimestampMixin):
     """报价版本表"""

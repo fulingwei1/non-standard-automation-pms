@@ -176,6 +176,18 @@ class Contract(Base, TimestampMixin):
     def __repr__(self):
         return f"<Contract {self.contract_code}>"
 
+    # ------------------------------------------------------------------
+    # Legacy compatibility aliases
+    # ------------------------------------------------------------------
+    @property
+    def contract_amount(self):
+        """Backward-compatible alias for legacy code paths."""
+        return self.total_amount
+
+    @contract_amount.setter
+    def contract_amount(self, value):
+        self.total_amount = value
+
 
 class ContractDeliverable(Base, TimestampMixin):
     """合同交付物清单表"""

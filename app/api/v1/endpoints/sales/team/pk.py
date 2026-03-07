@@ -23,6 +23,45 @@ from app.utils.db_helpers import save_obj
 router = APIRouter()
 
 
+def _safe_parse_id_list(raw_value: Optional[Any]) -> list[int]:
+    """Parse legacy team_ids payload safely."""
+    if raw_value in (None, "", []):
+        return []
+    if isinstance(raw_value, list):
+        return [int(x) for x in raw_value if str(x).strip().isdigit()]
+    if isinstance(raw_value, (int, float)):
+        return [int(raw_value)]
+
+    raw_str = str(raw_value).strip()
+    if not raw_str:
+        return []
+
+    try:
+        parsed = json.loads(raw_str)
+        if isinstance(parsed, list):
+            return [int(x) for x in parsed if str(x).strip().isdigit()]
+        if isinstance(parsed, (int, float)):
+            return [int(parsed)]
+    except (json.JSONDecodeError, TypeError, ValueError):
+        pass
+
+    # Legacy fallback: "1,2,3" / "1 2 3" / "1"
+    normalized = raw_str.replace(";", ",").replace("|", ",").replace(" ", ",")
+    return [int(x) for x in normalized.split(",") if x.strip().isdigit()]
+
+
+def _safe_parse_json(raw_value: Optional[Any]) -> Optional[Any]:
+    """Parse optional JSON text safely."""
+    if raw_value in (None, ""):
+        return None
+    if isinstance(raw_value, (dict, list)):
+        return raw_value
+    try:
+        return json.loads(str(raw_value))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return None
+
+
 @router.get("/team-pk", response_model=ResponseModel)
 def list_team_pks(
     *,
@@ -44,7 +83,7 @@ def list_team_pks(
 
     items = []
     for pk in pks:
-        team_ids = json.loads(pk.team_ids) if pk.team_ids else []
+        team_ids = _safe_parse_id_list(pk.team_ids)
         teams = db.query(SalesTeam).filter(SalesTeam.id.in_(team_ids)).all()
         team_info = [
             {"id": t.id, "team_code": t.team_code, "team_name": t.team_name} for t in teams
@@ -135,7 +174,7 @@ def get_team_pk(
             detail="PK记录不存在",
         )
 
-    team_ids = json.loads(pk.team_ids) if pk.team_ids else []
+    team_ids = _safe_parse_id_list(pk.team_ids)
     teams = db.query(SalesTeam).filter(SalesTeam.id.in_(team_ids)).all()
 
     # 获取各团队当前业绩数据
@@ -220,7 +259,7 @@ def get_team_pk(
             "status": pk.status,
             "winner_team_id": pk.winner_team_id,
             "winner_team_name": pk.winner_team.team_name if pk.winner_team else None,
-            "result_summary": json.loads(pk.result_summary) if pk.result_summary else None,
+            "result_summary": _safe_parse_json(pk.result_summary),
             "reward_description": pk.reward_description,
             "creator_name": (pk.creator.real_name or pk.creator.username) if pk.creator else None,
             "created_at": pk.created_at,
@@ -281,7 +320,7 @@ def complete_team_pk(
             detail="PK已完成",
         )
 
-    team_ids = json.loads(pk.team_ids) if pk.team_ids else []
+    team_ids = _safe_parse_id_list(pk.team_ids)
     teams = db.query(SalesTeam).filter(SalesTeam.id.in_(team_ids)).all()
 
     # 计算各团队业绩
