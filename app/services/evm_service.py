@@ -6,7 +6,7 @@ EVM (Earned Value Management) 挣值管理服务
 """
 
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Union
 
 from sqlalchemy import and_, desc

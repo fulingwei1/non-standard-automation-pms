@@ -669,6 +669,7 @@ REGULAR_USER_CREDENTIALS: Dict[str, str] = {
 ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
     ("engineer:read", "工程师进度查看"),
     ("engineer:create", "工程师任务创建"),
+    ("cost:read", "成本数据查看"),
 )
 
 

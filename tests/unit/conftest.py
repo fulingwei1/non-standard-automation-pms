@@ -5,9 +5,10 @@ Unit tests fixtures - 不依赖完整应用程序
 
 import os
 import tempfile
-from typing import Optional
+from typing import Generator, Optional
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
 
@@ -100,6 +101,47 @@ def db_session(db_engine) -> Session:
         raise
     finally:
         session.close()
+
+
+@pytest.fixture(scope="function")
+def client(db_engine) -> Generator[TestClient, None, None]:
+    """
+    Unit API tests use an isolated DB engine.
+    Override app-level get_db so FastAPI requests share this test database.
+    """
+    from app.dependencies import get_db as app_get_db
+    from app.main import app
+    from app.models import base as base_module
+    from app.models.base import get_db as base_get_db
+
+    TestingSessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=db_engine
+    )
+
+    def _override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    def _override_get_session():
+        return TestingSessionLocal()
+
+    app.dependency_overrides[app_get_db] = _override_get_db
+    app.dependency_overrides[base_get_db] = _override_get_db
+    original_get_session = base_module.get_session
+    base_module.get_session = _override_get_session
+
+    if getattr(app.state, "limiter", None) is not None:
+        app.state.limiter.enabled = False
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.pop(app_get_db, None)
+    app.dependency_overrides.pop(base_get_db, None)
+    base_module.get_session = original_get_session
 
 
 # ==================== 常用测试 Fixture ====================

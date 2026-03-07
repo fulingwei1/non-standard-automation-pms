@@ -41,6 +41,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         "/api/v1/auth/refresh",
         # 系统接口
         "/health",
+        "/api/health",
         "/",
         # API文档 - 仅在 _is_whitelisted 中通过 DEBUG 条件放行
         # "/docs",

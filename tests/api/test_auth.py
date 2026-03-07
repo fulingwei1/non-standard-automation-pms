@@ -35,10 +35,21 @@ def test_login_wrong_password(client: TestClient):
 
 
 def test_refresh_token(client: TestClient, admin_token: str):
-    if not admin_token:
-        pytest.skip("Admin token not available")
+    login_data = {
+        "username": "admin",
+        "password": "admin123",
+    }
+    login_response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    if login_response.status_code != 200:
+        pytest.skip("Admin user not available with expected credentials (admin/admin123)")
 
-    headers = {"Authorization": f"Bearer {admin_token}"}
-    response = client.post(f"{settings.API_V1_PREFIX}/auth/refresh", headers=headers)
+    refresh_token = login_response.json().get("refresh_token")
+    if not refresh_token:
+        pytest.skip("Refresh token not returned by login endpoint")
+
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
     assert response.status_code == 200
     assert "access_token" in response.json()
